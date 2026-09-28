@@ -132,3 +132,43 @@ def test_cli_imprime_json(ambiente):
         capture_output=True, text=True, check=True,
     )
     assert json.loads(saida.stdout)["ok"] is True
+
+
+def test_clientes_com_cpf_e_telefone_numericos(ambiente):
+    tmp, schemas, modelos = ambiente
+    arquivo = salvar(tmp / "c.xlsx", [
+        ["ID", "Nome", "Nº de pedidos", "Valor total produtos comprados (R$)", "Documento", "Contato"],
+        [1, "Ana", 2, 300.0, 12345678909, 11987654321],
+    ])
+    r = validar("clientes-historico", arquivo, schemas, modelos)
+    assert r["ok"] is False
+    texto = " ".join(r["problemas"])
+    assert "CPF" in texto and "“Documento”" in texto
+    assert "telefone" in texto and "“Contato”" in texto
+    assert "12345678909" not in texto
+
+
+def test_clientes_com_email_em_outra_aba(ambiente):
+    tmp, schemas, modelos = ambiente
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.append(["ID", "Nome", "Nº de pedidos", "Valor total produtos comprados (R$)"])
+    ws.append([1, "Ana", 2, 300.0])
+    extra = wb.create_sheet("Contatos")
+    extra.append(["cliente", "contato"])
+    extra.append([1, "ana@exemplo.com"])
+    arquivo = tmp / "c.xlsx"
+    wb.save(arquivo)
+    r = validar("clientes-historico", arquivo, schemas, modelos)
+    assert r["ok"] is False
+    assert any("e-mail" in p and "Contatos" in p for p in r["problemas"])
+
+
+def test_valores_monetarios_nao_viram_pii(ambiente):
+    tmp, schemas, modelos = ambiente
+    arquivo = salvar(tmp / "c.xlsx", [
+        ["ID", "Nome", "Nº de pedidos", "Valor total produtos comprados (R$)"],
+        [1234567, "Ana", 2, 12345678.9],
+        [2, "Bia", 1, 99.0],
+    ])
+    assert validar("clientes-historico", arquivo, schemas, modelos)["ok"] is True

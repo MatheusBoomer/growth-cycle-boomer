@@ -69,6 +69,41 @@ def colunas_esperadas(schema: Dict[str, Any], modelos_dir: Path) -> Tuple[List[s
     return [c for c in cabecalho if c], True
 
 
+# Excel costuma guardar CPF e telefone como número: compara pelo total de dígitos.
+DIGITOS_PII = {"CPF": (11,), "telefone": (10, 11), "cartão": (16,)}
+
+
+def tipos_pii(valor: Any) -> List[str]:
+    if isinstance(valor, str):
+        return [tipo for tipo, padrao in PADROES_PII.items() if padrao.search(valor)]
+    if isinstance(valor, bool) or not isinstance(valor, (int, float)):
+        return []
+    if isinstance(valor, float) and not valor.is_integer():
+        return []
+    digitos = len(str(abs(int(valor))))
+    return [tipo for tipo, tamanhos in DIGITOS_PII.items() if digitos in tamanhos]
+
+
+def procurar_pii(linhas: List[Tuple[int, Any]], cabecalho: List[str], aba: Optional[str]) -> List[str]:
+    achados: Dict[Tuple[str, str], List[int]] = {}
+    for numero, linha in linhas:
+        for i, valor in enumerate(linha):
+            for tipo in tipos_pii(valor):
+                if i < len(cabecalho) and cabecalho[i]:
+                    coluna = f"na coluna “{cabecalho[i]}”"
+                else:
+                    coluna = f"na coluna {i + 1}"
+                if aba:
+                    coluna += f" da aba “{aba}”"
+                achados.setdefault((tipo, coluna), []).append(numero)
+    problemas = []
+    for (tipo, coluna), numeros in achados.items():
+        lista = ", ".join(str(n) for n in numeros[:5]) + ("…" if len(numeros) > 5 else "")
+        rotulo = "linha" if len(numeros) == 1 else "linhas"
+        problemas.append(f"Encontrei o que parece ser {tipo} {coluna} ({rotulo} {lista}). Remova antes de enviar.")
+    return problemas
+
+
 def validar(insumo_id: str, arquivo: Path, schemas_path: Path, modelos_dir: Path) -> Dict[str, Any]:
     schemas = json.loads(Path(schemas_path).read_text(encoding="utf-8"))
     schema = schemas.get(insumo_id)
@@ -123,17 +158,11 @@ def validar(insumo_id: str, arquivo: Path, schemas_path: Path, modelos_dir: Path
             problemas.append("A planilha não tem linhas de dados abaixo do cabeçalho.")
         resumo = f"{len(dados)} linha{'s' if len(dados) != 1 else ''} de dados"
         if schema.get("sensivel"):
-            for tipo, padrao in PADROES_PII.items():
-                achados: Dict[str, List[int]] = {}
-                for numero, linha in dados:
-                    for i, valor in enumerate(linha):
-                        if isinstance(valor, str) and padrao.search(valor):
-                            coluna = cabecalho[i] if i < len(cabecalho) and cabecalho[i] else f"coluna {i + 1}"
-                            achados.setdefault(coluna, []).append(numero)
-                for coluna, numeros in achados.items():
-                    lista = ", ".join(str(n) for n in numeros[:5]) + ("…" if len(numeros) > 5 else "")
-                    rotulo = "linha" if len(numeros) == 1 else "linhas"
-                    problemas.append(f"Encontrei o que parece ser {tipo} na coluna “{coluna}” ({rotulo} {lista}). Remova antes de enviar.")
+            problemas.extend(procurar_pii(dados, cabecalho, None))
+            # dado pessoal em outra aba também entra no arquivo que o agente lê
+            for extra in wb.worksheets[1:]:
+                linhas_extra = [(n, l) for n, l in enumerate(extra.iter_rows(values_only=True), start=1)]
+                problemas.extend(procurar_pii(linhas_extra, [], extra.title))
 
     return {"ok": not problemas, "problemas": problemas, "avisos": avisos, "resumo": resumo}
 
