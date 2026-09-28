@@ -132,6 +132,26 @@ describe("turnos", () => {
     expect(conversa.find((e) => e.tipo === "mensagem_analista")).toMatchObject({ automatica: true })
   })
 
+  it("item da fila não se perde se um turno do analista começar enquanto ele é retirado", async () => {
+    const { t, executor } = turnos(roteiroSimples("ok", "s"))
+    const slug = await servico.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    const original = servico.retirarFila.bind(servico)
+    let primeira = true
+    servico.retirarFila = async (s: string) => {
+      const item = await original(s)
+      if (primeira && item) {
+        primeira = false
+        await t.enviarMensagem(s, "01", "mensagem do analista")
+      }
+      return item
+    }
+    await servico.enfileirar(slug, "01", "O analista APROVOU o entregável X.")
+    await t.aguardarOcioso(slug)
+    expect(executor.pedidos.some((p) => p.mensagem.includes("APROVOU"))).toBe(true)
+  })
+
   it("erro do executor vira turno_fim com detalhe e limite vira aviso", async () => {
     const { t } = turnos(async function* () {
       yield { tipo: "limite", status: "rejected", resetsAt: 1790651400 }

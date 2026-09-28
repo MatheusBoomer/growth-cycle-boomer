@@ -152,7 +152,12 @@ export class ServicoTurnos {
   async processarFila(slug: string): Promise<void> {
     if (this.ativos.has(slug)) return
     const item = await this.servico.retirarFila(slug)
-    if (!item || this.ativos.has(slug)) return
+    if (!item) return
+    if (this.ativos.has(slug)) {
+      // um turno começou enquanto o item era retirado: devolve à fila; o fim desse turno o processa
+      await this.servico.enfileirar(slug, item.etapa, item.texto)
+      return
+    }
     await this.registrar(slug, item.etapa, { tipo: "mensagem_analista", texto: item.texto, automatica: true, em: this.agora() })
     this.emSegundoPlano(slug, item.etapa, item.texto)
   }
