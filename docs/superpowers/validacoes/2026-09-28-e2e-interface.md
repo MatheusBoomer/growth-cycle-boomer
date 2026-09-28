@@ -45,3 +45,13 @@ Não havia navegador automatizado nesta sessão. Falta conferir, em http://127.0
 4. Cards: prévia e "Ampliar" do gráfico, markdown da seção, "Pedir ajuste…", arrastar planilha no card de insumo.
 5. Etapas 02 e 03 do `teste-interface` (a 02 já está liberada), reabrir a 02 e confirmar a 03 desatualizada.
 6. Diálogo "Falta configurar esta máquina" com `claude auth logout`.
+7. Com uma etapa aberta e o agente respondendo, reiniciar o `npm run dev`: sem recarregar a aba, o chat deve sair de "Pensando…" e mostrar "Resposta interrompida" assim que a conexão volta.
+
+## Correções da revisão final (branch inteira)
+
+- Trava de um turno por prospect: reserva síncrona (duplo clique não abre dois `claude`).
+- Nome de prospect vindo da URL validado (bloqueia `..%2F..`).
+- `proxy.ts` recusa POST de outros sites e Host não local.
+- Validador acha CPF/telefone/cartão guardados como número e dado pessoal em outras abas.
+- Painel lista arquivos em ativos aprovados que não passaram pela interface (terminal ou escrita direta).
+- Reconexão do SSE recarrega estado e conversas.

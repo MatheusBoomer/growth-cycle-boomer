@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import type { EtapaId, EventoConversa, EventoTempoReal, RespostaEstado } from "@workspace/core/tipos"
 
 export function useAreaDeTrabalho(slug: string) {
@@ -8,6 +8,7 @@ export function useAreaDeTrabalho(slug: string) {
   const [erro, setErro] = useState<string | null>(null)
   const [conversas, setConversas] = useState<Partial<Record<EtapaId, EventoConversa[]>>>({})
   const [deltas, setDeltas] = useState<Partial<Record<EtapaId, string>>>({})
+  const etapasCarregadas = useRef(new Set<EtapaId>())
 
   const recarregar = useCallback(async () => {
     const r = await fetch(`/api/prospects/${encodeURIComponent(slug)}/estado`, { cache: "no-store" })
@@ -25,6 +26,7 @@ export function useAreaDeTrabalho(slug: string) {
       const r = await fetch(`/api/prospects/${encodeURIComponent(slug)}/etapas/${etapa}/conversa`, { cache: "no-store" })
       if (!r.ok) return
       const { eventos } = (await r.json()) as { eventos: EventoConversa[] }
+      etapasCarregadas.current.add(etapa)
       setConversas((c) => ({ ...c, [etapa]: eventos }))
     },
     [slug],
@@ -56,7 +58,16 @@ export function useAreaDeTrabalho(slug: string) {
         if (ev.evento.tipo === "texto_agente") setDeltas((d) => ({ ...d, [ev.etapa]: "" }))
       }
     }
-    // o EventSource reconecta sozinho; ao voltar, o estado é recarregado pelo próximo evento
+    // O EventSource reconecta sozinho, mas o que aconteceu enquanto estava fora (turno que
+    // terminou, servidor reiniciado) não chega como evento: ao reabrir, recarrega tudo.
+    let jaAbriu = false
+    fonte.onopen = () => {
+      if (jaAbriu) {
+        void recarregar()
+        for (const etapa of etapasCarregadas.current) void carregarConversa(etapa)
+      }
+      jaAbriu = true
+    }
     return () => fonte.close()
   }, [slug, recarregar, carregarConversa])
 
