@@ -144,4 +144,6 @@ export interface RespostaEstado {
   condicoes: Record<EtapaId, string[]>
   turnoAtivo: EtapaId | null
   modelosDisponiveis: string[]
+  /** Arquivos em entrega/ativos-aprovados/ sem entregável aprovado pela interface (terminal ou escrita direta). */
+  aprovadosForaDaInterface: string[]
 }

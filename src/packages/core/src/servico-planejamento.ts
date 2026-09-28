@@ -216,7 +216,11 @@ export class ServicoPlanejamento {
     const modelosDisponiveis = this.catalogo.insumos
       .filter((i) => i.modelo && existsSync(path.join(this.arm.raiz, PASTA_MODELOS, i.modelo)))
       .map((i) => i.id)
-    return { estado, catalogo: this.catalogo, condicoes, turnoAtivo, modelosDisponiveis }
+    const aprovadosPelaInterface = new Set(
+      estado.entregaveis.filter((e) => e.status === "aprovado").map((e) => destinoAprovado(e)),
+    )
+    const aprovadosForaDaInterface = (await this.arm.listarAprovados(slug)).filter((a) => !aprovadosPelaInterface.has(a))
+    return { estado, catalogo: this.catalogo, condicoes, turnoAtivo, modelosDisponiveis, aprovadosForaDaInterface }
   }
 
   async listarProspects(): Promise<ResumoProspect[]> {

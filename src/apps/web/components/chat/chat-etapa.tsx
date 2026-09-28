@@ -51,7 +51,7 @@ export function ChatEtapa({ slug, etapa, dados, eventos, delta }: PropsChatEtapa
               {estadoEtapa.origem === "terminal" && eventos.length === 0 && (
                 <MessageScrollerItem messageId="terminal">
                   <Marker variant="separator">
-                    <MarkerContent>Conversa feita no terminal. Os entregáveis aprovados estão no painel ao lado.</MarkerContent>
+                    <MarkerContent>Conversa feita no terminal. Os arquivos aprovados estão no painel ao lado, em “Aprovados fora da interface”.</MarkerContent>
                   </Marker>
                 </MessageScrollerItem>
               )}

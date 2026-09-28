@@ -18,7 +18,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
 import { CardInsumo } from "@/components/cards/card-insumo"
-import { api, mensagemDeErro, type AcaoEtapa } from "@/lib/api"
+import { api, mensagemDeErro, urlArquivo, type AcaoEtapa } from "@/lib/api"
 
 const COR: Record<StatusEntregavel, string> = { pendente: "bg-amber-500", aprovado: "bg-primary", substituido: "bg-muted-foreground/40" }
 
@@ -64,6 +64,27 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
             </ul>
           )}
         </section>
+        {dados.aprovadosForaDaInterface.length > 0 && (
+          <section>
+            <details>
+              <summary className="text-muted-foreground cursor-pointer text-xs font-medium tracking-wide uppercase">
+                Aprovados fora da interface ({dados.aprovadosForaDaInterface.length})
+              </summary>
+              <p className="text-muted-foreground mt-2 text-xs">
+                Estão em ativos aprovados, mas não passaram por um card daqui: foram feitos no terminal ou gravados direto na pasta.
+              </p>
+              <ul className="mt-2 space-y-1">
+                {dados.aprovadosForaDaInterface.map((caminho) => (
+                  <li key={caminho} className="truncate text-sm">
+                    <a className="hover:underline" href={urlArquivo(slug, caminho)} target="_blank" rel="noreferrer" title={caminho}>
+                      {caminho.replace("entrega/ativos-aprovados/", "")}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          </section>
+        )}
         <section>
           <h3 className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">Insumos</h3>
           {etapaCat.insumos.length === 0 ? (

@@ -183,6 +183,28 @@ describe("ferramentas do agente", () => {
   })
 })
 
+describe("arquivos aprovados fora da interface", () => {
+  it("lista o que está em ativos-aprovados sem aprovação pela interface (terminal ou escrito direto)", async () => {
+    const slug = await prospectNaEtapa03()
+    await rascunho(slug, "g.png")
+    await servico.ferramenta(ctx03, "propor_entregavel", {
+      tipo: "grafico",
+      titulo: "Investimento",
+      arquivo_rascunho: ".app/rascunhos/g.png",
+      nome_final: "investimento-total-mensal",
+    })
+    await servico.aprovarEntregavel(slug, "id1")
+    const pasta = path.join(raiz, "clientes", slug, "entrega/ativos-aprovados")
+    await writeFile(path.join(pasta, "graficos/feito-no-terminal.png"), "x")
+    await writeFile(path.join(pasta, "secoes/03-macro-financeiro.md"), "x")
+    const r = await servico.respostaEstado(slug, null)
+    expect(r.aprovadosForaDaInterface).toEqual([
+      "entrega/ativos-aprovados/graficos/feito-no-terminal.png",
+      "entrega/ativos-aprovados/secoes/03-macro-financeiro.md",
+    ])
+  })
+})
+
 describe("insumos", () => {
   it("formato errado é recusado sem chamar o validador", async () => {
     const slug = await prospectNaEtapa03()
