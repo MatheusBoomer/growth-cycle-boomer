@@ -13,6 +13,10 @@ describe("prompts", () => {
     for (const f of ["propor_entregavel", "solicitar_insumo", "sinalizar_etapa_pronta"]) expect(s).toContain(f)
   })
 
+  it("pede resposta em português (a validação real abriu o chat em inglês)", () => {
+    expect(systemPromptModoInterface({ slug: "iszi", etapa: etapaDoCatalogo(cat, "01") })).toContain("português do Brasil")
+  })
+
   it("o prompt inicial manda usar a skill da etapa e inclui o dossiê", () => {
     const p = promptInicialEtapa({ slug: "iszi", etapa: etapaDoCatalogo(cat, "03"), dossie: "DOSSIE-AQUI" })
     expect(p).toContain("`03-diagnostico-performance`")
