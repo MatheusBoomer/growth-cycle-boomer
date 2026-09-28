@@ -1,0 +1,74 @@
+import type { EventoExecutor } from "./tipos"
+
+// O stream-json do Claude Code é um formato externo e sem tipos publicados: lemos como JSON solto
+// e validamos campo a campo.
+type Json = Record<string, unknown>
+const obj = (v: unknown): Json | null => (v && typeof v === "object" && !Array.isArray(v) ? (v as Json) : null)
+const str = (v: unknown): string | null => (typeof v === "string" ? v : null)
+
+export function parseLinhaStreamJson(linha: string): EventoExecutor[] {
+  let bruto: unknown
+  try {
+    bruto = JSON.parse(linha)
+  } catch {
+    return []
+  }
+  const o = obj(bruto)
+  if (!o || o.parent_tool_use_id) return []
+
+  switch (o.type) {
+    case "system": {
+      const sid = str(o.session_id)
+      return o.subtype === "init" && sid ? [{ tipo: "sessao", sessionId: sid }] : []
+    }
+    case "stream_event": {
+      const e = obj(o.event)
+      const delta = obj(e?.delta)
+      const texto = str(delta?.text)
+      return e?.type === "content_block_delta" && delta?.type === "text_delta" && texto !== null
+        ? [{ tipo: "texto_delta", texto }]
+        : []
+    }
+    case "assistant": {
+      const conteudo = obj(o.message)?.content
+      if (!Array.isArray(conteudo)) return []
+      return conteudo.flatMap((b): EventoExecutor[] => {
+        const bloco = obj(b)
+        if (bloco?.type === "text" && typeof bloco.text === "string") return [{ tipo: "texto", texto: bloco.text }]
+        if (bloco?.type === "tool_use") {
+          return [{ tipo: "ferramenta", id: String(bloco.id), nome: String(bloco.name), entrada: bloco.input ?? {} }]
+        }
+        return []
+      })
+    }
+    case "user": {
+      const conteudo = obj(o.message)?.content
+      if (!Array.isArray(conteudo)) return []
+      return conteudo.flatMap((b): EventoExecutor[] => {
+        const bloco = obj(b)
+        return bloco?.type === "tool_result"
+          ? [{ tipo: "ferramenta_resultado", id: String(bloco.tool_use_id), erro: bloco.is_error === true }]
+          : []
+      })
+    }
+    case "rate_limit_event": {
+      const info = obj(o.rate_limit_info)
+      const status = str(info?.status)
+      if (!status || status === "allowed") return []
+      return [{ tipo: "limite", status, resetsAt: typeof info?.resetsAt === "number" ? info.resetsAt : null }]
+    }
+    case "result": {
+      const ok = o.subtype === "success" && o.is_error !== true
+      return [
+        {
+          tipo: "fim",
+          ok,
+          erro: ok ? null : (str(o.result) || str(o.subtype) || "erro desconhecido"),
+          sessionId: str(o.session_id),
+        },
+      ]
+    }
+    default:
+      return []
+  }
+}
