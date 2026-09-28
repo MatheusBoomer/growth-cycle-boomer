@@ -1,0 +1,27 @@
+# Dependências e builds
+node_modules/
+.next/
+out/
+build/
+dist/
+.turbo/
+*.tsbuildinfo
+next-env.d.ts
+__pycache__/
+*.pyc
+
+# Segredos e ambiente
+.env*
+*.pem
+
+# Sistema
+.DS_Store
+
+# Mockups do brainstorming (visual companion)
+.superpowers/
+
+# Dados de prospects reais NUNCA vão para o git — só o _template
+clientes/*
+!clientes/_template/
+# Estado local do app (chats, rascunhos) — por prospect
+clientes/**/.app/

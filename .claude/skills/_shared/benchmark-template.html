@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<!--
+  Base visual do relatório de benchmark de concorrentes (Skill 06, Fase 2).
+  NÃO editar este arquivo por prospect — é só a origem. O preenchimento e o
+  salvamento são feitos pela Skill 06 em entrega/ativos-aprovados/benchmark/.
+  Regras de preenchimento: .claude/skills/_shared/relatorio-benchmark.md
+  Marcadores [ASSIM] são placeholders. Blocos "REPETIR" são clonados por item.
+-->
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Benchmark Meta Ads — [NOME DO PROSPECT]</title>
+<style>
+  body { background: #000; color: #e0e0e0; font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 32px 24px; }
+  .bm-header { border-bottom: 2px solid #C86F00; padding-bottom: 16px; margin-bottom: 32px; }
+  .bm-title { color: #C86F00; font-size: 28px; font-weight: 700; letter-spacing: 1px; }
+  .bm-subtitle { color: #888; font-size: 13px; margin-top: 4px; }
+  .bm-section-label { color: #C86F00; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin: 32px 0 12px; }
+  .bm-concorrente { border: 1px solid #1a1a1a; border-radius: 8px; padding: 20px; margin-bottom: 24px; background: #0a0a0a; }
+  .bm-concorrente-name { color: #fff; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .bm-concorrente-meta { color: #555; font-size: 11px; margin-bottom: 16px; }
+  .bm-links { background: #111; border-radius: 4px; padding: 12px; margin-bottom: 16px; }
+  .bm-links-label { color: #555; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .bm-links a { color: #C86F00; font-size: 12px; display: block; margin-bottom: 2px; text-decoration: none; word-break: break-all; }
+  .bm-links a:hover { text-decoration: underline; }
+  .bm-ad-card { border: 1px solid #1e1e1e; border-radius: 6px; padding: 16px; margin-bottom: 12px; background: #0d0d0d; }
+  .bm-ad-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .bm-ad-id { color: #C86F00; font-size: 13px; font-weight: 600; text-decoration: none; word-break: break-all; }
+  .bm-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .bm-badge-video { background: #002350; color: #6fa3d8; }
+  .bm-badge-img { background: #1a1a00; color: #c8b400; }
+  .bm-badge-carousel { background: #001a1a; color: #00c8b4; }
+  .bm-badge-dpa { background: #1a001a; color: #c800c8; }
+  .bm-badge-buyer { background: #001a00; color: #00c850; }
+  .bm-badge-seller { background: #1a0000; color: #c85000; }
+  .bm-badge-topo { background: #001a1a; color: #00c8c8; }
+  .bm-badge-meio { background: #0d0d1a; color: #7070c8; }
+  .bm-badge-fundo { background: #1a0d00; color: #c87000; }
+  .bm-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .bm-table tr { border-bottom: 1px solid #1a1a1a; }
+  .bm-table td:first-child { color: #555; width: 130px; padding: 6px 8px 6px 0; vertical-align: top; }
+  .bm-table td:last-child { color: #ccc; padding: 6px 0; }
+  .bm-sintese { background: #0d1a0d; border-left: 3px solid #C86F00; padding: 12px 16px; margin-top: 16px; border-radius: 0 4px 4px 0; }
+  .bm-sintese-label { color: #C86F00; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .bm-sintese p { color: #aaa; font-size: 13px; line-height: 1.6; margin: 0; }
+  .bm-sem-anuncios { color: #444; font-style: italic; padding: 16px; border: 1px dashed #1a1a1a; border-radius: 6px; margin-bottom: 24px; }
+  .bm-sintese-geral { background: #080808; border: 1px solid #1a1a1a; border-radius: 8px; padding: 24px; }
+  .bm-sq { color: #C86F00; font-size: 13px; font-weight: 700; margin: 20px 0 8px; }
+  .bm-sa { color: #999; font-size: 13px; line-height: 1.7; margin: 0 0 8px; }
+  .bm-divider { border: none; border-top: 1px solid #1a1a1a; margin: 24px 0; }
+  .bm-cliente { border: 1px solid #002350; border-radius: 8px; padding: 20px; margin-bottom: 24px; background: #050a10; }
+  .bm-footer { color: #333; font-size: 11px; text-align: center; margin-top: 48px; padding-top: 16px; border-top: 1px solid #1a1a1a; }
+</style>
+</head>
+<body>
+
+<div class="bm-header">
+  <div class="bm-title">Benchmark Meta Ads — [NOME DO PROSPECT]</div>
+  <div class="bm-subtitle">Data da pesquisa: [DD/MM/AAAA] &nbsp;·&nbsp; Concorrentes analisados: [N] ([lista de nomes]) &nbsp;·&nbsp; Fonte: Biblioteca de Anúncios do Meta</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- CONCORRENTES — REPETIR o bloco .bm-concorrente por concorrente -->
+<!-- ============================================================ -->
+<div class="bm-section-label">Concorrentes analisados</div>
+
+<div class="bm-concorrente">
+  <div class="bm-concorrente-name">[NOME DO CONCORRENTE]</div>
+  <div class="bm-concorrente-meta">view_all_page_id: [ID ou "não identificado"] &nbsp;·&nbsp; ~[N] anúncios ativos &nbsp;·&nbsp; coletado em [DD/MM/AAAA]</div>
+
+  <div class="bm-links">
+    <div class="bm-links-label">Links coletados</div>
+    <!-- REPETIR um <a> por criativo analisado. Link OBRIGATÓRIO por criativo. -->
+    <a href="https://www.facebook.com/ads/library/?id=[AD_ID]">[AD_ID]</a>
+    <a href="https://www.facebook.com/ads/library/?id=[AD_ID]">[AD_ID]</a>
+    <div style="font-size:11px; color:#555; margin-top:4px;">total: ~[N] anúncios ativos encontrados ([K] selecionados para análise, priorizando diversidade de formato)</div>
+  </div>
+
+  <!-- REPETIR .bm-ad-card por criativo analisado -->
+  <div class="bm-ad-card">
+    <div class="bm-ad-card-header">
+      <a href="https://www.facebook.com/ads/library/?id=[AD_ID]" class="bm-ad-id">[AD_ID]</a>
+      <!-- badges: escolher 1 formato + 1 foco + 1 etapa de funil (ver relatorio-benchmark.md) -->
+      <span class="bm-badge bm-badge-video">Vídeo</span>
+      <span class="bm-badge bm-badge-buyer">Buyer</span>
+      <span class="bm-badge bm-badge-fundo">Fundo</span>
+    </div>
+    <table class="bm-table">
+      <tr><td>Formato</td><td>[Vídeo / Imagem estática / Carrossel / Catálogo (DPA)]</td></tr>
+      <tr><td>Descrição visual</td><td>[descrição objetiva da imagem/vídeo, com suas palavras]</td></tr>
+      <tr><td>Copy</td><td>[texto do anúncio como observado; truncar com "…" se longo]</td></tr>
+      <tr><td>CTA</td><td>[Comprar agora / Saiba mais / Shop Now / …]</td></tr>
+      <tr><td>Domínio</td><td>[domínio de destino]</td></tr>
+      <tr><td>Tom</td><td>[Aspiracional / Relacional / Promocional / …]</td></tr>
+      <tr><td>Foco</td><td>[Buyer / Seller]</td></tr>
+      <tr><td>Etapa de funil</td><td>[Topo / Meio / Fundo]</td></tr>
+      <tr><td>Plataformas</td><td>[Facebook, Instagram, Messenger, Threads…]</td></tr>
+      <tr><td>Início</td><td>[data de início da veiculação, se disponível; senão —]</td></tr>
+      <tr><td>Versões</td><td>[nº de versões, se disponível; senão —]</td></tr>
+      <tr><td>Impressões</td><td>[quando disponível; no Brasil, ads não-políticos geralmente —]</td></tr>
+    </table>
+  </div>
+
+  <div class="bm-sintese">
+    <div class="bm-sintese-label">Síntese [NOME DO CONCORRENTE]</div>
+    <p>[leitura estratégica do concorrente, com suas palavras: posicionamento percebido, padrão de formato/tom, destaque comparativo em relação aos demais]</p>
+  </div>
+</div>
+
+<!-- VARIANTE quando o concorrente não tem anúncio ativo / página não localizada:
+     substituir os blocos .bm-links / .bm-ad-card / .bm-sintese por: -->
+<!--
+<div class="bm-concorrente">
+  <div class="bm-concorrente-name">[NOME]</div>
+  <div class="bm-concorrente-meta">view_all_page_id: [ID ou "não identificado"] &nbsp;·&nbsp; 0 anúncios ativos &nbsp;·&nbsp; coletado em [DD/MM/AAAA]</div>
+  <div class="bm-sem-anuncios">[motivo: nenhum anúncio ativo encontrado / página não localizada — confirmado pelo Analista. NUNCA inventar número.]</div>
+</div>
+-->
+
+<!-- ============================================================ -->
+<!-- ANÁLISE DO PRÓPRIO PROSPECT (mesmo formato dos concorrentes) -->
+<!-- ============================================================ -->
+<div class="bm-section-label">Análise do cliente</div>
+
+<div class="bm-cliente">
+  <div class="bm-concorrente-name">[NOME DO PROSPECT]</div>
+  <div class="bm-concorrente-meta">view_all_page_id: [ID] &nbsp;·&nbsp; ~[N] anúncios ativos &nbsp;·&nbsp; coletado em [DD/MM/AAAA]</div>
+
+  <div class="bm-links">
+    <div class="bm-links-label">Links coletados</div>
+    <a href="https://www.facebook.com/ads/library/?id=[AD_ID]">[AD_ID]</a>
+    <div style="font-size:11px; color:#555; margin-top:4px;">total: ~[N] anúncios ativos encontrados ([K] selecionados para análise)</div>
+  </div>
+
+  <!-- REPETIR .bm-ad-card igual aos concorrentes -->
+  <div class="bm-ad-card">
+    <div class="bm-ad-card-header">
+      <a href="https://www.facebook.com/ads/library/?id=[AD_ID]" class="bm-ad-id">[AD_ID]</a>
+      <span class="bm-badge bm-badge-img">Imagem estática</span>
+      <span class="bm-badge bm-badge-buyer">Buyer</span>
+      <span class="bm-badge bm-badge-fundo">Fundo</span>
+    </div>
+    <table class="bm-table">
+      <tr><td>Formato</td><td>[…]</td></tr>
+      <tr><td>Descrição visual</td><td>[…]</td></tr>
+      <tr><td>Copy</td><td>[…]</td></tr>
+      <tr><td>CTA</td><td>[…]</td></tr>
+      <tr><td>Domínio</td><td>[…]</td></tr>
+      <tr><td>Tom</td><td>[…]</td></tr>
+      <tr><td>Foco</td><td>[…]</td></tr>
+      <tr><td>Etapa de funil</td><td>[…]</td></tr>
+      <tr><td>Plataformas</td><td>[…]</td></tr>
+      <tr><td>Início</td><td>[…]</td></tr>
+      <tr><td>Versões</td><td>[…]</td></tr>
+      <tr><td>Impressões</td><td>[…]</td></tr>
+    </table>
+  </div>
+
+  <div class="bm-sintese">
+    <div class="bm-sintese-label">Síntese [NOME DO PROSPECT]</div>
+    <p>[como o prospect se posiciona hoje em anúncios, comparado aos concorrentes analisados — onde está à frente, onde está atrás]</p>
+  </div>
+</div>
+
+<hr class="bm-divider">
+
+<!-- ============================================================ -->
+<!-- SÍNTESE ESTRATÉGICA GERAL — perguntas fixas + 1 do prospect -->
+<!-- ============================================================ -->
+<div class="bm-section-label">Síntese Estratégica Geral</div>
+
+<div class="bm-sintese-geral">
+  <div class="bm-sq">1. Como os concorrentes comunicam autenticidade e confiança?</div>
+  <p class="bm-sa">[…]</p>
+
+  <div class="bm-sq">2. Quem usa posicionamento de valor vs. promoção de preço?</div>
+  <p class="bm-sa">[…]</p>
+
+  <div class="bm-sq">3. Quais formatos predominam no mercado? (vídeo, carrossel, estático, catálogo)</div>
+  <p class="bm-sa">[…]</p>
+
+  <div class="bm-sq">4. Há uso de figura pública, fundador ou influenciador?</div>
+  <p class="bm-sa">[…]</p>
+
+  <div class="bm-sq">5. Como cada marca distribui seus anúncios pelo funil? (topo, meio, fundo)</div>
+  <p class="bm-sa">[…]</p>
+
+  <div class="bm-sq">6. Quem está investindo mais intensamente? (volume de anúncios ativos)</div>
+  <p class="bm-sa">[ordenar por nº aproximado de anúncios ativos, incluindo o prospect; NUNCA inventar número]</p>
+
+  <div class="bm-sq">7. [PERGUNTA ESPECÍFICA DESTE PROSPECT — derivada do gargalo/contexto do diagnóstico]</div>
+  <p class="bm-sa">[…]</p>
+</div>
+
+<div class="bm-footer">boomer · benchmark gerado em [DD/MM/AAAA] · dados coletados via Biblioteca de Anúncios do Meta</div>
+
+</body>
+</html>
