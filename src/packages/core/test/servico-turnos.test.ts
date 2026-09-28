@@ -132,24 +132,78 @@ describe("turnos", () => {
     expect(conversa.find((e) => e.tipo === "mensagem_analista")).toMatchObject({ automatica: true })
   })
 
-  it("item da fila não se perde se um turno do analista começar enquanto ele é retirado", async () => {
+  it("enquanto a fila é retirada, a mensagem do analista é recusada e o item da fila não se perde", async () => {
     const { t, executor } = turnos(roteiroSimples("ok", "s"))
     const slug = await servico.criarProspect("Iszi", null)
     await t.iniciar(slug, "01")
     await t.aguardarOcioso(slug)
     const original = servico.retirarFila.bind(servico)
-    let primeira = true
+    let recusa: unknown = null
     servico.retirarFila = async (s: string) => {
       const item = await original(s)
-      if (primeira && item) {
-        primeira = false
-        await t.enviarMensagem(s, "01", "mensagem do analista")
-      }
+      if (item) recusa = await t.enviarMensagem(s, "01", "mensagem do analista").catch((e) => e)
       return item
     }
     await servico.enfileirar(slug, "01", "O analista APROVOU o entregável X.")
     await t.aguardarOcioso(slug)
+    expect(recusa).toBeInstanceOf(ErroTurnoAtivo)
     expect(executor.pedidos.some((p) => p.mensagem.includes("APROVOU"))).toBe(true)
+  })
+
+  describe("nunca dois turnos ao mesmo tempo no mesmo prospect", () => {
+    function contador() {
+      const c = { agora: 0, maximo: 0 }
+      const roteiro: Roteiro = async function* () {
+        c.agora++
+        c.maximo = Math.max(c.maximo, c.agora)
+        yield { tipo: "sessao", sessionId: "s1" }
+        await new Promise((r) => setTimeout(r, 30))
+        c.agora--
+        yield { tipo: "fim", ok: true, erro: null, sessionId: "s1" }
+      }
+      return { c, roteiro }
+    }
+
+    it("duas mensagens simultâneas (duplo clique): uma roda, a outra é recusada", async () => {
+      const { c, roteiro } = contador()
+      const { t, executor } = turnos(roteiro)
+      const slug = await servico.criarProspect("Iszi", null)
+      await t.iniciar(slug, "01")
+      await t.aguardarOcioso(slug)
+      const antes = executor.pedidos.length
+      const r = await Promise.allSettled([
+        t.enviarMensagem(slug, "01", "Continue de onde parou."),
+        t.enviarMensagem(slug, "01", "Continue de onde parou."),
+      ])
+      await t.aguardarOcioso(slug)
+      expect(r.map((x) => x.status).sort()).toEqual(["fulfilled", "rejected"])
+      expect((r.find((x) => x.status === "rejected") as PromiseRejectedResult).reason).toBeInstanceOf(ErroTurnoAtivo)
+      expect(executor.pedidos.length - antes).toBe(1)
+      expect(c.maximo).toBe(1)
+    })
+
+    it("fila automática e mensagem do analista no mesmo instante: nunca em paralelo", async () => {
+      const { c, roteiro } = contador()
+      const { t } = turnos(roteiro)
+      const slug = await servico.criarProspect("Iszi", null)
+      await t.iniciar(slug, "01")
+      await t.aguardarOcioso(slug)
+      await servico.enfileirar(slug, "01", "O analista APROVOU X.")
+      const envio = await t.enviarMensagem(slug, "01", "oi").catch((e) => e)
+      await t.aguardarOcioso(slug)
+      expect(envio).toBeInstanceOf(ErroTurnoAtivo)
+      expect(c.maximo).toBe(1)
+    })
+
+    it("iniciar duas vezes seguidas não abre dois turnos", async () => {
+      const { c, roteiro } = contador()
+      const { t } = turnos(roteiro)
+      const slug = await servico.criarProspect("Iszi", null)
+      const r = await Promise.allSettled([t.iniciar(slug, "01"), t.iniciar(slug, "01")])
+      await t.aguardarOcioso(slug)
+      expect(r.filter((x) => x.status === "rejected")).toHaveLength(1)
+      expect(c.maximo).toBe(1)
+    })
   })
 
   it("erro do executor vira turno_fim com detalhe e limite vira aviso", async () => {

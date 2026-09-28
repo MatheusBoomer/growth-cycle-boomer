@@ -94,7 +94,8 @@ export class ServicoTurnos {
   private readonly catalogo: Catalogo
   private readonly config: ConfigTurnos
   private readonly agora: () => string
-  private readonly ativos = new Map<string, { etapa: EtapaId; controle: AbortController }>()
+  /** Vaga do turno por prospect. etapa null = reservada enquanto a fila é consultada. */
+  private readonly ativos = new Map<string, { etapa: EtapaId | null; controle: AbortController }>()
   private readonly tokens = new Map<string, { slug: string; etapa: EtapaId }>()
   /** Trabalho em andamento por prospect (turnos e disparos da fila) — base do aguardarOcioso. */
   private readonly pendentes = new Map<string, Set<Promise<void>>>()
@@ -132,17 +133,40 @@ export class ServicoTurnos {
     return this.tokens.get(token) ?? null
   }
 
-  async iniciar(slug: string, etapa: EtapaId): Promise<void> {
+  /** Checa e ocupa a vaga no mesmo tick: entre o teste e o set não pode haver await. */
+  private reservar(slug: string, etapa: EtapaId | null): AbortController {
     if (this.ativos.has(slug)) throw new ErroTurnoAtivo()
-    await this.servico.iniciarEtapa(slug, etapa)
-    this.emSegundoPlano(slug, etapa, null)
+    const controle = new AbortController()
+    this.ativos.set(slug, { etapa, controle })
+    return controle
+  }
+
+  private liberar(slug: string, controle: AbortController): void {
+    if (this.ativos.get(slug)?.controle === controle) this.ativos.delete(slug)
+  }
+
+  private async comReserva(slug: string, controle: AbortController, preparar: () => Promise<void>): Promise<void> {
+    try {
+      await preparar()
+    } catch (e) {
+      this.liberar(slug, controle)
+      throw e
+    }
+  }
+
+  async iniciar(slug: string, etapa: EtapaId): Promise<void> {
+    const controle = this.reservar(slug, etapa)
+    await this.comReserva(slug, controle, () => this.servico.iniciarEtapa(slug, etapa))
+    this.emSegundoPlano(slug, etapa, null, controle)
   }
 
   async enviarMensagem(slug: string, etapa: EtapaId, texto: string): Promise<void> {
-    if (this.ativos.has(slug)) throw new ErroTurnoAtivo()
-    await this.servico.registrarMensagemAnalista(slug, etapa)
-    await this.registrar(slug, etapa, { tipo: "mensagem_analista", texto, automatica: false, em: this.agora() })
-    this.emSegundoPlano(slug, etapa, texto)
+    const controle = this.reservar(slug, etapa)
+    await this.comReserva(slug, controle, async () => {
+      await this.servico.registrarMensagemAnalista(slug, etapa)
+      await this.registrar(slug, etapa, { tipo: "mensagem_analista", texto, automatica: false, em: this.agora() })
+    })
+    this.emSegundoPlano(slug, etapa, texto, controle)
   }
 
   parar(slug: string): void {
@@ -151,15 +175,21 @@ export class ServicoTurnos {
 
   async processarFila(slug: string): Promise<void> {
     if (this.ativos.has(slug)) return
-    const item = await this.servico.retirarFila(slug)
-    if (!item) return
-    if (this.ativos.has(slug)) {
-      // um turno começou enquanto o item era retirado: devolve à fila; o fim desse turno o processa
-      await this.servico.enfileirar(slug, item.etapa, item.texto)
+    const controle = this.reservar(slug, null)
+    let item: Awaited<ReturnType<ServicoPlanejamento["retirarFila"]>> = null
+    await this.comReserva(slug, controle, async () => {
+      item = await this.servico.retirarFila(slug)
+    })
+    if (!item) {
+      this.liberar(slug, controle)
       return
     }
-    await this.registrar(slug, item.etapa, { tipo: "mensagem_analista", texto: item.texto, automatica: true, em: this.agora() })
-    this.emSegundoPlano(slug, item.etapa, item.texto)
+    const { etapa, texto } = item
+    this.ativos.set(slug, { etapa, controle })
+    await this.comReserva(slug, controle, () =>
+      this.registrar(slug, etapa, { tipo: "mensagem_analista", texto, automatica: true, em: this.agora() }),
+    )
+    this.emSegundoPlano(slug, etapa, texto, controle)
   }
 
   /** Para testes e para o desligamento: espera o turno atual e os que a fila disparar. */
@@ -171,16 +201,14 @@ export class ServicoTurnos {
     return this.servico.registrarConversa(slug, etapa, evento)
   }
 
-  private emSegundoPlano(slug: string, etapa: EtapaId, texto: string | null): void {
-    const controle = new AbortController()
-    this.ativos.set(slug, { etapa, controle })
+  private emSegundoPlano(slug: string, etapa: EtapaId, texto: string | null, controle: AbortController): void {
     this.barramento.publicar(slug, { tipo: "turno", etapa, ativo: true })
     this.acompanhar(
       slug,
       this.executarTurno(slug, etapa, texto, controle.signal)
         .catch((e) => console.error(`Turno do prospect ${slug} falhou:`, e))
         .finally(() => {
-          this.ativos.delete(slug)
+          this.liberar(slug, controle)
           this.barramento.publicar(slug, { tipo: "turno", etapa, ativo: false })
         })
         // o próximo turno (se houver fila) é registrado em `pendentes` antes deste sair de lá
