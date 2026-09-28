@@ -70,6 +70,8 @@ export class ClaudeCliExecutor implements Executor {
     const saida = new Promise<number | null>((resolve) => filho.once("close", (codigo) => resolve(codigo)))
     const abortar = () => filho.kill("SIGTERM")
     sinal.addEventListener("abort", abortar, { once: true })
+    // Parar pode ter sido clicado antes de o processo existir: o evento já passou.
+    if (sinal.aborted) abortar()
     filho.stdin.on("error", () => {})
     filho.stdin.end(pedido.mensagem)
 

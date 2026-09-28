@@ -74,6 +74,17 @@ describe("ClaudeCliExecutor", () => {
     expect(eventos.at(-1)).toMatchObject({ tipo: "fim", ok: false, erro: "Interrompido pelo analista." })
   })
 
+  it("sinal já abortado antes de iniciar encerra na hora como interrompido", async () => {
+    process.env.DORMIR_MS = "3000"
+    process.env.FIXTURE = FIXTURE
+    const controle = new AbortController()
+    controle.abort()
+    const inicio = Date.now()
+    const eventos = await coletar(falso().executar(pedido(), controle.signal))
+    expect(Date.now() - inicio).toBeLessThan(2000)
+    expect(eventos.at(-1)).toMatchObject({ tipo: "fim", ok: false, erro: "Interrompido pelo analista." })
+  })
+
   it("comando inexistente vira erro legível", async () => {
     const exec = new ClaudeCliExecutor({ comando: "comando-que-nao-existe-xyz" })
     const eventos = await coletar(exec.executar(pedido(), new AbortController().signal))
