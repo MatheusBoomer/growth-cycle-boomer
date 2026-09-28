@@ -1,0 +1,26 @@
+{
+  "historico-mensal": {
+    "modelo": "historico-mensal.xlsx",
+    "linha_marcadores": 1,
+    "marcador_obrigatorio": "Preench. Manual",
+    "linha_cabecalho": 2,
+    "coluna_mes": "DATA",
+    "meses_esperados": 12,
+    "colunas_obrigatorias": ["DATA"],
+    "sensivel": false
+  },
+  "produtos-curva-abc": {
+    "modelo": "produtos-curva-abc.xlsx",
+    "linha_cabecalho": 1,
+    "colunas_obrigatorias": ["PRODUTO", "VALOR TOTAL VENDAS"],
+    "min_linhas": 1,
+    "sensivel": false
+  },
+  "clientes-historico": {
+    "modelo": "clientes-historico.xlsx",
+    "linha_cabecalho": 1,
+    "colunas_obrigatorias": ["ID", "Nome", "Nº de pedidos", "Valor total produtos comprados (R$)"],
+    "min_linhas": 1,
+    "sensivel": true
+  }
+}
