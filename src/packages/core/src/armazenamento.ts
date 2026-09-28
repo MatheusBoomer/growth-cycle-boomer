@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto"
 import { appendFile, copyFile, cp, mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises"
 import path from "node:path"
-import { ErroCaminhoForaDoProspect, ErroNaoEncontrado, ErroProspectExistente } from "./erros"
+import { ErroCaminhoForaDoProspect, ErroEntrada, ErroNaoEncontrado, ErroProspectExistente } from "./erros"
+import { normalizarSlug } from "./slug"
 import type { Estado, EtapaId, EventoConversa } from "./tipos"
 
 const ARQUIVO_ESTADO = ".app/estado.json"
@@ -40,7 +41,11 @@ export class FsArmazenamento {
     this.moverParaLixeira = moverParaLixeira
   }
 
+  /** O slug vem da URL (já decodificada): só aceita nomes que o próprio app geraria. */
   pastaProspect(slug: string): string {
+    if (!slug || slug !== normalizarSlug(slug) || slug.startsWith("_")) {
+      throw new ErroEntrada(`Prospect inválido: ${JSON.stringify(slug)}`)
+    }
     return path.join(this.pastaClientes, slug)
   }
 
@@ -52,7 +57,7 @@ export class FsArmazenamento {
       .sort()
   }
 
-  existe(slug: string): Promise<boolean> {
+  async existe(slug: string): Promise<boolean> {
     return existeCaminho(this.pastaProspect(slug))
   }
 

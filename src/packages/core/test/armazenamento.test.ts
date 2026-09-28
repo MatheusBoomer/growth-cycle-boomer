@@ -3,7 +3,7 @@ import { mkdir, readdir, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { beforeEach, describe, expect, it } from "vitest"
 import { FsArmazenamento } from "../src/armazenamento"
-import { ErroCaminhoForaDoProspect, ErroProspectExistente } from "../src/erros"
+import { ErroCaminhoForaDoProspect, ErroEntrada, ErroProspectExistente } from "../src/erros"
 import { estadoInicial } from "../src/maquina-estados"
 import { raizTemporaria } from "./ajuda"
 
@@ -86,6 +86,13 @@ describe("FsArmazenamento", () => {
     await arm.moverParaDentro("a", fora, "dados/historico-mensal.xlsx")
     expect(existsSync(fora)).toBe(false)
     expect(await arm.existeArquivo("a", "dados/historico-mensal.xlsx")).toBe(true)
+  })
+
+  it.each(["..", "../..", "../../etc", "_template", "a/b", "Adda", ""])("recusa slug que não é de prospect: %j", async (slug) => {
+    expect(() => arm.pastaProspect(slug)).toThrow(ErroEntrada)
+    await expect(arm.existe(slug)).rejects.toBeInstanceOf(ErroEntrada)
+    await expect(arm.excluir(slug)).rejects.toBeInstanceOf(ErroEntrada)
+    expect(lixeira).toEqual([])
   })
 
   it("excluir manda a pasta para a lixeira", async () => {
