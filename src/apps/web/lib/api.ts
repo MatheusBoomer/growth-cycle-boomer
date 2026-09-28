@@ -1,0 +1,68 @@
+import type { EtapaId, ResultadoValidacao } from "@workspace/core/tipos"
+
+export class ErroApi extends Error {
+  readonly status: number
+  readonly codigo: string | null
+  readonly dados: Record<string, unknown>
+  constructor(message: string, status: number, codigo: string | null, dados: Record<string, unknown>) {
+    super(message)
+    this.status = status
+    this.codigo = codigo
+    this.dados = dados
+  }
+}
+
+async function chamar<T>(url: string, init?: RequestInit): Promise<T> {
+  const r = await fetch(url, init)
+  const corpo = (await r.json().catch(() => ({}))) as Record<string, unknown>
+  if (!r.ok) {
+    throw new ErroApi(
+      typeof corpo.erro === "string" ? corpo.erro : `Erro ${r.status}`,
+      r.status,
+      typeof corpo.codigo === "string" ? corpo.codigo : null,
+      corpo,
+    )
+  }
+  return corpo as T
+}
+
+const comJson = (metodo: string, corpo: unknown): RequestInit => ({
+  method: metodo,
+  headers: { "content-type": "application/json" },
+  body: JSON.stringify(corpo),
+})
+
+function multipart(arquivo: File): RequestInit {
+  const dados = new FormData()
+  dados.set("arquivo", arquivo)
+  return { method: "POST", body: dados }
+}
+
+const base = (slug: string) => `/api/prospects/${encodeURIComponent(slug)}`
+export type AcaoEtapa = "iniciar" | "concluir" | "reabrir" | "confirmar" | "revisar" | "parar"
+
+export const api = {
+  criarProspect: (nome: string, site: string) => chamar<{ slug: string }>("/api/prospects", comJson("POST", { nome, site })),
+  excluirProspect: (slug: string, confirmacao: string) => chamar(base(slug), comJson("DELETE", { confirmacao })),
+  abrirPasta: (slug: string) => chamar(`${base(slug)}/abrir-pasta`, { method: "POST" }),
+  acaoEtapa: (slug: string, etapa: EtapaId, acao: AcaoEtapa) => chamar(`${base(slug)}/etapas/${etapa}/acoes`, comJson("POST", { acao })),
+  enviarMensagem: (slug: string, etapa: EtapaId, texto: string) =>
+    chamar(`${base(slug)}/etapas/${etapa}/mensagens`, comJson("POST", { texto })),
+  aprovar: (slug: string, id: string) => chamar(`${base(slug)}/entregaveis/${id}`, comJson("POST", { acao: "aprovar" })),
+  pedirAjuste: (slug: string, id: string, texto: string) =>
+    chamar(`${base(slug)}/entregaveis/${id}`, comJson("POST", { acao: "ajuste", texto })),
+  enviarInsumo: (slug: string, etapa: EtapaId, insumoId: string, arquivo: File) =>
+    chamar<ResultadoValidacao>(`${base(slug)}/etapas/${etapa}/insumos/${insumoId}`, multipart(arquivo)),
+  enviarLink: (slug: string, etapa: EtapaId, insumoId: string, url: string) =>
+    chamar<ResultadoValidacao>(`${base(slug)}/etapas/${etapa}/insumos/${insumoId}`, comJson("POST", { url })),
+  enviarAnexo: (slug: string, etapa: EtapaId, arquivo: File) =>
+    chamar<{ caminho: string }>(`${base(slug)}/etapas/${etapa}/anexos`, multipart(arquivo)),
+}
+
+export function urlArquivo(slug: string, caminho: string, download = false): string {
+  return `${base(slug)}/arquivo?caminho=${encodeURIComponent(caminho)}${download ? "&download=1" : ""}`
+}
+
+export function mensagemDeErro(e: unknown): string {
+  return e instanceof Error ? e.message : "Algo deu errado."
+}
