@@ -28,7 +28,8 @@ prática de execução, sem ambiguidade).
 
 ## Base de dados obrigatória
 
-Tudo que já foi decidido nesta conversa: problemas e oportunidades do
+Tudo que já foi decidido nas etapas anteriores (`contexto/decisoes/`) e nesta
+conversa: problemas e oportunidades do
 diagnóstico, estratégia por Curva ABC, calendário estratégico, planejamento
 financeiro de mídia, estratégia de redução de dependências, achados de
 benchmark aplicáveis, cenários e KPIs influenciadores. Não buscar dado novo.

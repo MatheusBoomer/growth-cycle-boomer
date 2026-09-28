@@ -25,7 +25,9 @@ nas Skills 01 a 05.
 
 ### Processo
 
-1. Ler todo o histórico da conversa desde a Skill 01.
+1. Ler os resumos de decisão das etapas anteriores em `contexto/decisoes/`
+   e o histórico desta conversa (no modo interface, cada etapa tem sua
+   própria conversa — o que foi decidido antes está nos resumos e no dossiê).
 2. **Ler novamente a pasta `contexto/` do cliente** que está sendo trabalhado
    para coletar informações que podem ter sido perdidas ao longo da conversa.
 3. Preencher todos os campos do template abaixo com as informações

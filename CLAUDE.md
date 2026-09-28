@@ -69,6 +69,13 @@ handoff estruturado ao final de cada etapa (Regra 6): nunca terminar só com
 precisa estar pronto para a próxima, e atualizar
 `contexto/status-planejamento.md` do prospect.
 
+Quando a skill roda dentro da interface web (ferramentas do MCP
+`planejamento` disponíveis), vale também a Regra 7 de
+`regras-de-validacao.md`: checkpoints por `propor_entregavel`, pedidos de
+arquivo por `solicitar_insumo` e encerramento por `sinalizar_etapa_pronta`.
+Nesse modo cada etapa tem a própria conversa, e o contexto das anteriores
+chega pelo dossiê e por `contexto/decisoes/`.
+
 ### Estrutura por prospect
 
 Cada prospect novo nasce de uma cópia de `clientes/_template/`. Ver

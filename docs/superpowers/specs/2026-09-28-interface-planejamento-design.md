@@ -65,7 +65,8 @@ fora do executor sabe que o motor é o CLI.
 
 - **Catálogo de etapas.** Carrega o manifesto `etapas.json`: para cada etapa,
   `id`, `titulo`, `descricao`, `skill`, `insumos` (ids do catálogo de
-  insumos, com obrigatório/opcional), `tipos_de_entregavel`, `depende_de`.
+  insumos, com obrigatório/opcional). A ordem das etapas define as
+  dependências; o tipo de cada entregável vem em `propor_entregavel`.
   Inclui as etapas 01–08 e a "Apresentação final" (subagente
   `designer-apresentacao`). Também define o catálogo de insumos: `id`,
   `nome_para_o_analista`, `descricao`, `tipo` (`arquivo` ou `link`, ex.: o
@@ -118,7 +119,7 @@ Estados: `bloqueada`, `liberada`, `em_andamento`, `pronta`, `concluida`,
 2. nenhum entregável em "aguardando aprovação";
 3. o agente sinalizou que o critério de conclusão da skill foi atingido.
 
-O botão bloqueado mostra a lista do que falta.
+O botão bloqueado mostra a lista do que falta (sempre visível logo abaixo do botão).
 
 **Ao concluir**, o app grava `contexto/decisoes/NN-<etapa>.md` (resumo de
 decisões enviado pelo agente), grava o handoff, regera o
@@ -197,6 +198,7 @@ clientes/<slug>/
   .app/estado.json                  NOVO — estado das etapas, session_id, cards
   .app/rascunhos/                   NOVO — arquivos do agente antes da aprovação
   .app/conversas/NN.jsonl           NOVO — histórico exibido na UI, por etapa
+  .app/propostas/<id><ext>          NOVO — cópia congelada de cada proposta (o card mostra sempre a versão proposta)
 ```
 
 O histórico do chat fica na pasta do prospect, e não só nos arquivos internos
@@ -309,7 +311,7 @@ As skills continuam funcionando no terminal. O modo interface é aditivo.
 
 ## 10. Dependências e pré-requisitos
 
-- Máquina do analista: Node ≥ 20, Python 3 com openpyxl, pandas e matplotlib
+- Máquina do analista: Node ≥ 22.18 (o servidor MCP e o hook rodam como `.ts` direto), Python 3 com openpyxl, pandas e matplotlib
   (os mesmos que o `analista-dados` já usa), Claude Code instalado e logado.
 - **Dependência do usuário:** colocar os três modelos oficiais de insumo em
   `.claude/skills/_shared/modelos-insumo/`. Só a validação dos insumos das
@@ -327,3 +329,5 @@ As skills continuam funcionando no terminal. O modo interface é aditivo.
   Google Drive (implementação nova do módulo de armazenamento).
 - Edição manual de arquivos aprovados pela UI; qualquer versionamento de
   entregáveis (continua valendo "só a versão aprovada mais recente importa").
+- Servidor de desenvolvimento escuta só em 127.0.0.1; a versão hospedada
+  (Fase 3) precisa de autenticação antes de abrir para a rede.

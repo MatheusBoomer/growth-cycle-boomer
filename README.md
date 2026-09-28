@@ -60,6 +60,26 @@ Estratégico entregue a prospects.
    para montar a apresentação — o subagente `designer-apresentacao` lê só
    `entrega/ativos-aprovados/` e produz o arquivo final em `entrega/`.
 
+## Interface web (protótipo)
+
+Em vez de chamar as skills no terminal, dá para conduzir o planejamento pela
+interface local, que cria o prospect, mostra o chat por etapa, os cards de
+aprovação e de envio de planilha, e libera a próxima etapa quando você
+conclui a atual.
+
+    cd src
+    npm install
+    npm run dev          # http://127.0.0.1:3000
+
+Requisitos: Node ≥ 22.18, Python 3 com openpyxl/pandas/matplotlib e o Claude
+Code instalado e logado (`claude auth login`). O protótipo usa a sua
+assinatura do Claude, não uma chave de API. Para mexer na tela sem gastar
+uso: `PLANEJAMENTO_EXECUTOR=demo npm run dev`.
+
+Os modelos de planilha que o analista baixa ficam em
+`.claude/skills/_shared/modelos-insumo/` (ver o README de lá). Design:
+`docs/superpowers/specs/2026-09-28-interface-planejamento-design.md`.
+
 ## Pré-requisitos de configuração (uma vez só, não por cliente)
 
 - **Brand Template no Canva** — o `designer-apresentacao` depende de um
