@@ -25,3 +25,7 @@ clientes/*
 !clientes/_template/
 # Estado local do app (chats, rascunhos) — por prospect
 clientes/**/.app/
+
+# Gerados pelo next dev (agentRules)
+src/apps/web/AGENTS.md
+src/apps/web/CLAUDE.md
