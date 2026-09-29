@@ -1,20 +1,24 @@
 ---
 name: briefing-e-benchmark
-description: Consolida tudo que foi construído nas skills anteriores num briefing estruturado e aciona a pesquisa de concorrentes — substitui o antigo processo manual de sair do chat e entrar no Cowork. Use após metas-e-cenarios, ao concluir o diagnóstico e a projeção.
+description: Consolida tudo que foi construído nas skills anteriores num briefing estruturado e faz o benchmark de anúncios dos concorrentes na Biblioteca do Meta (coleta via Apify) — substitui o antigo processo manual de sair do chat e entrar no Cowork. Use após metas-e-cenarios, ao concluir o diagnóstico e a projeção.
 ---
 
 # Skill 06 — Briefing e Benchmark de Concorrentes
 
 Skill 6 de 8. Corresponde ao Prompt 7 (Produção de Briefing) do processo
 original, mais a etapa de pesquisa de concorrentes que antes não tinha skill
-própria e dependia de um salto manual para o Cowork. Aqui, o subagente
-`pesquisador-benchmark` faz essa pesquisa sem sair do Claude Code.
+própria e dependia de um salto manual para o Cowork (e, depois, da extensão
+do Claude no Chrome). Aqui, a coleta dos anúncios da Biblioteca do Meta é
+feita pela Apify (`scripts/coleta_meta_ads.py`) e a análise acontece na
+própria conversa, sem sair do planejamento.
 
 ## Antes de começar (checklist do analista)
 
 - [ ] Skills 01 a 05 concluídas e aprovadas.
-- [ ] Lista de concorrentes que você quer que a gente pesquise, se já tiver
+- [ ] Lista de até 4 concorrentes, com site ou @ de cada um, se já tiver
       pensado nisso (se não tiver, a skill pergunta antes da Fase 2).
+- [ ] `APIFY_TOKEN` configurado no `.env` da raiz e `ffmpeg` instalado (a
+      verificação do sistema da interface mostra os dois).
 
 ## Fase 1 — Briefing do Cliente
 
@@ -37,7 +41,9 @@ nas Skills 01 a 05.
    processo. Não inventar nem estimar valores não confirmados.
 5. Na seção de Concorrentes, usar a lista discutida com o analista. Se não
    foi discutida, registrar "A definir com o cliente" e sinalizar como
-   pendência.
+   pendência. Se a lista tiver mais de 4 concorrentes, pergunte ao
+   analista quais 4 são prioridade (sem preferência, sugira os que
+   provavelmente têm mais anúncios ativos).
 
 ### Template do briefing (`entrega/ativos-aprovados/secoes/06-briefing.md`)
 
@@ -67,44 +73,76 @@ Meta oficial, distribuição mensal, lógica de distribuição.
 Resumo dos 3 cenários, alavancas, riscos, alavanca principal.
 
 ## 7. Concorrentes para Pesquisa de Benchmark
-Lista de concorrentes a pesquisar + contexto estratégico para orientar a
-análise.
+Até 4 concorrentes. Para cada um: nome, site, @ do Instagram, link da
+Biblioteca de Anúncios (se o analista tiver) e por que analisar (foco de
+atenção). Depois: contexto estratégico para orientar a análise, pontos de
+atenção (opcional) e perguntas estratégicas customizadas (opcional —
+substituem as 7 padrão do relatório).
 
 ## 8. Observações e Pendências
 ```
 
-## Fase 2 — Pesquisa de Benchmark
+## Fase 2 — Benchmark de anúncios (Meta)
 
-Acionar o subagente `pesquisador-benchmark` passando a seção 7 do briefing
-(lista de concorrentes + contexto estratégico). O subagente devolve **duas
-saídas** (ver `.claude/agents/pesquisador-benchmark.md` para o processo
-completo):
+Segue integralmente as regras da skill `benchmark-meta-ads` da agência,
+com a coleta feita pela Apify em vez do navegador. Leia antes de começar:
 
-1. **Blocos estratégicos, por concorrente:**
-   - **Lição:** o que o concorrente faz de relevante, com base em presença
-     online e/ou anúncios ativos, conectado a uma aplicação direta e
-     específica para o prospect — não uma observação genérica.
-   - **Evidência:** contagem de anúncios ativos na Biblioteca de Anúncios do
-     Meta + exemplos de criativos, quando disponível.
+- `.claude/skills/_shared/benchmark-coleta-e-analise.md` — comandos, descoberta,
+  análise dos criativos, arquivo de análise;
+- `.claude/skills/_shared/relatorio-benchmark.md` — relatório HTML.
 
-2. **Dados do relatório detalhado** — os atributos de cada criativo analisado
-   (com o link da Biblioteca de Anúncios), a análise do próprio prospect e a
-   síntese estratégica.
+Nunca use navegador, Firecrawl ou o subagente `pesquisador-benchmark` nesta
+fase: a análise visual precisa acontecer nesta conversa, onde as imagens são
+lidas.
 
-### Montagem e salvamento dos artefatos
+Avise o analista no início que a coleta leva alguns minutos por anunciante e
+que você vai trabalhar sem pausas, parando só se alguma página precisar de
+confirmação.
 
-Depois da checagem manual do Analista:
+### 2a. Anunciantes
 
-- Montar o **relatório HTML de benchmark** a partir da base visual
-  `.claude/skills/_shared/benchmark-template.html`, preenchendo com os dados
-  da saída 2 conforme `.claude/skills/_shared/relatorio-benchmark.md`, e salvar
-  em `entrega/ativos-aprovados/benchmark/benchmark.html`. É um arquivo
-  autocontido — inclui um card por concorrente com a tabela de atributos e os
-  **links de cada criativo analisado**, a análise do próprio prospect e a
-  Síntese Estratégica Geral.
-- Salvar a camada estratégica concisa (Lição + Evidência por concorrente + os
-  destaques estratégicos) em `entrega/ativos-aprovados/secoes/06-benchmark.md`
-  — é ela que alimenta a narrativa e a apresentação final.
+Os concorrentes da seção 7 do briefing (até 4) + o próprio prospect, sempre
+por último. Concorrente sem site informado: encontre o site oficial com
+WebSearch antes da descoberta.
+
+### 2b. Descoberta das páginas
+
+Rode `descobrir` para cada anunciante sem link da Biblioteca. Páginas
+`confirmada` seguem direto; `ambigua` ou `nao_encontrada` param para uma
+pergunta ao analista no chat, com a tabela de candidatas (ver
+`benchmark-coleta-e-analise.md`). Pergunte todas as ambíguas de uma vez, numa
+mensagem só, antes de começar a coleta.
+
+### 2c. Coleta e análise
+
+Um anunciante por vez: `coletar`, ler `resumo.md`, abrir cada imagem e quadro,
+preencher os campos, escrever a síntese e acrescentar o bloco ao arquivo de
+análise `dados/benchmark-meta/analise-benchmark.md`. Se a execução tiver
+caído antes, retome a partir desse arquivo.
+
+Concorrente sem nenhum anúncio ativo: registre e siga — no relatório ele
+aparece com o bloco `bm-sem-anuncios`. Só interrompa a Fase 2 se ela ficar
+severamente comprometida (quase nenhum anunciante acessível) ou se o script
+sair com `ERRO:`.
+
+### 2d. Relatório e camada estratégica
+
+1. Montar o HTML conforme `relatorio-benchmark.md` e passar pela checagem do
+   analista (interface: `propor_entregavel` tipo `html`, `nome_final`
+   `benchmark`; terminal: checagem no chat e, aprovado, salvar em
+   `entrega/ativos-aprovados/benchmark/benchmark.html`).
+2. Depois do HTML aprovado, escrever a camada estratégica em
+   `entrega/ativos-aprovados/secoes/06-benchmark.md` (na interface, pelo
+   `propor_entregavel` tipo `secao`, `nome_final` `benchmark`), um bloco por
+   concorrente:
+   - **Lição:** o que o concorrente faz de relevante nos anúncios,
+     conectado a uma aplicação direta e específica para o prospect, amarrada
+     aos gargalos do diagnóstico (Skills 02 a 05). Nunca observação genérica.
+   - **Evidência:** total de anúncios ativos (do `resumo.md`, com a data da
+     coleta) + 1 a 3 criativos que sustentam a lição, cada um com o link da
+     Biblioteca.
+   Feche com 3 a 5 destaques estratégicos para o prospect. É essa camada que
+   alimenta a narrativa e a apresentação final.
 
 ## Restrições
 
@@ -116,11 +154,12 @@ Depois da checagem manual do Analista:
 ## Critério de conclusão
 
 - Briefing completo, sem campo em branco não justificado.
-- Achados de benchmark de todos os concorrentes da lista, com lição +
-  evidência.
-- Relatório HTML de benchmark montado, com um card por concorrente (tabela de
-  atributos + links dos criativos), a análise do próprio prospect e a síntese
-  estratégica.
+- Todos os anunciantes (concorrentes + prospect) coletados e analisados, ou
+  registrados como sem anúncio ativo, com o arquivo de análise completo.
+- Relatório HTML montado com o template da skill `benchmark-meta-ads`: um card
+  por concorrente com os criativos (links clicáveis), a análise do prospect,
+  as 7 perguntas (ou as customizadas) e o ranking de intensidade.
+- Camada Lição + Evidência escrita para cada concorrente.
 - Tudo aprovado pelo analista e salvo: briefing e camada estratégica em
   `entrega/ativos-aprovados/secoes/`, relatório em
   `entrega/ativos-aprovados/benchmark/benchmark.html`.

@@ -118,3 +118,16 @@ clientes/
   _template/                   # nunca editar direto — só copiar
   <prospect>/                  # uma pasta por prospect real
 ```
+
+## Token da Apify (Skill 06)
+
+O benchmark de anúncios da Skill 06 coleta a Biblioteca de Anúncios do Meta
+pelo ator `apify/facebook-ads-scraper`. Uma vez por máquina:
+
+1. Crie uma conta em apify.com e gere um token em **Settings → API &
+   Integrations**.
+2. Na raiz do projeto: `cp .env.example .env` e preencha `APIFY_TOKEN=`.
+3. Instale o ffmpeg: `brew install ffmpeg`.
+
+Custo de referência: um benchmark completo usa por volta de 350 anúncios na
+Apify (US$ 1 a 2 no plano mais caro por resultado).

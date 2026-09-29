@@ -85,5 +85,12 @@ quando existirem — a regra padrão é não ter nenhum.
 ## Subagentes disponíveis
 
 - **`analista-dados`** — cálculo de KPIs, geração de gráficos, motor de projeção (`scripts/projecao.py`). Usado pelas Skills 03 e 05.
-- **`pesquisador-benchmark`** — pesquisa de concorrentes e mercado via Firecrawl. Usado pelas Skills 06 e 07.
+- **`pesquisador-benchmark`** — pesquisa de mercado e referências via Firecrawl. Usado pela Skill 07 (e pontualmente pela 02). O benchmark de anúncios da Skill 06 não usa subagente: roda `scripts/coleta_meta_ads.py` (Apify) na própria conversa.
 - **`designer-apresentacao`** — montagem da apresentação final no Canva. Roda uma única vez, ao final, lendo apenas `entrega/ativos-aprovados/`.
+
+## Pré-requisitos da Skill 06
+
+O benchmark de anúncios coleta a Biblioteca de Anúncios do Meta pela Apify:
+precisa de `APIFY_TOKEN` no `.env` da raiz (modelo em `.env.example`) e do
+`ffmpeg` instalado (`brew install ffmpeg`). O token nunca aparece em arquivo
+gerado nem na conversa.

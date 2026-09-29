@@ -11,3 +11,10 @@ Três arquivos, com propósitos e sensibilidade diferentes:
 `historico-mensal.xlsx` segue o formato de referência usado no projeto
 (12 meses, KPIs de investimento/receita/ROAS/sessões/conversão já quebrados
 por Google e Meta).
+
+## benchmark-meta/ (gerada pela Skill 06)
+
+Não é insumo do analista. A Skill 06 cria `benchmark-meta/<marca>/` com os
+anúncios coletados pela Apify (`resumo.md`, `anuncios.json`, `bruto.json`,
+`midia/`) e o arquivo `analise-benchmark.md`. São anúncios públicos das
+marcas, sem dado de cliente final.
