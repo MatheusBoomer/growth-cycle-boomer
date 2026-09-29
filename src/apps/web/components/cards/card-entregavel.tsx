@@ -11,6 +11,7 @@ import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader,
 import { Spinner } from "@workspace/ui/components/spinner"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { cn } from "@workspace/ui/lib/utils"
+import { useVisualizador } from "@/components/trabalho/contexto-visualizador"
 import { api, mensagemDeErro } from "@/lib/api"
 import { PreviaArquivo } from "./previa-arquivo"
 
@@ -22,9 +23,10 @@ const ROTULO_TIPO: Record<TipoEntregavel, string> = {
   documento: "Documento",
   html: "Relatório HTML",
 }
-const ROTULO_STATUS: Record<StatusEntregavel, string> = { pendente: "Aguardando aprovação", aprovado: "Aprovado", substituido: "Substituído" }
+export const ROTULO_STATUS_ENTREGAVEL: Record<StatusEntregavel, string> = { pendente: "Aguardando aprovação", aprovado: "Aprovado", substituido: "Substituído" }
 
 export function CardEntregavel({ slug, entregavel: e }: { slug: string; entregavel: Entregavel }) {
+  const { abrir } = useVisualizador()
   const [ajusteAberto, setAjusteAberto] = useState(false)
   const [texto, setTexto] = useState("")
   const [ocupado, setOcupado] = useState(false)
@@ -63,12 +65,18 @@ export function CardEntregavel({ slug, entregavel: e }: { slug: string; entregav
         </CardDescription>
         <CardAction>
           <Badge variant={e.status === "aprovado" ? "default" : e.status === "pendente" ? "outline" : "secondary"}>
-            {ROTULO_STATUS[e.status]}
+            {ROTULO_STATUS_ENTREGAVEL[e.status]}
           </Badge>
         </CardAction>
       </CardHeader>
       <CardContent className="space-y-3">
-        <PreviaArquivo slug={slug} tipo={e.tipo} caminho={e.arquivoRascunho} titulo={e.titulo} />
+        <PreviaArquivo
+          slug={slug}
+          tipo={e.tipo}
+          caminho={e.arquivoRascunho}
+          titulo={e.titulo}
+          aoAbrir={e.tipo === "html" ? () => abrir(e.etapa, e.nomeFinal) : undefined}
+        />
         {(e.tipo === "grafico" || e.tipo === "tabela") && e.status === "pendente" && (
           <p className="text-sm">Confirme se os valores representados no gráfico correspondem exatamente aos dados enviados.</p>
         )}

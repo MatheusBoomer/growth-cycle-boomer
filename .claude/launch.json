@@ -7,6 +7,13 @@
       "runtimeArgs": ["run", "dev", "--prefix", "src/apps/web"],
       "port": 3000,
       "url": "http://127.0.0.1:3000"
+    },
+    {
+      "name": "interface-demo",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["PLANEJAMENTO_EXECUTOR=demo", "npm", "run", "dev", "--prefix", "src/apps/web"],
+      "port": 3000,
+      "url": "http://127.0.0.1:3000"
     }
   ]
 }

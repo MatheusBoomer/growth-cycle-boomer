@@ -19,6 +19,7 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
 import { CardInsumo } from "@/components/cards/card-insumo"
 import { api, mensagemDeErro, urlArquivo, type AcaoEtapa } from "@/lib/api"
+import { useVisualizador } from "./contexto-visualizador"
 
 const COR: Record<StatusEntregavel, string> = { pendente: "bg-amber-500", aprovado: "bg-primary", substituido: "bg-muted-foreground/40" }
 
@@ -28,6 +29,7 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
   const entregaveis = dados.estado.entregaveis.filter((e) => e.etapa === etapa && e.status !== "substituido")
   const condicoes = dados.condicoes[etapa]
   const [ocupado, setOcupado] = useState<AcaoEtapa | null>(null)
+  const { abrir } = useVisualizador()
 
   async function executar(acao: AcaoEtapa, sucesso: string) {
     setOcupado(acao)
@@ -57,7 +59,13 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
               {entregaveis.map((e) => (
                 <li key={e.id} className="flex items-center gap-2 text-sm">
                   <span className={cn("size-2 shrink-0 rounded-full", COR[e.status])} aria-hidden />
-                  <span className="truncate">{e.titulo}</span>
+                  {e.tipo === "html" ? (
+                    <button type="button" className="truncate text-left hover:underline" onClick={() => abrir(e.etapa, e.nomeFinal)}>
+                      {e.titulo}
+                    </button>
+                  ) : (
+                    <span className="truncate">{e.titulo}</span>
+                  )}
                   <span className="text-muted-foreground ml-auto text-xs">{e.status === "pendente" ? "aguardando" : "aprovado"}</span>
                 </li>
               ))}

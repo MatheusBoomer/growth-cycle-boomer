@@ -1,6 +1,6 @@
 "use client"
 
-import { DownloadIcon, FileSpreadsheetIcon, FileTextIcon, Maximize2Icon } from "lucide-react"
+import { DownloadIcon, FileCode2Icon, FileSpreadsheetIcon, FileTextIcon, Maximize2Icon, PanelRightOpenIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 import type { TipoEntregavel } from "@workspace/core/tipos"
 import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from "@workspace/ui/components/attachment"
@@ -10,7 +10,19 @@ import { Skeleton } from "@workspace/ui/components/skeleton"
 import { Markdown } from "@/components/markdown"
 import { urlArquivo } from "@/lib/api"
 
-export function PreviaArquivo({ slug, tipo, caminho, titulo }: { slug: string; tipo: TipoEntregavel; caminho: string; titulo: string }) {
+export function PreviaArquivo({
+  slug,
+  tipo,
+  caminho,
+  titulo,
+  aoAbrir,
+}: {
+  slug: string
+  tipo: TipoEntregavel
+  caminho: string
+  titulo: string
+  aoAbrir?: () => void
+}) {
   const url = urlArquivo(slug, caminho)
   const [texto, setTexto] = useState<string | null>(null)
 
@@ -53,7 +65,24 @@ export function PreviaArquivo({ slug, tipo, caminho, titulo }: { slug: string; t
     )
   }
   if (tipo === "html") {
-    return <iframe src={url} title={titulo} sandbox="allow-scripts" className="h-96 w-full rounded-md border bg-white" />
+    return (
+      <Attachment state="done">
+        <AttachmentMedia variant="icon">
+          <FileCode2Icon />
+        </AttachmentMedia>
+        <AttachmentContent>
+          <AttachmentTitle>{titulo}</AttachmentTitle>
+          <AttachmentDescription>Relatório HTML · abra para conferir</AttachmentDescription>
+        </AttachmentContent>
+        {aoAbrir && (
+          <AttachmentActions>
+            <Button size="sm" variant="outline" onClick={aoAbrir}>
+              <PanelRightOpenIcon /> Abrir
+            </Button>
+          </AttachmentActions>
+        )}
+      </Attachment>
+    )
   }
   return (
     <Attachment state="done">
