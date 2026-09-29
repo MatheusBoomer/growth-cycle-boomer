@@ -12,6 +12,7 @@ __pycache__/
 
 # Segredos e ambiente
 .env*
+!.env.example
 *.pem
 
 # Sistema
