@@ -9,6 +9,9 @@ export function descreverAtividade(nome: string, entrada: unknown, raiz: string)
   if (nome === "Agent" || nome === "Task") return { nome, detalhe: `Acionando o subagente ${String(e.subagent_type ?? "")}`.trim() }
   if (nome === "Read") return { nome, detalhe: `Lendo ${rel(e.file_path)}` }
   if (nome === "Write" || nome === "Edit" || nome === "MultiEdit") return { nome, detalhe: `Escrevendo ${rel(e.file_path)}` }
+  if (nome === "Bash" && String(e.command ?? "").includes("coleta_meta_ads")) {
+    return { nome, detalhe: "Coletando anúncios na Biblioteca do Meta" }
+  }
   if (nome === "Bash") return { nome, detalhe: `Rodando: ${String(e.command ?? "").slice(0, 80)}` }
   if (nome === "Glob" || nome === "Grep") return { nome, detalhe: "Procurando arquivos" }
   if (nome.startsWith("mcp__firecrawl") || nome === "WebSearch" || nome === "WebFetch") return { nome, detalhe: "Pesquisando na web" }

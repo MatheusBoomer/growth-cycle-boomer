@@ -15,6 +15,8 @@ import {
 interface Sistema {
   claude: { instalado: boolean; versao: string | null; logado: boolean; metodo: string | null; plano: string | null }
   python: { ok: boolean; detalhe: string | null }
+  ffmpeg: boolean
+  apify: boolean
 }
 
 export function VerificacaoSistema() {
@@ -37,6 +39,10 @@ export function VerificacaoSistema() {
   if (!sistema) return null
   const bloqueado = !sistema.claude.instalado || !sistema.claude.logado || !sistema.python.ok
   const cobrado = sistema.claude.logado && sistema.claude.metodo !== "claude.ai"
+  const faltasBenchmark = [
+    !sistema.ffmpeg && "instale o ffmpeg (brew install ffmpeg)",
+    !sistema.apify && "coloque o APIFY_TOKEN no arquivo .env da raiz do projeto (modelo em .env.example)",
+  ].filter(Boolean) as string[]
 
   return (
     <>
@@ -70,13 +76,22 @@ export function VerificacaoSistema() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {cobrado && (
-        <div className="fixed right-4 bottom-4 z-50 max-w-sm">
-          <Alert>
-            <AlertDescription>
-              O Claude Code desta máquina está autenticado por chave de API ({sistema.claude.metodo}), não pela assinatura. O uso vai ser cobrado na API.
-            </AlertDescription>
-          </Alert>
+      {(cobrado || faltasBenchmark.length > 0) && (
+        <div className="fixed right-4 bottom-4 z-50 flex max-w-sm flex-col gap-2">
+          {cobrado && (
+            <Alert>
+              <AlertDescription>
+                O Claude Code desta máquina está autenticado por chave de API ({sistema.claude.metodo}), não pela assinatura. O uso vai ser cobrado na API.
+              </AlertDescription>
+            </Alert>
+          )}
+          {faltasBenchmark.length > 0 && (
+            <Alert>
+              <AlertDescription>
+                Para o benchmark de anúncios (etapa 06): {faltasBenchmark.join("; ")}. As outras etapas funcionam normalmente.
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
       )}
     </>

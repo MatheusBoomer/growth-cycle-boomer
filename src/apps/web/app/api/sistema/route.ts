@@ -1,5 +1,9 @@
 import { execFile } from "node:child_process"
+import { readFile } from "node:fs/promises"
+import path from "node:path"
 import { promisify } from "node:util"
+import { tokenApifyConfigurado } from "@workspace/core/sistema"
+import { servidor } from "@/lib/servidor"
 
 const exec = promisify(execFile)
 export const dynamic = "force-dynamic"
@@ -35,5 +39,18 @@ export async function GET() {
   } catch {
     python = { ok: false, detalhe: "Python 3 com openpyxl, pandas e matplotlib não foi encontrado." }
   }
-  return Response.json({ claude, python })
+  let ffmpeg = true
+  try {
+    await exec("ffmpeg", ["-version"], { timeout: 10_000 })
+  } catch {
+    ffmpeg = false
+  }
+  let conteudoEnv: string | null = null
+  try {
+    conteudoEnv = await readFile(path.join(servidor().raiz, ".env"), "utf-8")
+  } catch {
+    // sem .env: vale só o ambiente
+  }
+  const apify = tokenApifyConfigurado(process.env, conteudoEnv)
+  return Response.json({ claude, python, ffmpeg, apify })
 }
