@@ -1,99 +1,97 @@
-# Relatório detalhado de benchmark de concorrentes
+# Relatório de benchmark Meta Ads
 
-Referenciado pela Skill 06 (`briefing-e-benchmark`, Fase 2) e pelo subagente
-`pesquisador-benchmark`. Não copie este conteúdo para dentro de uma skill —
-referencie este arquivo.
+Referenciado pela Skill 06 (`briefing-e-benchmark`, Fase 2). Não copie este
+conteúdo para dentro de uma skill — referencie este arquivo.
 
-Vale **apenas para a pesquisa de concorrentes** (Skill 06, Fase 2). O
-benchmarking de mercado nacional/internacional da Skill 07 continua em texto
-livre — não gera este relatório.
+Adaptado de `docs/referencias/benchmark-meta-ads/references/geracao-relatorio.md`.
+Vale **apenas para a pesquisa de concorrentes** (Skill 06). O benchmarking de
+mercado da Skill 07 continua em texto livre.
 
 ## O que é
 
-Um relatório HTML autocontido, no padrão visual da boomer (tema escuro, laranja
-`#C86F00`), que apresenta a análise dos anúncios ativos de cada concorrente na
-Biblioteca de Anúncios do Meta, do próprio prospect, e uma síntese estratégica.
-É o artefato visual que pode ser mostrado ao prospect; **não substitui** os
-blocos Lição + Evidência (esses continuam sendo produzidos — ver o agente).
+Um relatório HTML autocontido que apresenta a análise dos anúncios ativos de
+cada concorrente na Biblioteca de Anúncios do Meta, do próprio prospect, as
+respostas às perguntas estratégicas e o ranking de intensidade de mídia. É o
+artefato visual que pode ser mostrado ao prospect; **não substitui** a camada
+Lição + Evidência (`secoes/06-benchmark.md`).
 
-## Base visual e onde salvar
+## Template
 
-- Base visual (não editar): `.claude/skills/_shared/benchmark-template.html`.
-- Saída aprovada: `entrega/ativos-aprovados/benchmark/benchmark.html` do
-  prospect. Nome estável, sem versionamento — uma nova aprovação sobrescreve
-  (ver `regras-de-validacao.md`).
-- O arquivo é **autocontido** (CSS inline, sem dependências externas), para
-  abrir direto no navegador.
+Use `.claude/skills/_shared/benchmark-template.html` como esqueleto
+**exato** — não modifique a estrutura HTML, as classes CSS ou as cores. Copie
+o arquivo, substitua os placeholders entre colchetes pelo conteúdo real e
+duplique os blocos repetíveis: um `.bm-concorrente` por concorrente, um
+`.bm-cliente` para o prospect, um `.bm-ad-card` por anúncio, um par
+`.bm-sq`/`.bm-sa` por pergunta e uma `.bm-rank-row` por anunciante.
 
-## Blocos obrigatórios
+Fonte do conteúdo: `dados/benchmark-meta/analise-benchmark.md` e os
+`resumo.md` de cada anunciante.
 
-1. **Cabeçalho** — título com nome do prospect, data da pesquisa, nº de
-   concorrentes analisados (com nomes) e a fonte.
-2. **Um card por concorrente** da lista da seção 7 do briefing, contendo:
-   - `view_all_page_id`, contagem aproximada de anúncios ativos, data de coleta;
-   - **Links coletados** — a URL da Biblioteca de Anúncios de **cada** criativo
-     analisado (`facebook.com/ads/library/?id=<AD_ID>`). Link por criativo é
-     obrigatório;
-   - **Um card por criativo analisado** (2 a 3 por marca, priorizando
-     diversidade de formato), com badges e a tabela de atributos completa;
-   - **Síntese** do concorrente, com suas palavras.
-3. **Análise do próprio prospect** — no mesmo formato dos concorrentes.
-4. **Síntese Estratégica Geral** — as perguntas fixas abaixo + 1 pergunta
-   específica do prospect.
-5. **Rodapé** boomer.
+## Checklist obrigatório antes de salvar
 
-Não há bloco de ranking de barras — a intensidade de investimento é coberta
-pela pergunta 6 da síntese.
+- Todo ID de anúncio é um link que abre em nova aba:
+  `<a href="https://www.facebook.com/ads/library/?id=ID" target="_blank" rel="noopener noreferrer">ID</a>`.
+- A análise do prospect vem depois dos concorrentes e antes da síntese
+  estratégica geral.
+- O prospect está incluído no ranking de intensidade de mídia.
+- Toda tabela de anúncio inclui "Etapa de funil" (com justificativa breve).
+- Máximo de 1 catálogo (DPA) por anunciante, inclusive o prospect; anúncios de
+  catálogo usam o badge `bm-badge bm-badge-dpa`.
+- Anunciante sem anúncios ativos aparece com o bloco `bm-sem-anuncios`:
+  "Nenhum anúncio ativo encontrado no momento da pesquisa — confirmado pelo
+  Analista."
+- Quando a coleta de um anunciante tiver algo digno de nota (poucos anúncios
+  ativos, sem catálogo, forte reuso de criativo, vídeo sem quadros), inclua um
+  bloco `bm-nota` logo abaixo dos links daquele anunciante, em uma frase.
+- Cabeçalho: data da pesquisa, número de concorrentes analisados e a fonte.
 
-## Tabela de atributos por criativo
+## Perguntas estratégicas
 
-Campo | Como preencher
----|---
-Formato | Vídeo · Imagem estática · Carrossel · Catálogo (DPA)
-Descrição visual | Descrição objetiva da peça, **com suas palavras**
-Copy | Texto do anúncio **como observado**; truncar com "…" se longo
-CTA | Botão do anúncio (Comprar agora, Saiba mais, Shop Now…)
-Domínio | Domínio de destino do anúncio
-Tom | Aspiracional · Relacional · Promocional · Institucional…
-Foco | Buyer (consumidor final) · Seller (revenda/atacado)
-Etapa de funil | Topo · Meio · Fundo
-Plataformas | Facebook, Instagram, Messenger, Threads…
-Início | Data de início da veiculação, se disponível; senão `—`
-Versões | Nº de versões do criativo, se disponível; senão `—`
-Impressões | Quando disponível; ads não-políticos no Brasil geralmente `—`
-
-## Badges (classes CSS do template)
-
-- Formato: `bm-badge-video`, `bm-badge-img`, `bm-badge-carousel`, `bm-badge-dpa`
-- Foco: `bm-badge-buyer`, `bm-badge-seller`
-- Funil: `bm-badge-topo`, `bm-badge-meio`, `bm-badge-fundo`
-
-Cada card usa **1 badge de formato + 1 de foco + 1 de funil**.
-
-## Perguntas fixas da Síntese Estratégica Geral
+Se o briefing (seção 7) trouxe perguntas customizadas, use-as. Caso contrário,
+use estas 7:
 
 1. Como os concorrentes comunicam autenticidade e confiança?
-2. Quem usa posicionamento de valor vs. promoção de preço?
-3. Quais formatos predominam no mercado? (vídeo, carrossel, estático, catálogo)
-4. Há uso de figura pública, fundador ou influenciador?
-5. Como cada marca distribui seus anúncios pelo funil? (topo, meio, fundo)
-6. Quem está investindo mais intensamente? (volume de anúncios ativos)
-7. **Uma pergunta específica deste prospect**, derivada do gargalo/contexto do
-   diagnóstico (ex.: separação buyer vs. seller; dependência de influenciador;
-   ausência de topo de funil). Formular a partir do que apareceu nas Skills
-   02–05, não uma pergunta genérica.
+2. Quais concorrentes têm campanhas separadas para buyers e sellers?
+3. Quem usa posicionamento de valor vs. promoção de preço?
+4. Quais formatos predominam no mercado? (vídeo, carrossel, estático,
+   catálogo)
+5. Há uso de figura pública, fundador ou influenciador?
+6. Como cada marca distribui seus anúncios pelo funil? (topo, meio, fundo)
+7. Quem está investindo mais intensamente? (volume de anúncios ativos)
 
-## Regras
+Cada resposta compara nominalmente todos os anunciantes analisados,
+concorrentes e prospect. Não é observação genérica de mercado.
 
-- **Nunca inventar contagem de anúncios.** Sem acesso ou sem anúncios ativos,
-  usar o bloco `bm-sem-anuncios` registrando o motivo, confirmado pelo Analista.
-- **Copy é evidência observada** (transcrição do que o anúncio mostra),
-  permitida no campo Copy e truncada quando longa. Já a Descrição visual, a
-  Síntese e a Lição vão **com suas palavras** — nunca reaproveitar a copy de um
-  concorrente como recomendação de criativo para o prospect.
-- **PII** (`CLAUDE.md` raiz): a regra protege o cliente **final** do prospect.
+## Ranking de intensidade de mídia
+
+Uma `bm-rank-row` por anunciante, ordenado do maior para o menor número de
+anúncios ativos (o "Anúncios ativos (total)" de cada `resumo.md`). A barra
+(`bm-rank-bar`, `style="width:N%"`) do maior volume é 100%; as demais são
+`(volume / maior volume) × 100`, arredondado. Se a Apify não informou o total
+de algum anunciante, use o número de anúncios coletados e marque o valor com
+"≥" (ex.: "≥ 8"). Mantenha a estrutura estética do template — é a seção mais
+visual e a mais fácil de descuidar.
+
+## Regras do planejamento
+
+- **Nunca inventar contagem de anúncios** nem criativos.
+- **Copy é evidência observada**, permitida no campo Copy e truncada com "…"
+  quando longa. Descrição visual, síntese e Lição vão com suas palavras —
+  nunca reaproveitar a copy de um concorrente como recomendação de criativo
+  para o prospect.
+- **PII** (`CLAUDE.md` raiz): protege o cliente **final** do prospect.
   Influenciadores, creators e marcas que aparecem publicamente em anúncios não
   são PII e podem ser nomeados.
-- Só reportar concorrentes da lista fornecida pelo Analista.
-- Só salvar o `.html` depois da checagem manual do Analista (ver
-  `regras-de-validacao.md`).
+- Só reportar concorrentes da lista aprovada pelo analista.
+
+## Onde salvar
+
+- Modo interface (Regra 7 de `regras-de-validacao.md`): salvar em
+  `clientes/<slug>/.app/rascunhos/benchmark.html` e chamar
+  `propor_entregavel` com tipo `html`, `nome_final` `benchmark`. O app copia
+  para `entrega/ativos-aprovados/benchmark/benchmark.html` quando o analista
+  aprova.
+- Terminal: pedir a checagem no chat e, aprovado, salvar em
+  `clientes/<slug>/entrega/ativos-aprovados/benchmark/benchmark.html`.
+- Nome estável, sem versionamento: uma nova aprovação sobrescreve.
+- Arquivo autocontido (CSS inline, sem dependências externas).
