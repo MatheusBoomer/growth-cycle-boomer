@@ -260,3 +260,58 @@ def classificar_descoberta(marca: str, site: Optional[str], candidatas: List[Can
     else:
         return {"status": "confirmada", "page_id": topo.page_id, "motivo": f"Nome compatível e anuncia para {alvo}."}
     return {"status": "ambigua", "page_id": None, "motivo": motivo}
+
+
+def distancia_hamming(a: int, b: int) -> int:
+    return bin(a ^ b).count("1")
+
+
+def _duplicado(anuncio: Anuncio, midia: Midia, escolhidos: List[Selecionado]) -> bool:
+    texto = normalizar_texto(anuncio.texto)
+    for s in escolhidos:
+        if texto != normalizar_texto(s.anuncio.texto):
+            continue
+        if midia.hash is None or s.midia.hash is None:
+            continue
+        if distancia_hamming(midia.hash, s.midia.hash) <= LIMITE_HAMMING:
+            return True
+    return False
+
+
+def selecionar(
+    anuncios: List[Anuncio],
+    limite: int,
+    baixar: Callable[[Anuncio], Optional[Midia]],
+    descartar: Optional[Callable[[Anuncio, Midia], None]] = None,
+) -> Tuple[List[Selecionado], Dict[str, int]]:
+    """Mais recentes primeiro; pula duplicados, o 2º catálogo e anúncio sem mídia; para em `limite`."""
+    contagem = {"duplicados": 0, "catalogos_pulados": 0, "sem_midia": 0}
+    escolhidos: List[Selecionado] = []
+    colacoes = set()
+    tem_dpa = False
+    for a in sorted(anuncios, key=lambda x: x.inicio or "", reverse=True):
+        if len(escolhidos) >= limite:
+            break
+        if a.collation_id and a.collation_id in colacoes:
+            contagem["duplicados"] += 1
+            continue
+        if a.formato == FORMATO_DPA and tem_dpa:
+            contagem["catalogos_pulados"] += 1
+            continue
+        if not a.imagens and not a.videos:
+            contagem["sem_midia"] += 1
+            continue
+        midia = baixar(a)
+        if midia is None:
+            contagem["sem_midia"] += 1
+            continue
+        if _duplicado(a, midia, escolhidos):
+            contagem["duplicados"] += 1
+            if descartar:
+                descartar(a, midia)
+            continue
+        if a.collation_id:
+            colacoes.add(a.collation_id)
+        tem_dpa = tem_dpa or a.formato == FORMATO_DPA
+        escolhidos.append(Selecionado(a, midia))
+    return escolhidos, contagem

@@ -120,3 +120,75 @@ def test_descoberta_ambigua_por_dominio_nome_ou_sem_site():
 
 def test_descoberta_nao_encontrada():
     assert classificar_descoberta("Marca Teste", "marcateste.com.br", [])["status"] == "nao_encontrada"
+
+
+from meta_ads_selecao import Midia, distancia_hamming, selecionar  # noqa: E402
+
+HASHES = {"103": 0b0, "108": 0b1}
+
+
+def da_pagina_111():
+    return [a for a in anuncios().values() if a.page_id == "111"]
+
+
+def baixar_falso(falhas=()):
+    chamados = []
+
+    def baixar(a):
+        chamados.append(a.ad_id)
+        if a.ad_id in falhas:
+            return None
+        return Midia(arquivos=[f"midia/{a.ad_id}/imagem-1.jpg"], hash=HASHES.get(a.ad_id))
+
+    return baixar, chamados
+
+
+def test_distancia_hamming():
+    assert distancia_hamming(0b1010, 0b1010) == 0
+    assert distancia_hamming(0b1010, 0b0101) == 4
+
+
+def test_selecao_aplica_todas_as_regras():
+    baixar, chamados = baixar_falso()
+    descartados = []
+    escolhidos, contagem = selecionar(da_pagina_111(), 10, baixar, lambda a, m: descartados.append(a.ad_id))
+    assert [s.anuncio.ad_id for s in escolhidos] == ["101", "103", "104", "107"]
+    assert contagem == {"duplicados": 2, "catalogos_pulados": 1, "sem_midia": 1}
+    assert "102" not in chamados  # duplicado pelo collationID nem é baixado
+    assert "105" not in chamados  # segundo catálogo nem é baixado
+    assert "106" not in chamados  # sem URL de mídia nem é baixado
+    assert descartados == ["108"]  # mesmo texto e mesma imagem que o 103
+
+
+def test_selecao_respeita_o_limite():
+    baixar, _ = baixar_falso()
+    escolhidos, _ = selecionar(da_pagina_111(), 2, baixar)
+    assert [s.anuncio.ad_id for s in escolhidos] == ["101", "103"]
+
+
+def test_download_que_falha_e_substituido_pelo_proximo():
+    baixar, _ = baixar_falso(falhas={"103"})
+    escolhidos, contagem = selecionar(da_pagina_111(), 10, baixar)
+    assert [s.anuncio.ad_id for s in escolhidos] == ["101", "104", "107", "108"]
+    assert contagem["sem_midia"] == 2
+
+
+def test_texto_igual_com_imagem_diferente_nao_e_duplicado():
+    HASHES["108"] = (1 << 64) - 1
+    try:
+        baixar, _ = baixar_falso()
+        escolhidos, _ = selecionar(da_pagina_111(), 10, baixar)
+        assert "108" in [s.anuncio.ad_id for s in escolhidos]
+    finally:
+        HASHES["108"] = 0b1
+
+
+def test_menos_anuncios_que_o_limite():
+    baixar, _ = baixar_falso()
+    escolhidos, _ = selecionar(da_pagina_111()[:1], 10, baixar)
+    assert len(escolhidos) == 1
+
+
+def test_lista_vazia():
+    baixar, _ = baixar_falso()
+    assert selecionar([], 10, baixar) == ([], {"duplicados": 0, "catalogos_pulados": 0, "sem_midia": 0})
