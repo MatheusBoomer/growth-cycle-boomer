@@ -51,7 +51,7 @@ describe("status-planejamento.md", () => {
     e = sinalizarPronta(e, "01", { resumoDecisoes: "r", handoff: "Me mande a planilha X." }, cat, EM).estado
     e = concluirEtapa(e, "01", cat, EM)
     const md = renderStatusMd(e, cat)
-    expect(md).toContain("# Status do Planejamento — Iszi")
+    expect(md).toContain("# Status do Planejamento: Iszi")
     expect(md).toContain("| 00 · Criar prospect | ✅ | 2026-09-28 | |")
     expect(md).toContain("| 01 · Preparação de contexto | ✅ | 2026-09-28 |  |")
     expect(md).toContain("| 02 · Contextualização estratégica | ⬜ |  |  |")

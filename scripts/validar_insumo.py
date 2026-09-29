@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-scripts/validar_insumo.py — confere uma planilha de insumo contra o modelo oficial.
+scripts/validar_insumo.py: confere uma planilha de insumo contra o modelo oficial.
 
 Chamado pela interface ao receber um upload (e utilizável pelas skills no
 terminal). Nunca imprime valores de célula: mensagens citam só coluna e linha,

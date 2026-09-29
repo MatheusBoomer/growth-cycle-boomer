@@ -2,7 +2,7 @@ import type { EventoTempoReal } from "./tipos"
 
 type Ouvinte = (evento: EventoTempoReal) => void
 
-/** Pub/sub em memória por prospect — alimenta o SSE da interface. */
+/** Pub/sub em memória por prospect. Alimenta o SSE da interface. */
 export class Barramento {
   private readonly ouvintes = new Map<string, Set<Ouvinte>>()
 

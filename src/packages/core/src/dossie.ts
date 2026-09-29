@@ -32,7 +32,7 @@ export function montarDossie(e: EntradaDossie): string {
   ]
   if (e.overrides) partes.push("### Overrides deste prospect (valem sobre as regras padrão)", e.overrides)
   partes.push("### Decisões das etapas anteriores")
-  if (e.anteriores.length === 0) partes.push("Nenhuma — esta é a primeira etapa.")
+  if (e.anteriores.length === 0) partes.push("Nenhuma: esta é a primeira etapa.")
   for (const a of e.anteriores) {
     partes.push(`#### ${a.rotulo}${a.desatualizada ? " ⚠️ desatualizada (uma etapa anterior foi reaberta)" : ""}`)
     partes.push(

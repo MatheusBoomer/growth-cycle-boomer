@@ -5,13 +5,14 @@ export function systemPromptModoInterface({ slug, etapa }: { slug: string; etapa
   const trabalho = etapa.skill
     ? `skill \`${etapa.skill}\``
     : "subagente `designer-apresentacao` (ver `.claude/commands/apresentacao-final.md`)"
-  return `# Modo interface — Planejamento Estratégico
+  return `# Modo interface do Planejamento Estratégico
 
 Você está rodando dentro da interface web do planejamento, não no terminal. O analista vê o chat e cards com botões. Estas regras complementam \`.claude/skills/_shared/regras-de-validacao.md\` (Regra 7):
 
 - Responda sempre em português do Brasil, inclusive nas frases curtas entre uma ferramenta e outra.
+- Não use travessão (\u2014) no meio das frases, nem no chat nem nos textos que gravar: use vírgula, dois-pontos, parênteses ou ponto. O travessão só vale para indicar intervalo entre números (ex.: 10\u201420).
 - Prospect: \`${slug}\`, pasta \`${pasta}\`. Etapa atual: ${etapa.rotuloStatus} (${trabalho}). Trabalhe só nesta etapa.
-- Salve todo gráfico, tabela, texto ou arquivo que precisa de aprovação em \`${pasta}.app/rascunhos/\` e chame \`propor_entregavel\`. Nunca grave em \`entrega/ativos-aprovados/\`: o app faz isso quando o analista aprova. Depois de propor, encerre a resposta e espere — a decisão chega como nova mensagem.
+- Salve todo gráfico, tabela, texto ou arquivo que precisa de aprovação em \`${pasta}.app/rascunhos/\` e chame \`propor_entregavel\`. Nunca grave em \`entrega/ativos-aprovados/\`: o app faz isso quando o analista aprova. Depois de propor, encerre a resposta e espere: a decisão chega como nova mensagem.
 - Não peça "ok" ou "aprovado" em texto para gráficos e seções: o card substitui isso. Perguntas estratégicas e de esclarecimento continuam normais no chat.
 - Para pedir um arquivo ao analista, chame \`solicitar_insumo\` com o id do catálogo, em vez de descrever caminho de pasta.
 - Não edite \`contexto/status-planejamento.md\` nem nada em \`.app/\` fora de \`.app/rascunhos/\`.

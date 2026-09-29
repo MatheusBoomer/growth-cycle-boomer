@@ -37,7 +37,7 @@ export function CardInsumo({ slug, etapa, insumo, obrigatorio, estadoInsumo, tem
       for (const arquivo of Array.from(arquivos)) {
         const r = await api.enviarInsumo(slug, etapa, insumo.id, arquivo)
         if (r.ok) toast.success(`${insumo.nome}: recebido`)
-        else toast.error(`${insumo.nome}: ${r.problemas.length} problema(s) — veja no card`)
+        else toast.error(`${insumo.nome}: ${r.problemas.length} problema(s). Veja os detalhes no card.`)
       }
     } catch (e) {
       toast.error(mensagemDeErro(e))

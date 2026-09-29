@@ -11,11 +11,11 @@ const ICONE: Record<StatusEtapa, string> = {
 }
 
 const PROXIMO_PADRAO =
-  "(a skill mais recente concluída reescreve este bloco com o que falta\npreparar para a etapa seguinte — mesmo pedido apresentado no chat)"
+  "(a skill mais recente concluída reescreve este bloco com o que falta\npreparar para a etapa seguinte, com o mesmo pedido apresentado no chat)"
 
 export function renderStatusMd(estado: Estado, catalogo: Catalogo): string {
   const linhas = [
-    `# Status do Planejamento — ${estado.prospect.nome}`,
+    `# Status do Planejamento: ${estado.prospect.nome}`,
     "",
     "Gerado pela interface a partir de `.app/estado.json` a cada mudança de etapa",
     "(ver Regra 6 em `.claude/skills/_shared/regras-de-validacao.md`). Não editar manualmente.",

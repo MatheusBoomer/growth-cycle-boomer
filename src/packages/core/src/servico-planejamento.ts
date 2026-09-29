@@ -347,7 +347,7 @@ export class ServicoPlanejamento {
       const cat = etapaDoCatalogo(this.catalogo, etapa)
       const resumo = novo.etapas[etapa].resumoDecisoes
       if (resumo && cat.skill) {
-        await this.arm.gravarTexto(slug, `contexto/decisoes/${cat.skill}.md`, `# Decisões — ${cat.rotuloStatus}\n\n${resumo.trim()}\n`)
+        await this.arm.gravarTexto(slug, `contexto/decisoes/${cat.skill}.md`, `# Decisões da etapa ${cat.rotuloStatus}\n\n${resumo.trim()}\n`)
       }
       return { estado: novo, resultado: undefined }
     })

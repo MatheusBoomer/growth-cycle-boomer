@@ -2,7 +2,7 @@
  * O app só existe em 127.0.0.1, mas o navegador do analista visita outros sites: um POST
  * "simples" (text/plain) de qualquer página chegaria às rotas e, pelo agente, rodaria código.
  * Regras: Host precisa ser local (contra DNS rebinding) e métodos que mudam estado só da
- * própria origem — ou sem Origin nenhum (servidor MCP e ferramentas locais em Node).
+ * própria origem, ou sem Origin nenhum (servidor MCP e ferramentas locais em Node).
  */
 const HOSTS_LOCAIS = new Set(["127.0.0.1", "localhost", "[::1]"])
 

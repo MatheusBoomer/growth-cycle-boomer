@@ -97,7 +97,7 @@ export class ServicoTurnos {
   /** Vaga do turno por prospect. etapa null = reservada enquanto a fila é consultada. */
   private readonly ativos = new Map<string, { etapa: EtapaId | null; controle: AbortController }>()
   private readonly tokens = new Map<string, { slug: string; etapa: EtapaId }>()
-  /** Trabalho em andamento por prospect (turnos e disparos da fila) — base do aguardarOcioso. */
+  /** Trabalho em andamento por prospect (turnos e disparos da fila), base do aguardarOcioso. */
   private readonly pendentes = new Map<string, Set<Promise<void>>>()
 
   constructor(d: DependenciasTurnos) {

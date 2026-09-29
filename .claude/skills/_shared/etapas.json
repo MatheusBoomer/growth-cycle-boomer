@@ -18,7 +18,7 @@
       "numero": "02",
       "titulo": "Contextualização estratégica",
       "rotuloStatus": "02 · Contextualização estratégica",
-      "descricao": "Constrói o entendimento do negócio — modelo, produto, público, posicionamento, hipóteses e gargalos — antes de qualquer número.",
+      "descricao": "Constrói o entendimento do negócio (modelo, produto, público, posicionamento, hipóteses e gargalos) antes de qualquer número.",
       "skill": "02-contextualizacao-estrategica",
       "insumos": []
     },
@@ -128,7 +128,7 @@
     },
     {
       "id": "historico-mensal",
-      "nome": "Histórico mensal — últimos 12 meses",
+      "nome": "Histórico mensal dos últimos 12 meses",
       "descricao": "Investimento, receita captada e aprovada, ROAS, sessões e conversão, quebrados por Google e Meta.",
       "instrucao": "Preencha só as colunas marcadas como “Preench. Manual”; as de fórmula calculam sozinhas.",
       "tipo": "arquivo",
