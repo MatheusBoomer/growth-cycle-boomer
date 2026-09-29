@@ -1,0 +1,102 @@
+[
+  {
+    "adArchiveID": "101", "pageID": "111", "pageName": "Marca Teste Oficial",
+    "collationID": "c1", "collationCount": 3, "isActive": true,
+    "publisherPlatform": ["FACEBOOK", "INSTAGRAM"],
+    "startDateFormatted": "2026-09-20T07:00:00.000Z",
+    "impressionsWithIndex": {"impressionsText": null, "impressionsIndex": -1},
+    "snapshot": {
+      "pageName": "Marca Teste Oficial", "pageLikeCount": 50000, "pageCategories": ["Loja de roupas"],
+      "body": {"text": "Vídeo novo da coleção"}, "title": "Coleção Primavera", "caption": "MARCATESTE.COM.BR",
+      "ctaText": "Comprar agora", "linkUrl": "https://www.marcateste.com.br/colecao", "displayFormat": "VIDEO",
+      "images": [], "cards": [],
+      "videos": [{"videoHdUrl": "https://cdn.test/v101.mp4", "videoSdUrl": "https://cdn.test/v101-sd.mp4", "videoPreviewImageUrl": "https://cdn.test/v101.jpg"}]
+    }
+  },
+  {
+    "adArchiveID": "102", "pageID": "111", "pageName": "Marca Teste Oficial",
+    "collationID": "c1", "collationCount": 3, "isActive": true,
+    "publisherPlatform": ["FACEBOOK"],
+    "startDateFormatted": "2026-09-19T07:00:00.000Z",
+    "snapshot": {
+      "body": {"text": "Vídeo novo da coleção"}, "ctaText": "Comprar agora", "linkUrl": "https://www.marcateste.com.br/colecao",
+      "displayFormat": "VIDEO", "images": [], "cards": [],
+      "videos": [{"videoHdUrl": "https://cdn.test/v102.mp4", "videoPreviewImageUrl": "https://cdn.test/v102.jpg"}]
+    }
+  },
+  {
+    "adArchiveID": "103", "pageID": "111", "pageName": "Marca Teste Oficial",
+    "collationID": "c3", "collationCount": 1,
+    "publisherPlatform": ["INSTAGRAM"],
+    "startDateFormatted": "2026-09-18T07:00:00.000Z",
+    "snapshot": {
+      "body": {"text": "Promo de primavera"}, "ctaText": "Saiba mais", "linkUrl": "https://marcateste.com.br/promo",
+      "displayFormat": "IMAGE", "cards": [], "videos": [],
+      "images": [{"originalImageUrl": "https://cdn.test/i103.jpg", "resizedImageUrl": "https://cdn.test/i103-p.jpg"}]
+    }
+  },
+  {
+    "adArchiveID": "104", "pageID": "111", "pageName": "Marca Teste Oficial",
+    "collationID": "c4", "collationCount": 1,
+    "publisherPlatform": ["FACEBOOK", "INSTAGRAM"],
+    "startDateFormatted": "2026-09-17T07:00:00.000Z",
+    "snapshot": {
+      "body": {"text": "{{product.name}}"}, "ctaText": "Comprar agora", "displayFormat": "DPA", "images": [], "videos": [],
+      "cards": [
+        {"title": "Camisa", "linkUrl": "https://marcateste.com.br/p/1", "originalImageUrl": "https://cdn.test/c104a.jpg"},
+        {"title": "Calça", "linkUrl": "https://marcateste.com.br/p/2", "originalImageUrl": "https://cdn.test/c104b.jpg"},
+        {"title": "Saia", "linkUrl": "https://marcateste.com.br/p/3", "originalImageUrl": "https://cdn.test/c104c.jpg"},
+        {"title": "Bota", "linkUrl": "https://marcateste.com.br/p/4", "originalImageUrl": "https://cdn.test/c104d.jpg"}
+      ]
+    }
+  },
+  {
+    "adArchiveID": "105", "pageID": "111", "pageName": "Marca Teste Oficial",
+    "collationID": "c5",
+    "startDateFormatted": "2026-09-16T07:00:00.000Z",
+    "snapshot": {
+      "body": {"text": "{{product.name}}"}, "displayFormat": "DPA", "images": [], "videos": [],
+      "cards": [{"title": "Tênis", "originalImageUrl": "https://cdn.test/c105a.jpg"}, {"title": "Meia", "originalImageUrl": "https://cdn.test/c105b.jpg"}]
+    }
+  },
+  {
+    "adArchiveID": "106", "pageID": "111", "pageName": "Marca Teste Oficial",
+    "collationID": "c6",
+    "startDateFormatted": "2026-09-15T07:00:00.000Z",
+    "snapshot": {"body": {"text": "Sem mídia"}, "displayFormat": "IMAGE", "images": [], "videos": [], "cards": []}
+  },
+  {
+    "ad_archive_id": "107", "page_id": "111", "page_name": "Marca Teste Oficial",
+    "collation_id": "c7", "collation_count": 2,
+    "publisher_platform": ["facebook", "threads"],
+    "start_date": 1789387200,
+    "snapshot": {
+      "body": "Carrossel de looks", "cta_text": "Ver mais", "link_url": "https://loja.marcateste.com.br/looks",
+      "display_format": "CAROUSEL", "images": [], "videos": [],
+      "cards": [
+        {"body": "Look 1", "original_image_url": "https://cdn.test/c107a.jpg"},
+        {"body": "Look 2", "resized_image_url": "https://cdn.test/c107b.jpg"}
+      ]
+    }
+  },
+  {
+    "adArchiveID": "108", "pageID": "111", "pageName": "Marca Teste Oficial",
+    "collationID": "c8",
+    "startDateFormatted": "2026-09-13T07:00:00.000Z",
+    "snapshot": {
+      "body": {"text": "Promo de Primavera!"}, "ctaText": "Saiba mais", "linkUrl": "https://marcateste.com.br/promo",
+      "displayFormat": "IMAGE", "cards": [], "videos": [],
+      "images": [{"originalImageUrl": "https://cdn.test/i108.jpg"}]
+    }
+  },
+  {
+    "adArchiveID": "201", "pageID": "222", "pageName": "Marca Teste Revenda",
+    "collationID": "c201",
+    "startDateFormatted": "2026-09-12T07:00:00.000Z",
+    "snapshot": {
+      "pageLikeCount": 900, "pageCategories": ["Atacado"],
+      "body": {"text": "Revenda"}, "linkUrl": "https://revenda.example.com/", "displayFormat": "IMAGE",
+      "videos": [], "cards": [], "images": [{"originalImageUrl": "https://cdn.test/i201.jpg"}]
+    }
+  }
+]

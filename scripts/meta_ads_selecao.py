@@ -1,0 +1,262 @@
+#!/usr/bin/env python3
+"""
+scripts/meta_ads_selecao.py: normaliza os anúncios devolvidos pela Apify
+(ator apify/facebook-ads-scraper), agrupa páginas na descoberta e aplica as
+regras mecânicas de seleção da Skill 06 (até 10 criativos, no máximo 1
+catálogo, sem duplicados, sem anúncio sem mídia).
+
+Sem rede e sem disco: o download entra por uma função injetada, o que deixa
+tudo testável. Usado por scripts/coleta_meta_ads.py.
+"""
+
+from __future__ import annotations
+
+import re
+import unicodedata
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from typing import Any, Callable, Dict, List, Optional, Tuple
+from urllib.parse import urlparse
+
+FORMATO_VIDEO = "Vídeo"
+FORMATO_IMAGEM = "Imagem estática"
+FORMATO_CARROSSEL = "Carrossel"
+FORMATO_DPA = "Catálogo (DPA)"
+
+PLATAFORMAS = {
+    "FACEBOOK": "Facebook",
+    "INSTAGRAM": "Instagram",
+    "MESSENGER": "Messenger",
+    "AUDIENCE_NETWORK": "Audience Network",
+    "THREADS": "Threads",
+    "WHATSAPP": "WhatsApp",
+}
+SEGUNDO_NIVEL = {"com", "net", "org", "gov", "edu", "art", "blog", "ind", "eco", "app", "co"}
+LIMITE_HAMMING = 5
+
+
+@dataclass
+class Anuncio:
+    ad_id: str
+    page_id: str
+    pagina: str
+    formato: str
+    texto: str = ""
+    titulo: str = ""
+    cta: str = ""
+    dominio: Optional[str] = None
+    plataformas: List[str] = field(default_factory=list)
+    inicio: Optional[str] = None
+    versoes: Optional[int] = None
+    impressoes: Optional[str] = None
+    collation_id: Optional[str] = None
+    imagens: List[str] = field(default_factory=list)
+    videos: List[Dict[str, Optional[str]]] = field(default_factory=list)
+    curtidas_pagina: Optional[int] = None
+    categorias_pagina: List[str] = field(default_factory=list)
+
+    @property
+    def link(self) -> str:
+        return f"https://www.facebook.com/ads/library/?id={self.ad_id}"
+
+
+@dataclass
+class Midia:
+    arquivos: List[str]
+    hash: Optional[int] = None
+    quadros_falharam: bool = False
+
+
+@dataclass
+class Candidata:
+    page_id: str
+    nome: str
+    curtidas: Optional[int]
+    categorias: List[str]
+    dominios: List[str]
+    anuncios: int
+
+
+@dataclass
+class Selecionado:
+    anuncio: Anuncio
+    midia: Midia
+
+
+def campo(d: Any, *nomes: str) -> Any:
+    """Primeiro valor não vazio entre as chaves (a Apify já usou camelCase e snake_case)."""
+    if not isinstance(d, dict):
+        return None
+    for nome in nomes:
+        valor = d.get(nome)
+        if valor not in (None, "", [], {}):
+            return valor
+    return None
+
+
+def sem_acento(texto: str) -> str:
+    return unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode("ascii")
+
+
+def slug_marca(nome: str) -> str:
+    s = re.sub(r"[^a-z0-9]+", "-", sem_acento(nome).lower()).strip("-")
+    return s or "marca"
+
+
+def normalizar_texto(texto: Optional[str]) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", sem_acento(texto or "").lower()).strip()
+
+
+def nome_compativel(marca: str, pagina: str) -> bool:
+    a = normalizar_texto(marca).replace(" ", "")
+    b = normalizar_texto(pagina).replace(" ", "")
+    return bool(a) and bool(b) and (a in b or b in a)
+
+
+def dominio_base(valor: Optional[str]) -> Optional[str]:
+    if not valor or not isinstance(valor, str):
+        return None
+    v = valor.strip().lower()
+    if "://" not in v:
+        v = "http://" + v
+    try:
+        host = urlparse(v).hostname or ""
+    except ValueError:
+        return None
+    if host.startswith("www."):
+        host = host[4:]
+    partes = [p for p in host.split(".") if p]
+    if len(partes) < 2 or " " in host:
+        return None
+    if len(partes) >= 3 and len(partes[-1]) == 2 and partes[-2] in SEGUNDO_NIVEL:
+        return ".".join(partes[-3:])
+    return ".".join(partes[-2:])
+
+
+def _texto(valor: Any) -> str:
+    if isinstance(valor, dict):
+        valor = campo(valor, "text", "markup")
+    return valor.strip() if isinstance(valor, str) else ""
+
+
+def _url_imagem(d: Any) -> Optional[str]:
+    return campo(d, "originalImageUrl", "original_image_url", "resizedImageUrl", "resized_image_url")
+
+
+def _video(d: Any) -> Optional[Dict[str, Optional[str]]]:
+    url = campo(d, "videoHdUrl", "video_hd_url", "videoSdUrl", "video_sd_url")
+    if not url:
+        return None
+    return {"url": url, "capa": campo(d, "videoPreviewImageUrl", "video_preview_image_url")}
+
+
+def _data_inicio(bruto: Dict[str, Any]) -> Optional[str]:
+    formatada = campo(bruto, "startDateFormatted", "start_date_formatted")
+    if isinstance(formatada, str) and len(formatada) >= 10:
+        return formatada[:10]
+    epoch = campo(bruto, "startDate", "start_date")
+    if isinstance(epoch, (int, float)):
+        return datetime.fromtimestamp(epoch, tz=timezone.utc).strftime("%Y-%m-%d")
+    return None
+
+
+def _inteiro(valor: Any) -> Optional[int]:
+    try:
+        return int(valor)
+    except (TypeError, ValueError):
+        return None
+
+
+def normalizar_anuncio(bruto: Dict[str, Any]) -> Optional[Anuncio]:
+    ad_id = campo(bruto, "adArchiveID", "ad_archive_id", "adArchiveId")
+    if not ad_id:
+        return None
+    snap = campo(bruto, "snapshot") or {}
+    cards = [c for c in (campo(snap, "cards") or []) if isinstance(c, dict)]
+    imagens = [u for u in (_url_imagem(i) for i in (campo(snap, "images") or [])) if u]
+    videos = [v for v in (_video(i) for i in (campo(snap, "videos") or [])) if v]
+    for card in cards[:3]:
+        v = _video(card)
+        if v:
+            videos.append(v)
+        else:
+            u = _url_imagem(card)
+            if u:
+                imagens.append(u)
+
+    exibicao = str(campo(snap, "displayFormat", "display_format") or "").upper()
+    if exibicao == "DPA":
+        formato = FORMATO_DPA
+    elif exibicao == "CAROUSEL" or (exibicao != "VIDEO" and len(cards) >= 2):
+        formato = FORMATO_CARROSSEL
+    elif exibicao == "VIDEO" or videos:
+        formato = FORMATO_VIDEO
+    else:
+        formato = FORMATO_IMAGEM
+
+    primeiro_card = cards[0] if cards else {}
+    dominio = (
+        dominio_base(campo(snap, "linkUrl", "link_url"))
+        or dominio_base(campo(snap, "caption"))
+        or dominio_base(campo(primeiro_card, "linkUrl", "link_url"))
+    )
+    impressoes = campo(bruto, "impressionsWithIndex", "impressions_with_index")
+    plataformas = [
+        PLATAFORMAS.get(str(p).upper(), str(p).title())
+        for p in (campo(bruto, "publisherPlatform", "publisher_platform") or [])
+    ]
+    categorias = [c for c in (campo(snap, "pageCategories", "page_categories") or []) if isinstance(c, str)]
+    collation = campo(bruto, "collationID", "collation_id", "collationId")
+    return Anuncio(
+        ad_id=str(ad_id),
+        page_id=str(campo(bruto, "pageID", "page_id", "pageId") or campo(snap, "pageId", "page_id") or ""),
+        pagina=str(campo(bruto, "pageName", "page_name") or campo(snap, "pageName", "page_name") or ""),
+        formato=formato,
+        texto=_texto(campo(snap, "body")) or _texto(campo(primeiro_card, "body")),
+        titulo=_texto(campo(snap, "title")) or _texto(campo(primeiro_card, "title")),
+        cta=_texto(campo(snap, "ctaText", "cta_text")) or _texto(campo(primeiro_card, "ctaText", "cta_text")),
+        dominio=dominio,
+        plataformas=plataformas,
+        inicio=_data_inicio(bruto),
+        versoes=_inteiro(campo(bruto, "collationCount", "collation_count")),
+        impressoes=campo(impressoes, "impressionsText", "impressions_text"),
+        collation_id=str(collation) if collation else None,
+        imagens=imagens,
+        videos=videos,
+        curtidas_pagina=_inteiro(campo(snap, "pageLikeCount", "page_like_count")),
+        categorias_pagina=categorias,
+    )
+
+
+def agrupar_paginas(anuncios: List[Anuncio]) -> List[Candidata]:
+    grupos: Dict[str, Candidata] = {}
+    for a in anuncios:
+        if not a.page_id:
+            continue
+        c = grupos.get(a.page_id)
+        if c is None:
+            c = grupos[a.page_id] = Candidata(a.page_id, a.pagina, a.curtidas_pagina, list(a.categorias_pagina), [], 0)
+        c.anuncios += 1
+        if a.dominio and a.dominio not in c.dominios:
+            c.dominios.append(a.dominio)
+        if c.curtidas is None and a.curtidas_pagina is not None:
+            c.curtidas = a.curtidas_pagina
+        if not c.categorias and a.categorias_pagina:
+            c.categorias = list(a.categorias_pagina)
+    return sorted(grupos.values(), key=lambda c: (c.anuncios, c.curtidas or 0), reverse=True)
+
+
+def classificar_descoberta(marca: str, site: Optional[str], candidatas: List[Candidata]) -> Dict[str, Any]:
+    if not candidatas:
+        return {"status": "nao_encontrada", "page_id": None, "motivo": "Nenhuma página anunciando com esse nome."}
+    topo = candidatas[0]
+    alvo = dominio_base(site)
+    if not alvo:
+        motivo = "Site da marca não informado: não dá para confirmar pelo domínio."
+    elif not nome_compativel(marca, topo.nome):
+        motivo = f'A página com mais anúncios ("{topo.nome}") não tem o nome da marca.'
+    elif alvo not in topo.dominios:
+        motivo = f"A página com mais anúncios não anuncia para {alvo}."
+    else:
+        return {"status": "confirmada", "page_id": topo.page_id, "motivo": f"Nome compatível e anuncia para {alvo}."}
+    return {"status": "ambigua", "page_id": None, "motivo": motivo}
