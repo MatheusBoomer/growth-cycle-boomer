@@ -114,3 +114,21 @@ export function pedirAjuste(estado: Estado, id: string, texto: string, em: strin
     atualizadoEm: em,
   }
 }
+
+/** O HTML que o visualizador mostra para um nome final: a versão não substituída mais recente (pendente ou aprovada). */
+export function entregavelVisivel(entregaveis: Entregavel[], etapa: EtapaId, nomeFinal: string): Entregavel | null {
+  let visivel: Entregavel | null = null
+  for (const e of entregaveis) {
+    if (e.tipo !== "html" || e.etapa !== etapa || e.nomeFinal !== nomeFinal || e.status === "substituido") continue
+    if (!visivel || e.criadoEm > visivel.criadoEm) visivel = e
+  }
+  return visivel
+}
+
+/** Nome final do HTML que acabou de chegar pendente na etapa aberta. null na primeira carga (`antes` = null). */
+export function htmlParaAbrir(antes: Entregavel[] | null, depois: Entregavel[], etapa: EtapaId): string | null {
+  if (antes === null) return null
+  const conhecidos = new Set(antes.map((e) => e.id))
+  const novo = depois.find((e) => !conhecidos.has(e.id) && e.tipo === "html" && e.status === "pendente" && e.etapa === etapa)
+  return novo ? novo.nomeFinal : null
+}

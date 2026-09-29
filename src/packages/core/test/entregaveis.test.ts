@@ -4,10 +4,13 @@ import {
   destinoAprovado,
   normalizarNomeFinal,
   pedirAjuste,
+  entregavelVisivel,
+  htmlParaAbrir,
   proporEntregavel,
 } from "../src/entregaveis"
 import { ErroEntrada, TransicaoInvalida } from "../src/erros"
 import { estadoInicial } from "../src/maquina-estados"
+import type { Entregavel } from "../src/tipos"
 
 const EM = "2026-09-28T10:00:00.000Z"
 const base = () => estadoInicial({ slug: "x", nome: "X", site: null }, EM)
@@ -84,5 +87,54 @@ describe("ciclo do entregável", () => {
     e = pedirAjuste(e, "p1", "trocar para barras", EM)
     expect(e.entregaveis[0]).toMatchObject({ status: "pendente", ajustePedido: "trocar para barras" })
     expect(() => pedirAjuste(e, "p1", "   ", EM)).toThrow(ErroEntrada)
+  })
+})
+
+const html = (id: string, over: Partial<Entregavel> = {}): Entregavel => ({
+  id,
+  etapa: "06",
+  tipo: "html",
+  titulo: "Benchmark",
+  arquivoRascunho: `.app/propostas/${id}.html`,
+  nomeFinal: "benchmark",
+  status: "pendente",
+  ajustePedido: null,
+  criadoEm: `2026-09-29T10:00:0${id.slice(-1)}.000Z`,
+  decididoEm: null,
+  ...over,
+})
+
+describe("entregável visível no visualizador", () => {
+  it("mostra a versão não substituída mais recente", () => {
+    const lista = [html("e1", { status: "substituido" }), html("e2", { status: "aprovado" }), html("e3")]
+    expect(entregavelVisivel(lista, "06", "benchmark")?.id).toBe("e3")
+  })
+  it("mostra o aprovado quando não há pendente", () => {
+    const lista = [html("e1", { status: "substituido" }), html("e2", { status: "aprovado" })]
+    expect(entregavelVisivel(lista, "06", "benchmark")?.id).toBe("e2")
+  })
+  it("ignora a seção de texto com o mesmo nome final do HTML", () => {
+    const lista = [html("e1"), html("e2", { tipo: "secao", arquivoRascunho: ".app/propostas/e2.md" })]
+    expect(entregavelVisivel(lista, "06", "benchmark")?.id).toBe("e1")
+  })
+  it("devolve null quando o entregável sumiu ou é de outra etapa", () => {
+    expect(entregavelVisivel([html("e1", { status: "substituido" })], "06", "benchmark")).toBeNull()
+    expect(entregavelVisivel([html("e1")], "05", "benchmark")).toBeNull()
+    expect(entregavelVisivel([], "06", "outro")).toBeNull()
+  })
+})
+
+describe("abertura automática do visualizador", () => {
+  it("não abre na primeira carga", () => {
+    expect(htmlParaAbrir(null, [html("e1")], "06")).toBeNull()
+  })
+  it("abre quando chega um HTML pendente novo da etapa aberta", () => {
+    expect(htmlParaAbrir([], [html("e1")], "06")).toBe("benchmark")
+  })
+  it("ignora HTML já conhecido, de outra etapa, aprovado ou outro tipo", () => {
+    expect(htmlParaAbrir([html("e1")], [html("e1")], "06")).toBeNull()
+    expect(htmlParaAbrir([], [html("e1")], "05")).toBeNull()
+    expect(htmlParaAbrir([], [html("e1", { status: "aprovado" })], "06")).toBeNull()
+    expect(htmlParaAbrir([], [html("e1", { tipo: "secao", arquivoRascunho: ".app/propostas/e1.md" })], "06")).toBeNull()
   })
 })
