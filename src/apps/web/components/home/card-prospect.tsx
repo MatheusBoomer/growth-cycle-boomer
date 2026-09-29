@@ -25,15 +25,16 @@ export function CardProspect({ prospect: p }: { prospect: ResumoProspect }) {
   const concluido = p.etapaAtual === null
 
   return (
-    <Card>
+    // O link do nome se estica sobre o card inteiro (::after); só o menu ⋯ fica por cima dele.
+    <Card className="hover:bg-muted/40 has-[a:focus-visible]:ring-ring relative transition-colors has-[a:focus-visible]:ring-2">
       <CardHeader>
         <CardTitle>
-          <Link href={`/prospects/${p.slug}`} className="hover:underline">
+          <Link href={`/prospects/${p.slug}`} className="after:absolute after:inset-0 after:rounded-[inherit] focus-visible:outline-none">
             {p.nome}
           </Link>
         </CardTitle>
         <CardDescription>{p.rotuloEtapaAtual}</CardDescription>
-        <CardAction>
+        <CardAction className="relative z-10">
           <DropdownMenu>
             <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label={`Ações de ${p.nome}`} />}>
               <EllipsisIcon />
