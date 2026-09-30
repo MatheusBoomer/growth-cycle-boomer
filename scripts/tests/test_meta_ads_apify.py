@@ -124,3 +124,15 @@ def test_tempo_esgotado():
     sessao = SessaoFalsa(criado(), [rodando("RUNNING")] * 5)
     with pytest.raises(ErroColeta, match="10 minutos"):
         cliente(sessao, relogio).executar({})
+
+
+def test_limite_de_tempo_por_chamada():
+    tempo = {"t": 0.0}
+
+    def relogio():
+        tempo["t"] += 100.0
+        return tempo["t"]
+
+    sessao = SessaoFalsa(criado(), [rodando("RUNNING")] * 5)
+    with pytest.raises(ErroColeta, match="2 minutos"):
+        cliente(sessao, relogio).executar({}, limite_segundos=150)

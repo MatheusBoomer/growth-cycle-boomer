@@ -112,16 +112,17 @@ class ClienteApify:
         self._checar(r)
         return r.json()
 
-    def executar(self, entrada: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def executar(self, entrada: Dict[str, Any], limite_segundos: Optional[float] = None) -> List[Dict[str, Any]]:
+        limite = limite_segundos if limite_segundos is not None else self.limite_segundos
         dados = self._pedir("post", f"{BASE}/acts/{ATOR}/runs", json=entrada, timeout=60)["data"]
         run_id, dataset = dados["id"], dados["defaultDatasetId"]
         status = dados.get("status")
         inicio = self.relogio()
         espera = 2.0
         while status not in STATUS_FINAIS:
-            if self.relogio() - inicio > self.limite_segundos:
+            if self.relogio() - inicio > limite:
                 raise ErroColeta(
-                    f"A coleta passou de {int(self.limite_segundos // 60)} minutos. A execução {run_id} "
+                    f"A coleta passou de {int(limite // 60)} minutos. A execução {run_id} "
                     "continua visível em console.apify.com; tente de novo."
                 )
             self.dormir(espera)

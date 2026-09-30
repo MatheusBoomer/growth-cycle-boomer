@@ -52,6 +52,10 @@ from meta_ads_selecao import (
 
 AMOSTRA_DESCOBERTA = 30
 AMOSTRA_COLETA = 40
+# As duas chamadas de `coletar` somadas ficam abaixo dos 10 min do Bash do agente, com folga
+# para os downloads: o agente recebe a mensagem de tempo esgotado em vez de um timeout mudo.
+LIMITE_CONTAGEM_S = 150
+LIMITE_COLETA_S = 330
 
 
 def _buscar(termo: str, cliente: Any):
@@ -102,7 +106,7 @@ def notas_de_coleta(total: Optional[int], anuncios: List[Anuncio], selecionados:
         return []
     notas: List[str] = []
     if total is None:
-        notas.append("A Apify não informou o total de anúncios ativos; use o número de anúncios coletados como mínimo no ranking.")
+        notas.append("A Apify não informou o total de anúncios ativos; use o número de anúncios da amostra como mínimo no ranking.")
     elif total < 10:
         notas.append(f"Só {total} anúncios ativos no momento da coleta.")
     if contagem["duplicados"]:
@@ -120,7 +124,7 @@ def _data_br(iso: Optional[str]) -> str:
     return f"{iso[8:10]}/{iso[5:7]}/{iso[0:4]}" if iso and len(iso) >= 10 else "—"
 
 
-def escrever_resumo(marca: str, pagina: str, page_id: str, total: Optional[int], hoje: date,
+def escrever_resumo(marca: str, pagina: str, page_id: str, total: Optional[int], na_amostra: int, hoje: date,
                     selecionados: List[Selecionado], notas: List[str], pasta: Path) -> str:
     l = [
         f"# Coleta Meta Ads — {marca}",
@@ -128,6 +132,7 @@ def escrever_resumo(marca: str, pagina: str, page_id: str, total: Optional[int],
         f"- Página: {pagina} (page_id {page_id})",
         f"- Página na Biblioteca: {url_pagina(page_id)}",
         f"- Anúncios ativos (total): {total if total is not None else 'não informado pela Apify'}",
+        f"- Anúncios da página na amostra: {na_amostra} (limite {AMOSTRA_COLETA})",
         f"- Coletado em: {hoje.strftime('%d/%m/%Y')}",
         f"- Anúncios selecionados: {len(selecionados)}",
         f"- Pasta da coleta (os caminhos de mídia abaixo são relativos a ela): {pasta}",
@@ -171,23 +176,32 @@ def coletar(page_id: str, marca: str, saida: Path, limite: int, cliente: Any, se
     if not ffmpeg_disponivel():
         raise ErroColeta("ffmpeg não encontrado. Instale com: brew install ffmpeg")
     pasta = saida / slug_marca(marca)
-    shutil.rmtree(pasta / "midia", ignore_errors=True)
     pasta.mkdir(parents=True, exist_ok=True)
     try:
-        total = extrair_total(cliente.executar(entrada_ator(url_pagina(page_id), 1, apenas_total=True)))
+        total = extrair_total(
+            cliente.executar(entrada_ator(url_pagina(page_id), 1, apenas_total=True), limite_segundos=LIMITE_CONTAGEM_S)
+        )
     except ErroColeta:
         total = None
-    brutos = cliente.executar(entrada_ator(url_pagina(page_id), AMOSTRA_COLETA))
+    brutos = cliente.executar(entrada_ator(url_pagina(page_id), AMOSTRA_COLETA), limite_segundos=LIMITE_COLETA_S)
     anuncios = [a for a in (normalizar_anuncio(b) for b in brutos if isinstance(b, dict)) if a]
     da_pagina = [a for a in anuncios if a.page_id == str(page_id)]
     if da_pagina:
         anuncios = da_pagina
+    # Só agora, com a coleta nova em mãos, a mídia da coleta anterior sai.
+    shutil.rmtree(pasta / "midia", ignore_errors=True)
     selecionados, contagem = selecionar(
         anuncios,
         limite,
         lambda a: baixar_midia(a, pasta, sessao),
         lambda a, _m: apagar_midia(pasta, a),
     )
+    if anuncios and not selecionados:
+        raise ErroColeta(
+            f"A página tem {len(anuncios)} anúncios na amostra, mas nenhuma mídia pôde ser baixada "
+            "(links do Facebook expirados ou recusados). Não registre como \"sem anúncios\": "
+            "tente de novo em alguns minutos e, se repetir, avise o analista."
+        )
     notas = notas_de_coleta(total, anuncios, selecionados, contagem)
     pagina = anuncios[0].pagina if anuncios else marca
     (pasta / "bruto.json").write_text(json.dumps(brutos, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -195,7 +209,7 @@ def coletar(page_id: str, marca: str, saida: Path, limite: int, cliente: Any, se
         json.dumps([_para_json(s) for s in selecionados], ensure_ascii=False, indent=2), encoding="utf-8"
     )
     (pasta / "resumo.md").write_text(
-        escrever_resumo(marca, pagina, str(page_id), total, hoje, selecionados, notas, pasta), encoding="utf-8"
+        escrever_resumo(marca, pagina, str(page_id), total, len(anuncios), hoje, selecionados, notas, pasta), encoding="utf-8"
     )
     return {"pasta": str(pasta), "total": total, "selecionados": len(selecionados), "notas": notas}
 

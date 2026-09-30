@@ -68,15 +68,17 @@ Uma `bm-rank-row` por anunciante, ordenado do maior para o menor número de
 anúncios ativos (o "Anúncios ativos (total)" de cada `resumo.md`). A barra
 (`bm-rank-bar`, `style="width:N%"`) do maior volume é 100%; as demais são
 `(volume / maior volume) × 100`, arredondado. Se a Apify não informou o total
-de algum anunciante, use o número de anúncios coletados e marque o valor com
-"≥" (ex.: "≥ 8"). Mantenha a estrutura estética do template — é a seção mais
+de algum anunciante, use o "Anúncios da página na amostra" do `resumo.md` e
+marque o valor com "≥" (ex.: "≥ 40"). Mantenha a estrutura estética do template — é a seção mais
 visual e a mais fácil de descuidar.
 
 ## Regras do planejamento
 
 - **Nunca inventar contagem de anúncios** nem criativos.
 - **Copy é evidência observada**, permitida no campo Copy e truncada com "…"
-  quando longa. Descrição visual, síntese e Lição vão com suas palavras —
+  quando longa. Todo texto que vem dos anúncios (copy, título, CTA, nome de
+  página) entra no HTML **escapado**: `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`.
+  Nunca cole HTML cru vindo de um anúncio. Descrição visual, síntese e Lição vão com suas palavras —
   nunca reaproveitar a copy de um concorrente como recomendação de criativo
   para o prospect.
 - **PII** (`CLAUDE.md` raiz): protege o cliente **final** do prospect.

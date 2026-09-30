@@ -23,9 +23,11 @@ class ClienteFalso:
         self.pagina = FIXTURE if pagina is None else pagina
         self.total = total
         self.entradas = []
+        self.limites = []
 
-    def executar(self, entrada):
+    def executar(self, entrada, limite_segundos=None):
         self.entradas.append(entrada)
+        self.limites.append(limite_segundos)
         url = entrada["startUrls"][0]["url"]
         if entrada["onlyTotal"]:
             return [{"totalCount": self.total}] if self.total is not None else [{}]
@@ -100,7 +102,7 @@ def test_coletar_sem_total_avisa_no_resumo(tmp_path):
     coleta_meta_ads.coletar("111", "Marca Teste", tmp_path, 10, ClienteFalso(total=None), None, HOJE)
     resumo = (tmp_path / "marca-teste" / "resumo.md").read_text(encoding="utf-8")
     assert "não informado pela Apify" in resumo
-    assert "use o número de anúncios coletados como mínimo" in resumo
+    assert "use o número de anúncios da amostra como mínimo" in resumo
 
 
 def test_coletar_pagina_sem_anuncios(tmp_path):
@@ -140,3 +142,39 @@ def test_cli_nao_imprime_aviso_do_urllib3():
                        capture_output=True, text=True)
     assert r.returncode == 0
     assert "NotOpenSSLWarning" not in r.stderr
+
+
+def test_coletar_quando_nenhuma_midia_baixa_e_erro_e_nao_sem_anuncios(tmp_path, monkeypatch):
+    monkeypatch.setattr(coleta_meta_ads, "baixar_midia", lambda anuncio, pasta_marca, sessao: None)
+    with pytest.raises(ErroColeta, match="nenhuma mídia"):
+        coleta_meta_ads.coletar("111", "Marca Teste", tmp_path, 10, ClienteFalso(), None, HOJE)
+    assert not (tmp_path / "marca-teste" / "resumo.md").exists()
+
+
+def test_resumo_mostra_quantos_anuncios_vieram_na_amostra(tmp_path):
+    coleta_meta_ads.coletar("111", "Marca Teste", tmp_path, 10, ClienteFalso(total=None), None, HOJE)
+    resumo = (tmp_path / "marca-teste" / "resumo.md").read_text(encoding="utf-8")
+    assert "- Anúncios da página na amostra: 8 (limite 40)" in resumo
+    assert "use o número de anúncios da amostra como mínimo" in resumo
+
+
+def test_coletar_usa_limites_de_tempo_que_cabem_no_bash(tmp_path):
+    cliente = ClienteFalso()
+    coleta_meta_ads.coletar("111", "Marca Teste", tmp_path, 10, cliente, None, HOJE)
+    assert cliente.limites == [coleta_meta_ads.LIMITE_CONTAGEM_S, coleta_meta_ads.LIMITE_COLETA_S]
+    assert coleta_meta_ads.LIMITE_CONTAGEM_S + coleta_meta_ads.LIMITE_COLETA_S <= 480
+
+
+def test_coleta_que_falha_nao_apaga_a_midia_anterior(tmp_path):
+    velho = tmp_path / "marca-teste" / "midia" / "antigo"
+    velho.mkdir(parents=True)
+
+    class ClienteQueFalha(ClienteFalso):
+        def executar(self, entrada, limite_segundos=None):
+            if not entrada["onlyTotal"]:
+                raise ErroColeta("A coleta passou de 5 minutos.")
+            return super().executar(entrada, limite_segundos)
+
+    with pytest.raises(ErroColeta):
+        coleta_meta_ads.coletar("111", "Marca Teste", tmp_path, 10, ClienteQueFalha(), None, HOJE)
+    assert velho.exists()
