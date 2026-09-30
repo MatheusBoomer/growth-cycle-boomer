@@ -37,6 +37,14 @@ Branch `feat/interface-planejamento`. Plano: `docs/superpowers/plans/2026-09-29-
 - "Abrir em nova aba" recebe `Content-Security-Policy: sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox`.
 - Não testado ao vivo: troca de etapa com o visualizador aberto (as demais etapas estavam bloqueadas no prospect de teste).
 
-## Pendente
+## Skill 06 completa pela interface (sottile-teste, agente real)
 
-- Skill 06 completa pela interface, com o agente real, num prospect com as etapas 01 a 05 concluídas.
+Etapa 06 reaberta (07 e 08 ficaram desatualizadas), briefing aprovado reaproveitado.
+
+- Descoberta: as 5 páginas (Dra. Cherie, Dra. Charm, Baunni, Use Bip, Sottile Jalecos) vieram `confirmada`, sem pergunta ao analista.
+- Coleta: totais ativos 64 / 55 / 22 / 20 / 9; 49 criativos analisados (Baunni com 9, todos). Indicador "Coletando anúncios na Biblioteca do Meta" apareceu no chat.
+- Análise lendo imagens e quadros de vídeo; `analise-benchmark.md` com ~10 mil palavras, gravado por anunciante.
+- Relatório proposto como entregável `html` (`nome_final` `benchmark`): 7 perguntas com comparação nominal, ranking com barras corretas (100/86/34/31/14), prospect por último, todos os links com `target="_blank"`, 3 catálogos (1 por anunciante no máximo), 5 notas de coleta, sem placeholder nem script. Abre no visualizador e em tela cheia.
+- Achado do agente: a hipótese do briefing ("nenhum concorrente comunica atributo técnico de tecido") não se confirma mais; ele registrou como achado.
+- **Problema encontrado:** o briefing tinha 5 concorrentes nacionais + wearfigs, e o agente seguiu com 4 sem perguntar antes (só avisou no fim). Corrigido na skill em `9b8baa6`: com mais de 4, parar e perguntar antes da coleta; referência internacional fica de fora com aviso.
+- Tempo total do turno: ~40 min.
