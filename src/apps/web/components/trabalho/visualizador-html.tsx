@@ -9,6 +9,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@workspace/ui/
 import { Spinner } from "@workspace/ui/components/spinner"
 import { ROTULO_STATUS_ENTREGAVEL } from "@/components/cards/card-entregavel"
 import { urlArquivo } from "@/lib/api"
+import { alvoDeDigitacao } from "@/lib/layout-colunas"
 
 export function VisualizadorHtml({
   slug,
@@ -25,7 +26,7 @@ export function VisualizadorHtml({
 }) {
   useEffect(() => {
     function aoTeclar(ev: KeyboardEvent) {
-      if (ev.key !== "Escape") return
+      if (ev.key !== "Escape" || alvoDeDigitacao(document.activeElement as HTMLElement | null)) return
       if (telaCheia) aoAlternarTelaCheia()
       else aoFechar()
     }

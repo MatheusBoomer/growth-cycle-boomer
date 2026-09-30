@@ -12,13 +12,14 @@ import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-  useDefaultLayout,
+  useGroupRef,
   usePanelRef,
 } from "@workspace/ui/components/resizable"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
 import { ChatEtapa } from "@/components/chat/chat-etapa"
 import { useAreaDeTrabalho } from "@/hooks/use-area-de-trabalho"
+import { layoutParaVisualizador, lerLayout, salvarLayout, type Layout } from "@/lib/layout-colunas"
 import { ContextoVisualizador } from "./contexto-visualizador"
 import { EtapaLiberada } from "./etapa-liberada"
 import { ROTULO_STATUS } from "./icone-status"
@@ -35,24 +36,7 @@ export function escolherEtapaInicial(estado: Estado): EtapaId {
   return "final"
 }
 
-// Larguras das colunas lembradas no navegador. No servidor (render inicial do Next) não há
-// localStorage, e em janela anônima ele pode recusar: nos dois casos, vale o layout padrão.
-const armazenamentoLayout = {
-  getItem(chave: string): string | null {
-    try {
-      return typeof window === "undefined" ? null : window.localStorage.getItem(chave)
-    } catch {
-      return null
-    }
-  },
-  setItem(chave: string, valor: string): void {
-    try {
-      window.localStorage.setItem(chave, valor)
-    } catch {
-      // sem armazenamento: o layout só não fica lembrado
-    }
-  },
-}
+const IDS_COLUNAS = ["chat", "painel", "trilha", "visualizador"]
 
 export function AreaDeTrabalho({ slug }: { slug: string }) {
   const { dados, erro, conversas, deltas, carregarConversa } = useAreaDeTrabalho(slug)
@@ -64,17 +48,11 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   const [telaCheia, setTelaCheia] = useState(false)
   const [entregaveisVistos, setEntregaveisVistos] = useState<Entregavel[] | null>(null)
   const [abertosSozinhos, setAbertosSozinhos] = useState<ReadonlySet<string>>(new Set())
+  const grupoRef = useGroupRef()
   const trilhaRef = usePanelRef()
   const painelRef = usePanelRef()
   const etapa = selecionada ?? (dados ? escolherEtapaInicial(dados.estado) : null)
   const visualizadorAberto = visualizador !== null && visualizador.etapa === etapa
-  // Um layout salvo por combinação de colunas: abrir um relatório não mexe nas larguras do dia a dia.
-  const idsPaineis = visualizadorAberto ? ["trilha", "chat", "visualizador", "painel"] : ["trilha", "chat", "painel"]
-  const { defaultLayout, onLayoutChanged } = useDefaultLayout({
-    id: "area-de-trabalho",
-    panelIds: idsPaineis,
-    storage: armazenamentoLayout,
-  })
 
   // HTML novo proposto na etapa aberta abre o visualizador sozinho, uma vez por nome final.
   // Estado ajustado durante a renderização: é o padrão do React para reagir a dado novo sem efeito.
@@ -100,6 +78,19 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   useEffect(() => {
     if (etapa && dados && conversas[etapa] === undefined) void carregarConversa(etapa)
   }, [etapa, dados, conversas, carregarConversa])
+
+  // O visualizador fica sempre montado (recolhido quando fechado): abrir ou fechar não remonta o
+  // chat nem os cards, então o que o analista está digitando não se perde. Cada estado (com e sem
+  // relatório) tem suas larguras lembradas, aplicadas aqui pela API do grupo.
+  useEffect(() => {
+    const grupo = grupoRef.current
+    if (!grupo) return
+    try {
+      grupo.setLayout(layoutParaVisualizador(grupo.getLayout(), lerLayout(visualizadorAberto), visualizadorAberto))
+    } catch {
+      // grupo ainda montando ou já desmontado: vale o layout que ele tiver
+    }
+  }, [visualizadorAberto, grupoRef])
 
   useEffect(() => {
     if (!arrastando) return
@@ -140,6 +131,12 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   const indice = ORDEM_ETAPAS.indexOf(etapa)
   const anterior = indice > 0 ? ORDEM_ETAPAS[indice - 1]! : null
   const mostrarChat = estadoEtapa.status !== "liberada" && estadoEtapa.status !== "bloqueada"
+  const salvoInicial = lerLayout(false)
+  const layoutInicial = salvoInicial && Object.keys(salvoInicial).sort().join() === IDS_COLUNAS.join() ? salvoInicial : undefined
+  function aoMudarLayout(layout: Layout) {
+    // Só grava quando o layout corresponde ao estado atual (não no meio de uma troca).
+    if ((layout.visualizador ?? 0) > 0 === visualizadorAberto) salvarLayout(visualizadorAberto, layout)
+  }
   const painelVisualizador = visualizadorAberto ? (
     <VisualizadorHtml
       slug={slug}
@@ -158,12 +155,7 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   return (
     <ContextoVisualizador.Provider value={{ abrir }}>
       <div className={cn("h-svh", arrastando && "[&_iframe]:pointer-events-none")} onPointerDownCapture={aoApertar}>
-        <ResizablePanelGroup
-          key={idsPaineis.join(",")}
-          orientation="horizontal"
-          defaultLayout={defaultLayout}
-          onLayoutChanged={onLayoutChanged}
-        >
+        <ResizablePanelGroup groupRef={grupoRef} orientation="horizontal" defaultLayout={layoutInicial} onLayoutChanged={aoMudarLayout}>
           <ResizablePanel
             id="trilha"
             panelRef={trilhaRef}
@@ -207,15 +199,21 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
               )}
             </main>
           </ResizablePanel>
-          {visualizadorAberto && (
-            <>
-              <ResizableHandle withHandle />
-              {/* Em tela cheia o painel continua montado (vazio) para não trocar o layout salvo. */}
-              <ResizablePanel id="visualizador" defaultSize="50%" minSize="320px">
-                {telaCheia ? null : painelVisualizador}
-              </ResizablePanel>
-            </>
-          )}
+          <ResizableHandle withHandle className={cn(!visualizadorAberto && "hidden")} />
+          <ResizablePanel
+            id="visualizador"
+            defaultSize="0%"
+            minSize="320px"
+            collapsible
+            collapsedSize="0%"
+            onResize={(tamanho) => {
+              // Arrastar o visualizador até sumir é o mesmo que fechá-lo.
+              if (tamanho.asPercentage === 0 && visualizadorAberto) fechar()
+            }}
+          >
+            {/* Em tela cheia o conteúdo vai para a camada fixa abaixo; o painel fica vazio. */}
+            {telaCheia ? null : painelVisualizador}
+          </ResizablePanel>
           <ResizableHandle withHandle />
           <ResizablePanel
             id="painel"
