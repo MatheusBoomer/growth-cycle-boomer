@@ -101,9 +101,18 @@ confirmação.
 
 ### 2a. Anunciantes
 
-Os concorrentes da seção 7 do briefing (até 4) + o próprio prospect, sempre
-por último. Concorrente sem site informado: encontre o site oficial com
-WebSearch antes da descoberta.
+Os concorrentes da seção 7 do briefing + o próprio prospect, sempre por
+último. Cada rodada analisa **no máximo 4 concorrentes**. Se a seção 7 tiver
+mais de 4, **pare e pergunte ao analista quais 4 priorizar antes de qualquer
+coleta**, mesmo que o briefing já esteja aprovado; nunca escolha sozinho (sem
+preferência dele, sugira os que provavelmente têm mais anúncios ativos).
+
+A coleta busca anúncios veiculados no Brasil. Referência internacional sem
+operação no Brasil (ex.: marca estrangeira citada como inspiração) não entra
+na conta dos 4: avise o analista que ela fica de fora deste relatório.
+
+Concorrente sem site informado: encontre o site oficial com WebSearch antes
+da descoberta.
 
 ### 2b. Descoberta das páginas
 
