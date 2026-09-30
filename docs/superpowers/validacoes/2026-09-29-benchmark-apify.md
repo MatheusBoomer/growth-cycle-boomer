@@ -1,0 +1,42 @@
+# Validação do benchmark via Apify e do visualizador — 2026-09-29
+
+Python 3.9.6, ffmpeg (Homebrew), Next.js 16.3.3, react-resizable-panels 4.14.1.
+Branch `feat/interface-planejamento`. Plano: `docs/superpowers/plans/2026-09-29-benchmark-apify-e-visualizador.md`.
+
+## Suíte automática
+
+| Comando | Resultado |
+|---|---|
+| `python3 -m pytest scripts/tests -q` | 65/65 |
+| `cd src && npx turbo test typecheck lint` | core 132/132, web 6/6, mcp-planejamento 11/11; typecheck ok; lint sem erros |
+
+## Coleta real na Apify (Insider Store)
+
+| Passo | Resultado |
+|---|---|
+| `descobrir --marca "Insider Store" --site insiderstore.com.br` | 29 s. `confirmada`, page_id 1812940462298746 (95.265 curtidas, Clothing (Brand), anuncia para insiderstore.com.br, 29 de 30 na amostra). Segunda candidata ("Wellness Insider", 1 anúncio) descartada |
+| `coletar --page-id 1812940462298746` | 66 s. Total ativo 1.082 (o `onlyTotal` devolve `totalCount`, já reconhecido). Amostra de 40, 10 selecionados, 56 arquivos de mídia, nenhum `.mp4` sobrando |
+| Quadros de vídeo | Legíveis ao abrir com Read (vídeo UGC, pessoa mostrando o bojo removível do "Perfect Top", coerente com a copy) |
+| Token | Não aparece em nenhum arquivo gerado (`bruto.json`, `anuncios.json`, `resumo.md`, `descoberta.json`) |
+
+### Formato real da resposta x fixture
+
+- Chaves em camelCase, como o fixture; `body` vem como `{text}` ou `null`. A Apify usa `collationId` (o código já aceitava).
+- **Divergência encontrada:** 20 dos 40 anúncios vieram com `displayFormat: "DCO"` (criativo dinâmico), com as variações em `cards`. O script os classificava como "Carrossel". Corrigido em `63f2bd5` (DCO → Vídeo se houver vídeo, senão Imagem estática), com teste. Depois da correção: 6 vídeos e 4 imagens estáticas entre os 10 selecionados.
+- 2 dos 10 selecionados não têm copy (texto só na imagem); a regra de análise manda transcrever o texto legível da imagem.
+- Nenhum anúncio de catálogo (DPA) nessa página; a nota de coleta registra isso.
+
+## Interface (executor de demonstração)
+
+- `demo:propor html` abre o visualizador sozinho; Abrir no card e no painel; relatório renderiza via `srcDoc`.
+- Link de anúncio dentro do relatório tenta abrir nova aba (o painel do navegador embutido só bloqueia porque o clique veio da automação).
+- Tela cheia, Esc (sai da tela cheia), Esc (fecha); Esc com foco num campo de texto não fecha.
+- Rascunho digitado no chat sobrevive à abertura automática e ao fechamento do visualizador.
+- Larguras lembradas separadamente com e sem visualizador; recolher e expandir trilha e painel; `pointer-events: none` nos iframes durante o arraste.
+- Nova versão do HTML troca o conteúdo aberto; fechado, não reabre sozinho.
+- "Abrir em nova aba" recebe `Content-Security-Policy: sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox`.
+- Não testado ao vivo: troca de etapa com o visualizador aberto (as demais etapas estavam bloqueadas no prospect de teste).
+
+## Pendente
+
+- Skill 06 completa pela interface, com o agente real, num prospect com as etapas 01 a 05 concluídas.
