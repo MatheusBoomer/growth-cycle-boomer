@@ -52,28 +52,6 @@ def sem_rede(monkeypatch):
     monkeypatch.setattr(coleta_meta_ads, "ffmpeg_disponivel", lambda: True)
 
 
-def test_descobrir_confirma_e_grava(tmp_path):
-    r = coleta_meta_ads.descobrir("Marca Teste", "marcateste.com.br", tmp_path, ClienteFalso())
-    assert r["status"] == "confirmada" and r["page_id"] == "111"
-    salvo = json.loads((tmp_path / "marca-teste" / "descoberta.json").read_text(encoding="utf-8"))
-    assert salvo["candidatas"][0]["page_id"] == "111"
-    texto = coleta_meta_ads.texto_descoberta(r)
-    assert "confirmada" in texto and "| Marca Teste Oficial | 111 |" in texto
-
-
-def test_descobrir_tenta_sem_espaco(tmp_path):
-    cliente = ClienteFalso(busca={"MarcaTeste": FIXTURE})
-    r = coleta_meta_ads.descobrir("Marca Teste", "marcateste.com.br", tmp_path, cliente)
-    assert r["termo_buscado"] == "MarcaTeste"
-    assert r["status"] == "confirmada"
-    assert len(cliente.entradas) == 2
-
-
-def test_descobrir_nao_encontrada(tmp_path):
-    r = coleta_meta_ads.descobrir("Inexistente", None, tmp_path, ClienteFalso(busca={}))
-    assert r["status"] == "nao_encontrada"
-
-
 def test_coletar_grava_resumo_json_e_notas(tmp_path):
     r = coleta_meta_ads.coletar("111", "Marca Teste", tmp_path, 10, ClienteFalso(), None, HOJE)
     pasta = tmp_path / "marca-teste"
@@ -130,7 +108,7 @@ def test_main_erro_sai_com_codigo_1_e_mensagem(tmp_path, monkeypatch, capsys):
         raise ErroColeta("APIFY_TOKEN não configurado.")
 
     monkeypatch.setattr(coleta_meta_ads, "ler_token", sem_token)
-    codigo = coleta_meta_ads.main(["descobrir", "--marca", "X", "--saida", str(tmp_path)])
+    codigo = coleta_meta_ads.main(["coletar", "--page-id", "1", "--marca", "X", "--saida", str(tmp_path)])
     assert codigo == 1
     assert "APIFY_TOKEN não configurado." in capsys.readouterr().err
 
@@ -154,7 +132,7 @@ def test_coletar_quando_nenhuma_midia_baixa_e_erro_e_nao_sem_anuncios(tmp_path, 
 def test_resumo_mostra_quantos_anuncios_vieram_na_amostra(tmp_path):
     coleta_meta_ads.coletar("111", "Marca Teste", tmp_path, 10, ClienteFalso(total=None), None, HOJE)
     resumo = (tmp_path / "marca-teste" / "resumo.md").read_text(encoding="utf-8")
-    assert "- Anúncios da página na amostra: 8 (limite 40)" in resumo
+    assert "- Anúncios da página na amostra: 8 (limite 15)" in resumo
     assert "use o número de anúncios da amostra como mínimo" in resumo
 
 
@@ -178,3 +156,36 @@ def test_coleta_que_falha_nao_apaga_a_midia_anterior(tmp_path):
     with pytest.raises(ErroColeta):
         coleta_meta_ads.coletar("111", "Marca Teste", tmp_path, 10, ClienteQueFalha(), None, HOJE)
     assert velho.exists()
+
+
+def test_valores_padrao_economizam_api():
+    assert coleta_meta_ads.AMOSTRA_COLETA == 15
+    args = coleta_meta_ads.criar_parser().parse_args(["coletar", "--link", "https://www.facebook.com/ads/library/?view_all_page_id=1", "--marca", "X", "--saida", "y"])
+    assert args.limite == 5
+
+
+def test_aviso_de_poucos_anuncios_acompanha_o_limite(tmp_path):
+    coleta_meta_ads.coletar("111", "Marca Teste", tmp_path, 5, ClienteFalso(total=4), None, HOJE)
+    resumo = (tmp_path / "marca-teste" / "resumo.md").read_text(encoding="utf-8")
+    assert "Só 4 anúncios ativos" in resumo
+    coleta_meta_ads.coletar("111", "Marca Teste", tmp_path, 5, ClienteFalso(total=7), None, HOJE)
+    resumo = (tmp_path / "marca-teste" / "resumo.md").read_text(encoding="utf-8")
+    assert "anúncios ativos no momento" not in resumo
+
+
+def test_cli_coleta_pelo_link(tmp_path, monkeypatch, capsys):
+    chamadas = []
+    monkeypatch.setattr(coleta_meta_ads, "ler_token", lambda: "t")
+    monkeypatch.setattr(coleta_meta_ads, "coletar",
+                        lambda page_id, marca, saida, limite, cliente, sessao, hoje: chamadas.append((page_id, limite)) or
+                        {"pasta": str(saida), "total": 1, "selecionados": 1, "notas": []})
+    link = "https://www.facebook.com/ads/library/?active_status=active&view_all_page_id=987&search_type=page"
+    assert coleta_meta_ads.main(["coletar", "--link", link, "--marca", "X", "--saida", str(tmp_path)]) == 0
+    assert chamadas == [("987", 5)]
+
+
+def test_cli_com_link_errado_sai_com_erro_em_portugues(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(coleta_meta_ads, "ler_token", lambda: "t")
+    codigo = coleta_meta_ads.main(["coletar", "--link", "https://www.facebook.com/insiderstore", "--marca", "X", "--saida", str(tmp_path)])
+    assert codigo == 1
+    assert "view_all_page_id" in capsys.readouterr().err

@@ -11,10 +11,7 @@ from meta_ads_selecao import (  # noqa: E402
     FORMATO_DPA,
     FORMATO_IMAGEM,
     FORMATO_VIDEO,
-    agrupar_paginas,
-    classificar_descoberta,
     dominio_base,
-    nome_compativel,
     normalizar_anuncio,
     slug_marca,
 )
@@ -81,45 +78,10 @@ def test_dominio_base():
     assert dominio_base(None) is None
 
 
-def test_nome_compativel_tolera_acento_apostrofo_e_sufixo():
-    assert nome_compativel("Água de Cheiro", "Agua de Cheiro Oficial")
-    assert nome_compativel("L'Occitane", "L'OCCITANE en Provence")
-    assert nome_compativel("Marca Teste", "MarcaTeste")
-    assert not nome_compativel("Nike", "Adidas Brasil")
-    assert not nome_compativel("!!!", "Qualquer")
-
-
 def test_slug_marca():
     assert slug_marca("Água de Cheiro") == "agua-de-cheiro"
     assert slug_marca("L'Occitane en Provence") == "l-occitane-en-provence"
     assert slug_marca("!!!") == "marca"
-
-
-def test_agrupar_paginas_ordena_por_volume():
-    candidatas = agrupar_paginas(list(anuncios().values()))
-    assert [c.page_id for c in candidatas] == ["111", "222"]
-    assert candidatas[0].anuncios == 8
-    assert candidatas[0].curtidas == 50000
-    assert candidatas[0].dominios == ["marcateste.com.br"]
-    assert candidatas[1].dominios == ["example.com"]
-
-
-def test_descoberta_confirmada_com_nome_e_dominio():
-    r = classificar_descoberta("Marca Teste", "https://www.marcateste.com.br", agrupar_paginas(list(anuncios().values())))
-    assert r["status"] == "confirmada"
-    assert r["page_id"] == "111"
-
-
-def test_descoberta_ambigua_por_dominio_nome_ou_sem_site():
-    candidatas = agrupar_paginas(list(anuncios().values()))
-    outro = classificar_descoberta("Marca Teste", "outra.com.br", candidatas)
-    assert outro["status"] == "ambigua" and "outra.com.br" in outro["motivo"] and outro["page_id"] is None
-    assert classificar_descoberta("Outra Coisa", "marcateste.com.br", candidatas)["status"] == "ambigua"
-    assert classificar_descoberta("Marca Teste", None, candidatas)["status"] == "ambigua"
-
-
-def test_descoberta_nao_encontrada():
-    assert classificar_descoberta("Marca Teste", "marcateste.com.br", [])["status"] == "nao_encontrada"
 
 
 from meta_ads_selecao import Midia, distancia_hamming, selecionar  # noqa: E402

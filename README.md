@@ -129,5 +129,8 @@ pelo ator `apify/facebook-ads-scraper`. Uma vez por máquina:
 2. Na raiz do projeto: `cp .env.example .env` e preencha `APIFY_TOKEN=`.
 3. Instale o ffmpeg: `brew install ffmpeg`.
 
-Custo de referência: um benchmark completo usa por volta de 350 anúncios na
-Apify (US$ 1 a 2 no plano mais caro por resultado).
+O analista informa o link da página de cada concorrente na Biblioteca de
+Anúncios (com `view_all_page_id=`): o script não gasta API procurando páginas.
+
+Custo de referência: um benchmark completo (4 concorrentes + prospect, 5
+criativos analisados por marca) usa por volta de 80 anúncios na Apify.

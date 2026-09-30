@@ -73,9 +73,10 @@ Meta oficial, distribuição mensal, lógica de distribuição.
 Resumo dos 3 cenários, alavancas, riscos, alavanca principal.
 
 ## 7. Concorrentes para Pesquisa de Benchmark
-Até 4 concorrentes. Para cada um: nome, site, @ do Instagram, link da
-Biblioteca de Anúncios (se o analista tiver) e por que analisar (foco de
-atenção). Depois: contexto estratégico para orientar a análise, pontos de
+Até 4 concorrentes. Para cada um: nome, site, @ do Instagram, **link da página
+na Biblioteca de Anúncios (obrigatório, com `view_all_page_id=`)** e por que
+analisar (foco de atenção). Registrar também o link da página do próprio
+prospect na Biblioteca. Depois: contexto estratégico para orientar a análise, pontos de
 atenção (opcional) e perguntas estratégicas customizadas (opcional —
 substituem as 7 padrão do relatório).
 
@@ -87,8 +88,8 @@ substituem as 7 padrão do relatório).
 Segue integralmente as regras da skill `benchmark-meta-ads` da agência,
 com a coleta feita pela Apify em vez do navegador. Leia antes de começar:
 
-- `.claude/skills/_shared/benchmark-coleta-e-analise.md` — comandos, descoberta,
-  análise dos criativos, arquivo de análise;
+- `.claude/skills/_shared/benchmark-coleta-e-analise.md` — comandos, links das
+  páginas, análise dos criativos, arquivo de análise;
 - `.claude/skills/_shared/relatorio-benchmark.md` — relatório HTML.
 
 Nunca use navegador, Firecrawl ou o subagente `pesquisador-benchmark` nesta
@@ -96,8 +97,7 @@ fase: a análise visual precisa acontecer nesta conversa, onde as imagens são
 lidas.
 
 Avise o analista no início que a coleta leva alguns minutos por anunciante e
-que você vai trabalhar sem pausas, parando só se alguma página precisar de
-confirmação.
+que você vai trabalhar sem pausas depois de ter os links de todas as páginas.
 
 ### 2a. Anunciantes
 
@@ -111,16 +111,22 @@ A coleta busca anúncios veiculados no Brasil. Referência internacional sem
 operação no Brasil (ex.: marca estrangeira citada como inspiração) não entra
 na conta dos 4: avise o analista que ela fica de fora deste relatório.
 
-Concorrente sem site informado: encontre o site oficial com WebSearch antes
-da descoberta.
+### 2b. Links das páginas na Biblioteca
 
-### 2b. Descoberta das páginas
+A coleta parte do link da página de cada anunciante na Biblioteca de
+Anúncios, informado pelo analista. **Nunca busque a página pela API, pelo
+navegador ou pela web**: a busca é gasto de API que o link evita.
 
-Rode `descobrir` para cada anunciante sem link da Biblioteca. Páginas
-`confirmada` seguem direto; `ambigua` ou `nao_encontrada` param para uma
-pergunta ao analista no chat, com a tabela de candidatas (ver
-`benchmark-coleta-e-analise.md`). Pergunte todas as ambíguas de uma vez, numa
-mensagem só, antes de começar a coleta.
+Confira na seção 7 do briefing (e na conversa) se todos os anunciantes,
+inclusive o prospect, têm link com `view_all_page_id=`. Se faltar algum, pare
+e peça todos os que faltam numa mensagem só, antes de qualquer coleta,
+explicando como copiar: abra facebook.com/ads/library (país Brasil, todos os
+anúncios), busque o nome da marca, clique no nome da **página** (não num
+anúncio) e copie o endereço do navegador. O link certo tem
+`view_all_page_id=`.
+Só comece a coleta com todos os links em mãos. Se o script recusar um link
+(`ERRO:` falando de `view_all_page_id`), repasse a explicação ao analista e
+peça o link certo daquela marca.
 
 ### 2c. Coleta e análise
 

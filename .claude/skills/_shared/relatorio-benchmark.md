@@ -69,7 +69,7 @@ anúncios ativos (o "Anúncios ativos (total)" de cada `resumo.md`). A barra
 (`bm-rank-bar`, `style="width:N%"`) do maior volume é 100%; as demais são
 `(volume / maior volume) × 100`, arredondado. Se a Apify não informou o total
 de algum anunciante, use o "Anúncios da página na amostra" do `resumo.md` e
-marque o valor com "≥" (ex.: "≥ 40"). Mantenha a estrutura estética do template — é a seção mais
+marque o valor com "≥" (ex.: "≥ 15"). Mantenha a estrutura estética do template — é a seção mais
 visual e a mais fácil de descuidar.
 
 ## Regras do planejamento

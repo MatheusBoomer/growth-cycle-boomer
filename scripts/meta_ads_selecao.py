@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
 scripts/meta_ads_selecao.py: normaliza os anúncios devolvidos pela Apify
-(ator apify/facebook-ads-scraper), agrupa páginas na descoberta e aplica as
-regras mecânicas de seleção da Skill 06 (até 10 criativos, no máximo 1
-catálogo, sem duplicados, sem anúncio sem mídia).
+(ator apify/facebook-ads-scraper) e aplica as regras mecânicas de seleção da
+Skill 06 (até 5 criativos, no máximo 1 catálogo, sem duplicados, sem anúncio
+sem mídia).
 
 Sem rede e sem disco: o download entra por uma função injetada, o que deixa
 tudo testável. Usado por scripts/coleta_meta_ads.py.
@@ -68,16 +68,6 @@ class Midia:
 
 
 @dataclass
-class Candidata:
-    page_id: str
-    nome: str
-    curtidas: Optional[int]
-    categorias: List[str]
-    dominios: List[str]
-    anuncios: int
-
-
-@dataclass
 class Selecionado:
     anuncio: Anuncio
     midia: Midia
@@ -105,12 +95,6 @@ def slug_marca(nome: str) -> str:
 
 def normalizar_texto(texto: Optional[str]) -> str:
     return re.sub(r"[^a-z0-9]+", " ", sem_acento(texto or "").lower()).strip()
-
-
-def nome_compativel(marca: str, pagina: str) -> bool:
-    a = normalizar_texto(marca).replace(" ", "")
-    b = normalizar_texto(pagina).replace(" ", "")
-    return bool(a) and bool(b) and (a in b or b in a)
 
 
 def dominio_base(valor: Optional[str]) -> Optional[str]:
@@ -229,40 +213,6 @@ def normalizar_anuncio(bruto: Dict[str, Any]) -> Optional[Anuncio]:
         curtidas_pagina=_inteiro(campo(snap, "pageLikeCount", "page_like_count")),
         categorias_pagina=categorias,
     )
-
-
-def agrupar_paginas(anuncios: List[Anuncio]) -> List[Candidata]:
-    grupos: Dict[str, Candidata] = {}
-    for a in anuncios:
-        if not a.page_id:
-            continue
-        c = grupos.get(a.page_id)
-        if c is None:
-            c = grupos[a.page_id] = Candidata(a.page_id, a.pagina, a.curtidas_pagina, list(a.categorias_pagina), [], 0)
-        c.anuncios += 1
-        if a.dominio and a.dominio not in c.dominios:
-            c.dominios.append(a.dominio)
-        if c.curtidas is None and a.curtidas_pagina is not None:
-            c.curtidas = a.curtidas_pagina
-        if not c.categorias and a.categorias_pagina:
-            c.categorias = list(a.categorias_pagina)
-    return sorted(grupos.values(), key=lambda c: (c.anuncios, c.curtidas or 0), reverse=True)
-
-
-def classificar_descoberta(marca: str, site: Optional[str], candidatas: List[Candidata]) -> Dict[str, Any]:
-    if not candidatas:
-        return {"status": "nao_encontrada", "page_id": None, "motivo": "Nenhuma página anunciando com esse nome."}
-    topo = candidatas[0]
-    alvo = dominio_base(site)
-    if not alvo:
-        motivo = "Site da marca não informado: não dá para confirmar pelo domínio."
-    elif not nome_compativel(marca, topo.nome):
-        motivo = f'A página com mais anúncios ("{topo.nome}") não tem o nome da marca.'
-    elif alvo not in topo.dominios:
-        motivo = f"A página com mais anúncios não anuncia para {alvo}."
-    else:
-        return {"status": "confirmada", "page_id": topo.page_id, "motivo": f"Nome compatível e anuncia para {alvo}."}
-    return {"status": "ambigua", "page_id": None, "motivo": motivo}
 
 
 def distancia_hamming(a: int, b: int) -> int:

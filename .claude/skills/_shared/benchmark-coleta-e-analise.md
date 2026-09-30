@@ -13,7 +13,7 @@ os quadros de vídeo baixados.
 O script já garante, em código, as regras mecânicas da skill original — não
 as refaça à mão:
 
-- até 10 criativos por anunciante, os mais recentes primeiro;
+- até 5 criativos por anunciante, os mais recentes primeiro;
 - no máximo 1 catálogo (DPA) por anunciante, inclusive o próprio prospect;
 - sem criativos duplicados (mesmo agrupamento de versões da Meta, ou mesmo
   texto e mesma imagem);
@@ -29,25 +29,26 @@ Rode sempre da raiz do projeto, com a ferramenta Bash e `timeout` de
 600000 ms (a Apify leva de 1 a 3 minutos por chamada):
 
 ```bash
-python3 scripts/coleta_meta_ads.py descobrir --marca "Nome" --site dominio.com.br --saida clientes/<slug>/dados/benchmark-meta
-python3 scripts/coleta_meta_ads.py coletar --page-id <N> --marca "Nome" --saida clientes/<slug>/dados/benchmark-meta
+python3 scripts/coleta_meta_ads.py coletar --link "<link da página na Biblioteca>" --marca "Nome" --saida clientes/<slug>/dados/benchmark-meta
 ```
+
+Sempre entre aspas no `--link` (o endereço tem `&`).
 
 Se o comando sair com `ERRO:`, mostre a mensagem ao analista como veio (ela já
 diz o que fazer: token, créditos, ffmpeg) e pare a Fase 2 até ele resolver.
 Nunca tente coletar por outro caminho (navegador, Firecrawl, WebFetch da
 Biblioteca).
 
-## Descoberta da página oficial
+## Link da página de cada anunciante
 
-- `confirmada`: siga direto para a coleta com o `page_id` indicado.
-- `ambigua` ou `nao_encontrada`: pare e pergunte ao analista no chat,
-  mostrando a tabela de candidatas que o script imprimiu e o motivo. Aceite
-  como resposta um `page_id` da tabela ou um link da Biblioteca com
-  `view_all_page_id=`. Isso é uma pergunta de escolha, não um entregável:
-  não use `propor_entregavel`.
-- Se o analista já tiver passado um link com `view_all_page_id=`, pule a
-  descoberta daquela marca.
+O script não procura páginas: cada anunciante precisa do link da página na
+Biblioteca, informado pelo analista. Para o analista conseguir o link:
+abra facebook.com/ads/library (país Brasil, todos os anúncios), busque o
+nome da marca, clique no nome da **página** (não num anúncio) e copie o
+endereço do navegador. O link certo tem `view_all_page_id=`.
+
+Faltando link, peça ao analista no chat (todos os que faltam de uma vez) e
+espere. É uma pergunta, não um entregável: não use `propor_entregavel`.
 
 ## Análise de cada criativo
 

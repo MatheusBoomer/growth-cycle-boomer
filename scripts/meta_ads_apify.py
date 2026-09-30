@@ -11,7 +11,7 @@ import os
 import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional
-from urllib.parse import urlencode
+from urllib.parse import parse_qs, urlencode, urlparse
 
 import requests
 
@@ -41,11 +41,21 @@ def ler_token(ambiente: Mapping[str, str] = os.environ, arquivo_env: Path = RAIZ
     return token
 
 
-def url_busca(marca: str) -> str:
-    return BIBLIOTECA + "?" + urlencode({
-        "active_status": "active", "ad_type": "all", "country": "BR", "media_type": "all",
-        "q": marca, "search_type": "keyword_unordered",
-    })
+def page_id_do_link(texto: str) -> str:
+    """page_id de um link de página da Biblioteca de Anúncios (com view_all_page_id=), colado pelo analista."""
+    t = (texto or "").strip()
+    if t and "://" not in t:
+        t = "https://" + t
+    try:
+        valores = parse_qs(urlparse(t).query).get("view_all_page_id") or []
+    except ValueError:
+        valores = []
+    if valores and valores[0].strip().isdigit():
+        return valores[0].strip()
+    raise ErroColeta(
+        "Esse link não é de uma página da Biblioteca de Anúncios. Abra facebook.com/ads/library, busque a marca, "
+        "clique no nome da página (não num anúncio) e copie o endereço: ele precisa ter view_all_page_id=."
+    )
 
 
 def url_pagina(page_id: str) -> str:

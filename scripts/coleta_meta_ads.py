@@ -3,15 +3,14 @@
 scripts/coleta_meta_ads.py: coleta de anúncios da Biblioteca de Anúncios do
 Meta via Apify, para o benchmark da Skill 06.
 
-    python3 scripts/coleta_meta_ads.py descobrir --marca "Nome" [--site dominio.com.br] --saida clientes/<slug>/dados/benchmark-meta
-    python3 scripts/coleta_meta_ads.py coletar --page-id N --marca "Nome" --saida clientes/<slug>/dados/benchmark-meta [--limite 10]
+    python3 scripts/coleta_meta_ads.py coletar --link "<link da página na Biblioteca>" --marca "Nome" --saida clientes/<slug>/dados/benchmark-meta [--limite 5]
 
-descobrir: lista as páginas que anunciam com o nome da marca e diz se a
-oficial ficou "confirmada" (nome + domínio do site) ou se é preciso perguntar
-ao analista ("ambigua" / "nao_encontrada").
+O link é o da página da marca na Biblioteca de Anúncios (com view_all_page_id=),
+informado pelo analista: o script não busca páginas pela API, para não gastar
+com descoberta. `--page-id N` também é aceito no lugar do link.
 
 coletar: baixa os anúncios ativos da página, aplica as regras da Skill 06
-(até 10 criativos distintos, no máximo 1 catálogo, sem anúncio sem mídia),
+(até 5 criativos distintos, no máximo 1 catálogo, sem anúncio sem mídia),
 baixa imagens, extrai quadros de vídeo e grava anuncios.json, bruto.json,
 resumo.md e midia/ em <saida>/<marca>/.
 
@@ -37,77 +36,35 @@ warnings.filterwarnings("ignore", message="urllib3 v2 only supports OpenSSL")
 
 import requests  # noqa: E402
 
-from meta_ads_apify import ClienteApify, ErroColeta, entrada_ator, extrair_total, ler_token, url_busca, url_pagina
+from meta_ads_apify import ClienteApify, ErroColeta, entrada_ator, extrair_total, ler_token, page_id_do_link, url_pagina
 from meta_ads_midia import apagar_midia, baixar_midia, ffmpeg_disponivel
 from meta_ads_selecao import (
     FORMATO_DPA,
     Anuncio,
     Selecionado,
-    agrupar_paginas,
-    classificar_descoberta,
     normalizar_anuncio,
     selecionar,
     slug_marca,
 )
 
-AMOSTRA_DESCOBERTA = 30
-AMOSTRA_COLETA = 40
+# Cada anúncio buscado é cobrado pela Apify: 15 dá folga para descartar duplicados e mídia
+# quebrada e ainda chegar aos 5 criativos analisados.
+AMOSTRA_COLETA = 15
+LIMITE_PADRAO = 5
 # As duas chamadas de `coletar` somadas ficam abaixo dos 10 min do Bash do agente, com folga
 # para os downloads: o agente recebe a mensagem de tempo esgotado em vez de um timeout mudo.
 LIMITE_CONTAGEM_S = 150
 LIMITE_COLETA_S = 330
 
 
-def _buscar(termo: str, cliente: Any):
-    itens = cliente.executar(entrada_ator(url_busca(termo), AMOSTRA_DESCOBERTA))
-    return agrupar_paginas([a for a in (normalizar_anuncio(i) for i in itens if isinstance(i, dict)) if a])
-
-
-def descobrir(marca: str, site: Optional[str], saida: Path, cliente: Any) -> Dict[str, Any]:
-    termo = marca.strip()
-    candidatas = _buscar(termo, cliente)
-    if not candidatas and " " in termo:
-        termo = termo.replace(" ", "")
-        candidatas = _buscar(termo, cliente)
-    resultado = classificar_descoberta(marca, site, candidatas)
-    resultado.update({
-        "marca": marca,
-        "site": site,
-        "termo_buscado": termo,
-        "candidatas": [asdict(c) for c in candidatas],
-    })
-    pasta = saida / slug_marca(marca)
-    pasta.mkdir(parents=True, exist_ok=True)
-    (pasta / "descoberta.json").write_text(json.dumps(resultado, ensure_ascii=False, indent=2), encoding="utf-8")
-    return resultado
-
-
-def texto_descoberta(r: Dict[str, Any]) -> str:
-    linhas = [
-        f'Marca: {r["marca"]} (busca: "{r["termo_buscado"]}")',
-        f'Resultado: {r["status"]}. {r["motivo"]}',
-    ]
-    if r["page_id"]:
-        linhas.append(f'Página confirmada: page_id {r["page_id"]} ({url_pagina(r["page_id"])})')
-    if r["candidatas"]:
-        linhas += ["", "| Página | page_id | Curtidas | Categoria | Domínios | Anúncios na amostra |", "|---|---|---|---|---|---|"]
-        for c in r["candidatas"]:
-            curtidas = c["curtidas"] if c["curtidas"] is not None else "—"
-            linhas.append(
-                f'| {c["nome"]} | {c["page_id"]} | {curtidas} | {", ".join(c["categorias"]) or "—"} '
-                f'| {", ".join(c["dominios"]) or "—"} | {c["anuncios"]} |'
-            )
-    return "\n".join(linhas)
-
-
 def notas_de_coleta(total: Optional[int], anuncios: List[Anuncio], selecionados: List[Selecionado],
-                    contagem: Dict[str, int]) -> List[str]:
+                    contagem: Dict[str, int], limite: int = LIMITE_PADRAO) -> List[str]:
     if not anuncios:
         return []
     notas: List[str] = []
     if total is None:
         notas.append("A Apify não informou o total de anúncios ativos; use o número de anúncios da amostra como mínimo no ranking.")
-    elif total < 10:
+    elif total < limite:
         notas.append(f"Só {total} anúncios ativos no momento da coleta.")
     if contagem["duplicados"]:
         notas.append(f'{contagem["duplicados"]} anúncios repetiam um criativo já selecionado e foram descartados.')
@@ -202,7 +159,7 @@ def coletar(page_id: str, marca: str, saida: Path, limite: int, cliente: Any, se
             "(links do Facebook expirados ou recusados). Não registre como \"sem anúncios\": "
             "tente de novo em alguns minutos e, se repetir, avise o analista."
         )
-    notas = notas_de_coleta(total, anuncios, selecionados, contagem)
+    notas = notas_de_coleta(total, anuncios, selecionados, contagem, limite)
     pagina = anuncios[0].pagina if anuncios else marca
     (pasta / "bruto.json").write_text(json.dumps(brutos, ensure_ascii=False, indent=2), encoding="utf-8")
     (pasta / "anuncios.json").write_text(
@@ -214,36 +171,35 @@ def coletar(page_id: str, marca: str, saida: Path, limite: int, cliente: Any, se
     return {"pasta": str(pasta), "total": total, "selecionados": len(selecionados), "notas": notas}
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def criar_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Coleta de anúncios da Biblioteca do Meta via Apify (Skill 06).")
     sub = p.add_subparsers(dest="comando", required=True)
-    d = sub.add_parser("descobrir")
-    d.add_argument("--marca", required=True)
-    d.add_argument("--site")
-    d.add_argument("--saida", required=True, type=Path)
     c = sub.add_parser("coletar")
-    c.add_argument("--page-id", required=True)
+    pagina = c.add_mutually_exclusive_group(required=True)
+    pagina.add_argument("--link", help="link da página da marca na Biblioteca de Anúncios (com view_all_page_id=)")
+    pagina.add_argument("--page-id")
     c.add_argument("--marca", required=True)
     c.add_argument("--saida", required=True, type=Path)
-    c.add_argument("--limite", type=int, default=10)
-    args = p.parse_args(argv)
+    c.add_argument("--limite", type=int, default=LIMITE_PADRAO)
+    return p
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    args = criar_parser().parse_args(argv)
     try:
+        page_id = args.page_id or page_id_do_link(args.link)
         sessao = requests.Session()
         cliente = ClienteApify(ler_token(), sessao=sessao)
-        if args.comando == "descobrir":
-            print(texto_descoberta(descobrir(args.marca, args.site, args.saida, cliente)))
-        else:
-            r = coletar(args.page_id, args.marca, args.saida, args.limite, cliente, sessao, date.today())
-            total = r["total"] if r["total"] is not None else "não informado"
-            print(f'Coleta de {args.marca}: {r["selecionados"]} anúncios selecionados (total ativo: {total}).')
-            print(f'Resumo: {r["pasta"]}/resumo.md')
-            for n in r["notas"]:
-                print(f"- {n}")
+        r = coletar(page_id, args.marca, args.saida, args.limite, cliente, sessao, date.today())
+        total = r["total"] if r["total"] is not None else "não informado"
+        print(f'Coleta de {args.marca}: {r["selecionados"]} anúncios selecionados (total ativo: {total}).')
+        print(f'Resumo: {r["pasta"]}/resumo.md')
+        for n in r["notas"]:
+            print(f"- {n}")
     except ErroColeta as e:
         print(f"ERRO: {e}", file=sys.stderr)
         return 1
     return 0
-
 
 if __name__ == "__main__":
     sys.exit(main())

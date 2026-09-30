@@ -13,7 +13,6 @@ from meta_ads_apify import (  # noqa: E402
     entrada_ator,
     extrair_total,
     ler_token,
-    url_busca,
     url_pagina,
 )
 
@@ -72,9 +71,6 @@ def test_ler_token_ausente(tmp_path):
 
 
 def test_urls_e_entrada():
-    busca = url_busca("Marca Teste")
-    assert busca.startswith("https://www.facebook.com/ads/library/?")
-    assert "q=Marca+Teste" in busca and "country=BR" in busca and "search_type=keyword_unordered" in busca
     assert "view_all_page_id=111" in url_pagina("111")
     e = entrada_ator(url_pagina("111"), 40)
     assert e["startUrls"] == [{"url": url_pagina("111")}]
@@ -136,3 +132,26 @@ def test_limite_de_tempo_por_chamada():
     sessao = SessaoFalsa(criado(), [rodando("RUNNING")] * 5)
     with pytest.raises(ErroColeta, match="2 minutos"):
         cliente(sessao, relogio).executar({}, limite_segundos=150)
+
+
+def test_page_id_do_link_da_biblioteca():
+    from meta_ads_apify import page_id_do_link
+
+    assert page_id_do_link(
+        "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=BR&view_all_page_id=1812940462298746&search_type=page"
+    ) == "1812940462298746"
+    assert page_id_do_link("  facebook.com/ads/library/?view_all_page_id=123  ") == "123"
+
+
+@pytest.mark.parametrize("texto", [
+    "https://www.facebook.com/ads/library/?id=28908232825449860",
+    "https://www.facebook.com/insiderstore",
+    "https://www.facebook.com/ads/library/?q=insider&search_type=keyword_unordered",
+    "insider store",
+    "",
+])
+def test_link_que_nao_e_de_pagina_explica_qual_copiar(texto):
+    from meta_ads_apify import page_id_do_link
+
+    with pytest.raises(ErroColeta, match="view_all_page_id"):
+        page_id_do_link(texto)
