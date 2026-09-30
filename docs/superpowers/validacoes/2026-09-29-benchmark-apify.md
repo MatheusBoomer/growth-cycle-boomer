@@ -48,3 +48,16 @@ Etapa 06 reaberta (07 e 08 ficaram desatualizadas), briefing aprovado reaproveit
 - Achado do agente: a hipótese do briefing ("nenhum concorrente comunica atributo técnico de tecido") não se confirma mais; ele registrou como achado.
 - **Problema encontrado:** o briefing tinha 5 concorrentes nacionais + wearfigs, e o agente seguiu com 4 sem perguntar antes (só avisou no fim). Corrigido na skill em `9b8baa6`: com mais de 4, parar e perguntar antes da coleta; referência internacional fica de fora com aviso.
 - Tempo total do turno: ~40 min.
+
+## Revisão de custo (2026-09-30): link do analista e 5 criativos
+
+Pedido do analista: sem descoberta de página pela API (o analista informa o link da página na
+Biblioteca) e 5 criativos por marca. Commit `cfad192`.
+
+- `coletar --link "<link com view_all_page_id>"` na Insider Store: 70 s, 15 anúncios cobrados
+  (antes: 30 da descoberta + 40 da coleta), total ativo 1.101, 5 criativos distintos
+  (2 vídeos, 3 imagens estáticas), 1 duplicado descartado.
+- Link de anúncio avulso, de perfil do Facebook, de busca por palavra ou texto solto: recusado
+  com explicação de como copiar o link da página (testes).
+- Suíte Python: 67/67.
+- Estimativa por benchmark (4 concorrentes + prospect): ~80 anúncios na Apify (antes ~355).
