@@ -185,8 +185,11 @@ def normalizar_anuncio(bruto: Dict[str, Any]) -> Optional[Anuncio]:
                 imagens.append(u)
 
     exibicao = str(campo(snap, "displayFormat", "display_format") or "").upper()
+    # DCO (criativo dinâmico): os "cards" são variações do mesmo anúncio, não um carrossel.
     if exibicao == "DPA":
         formato = FORMATO_DPA
+    elif exibicao == "DCO":
+        formato = FORMATO_VIDEO if videos else FORMATO_IMAGEM
     elif exibicao == "CAROUSEL" or (exibicao != "VIDEO" and len(cards) >= 2):
         formato = FORMATO_CARROSSEL
     elif exibicao == "VIDEO" or videos:

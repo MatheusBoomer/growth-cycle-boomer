@@ -83,6 +83,11 @@ imagem mostrar claramente o layout de catálogo (grade com nome/preço do
 produto) num anúncio marcado de outro jeito, registre como Catálogo (DPA) e
 mencione na nota de coleta.
 
+**Criativo dinâmico (várias pastas `video-1`, `video-2`… ou `imagem-1`, `imagem-2`… no
+mesmo anúncio):** são variações do mesmo anúncio que a Meta alterna, não um carrossel.
+Descreva o conceito comum, diga quantas variações há e o que muda entre elas. Anúncio sem
+Copy no resumo costuma ter o texto na própria imagem: transcreva o que estiver legível.
+
 **Vídeos:** os arquivos `video-N-quadro-1..5.jpg` são quadros em ordem de
 tempo (~2 s, 25%, 50%, 75% e o final). Descreva a partir do primeiro quadro
 com conteúdo (nunca de um quadro preto ou de transição), registre os textos

@@ -192,3 +192,17 @@ def test_menos_anuncios_que_o_limite():
 def test_lista_vazia():
     baixar, _ = baixar_falso()
     assert selecionar([], 10, baixar) == ([], {"duplicados": 0, "catalogos_pulados": 0, "sem_midia": 0})
+
+
+def test_criativo_dinamico_dco_e_classificado_pela_midia_e_nao_como_carrossel():
+    # Na coleta real, metade dos anúncios veio como DCO: variações do mesmo criativo em "cards".
+    def dco(cards):
+        return normalizar_anuncio({"adArchiveID": "9", "pageID": "1", "snapshot": {"displayFormat": "DCO", "cards": cards}})
+
+    video = dco([{"videoHdUrl": "https://cdn.test/a.mp4", "videoPreviewImageUrl": "https://cdn.test/a.jpg"},
+                 {"videoHdUrl": "https://cdn.test/b.mp4", "videoPreviewImageUrl": "https://cdn.test/b.jpg"}])
+    imagem = dco([{"originalImageUrl": "https://cdn.test/a.jpg"}, {"originalImageUrl": "https://cdn.test/b.jpg"}])
+    assert video.formato == FORMATO_VIDEO
+    assert len(video.videos) == 2
+    assert imagem.formato == FORMATO_IMAGEM
+    assert len(imagem.imagens) == 2
