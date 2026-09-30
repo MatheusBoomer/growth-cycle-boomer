@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises"
 import path from "node:path"
 import type { NextRequest } from "next/server"
+import { politicaDeConteudoArquivo } from "@workspace/core/seguranca"
 import { json, respostaDeErro } from "@/lib/http"
 import { servidor } from "@/lib/servidor"
 
@@ -31,6 +32,8 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/prospects/[s
       "content-type": TIPOS[path.extname(abs).toLowerCase()] ?? "application/octet-stream",
       "cache-control": "no-store",
     }
+    const politica = politicaDeConteudoArquivo(path.extname(abs))
+    if (politica) headers["content-security-policy"] = politica
     if (download) headers["content-disposition"] = `attachment; filename*=UTF-8''${encodeURIComponent(path.basename(abs))}`
     return new Response(new Uint8Array(dados), { headers })
   } catch (e) {

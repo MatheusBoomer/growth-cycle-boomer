@@ -30,3 +30,12 @@ export function requisicaoLocalPermitida(r: DadosRequisicao): boolean {
   }
   return true
 }
+
+/**
+ * HTML de entregável é gerado pelo agente e pode trazer texto de anúncios de terceiros. Aberto
+ * direto (nova aba), ele rodaria na origem do app e poderia chamar as rotas; com CSP sandbox
+ * ganha origem opaca, como no iframe do visualizador. null = sem política extra.
+ */
+export function politicaDeConteudoArquivo(extensao: string): string | null {
+  return extensao.toLowerCase() === ".html" ? "sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox" : null
+}

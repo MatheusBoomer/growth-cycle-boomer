@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { requisicaoLocalPermitida } from "../src/seguranca"
+import { politicaDeConteudoArquivo, requisicaoLocalPermitida } from "../src/seguranca"
 
 const base = { metodo: "POST", host: "127.0.0.1:3000", origin: null, secFetchSite: null }
 
@@ -23,5 +23,16 @@ describe("requisicaoLocalPermitida", () => {
 
   it("GET de outra origem passa (o navegador já não deixa ler a resposta)", () => {
     expect(requisicaoLocalPermitida({ ...base, metodo: "GET", origin: "https://x.com", secFetchSite: "cross-site" })).toBe(true)
+  })
+})
+
+describe("arquivos servidos pela interface", () => {
+  it("HTML gerado pelo agente abre em sandbox, fora da origem do app", () => {
+    expect(politicaDeConteudoArquivo(".html")).toBe("sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox")
+    expect(politicaDeConteudoArquivo(".HTML")).toBe("sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox")
+  })
+  it("demais tipos não mudam", () => {
+    expect(politicaDeConteudoArquivo(".png")).toBeNull()
+    expect(politicaDeConteudoArquivo(".md")).toBeNull()
   })
 })
