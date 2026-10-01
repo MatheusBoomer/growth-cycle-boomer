@@ -16,7 +16,7 @@ import {
 } from "@workspace/ui/components/message-scroller"
 import { Markdown } from "@/components/markdown"
 import { api, mensagemDeErro } from "@/lib/api"
-import { agruparPassos, separarPassosAoVivo, type Passo } from "@/lib/passos"
+import { agruparProcesso, separarProcessoAoVivo, type EventoProcesso } from "@/lib/passos"
 import { Compositor } from "./compositor"
 import { ItemConversa } from "./item-conversa"
 
@@ -28,13 +28,14 @@ export interface PropsChatEtapa {
   delta: string
 }
 
-/** Detalhe do passo sem o prefixo da pasta do prospect, para caber numa linha. */
-function textoDoPasso(passo: Passo, slug: string): string {
-  return passo.detalhe.replaceAll(`clientes/${slug}/`, "")
+/** Linha curta de um item do processo: passo sem o prefixo da pasta do prospect, ou a 1ª linha da fala. */
+function linhaDoProcesso(e: EventoProcesso, slug: string): string {
+  if (e.tipo === "atividade") return e.detalhe.replaceAll(`clientes/${slug}/`, "")
+  return (e.texto.split("\n").find((l) => l.trim()) ?? "").replace(/[*_`#>]/g, "").trim()
 }
 
-/** Histórico de passos de um trecho do turno: uma linha recolhida que expande a lista. */
-function ListaDePassos({ passos, slug, resumo }: { passos: Passo[]; slug: string; resumo: string }) {
+/** Processo de um trecho do turno (passos + falas intermediárias): uma linha recolhida que expande. */
+function ListaDeProcesso({ itens, slug, resumo }: { itens: EventoProcesso[]; slug: string; resumo: string }) {
   return (
     <details className="group text-muted-foreground text-xs">
       <summary className="hover:text-foreground flex cursor-pointer list-none items-center gap-1.5 select-none">
@@ -42,18 +43,28 @@ function ListaDePassos({ passos, slug, resumo }: { passos: Passo[]; slug: string
         <WrenchIcon className="size-3.5" />
         {resumo}
       </summary>
-      <ol className="mt-2 ml-5 space-y-1 border-l pl-3">
-        {passos.map((p, i) => (
-          <li key={`${p.em}-${i}`} className="truncate" title={p.detalhe}>
-            {textoDoPasso(p, slug)}
-          </li>
-        ))}
+      <ol className="mt-2 ml-5 space-y-1.5 border-l pl-3">
+        {itens.map((e, i) =>
+          e.tipo === "atividade" ? (
+            <li key={`${e.em}-${i}`} className="truncate" title={e.detalhe}>
+              {linhaDoProcesso(e, slug)}
+            </li>
+          ) : (
+            <li key={`${e.em}-${i}`} className="text-foreground/80 text-sm">
+              <Markdown>{e.texto}</Markdown>
+            </li>
+          ),
+        )}
       </ol>
     </details>
   )
 }
 
-const executados = (n: number) => (n === 1 ? "1 passo executado" : `${n} passos executados`)
+function resumoDoProcesso(itens: EventoProcesso[]): string {
+  const passos = itens.filter((e) => e.tipo === "atividade").length
+  if (passos === 0) return "Processo"
+  return `Processo · ${passos === 1 ? "1 passo" : `${passos} passos`}`
+}
 
 export function ChatEtapa({ slug, etapa, dados, eventos, delta }: PropsChatEtapa) {
   const estadoEtapa = dados.estado.etapas[etapa]
@@ -68,8 +79,8 @@ export function ChatEtapa({ slug, etapa, dados, eventos, delta }: PropsChatEtapa
       ? "O agente está respondendo em outra etapa deste prospect."
       : null
 
-  const { itens, aoVivo } = separarPassosAoVivo(agruparPassos(eventos), ativoAqui)
-  const passoAtual = aoVivo.at(-1)
+  const { itens, aoVivo } = separarProcessoAoVivo(agruparProcesso(eventos, ativoAqui), ativoAqui)
+  const atual = aoVivo.at(-1)
 
   const tentarDeNovo = () =>
     api.enviarMensagem(slug, etapa, "Continue de onde parou.").catch((e) => toast.error(mensagemDeErro(e)))
@@ -88,9 +99,9 @@ export function ChatEtapa({ slug, etapa, dados, eventos, delta }: PropsChatEtapa
                 </MessageScrollerItem>
               )}
               {itens.map((item) =>
-                item.tipo === "passos" ? (
+                item.tipo === "processo" ? (
                   <MessageScrollerItem key={`passos-${item.indice}`} messageId={`evento-${item.indice}`}>
-                    <ListaDePassos passos={item.passos} slug={slug} resumo={executados(item.passos.length)} />
+                    <ListaDeProcesso itens={item.itens} slug={slug} resumo={resumoDoProcesso(item.itens)} />
                   </MessageScrollerItem>
                 ) : (
                   <MessageScrollerItem
@@ -111,13 +122,13 @@ export function ChatEtapa({ slug, etapa, dados, eventos, delta }: PropsChatEtapa
                           {delta ? (
                             <Markdown>{delta}</Markdown>
                           ) : (
-                            <span className="shimmer block truncate" title={passoAtual?.detalhe}>
-                              {passoAtual ? `${textoDoPasso(passoAtual, slug)}…` : "Pensando…"}
+                            <span className="shimmer block truncate">
+                              {atual ? `${linhaDoProcesso(atual, slug)}…` : "Pensando…"}
                             </span>
                           )}
                         </BubbleContent>
                       </Bubble>
-                      {aoVivo.length > 0 && <ListaDePassos passos={aoVivo} slug={slug} resumo={`Ver passos (${aoVivo.length})`} />}
+                      {aoVivo.length > 0 && <ListaDeProcesso itens={aoVivo} slug={slug} resumo={`Ver processo (${aoVivo.length})`} />}
                     </MessageContent>
                   </Message>
                 </MessageScrollerItem>

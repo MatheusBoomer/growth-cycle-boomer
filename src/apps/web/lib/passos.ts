@@ -1,27 +1,60 @@
 import type { EventoConversa } from "@workspace/core/tipos"
 
-export type Passo = Extract<EventoConversa, { tipo: "atividade" }>
+/** O que vai para o dropdown do processo: passos (ferramentas) e falas intermediárias do agente. */
+export type EventoProcesso = Extract<EventoConversa, { tipo: "atividade" | "texto_agente" }>
 
-/** Item do chat: um evento comum ou um bloco de passos consecutivos do agente. `indice` = posição do 1º evento. */
-export type ItemChat = { tipo: "evento"; evento: EventoConversa; indice: number } | { tipo: "passos"; passos: Passo[]; indice: number }
+/** Item do chat: um evento visível ou um bloco de processo. `indice` = posição do 1º evento. */
+export type ItemChat =
+  | { tipo: "evento"; evento: EventoConversa; indice: number }
+  | { tipo: "processo"; itens: EventoProcesso[]; indice: number }
 
-export function agruparPassos(eventos: EventoConversa[]): ItemChat[] {
+/** Eventos que separam turnos: dentro de um turno, só a última fala do agente é resposta. */
+function divisoria(e: EventoConversa): boolean {
+  return e.tipo === "mensagem_analista" || e.tipo === "turno_inicio" || e.tipo === "turno_fim"
+}
+
+/**
+ * Fala do agente é processo quando, no mesmo turno, ainda vieram passos depois dela (era
+ * narração do caminho, não a resposta). No turno em andamento toda fala é processo: a resposta
+ * só se define quando o turno termina, para o chat não "pular".
+ */
+function falasDeProcesso(eventos: EventoConversa[], turnoAtivo: boolean): Set<number> {
+  const processo = new Set<number>()
+  let passoDepois = false
+  let haDivisoriaDepois = false
+  for (let i = eventos.length - 1; i >= 0; i--) {
+    const e = eventos[i]!
+    if (divisoria(e)) {
+      passoDepois = false
+      haDivisoriaDepois = true
+    } else if (e.tipo === "atividade") {
+      passoDepois = true
+    } else if (e.tipo === "texto_agente" && (passoDepois || (turnoAtivo && !haDivisoriaDepois))) {
+      processo.add(i)
+    }
+  }
+  return processo
+}
+
+export function agruparProcesso(eventos: EventoConversa[], turnoAtivo: boolean): ItemChat[] {
+  const deProcesso = falasDeProcesso(eventos, turnoAtivo)
   const itens: ItemChat[] = []
   eventos.forEach((evento, indice) => {
+    const ehProcesso = evento.tipo === "atividade" || (evento.tipo === "texto_agente" && deProcesso.has(indice))
     const ultimo = itens.at(-1)
-    if (evento.tipo !== "atividade") itens.push({ tipo: "evento", evento, indice })
-    else if (ultimo?.tipo === "passos") ultimo.passos.push(evento)
-    else itens.push({ tipo: "passos", passos: [evento], indice })
+    if (!ehProcesso) itens.push({ tipo: "evento", evento, indice })
+    else if (ultimo?.tipo === "processo") ultimo.itens.push(evento as EventoProcesso)
+    else itens.push({ tipo: "processo", itens: [evento as EventoProcesso], indice })
   })
   return itens
 }
 
 /**
- * Com o turno em andamento, o bloco de passos mais recente (depois da última fala do agente) é o
- * que ele está executando agora: sai da lista e aparece no balão "Pensando…".
+ * Com o turno em andamento, o bloco de processo mais recente é o que o agente está fazendo
+ * agora: sai da lista e aparece no balão "Pensando…".
  */
-export function separarPassosAoVivo(itens: ItemChat[], turnoAtivo: boolean): { itens: ItemChat[]; aoVivo: Passo[] } {
+export function separarProcessoAoVivo(itens: ItemChat[], turnoAtivo: boolean): { itens: ItemChat[]; aoVivo: EventoProcesso[] } {
   const ultimo = itens.at(-1)
-  if (!turnoAtivo || ultimo?.tipo !== "passos") return { itens, aoVivo: [] }
-  return { itens: itens.slice(0, -1), aoVivo: ultimo.passos }
+  if (!turnoAtivo || ultimo?.tipo !== "processo") return { itens, aoVivo: [] }
+  return { itens: itens.slice(0, -1), aoVivo: ultimo.itens }
 }
