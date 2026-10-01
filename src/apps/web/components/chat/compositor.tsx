@@ -1,6 +1,6 @@
 "use client"
 
-import { FileIcon, PaperclipIcon, SendIcon, SquareIcon } from "lucide-react"
+import { FileIcon, PaperclipIcon, PanelRightOpenIcon, SendIcon, SquareIcon } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import type { EtapaId } from "@workspace/core/tipos"
@@ -32,7 +32,9 @@ export function Compositor({
   const [anexando, setAnexando] = useState(false)
   const entradaArquivo = useRef<HTMLInputElement>(null)
   const campo = useRef<HTMLTextAreaElement>(null)
-  const { registrarCompositor } = useVisualizador()
+  const { registrarCompositor, abrirArquivo } = useVisualizador()
+  // Shift pressionado com a lista do @ aberta = modo consulta: o arquivo abre na lateral em vez de ser mencionado.
+  const [shift, setShift] = useState(false)
   const [arquivos, setArquivos] = useState<string[] | null>(null)
   const [consulta, setConsulta] = useState<{ inicio: number; termo: string } | null>(null)
   const [destaque, setDestaque] = useState(0)
@@ -57,6 +59,25 @@ export function Compositor({
       ? arquivos.filter((c) => c.toLowerCase().includes(consulta.termo.toLowerCase())).slice(0, MAX_SUGESTOES)
       : []
   const listaAberta = consulta !== null && sugestoes.length > 0
+
+  useEffect(() => {
+    const aoTeclar = (ev: KeyboardEvent) => setShift(ev.shiftKey)
+    const soltar = () => setShift(false)
+    window.addEventListener("keydown", aoTeclar)
+    window.addEventListener("keyup", aoTeclar)
+    window.addEventListener("blur", soltar)
+    return () => {
+      window.removeEventListener("keydown", aoTeclar)
+      window.removeEventListener("keyup", aoTeclar)
+      window.removeEventListener("blur", soltar)
+    }
+  }, [])
+
+  /** Abre o arquivo na janela embaixo do painel sem mencionar; a lista e o que foi digitado continuam. */
+  function consultar(caminho: string) {
+    abrirArquivo(caminho)
+    campo.current?.focus()
+  }
 
   function atualizarConsulta(valor: string, cursor: number) {
     const c = consultaDeMencao(valor, cursor)
@@ -123,8 +144,12 @@ export function Compositor({
           {listaAberta && (
             <ul
               role="listbox"
-              aria-label="Arquivos para mencionar"
-              className="bg-popover text-popover-foreground absolute bottom-full left-0 z-20 mb-1 max-h-64 w-full overflow-y-auto rounded-md border p-1 shadow-md"
+              aria-label={shift ? "Arquivos para abrir na lateral" : "Arquivos para mencionar"}
+              data-modo={shift ? "consulta" : "mencao"}
+              className={cn(
+                "bg-popover text-popover-foreground absolute bottom-full left-0 z-20 mb-1 max-h-72 w-full overflow-y-auto rounded-md border p-1 shadow-md",
+                shift && "border-primary ring-primary/30 ring-2",
+              )}
             >
               {sugestoes.map((c, i) => (
                 <li key={c} role="option" aria-selected={i === destaque}>
@@ -132,16 +157,31 @@ export function Compositor({
                     type="button"
                     onMouseDown={(ev) => {
                       ev.preventDefault()
-                      escolher(c)
+                      if (ev.shiftKey) consultar(c)
+                      else escolher(c)
                     }}
-                    className={cn("flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm", i === destaque && "bg-muted")}
+                    className={cn(
+                      "flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm",
+                      i === destaque && (shift ? "bg-primary/15 text-primary" : "bg-muted"),
+                    )}
                   >
-                    <FileIcon className="text-muted-foreground size-3.5 shrink-0" />
+                    {shift ? (
+                      <PanelRightOpenIcon className="text-primary size-3.5 shrink-0" />
+                    ) : (
+                      <FileIcon className="text-muted-foreground size-3.5 shrink-0" />
+                    )}
                     <span className="truncate font-medium">{c.split("/").pop()}</span>
                     <span className="text-muted-foreground ml-auto truncate text-xs">{c.split("/").slice(0, -1).join("/")}</span>
                   </button>
                 </li>
               ))}
+              <li role="presentation" className="text-muted-foreground mt-1 border-t px-2 pt-1 pb-0.5 text-[11px]">
+                {shift ? (
+                  <span className="text-primary font-medium">Abrir na lateral para consultar · solte o Shift para mencionar</span>
+                ) : (
+                  "Enter menciona · segure Shift para abrir na lateral"
+                )}
+              </li>
             </ul>
           )}
         <Textarea
@@ -158,6 +198,11 @@ export function Compositor({
                 e.preventDefault()
                 const passo = e.key === "ArrowDown" ? 1 : -1
                 setDestaque((d) => (d + passo + sugestoes.length) % sugestoes.length)
+                return
+              }
+              if (e.key === "Enter" && e.shiftKey) {
+                e.preventDefault()
+                consultar(sugestoes[destaque]!)
                 return
               }
               if (e.key === "Enter" || e.key === "Tab") {
