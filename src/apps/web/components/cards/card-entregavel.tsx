@@ -1,6 +1,6 @@
 "use client"
 
-import { CheckIcon } from "lucide-react"
+import { AtSignIcon, CheckIcon } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import { destinoAprovado } from "@workspace/core/entregaveis"
@@ -26,7 +26,7 @@ const ROTULO_TIPO: Record<TipoEntregavel, string> = {
 export const ROTULO_STATUS_ENTREGAVEL: Record<StatusEntregavel, string> = { pendente: "Aguardando aprovação", aprovado: "Aprovado", substituido: "Substituído" }
 
 export function CardEntregavel({ slug, entregavel: e }: { slug: string; entregavel: Entregavel }) {
-  const { abrir } = useVisualizador()
+  const { abrir, abrirArquivo, mencionar } = useVisualizador()
   const [ajusteAberto, setAjusteAberto] = useState(false)
   const [texto, setTexto] = useState("")
   const [ocupado, setOcupado] = useState(false)
@@ -63,7 +63,16 @@ export function CardEntregavel({ slug, entregavel: e }: { slug: string; entregav
         <CardDescription>
           {ROTULO_TIPO[e.tipo]} · vai para a apresentação como <code className="font-mono">{nomeNaApresentacao}</code>
         </CardDescription>
-        <CardAction>
+        <CardAction className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Mencionar no chat"
+            title="Mencionar no chat"
+            onClick={() => mencionar(e.arquivoRascunho)}
+          >
+            <AtSignIcon />
+          </Button>
           <Badge variant={e.status === "aprovado" ? "default" : e.status === "pendente" ? "outline" : "secondary"}>
             {ROTULO_STATUS_ENTREGAVEL[e.status]}
           </Badge>
@@ -75,7 +84,7 @@ export function CardEntregavel({ slug, entregavel: e }: { slug: string; entregav
           tipo={e.tipo}
           caminho={e.arquivoRascunho}
           titulo={e.titulo}
-          aoAbrir={e.tipo === "html" ? () => abrir(e.etapa, e.nomeFinal) : undefined}
+          aoAbrir={e.tipo === "html" ? () => abrir(e.etapa, e.nomeFinal) : () => abrirArquivo(e.arquivoRascunho)}
         />
         {(e.tipo === "grafico" || e.tipo === "tabela") && e.status === "pendente" && (
           <p className="text-sm">Confirme se os valores representados no gráfico correspondem exatamente aos dados enviados.</p>

@@ -41,23 +41,25 @@ export function alvoDeDigitacao(el: ElementoFoco | null): boolean {
 
 // Larguras lembradas no navegador. No servidor (render inicial do Next) não há localStorage, e em
 // janela anônima ele pode recusar: nos dois casos, vale o layout padrão.
-function chave(aberto: boolean): string {
-  return `area-de-trabalho:${aberto ? "com" : "sem"}-visualizador`
+export function chaveColunas(visualizadorAberto: boolean): string {
+  return `area-de-trabalho:${visualizadorAberto ? "com" : "sem"}-visualizador`
 }
 
-export function lerLayout(aberto: boolean): Layout | null {
+export const CHAVE_COLUNA_DIREITA = "area-de-trabalho:coluna-direita"
+
+export function lerLayout(chave: string): Layout | null {
   try {
     if (typeof window === "undefined") return null
-    const texto = window.localStorage.getItem(chave(aberto))
+    const texto = window.localStorage.getItem(chave)
     return texto ? (JSON.parse(texto) as Layout) : null
   } catch {
     return null
   }
 }
 
-export function salvarLayout(aberto: boolean, layout: Layout): void {
+export function salvarLayout(chave: string, layout: Layout): void {
   try {
-    window.localStorage.setItem(chave(aberto), JSON.stringify(layout))
+    window.localStorage.setItem(chave, JSON.stringify(layout))
   } catch {
     // sem armazenamento: o layout só não fica lembrado
   }

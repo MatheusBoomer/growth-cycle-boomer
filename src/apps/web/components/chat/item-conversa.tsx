@@ -10,6 +10,32 @@ import { Message, MessageContent } from "@workspace/ui/components/message"
 import { CardEntregavel } from "@/components/cards/card-entregavel"
 import { CardInsumo } from "@/components/cards/card-insumo"
 import { Markdown } from "@/components/markdown"
+import { useVisualizador } from "@/components/trabalho/contexto-visualizador"
+import { partesComMencoes, semRodape } from "@/lib/mencoes"
+
+/** Mensagem do analista com as menções "@arquivo" como etiquetas que abrem o arquivo. */
+function TextoComMencoes({ texto }: { texto: string }) {
+  const { abrirArquivo } = useVisualizador()
+  return (
+    <>
+      {partesComMencoes(semRodape(texto)).map((p, i) =>
+        p.tipo === "texto" ? (
+          <span key={i}>{p.valor}</span>
+        ) : (
+          <button
+            key={i}
+            type="button"
+            title={p.caminho}
+            onClick={() => abrirArquivo(p.caminho)}
+            className="bg-primary-foreground/15 hover:bg-primary-foreground/25 mx-0.5 inline rounded px-1 font-mono text-[0.85em] underline-offset-2 hover:underline"
+          >
+            @{p.caminho.split("/").pop()}
+          </button>
+        ),
+      )}
+    </>
+  )
+}
 
 function resumoAutomatico(texto: string): string {
   const primeira = texto.split("\n")[0] ?? ""
@@ -41,7 +67,9 @@ export function ItemConversa({
         <Message align="end">
           <MessageContent>
             <Bubble variant="default" align="end">
-              <BubbleContent className="whitespace-pre-wrap">{evento.texto}</BubbleContent>
+              <BubbleContent className="whitespace-pre-wrap">
+                <TextoComMencoes texto={evento.texto} />
+              </BubbleContent>
             </Bubble>
           </MessageContent>
         </Message>

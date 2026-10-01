@@ -55,6 +55,7 @@ export const api = {
     chamar<ResultadoValidacao>(`${base(slug)}/etapas/${etapa}/insumos/${insumoId}`, multipart(arquivo)),
   enviarLink: (slug: string, etapa: EtapaId, insumoId: string, url: string) =>
     chamar<ResultadoValidacao>(`${base(slug)}/etapas/${etapa}/insumos/${insumoId}`, comJson("POST", { url })),
+  listarArquivos: (slug: string) => chamar<{ arquivos: { caminho: string; modificadoEm: string }[] }>(`${base(slug)}/arquivos`),
   enviarAnexo: (slug: string, etapa: EtapaId, arquivo: File) =>
     chamar<{ caminho: string }>(`${base(slug)}/etapas/${etapa}/anexos`, multipart(arquivo)),
 }

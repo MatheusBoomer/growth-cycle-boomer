@@ -1,11 +1,10 @@
 "use client"
 
-import { DownloadIcon, FileCode2Icon, FileSpreadsheetIcon, FileTextIcon, Maximize2Icon, PanelRightOpenIcon } from "lucide-react"
+import { DownloadIcon, FileCode2Icon, FileSpreadsheetIcon, FileTextIcon, PanelRightOpenIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 import type { TipoEntregavel } from "@workspace/core/tipos"
 import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from "@workspace/ui/components/attachment"
 import { Button } from "@workspace/ui/components/button"
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@workspace/ui/components/dialog"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { Markdown } from "@/components/markdown"
 import { urlArquivo } from "@/lib/api"
@@ -39,20 +38,17 @@ export function PreviaArquivo({
 
   if (tipo === "grafico" || tipo === "tabela") {
     return (
-      <Dialog>
-        <div className="group relative">
+      <div className="group relative">
+        <button type="button" className="block w-full cursor-zoom-in" onClick={aoAbrir} aria-label={`Abrir ${titulo}`} disabled={!aoAbrir}>
           {/* eslint-disable-next-line @next/next/no-img-element -- arquivo local servido pela rota do app */}
           <img src={url} alt={titulo} className="w-full rounded-md border bg-white" />
-          <DialogTrigger render={<Button size="sm" variant="secondary" className="absolute top-2 right-2" />}>
-            <Maximize2Icon /> Ampliar
-          </DialogTrigger>
-        </div>
-        <DialogContent className="max-w-[92vw] sm:max-w-[92vw]">
-          <DialogTitle>{titulo}</DialogTitle>
-          {/* eslint-disable-next-line @next/next/no-img-element -- arquivo local servido pela rota do app */}
-          <img src={url} alt={titulo} className="max-h-[80vh] w-full object-contain" />
-        </DialogContent>
-      </Dialog>
+        </button>
+        {aoAbrir && (
+          <Button size="sm" variant="secondary" className="absolute top-2 right-2" onClick={aoAbrir}>
+            <PanelRightOpenIcon /> Abrir
+          </Button>
+        )}
+      </div>
     )
   }
   if (tipo === "secao") {

@@ -18,7 +18,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
 import { CardInsumo } from "@/components/cards/card-insumo"
-import { api, mensagemDeErro, urlArquivo, type AcaoEtapa } from "@/lib/api"
+import { api, mensagemDeErro, type AcaoEtapa } from "@/lib/api"
 import { useVisualizador } from "./contexto-visualizador"
 
 const COR: Record<StatusEntregavel, string> = { pendente: "bg-amber-500", aprovado: "bg-primary", substituido: "bg-muted-foreground/40" }
@@ -29,7 +29,7 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
   const entregaveis = dados.estado.entregaveis.filter((e) => e.etapa === etapa && e.status !== "substituido")
   const condicoes = dados.condicoes[etapa]
   const [ocupado, setOcupado] = useState<AcaoEtapa | null>(null)
-  const { abrir } = useVisualizador()
+  const { abrir, abrirArquivo } = useVisualizador()
 
   async function executar(acao: AcaoEtapa, sucesso: string) {
     setOcupado(acao)
@@ -64,7 +64,9 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
                       {e.titulo}
                     </button>
                   ) : (
-                    <span className="truncate">{e.titulo}</span>
+                    <button type="button" className="truncate text-left hover:underline" onClick={() => abrirArquivo(e.arquivoRascunho)}>
+                      {e.titulo}
+                    </button>
                   )}
                   <span className="text-muted-foreground ml-auto text-xs">{e.status === "pendente" ? "aguardando" : "aprovado"}</span>
                 </li>
@@ -84,9 +86,9 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
               <ul className="mt-2 space-y-1">
                 {dados.aprovadosForaDaInterface.map((caminho) => (
                   <li key={caminho} className="truncate text-sm">
-                    <a className="hover:underline" href={urlArquivo(slug, caminho)} target="_blank" rel="noreferrer" title={caminho}>
+                    <button type="button" className="max-w-full truncate text-left hover:underline" onClick={() => abrirArquivo(caminho)} title={caminho}>
                       {caminho.replace("entrega/ativos-aprovados/", "")}
-                    </a>
+                    </button>
                   </li>
                 ))}
               </ul>

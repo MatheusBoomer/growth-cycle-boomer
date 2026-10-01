@@ -30,6 +30,21 @@ function codigoErro(e: unknown): string | undefined {
 
 const emBarras = (p: string) => p.split(path.sep).join("/")
 
+const PASTAS_DO_APP_VISIVEIS = [".app/propostas/", ".app/rascunhos/", ".app/anexos/"]
+
+/** Arquivo que o analista pode abrir e mencionar no chat: tudo da pasta do prospect, menos o estado interno do app. */
+export function arquivoVisivel(relativo: string): boolean {
+  const nome = relativo.split("/").pop() ?? ""
+  if (!nome || nome.startsWith(".") || nome.startsWith("~$")) return false
+  if (relativo.startsWith(".app/")) return PASTAS_DO_APP_VISIVEIS.some((p) => relativo.startsWith(p))
+  return true
+}
+
+export interface ArquivoProspect {
+  caminho: string
+  modificadoEm: string
+}
+
 export class FsArmazenamento {
   readonly raiz: string
   readonly pastaClientes: string
@@ -162,6 +177,27 @@ export class FsArmazenamento {
       if (codigoErro(e) === "ENOENT") return []
       throw e
     }
+  }
+
+  /** Arquivos visíveis do prospect (ver arquivoVisivel), mais recentes primeiro. */
+  async listarArquivosDoProspect(slug: string): Promise<ArquivoProspect[]> {
+    const pasta = this.pastaProspect(slug)
+    let itens
+    try {
+      itens = await readdir(pasta, { recursive: true, withFileTypes: true })
+    } catch (e) {
+      if (codigoErro(e) === "ENOENT") return []
+      throw e
+    }
+    const arquivos: ArquivoProspect[] = []
+    for (const i of itens) {
+      if (!i.isFile()) continue
+      const caminho = emBarras(path.relative(pasta, path.join(i.parentPath, i.name)))
+      if (!arquivoVisivel(caminho)) continue
+      const info = await stat(path.join(i.parentPath, i.name))
+      arquivos.push({ caminho, modificadoEm: info.mtime.toISOString() })
+    }
+    return arquivos.sort((a, b) => (a.modificadoEm < b.modificadoEm ? 1 : a.modificadoEm > b.modificadoEm ? -1 : 0))
   }
 
   async listarAprovados(slug: string): Promise<string[]> {

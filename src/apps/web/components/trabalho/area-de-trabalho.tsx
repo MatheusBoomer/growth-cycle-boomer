@@ -2,7 +2,7 @@
 
 import { PanelLeftCloseIcon, PanelLeftOpenIcon, PanelRightCloseIcon, PanelRightOpenIcon } from "lucide-react"
 import Link from "next/link"
-import { useCallback, useEffect, useState, type PointerEvent as EventoPonteiro } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as EventoPonteiro } from "react"
 import { entregavelVisivel, htmlParaAbrir } from "@workspace/core/entregaveis"
 import { ORDEM_ETAPAS, type Entregavel, type EtapaId, type Estado, type StatusEtapa } from "@workspace/core/tipos"
 import { Badge } from "@workspace/ui/components/badge"
@@ -19,12 +19,13 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
 import { ChatEtapa } from "@/components/chat/chat-etapa"
 import { useAreaDeTrabalho } from "@/hooks/use-area-de-trabalho"
-import { layoutParaVisualizador, lerLayout, salvarLayout, type Layout } from "@/lib/layout-colunas"
+import { CHAVE_COLUNA_DIREITA, chaveColunas, layoutParaVisualizador, lerLayout, salvarLayout, type Layout } from "@/lib/layout-colunas"
 import { ContextoVisualizador } from "./contexto-visualizador"
 import { EtapaLiberada } from "./etapa-liberada"
 import { ROTULO_STATUS } from "./icone-status"
 import { PainelEtapa } from "./painel-etapa"
 import { TrilhaEtapas } from "./trilha-etapas"
+import { VisualizadorArquivo } from "./visualizador-arquivo"
 import { VisualizadorHtml } from "./visualizador-html"
 
 export function escolherEtapaInicial(estado: Estado): EtapaId {
@@ -53,6 +54,9 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   const painelRef = usePanelRef()
   const etapa = selecionada ?? (dados ? escolherEtapaInicial(dados.estado) : null)
   const visualizadorAberto = visualizador !== null && visualizador.etapa === etapa
+  const [arquivoAberto, setArquivoAberto] = useState<string | null>(null)
+  const colunaDireitaRef = useGroupRef()
+  const inserirNoCompositor = useRef<((texto: string) => void) | null>(null)
 
   // HTML novo proposto na etapa aberta abre o visualizador sozinho, uma vez por nome final.
   // Estado ajustado durante a renderização: é o padrão do React para reagir a dado novo sem efeito.
@@ -74,6 +78,37 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
     setVisualizador(null)
   }, [])
   const alternarTelaCheia = useCallback(() => setTelaCheia((v) => !v), [])
+  const abrirArquivo = useCallback(
+    (caminho: string) => {
+      if (painelRef.current?.isCollapsed()) painelRef.current.expand()
+      setArquivoAberto(caminho)
+    },
+    [painelRef],
+  )
+  const fecharArquivo = useCallback(() => setArquivoAberto(null), [])
+  const mencionar = useCallback((caminho: string) => inserirNoCompositor.current?.(`@${caminho} `), [])
+  const registrarCompositor = useCallback((inserir: ((texto: string) => void) | null) => {
+    inserirNoCompositor.current = inserir
+  }, [])
+  const controle = useMemo(
+    () => ({ abrir, abrirArquivo, mencionar, registrarCompositor }),
+    [abrir, abrirArquivo, mencionar, registrarCompositor],
+  )
+
+  // Arquivo aberto (janela embaixo do painel da etapa): mesmo princípio do visualizador de
+  // relatório, painel sempre montado e altura lembrada no navegador.
+  const temArquivo = arquivoAberto !== null
+  useEffect(() => {
+    const grupo = colunaDireitaRef.current
+    if (!grupo) return
+    try {
+      const salvo = lerLayout(CHAVE_COLUNA_DIREITA)
+      const aberto = salvo && (salvo.arquivo ?? 0) > 0 && (salvo.etapa ?? 0) > 0 ? salvo : { etapa: 45, arquivo: 55 }
+      grupo.setLayout(temArquivo ? aberto : { etapa: 100, arquivo: 0 })
+    } catch {
+      // grupo ainda montando: vale o layout que ele tiver
+    }
+  }, [temArquivo, colunaDireitaRef])
 
   useEffect(() => {
     if (etapa && dados && conversas[etapa] === undefined) void carregarConversa(etapa)
@@ -86,7 +121,7 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
     const grupo = grupoRef.current
     if (!grupo) return
     try {
-      grupo.setLayout(layoutParaVisualizador(grupo.getLayout(), lerLayout(visualizadorAberto), visualizadorAberto))
+      grupo.setLayout(layoutParaVisualizador(grupo.getLayout(), lerLayout(chaveColunas(visualizadorAberto)), visualizadorAberto))
     } catch {
       // grupo ainda montando ou já desmontado: vale o layout que ele tiver
     }
@@ -131,11 +166,11 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   const indice = ORDEM_ETAPAS.indexOf(etapa)
   const anterior = indice > 0 ? ORDEM_ETAPAS[indice - 1]! : null
   const mostrarChat = estadoEtapa.status !== "liberada" && estadoEtapa.status !== "bloqueada"
-  const salvoInicial = lerLayout(false)
+  const salvoInicial = lerLayout(chaveColunas(false))
   const layoutInicial = salvoInicial && Object.keys(salvoInicial).sort().join() === IDS_COLUNAS.join() ? salvoInicial : undefined
   function aoMudarLayout(layout: Layout) {
     // Só grava quando o layout corresponde ao estado atual (não no meio de uma troca).
-    if ((layout.visualizador ?? 0) > 0 === visualizadorAberto) salvarLayout(visualizadorAberto, layout)
+    if ((layout.visualizador ?? 0) > 0 === visualizadorAberto) salvarLayout(chaveColunas(visualizadorAberto), layout)
   }
   const painelVisualizador = visualizadorAberto ? (
     <VisualizadorHtml
@@ -153,7 +188,7 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   }
 
   return (
-    <ContextoVisualizador.Provider value={{ abrir }}>
+    <ContextoVisualizador.Provider value={controle}>
       <div className={cn("h-svh", arrastando && "[&_iframe]:pointer-events-none")} onPointerDownCapture={aoApertar}>
         <ResizablePanelGroup groupRef={grupoRef} orientation="horizontal" defaultLayout={layoutInicial} onLayoutChanged={aoMudarLayout}>
           <ResizablePanel
@@ -225,7 +260,38 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
             collapsedSize="0%"
             onResize={(tamanho) => setPainelRecolhido(tamanho.asPercentage === 0)}
           >
-            <PainelEtapa slug={slug} etapa={etapa} dados={dados} />
+            <ResizablePanelGroup
+              groupRef={colunaDireitaRef}
+              orientation="vertical"
+              onLayoutChanged={(layout: Layout) => {
+                if (temArquivo && (layout.arquivo ?? 0) > 0) salvarLayout(CHAVE_COLUNA_DIREITA, layout)
+              }}
+            >
+              <ResizablePanel id="etapa" minSize="120px">
+                <PainelEtapa slug={slug} etapa={etapa} dados={dados} />
+              </ResizablePanel>
+              <ResizableHandle withHandle className={cn(!temArquivo && "hidden")} />
+              <ResizablePanel
+                id="arquivo"
+                defaultSize="0%"
+                minSize="160px"
+                collapsible
+                collapsedSize="0%"
+                onResize={(tamanho) => {
+                  // Arrastar a janela do arquivo até sumir é o mesmo que fechá-la.
+                  if (tamanho.asPercentage === 0 && temArquivo) fecharArquivo()
+                }}
+              >
+                {arquivoAberto && (
+                  <VisualizadorArquivo
+                    slug={slug}
+                    caminho={arquivoAberto}
+                    aoMencionar={() => mencionar(arquivoAberto)}
+                    aoFechar={fecharArquivo}
+                  />
+                )}
+              </ResizablePanel>
+            </ResizablePanelGroup>
           </ResizablePanel>
         </ResizablePanelGroup>
         {visualizadorAberto && telaCheia && <div className="fixed inset-0 z-40">{painelVisualizador}</div>}
