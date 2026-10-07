@@ -147,6 +147,17 @@ def _preencher(prs, slide, tipo: str, dados: dict, pasta: Path, numero: int, avi
             avisos.append(f"Slide {numero}, campo {nome}: o texto provavelmente não cabe na caixa ({ap.ocupacao(forma):.0%} do espaço).")
 
 
+def _graficos_fora_do_roteiro(roteiro: dict, pasta: Path) -> List[str]:
+    """Gráficos e tabelas aprovados que nenhum slide usa: todo aprovado deve entrar no deck."""
+    usados = set()
+    for s in roteiro["slides"]:
+        for valor in [s.get("imagem")] + list(s.get("imagens") or []):
+            if isinstance(valor, str):
+                usados.add((pasta / valor).resolve())
+    aprovados = sorted((pasta / "entrega/ativos-aprovados/graficos").glob("*.png"))
+    return [p.name for p in aprovados if p.resolve() not in usados]
+
+
 def gerar(roteiro: dict, pasta_prospect: Path, saida: Path, molde: Path = CAMINHO_MOLDE) -> dict:
     prs = Presentation(molde)
     modelos = {ap.tipo_do_slide(s): s for s in prs.slides}
@@ -170,6 +181,9 @@ def gerar(roteiro: dict, pasta_prospect: Path, saida: Path, molde: Path = CAMINH
         })
     for modelo in modelos.values():
         ap.remover_slide(prs, modelo)
+    fora = _graficos_fora_do_roteiro(roteiro, pasta_prospect)
+    if fora:
+        avisos.append(f"{len(fora)} gráficos aprovados não entraram no roteiro: {', '.join(fora)}.")
     saida.parent.mkdir(parents=True, exist_ok=True)
     prs.save(saida)
     caminho_mapa = saida.with_name("mapa-slides.json")

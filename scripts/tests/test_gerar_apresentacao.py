@@ -161,3 +161,18 @@ def test_benchmark_com_criativo_repetido(prospect, tmp_path):
     r = ga.gerar(roteiro, prospect, tmp_path / "deck.pptx")
     c = ap.campos(Presentation(tmp_path / "deck.pptx").slides[4])
     assert r["slides"] == 6 and c["imagem_1"].image.blob == c["imagem_3"].image.blob
+
+
+def test_aviso_de_graficos_aprovados_fora_do_roteiro(prospect, tmp_path):
+    graficos = prospect / "entrega/ativos-aprovados/graficos"
+    Image.new("RGB", (800, 400)).save(graficos / "cac-mensal.png")
+    Image.new("RGB", (800, 400)).save(graficos / "tabela-calendario.png")
+    r = ga.gerar(roteiro_basico(), prospect, tmp_path / "deck.pptx")
+    aviso = next(a for a in r["avisos"] if "não entraram" in a)
+    assert "2 gráficos aprovados" in aviso and "cac-mensal.png" in aviso and "tabela-calendario.png" in aviso
+    assert "roas.png" not in aviso
+
+
+def test_sem_aviso_quando_todos_os_graficos_estao_no_roteiro(prospect, tmp_path):
+    r = ga.gerar(roteiro_basico(), prospect, tmp_path / "deck.pptx")
+    assert not any("não entraram" in a for a in r["avisos"])

@@ -50,12 +50,32 @@ dos campos é o `ESQUEMA` em `scripts/gerar_apresentacao.py`:
 Opcionais em qualquer slide: `fonte` e `pendencia`. Imagens: caminhos relativos
 à pasta do prospect (png ou jpg).
 
+Estrutura de referência (deck de 61 slides entregue à Sottile Jalecos; siga
+esta espinha e adapte ao material de cada prospect):
+
+| Seção | Slides, na ordem |
+|---|---|
+| Abertura | capa · jornada (6 seções) |
+| 01. Cenário atual | divisória · um `grafico` por gráfico do diagnóstico (investimento, receita captada x aprovada, taxa de quebra, ROAS global, ROAS por plataforma, sessões, dependência de mídia, conversão global, funil de eventos, conversão por plataforma, Curva ABC, top 10 produtos, CAC, novos x recorrentes) com 1 a 3 conclusões · `analises_2_colunas` depois de cada bloco (investimento e receita; conversão) · `tabela_lateral` por curva (A, B, C) · análise de criativos do próprio prospect quando houver imagem aprovada |
+| 02. Desafios | divisória · `bullets` com a lista de desafios · `cartoes` com os 3 pilares · um `bullets` por iniciativa de cada pilar (ex.: retenção de base, auditoria de rastreio, ofertas, sessões x conversão, ROAS) |
+| 03. Benchmarking | divisória · um `benchmark` por concorrente (3 criativos, conclusões, link da página) · `bullets` com as análises de benchmarking |
+| 04. Metas | divisória · `imagem_larga` com a tabela de metas e os 3 cenários · `grafico` com as curvas dos cenários |
+| 05. Cenários e impactos | divisória · `bullets` com a metodologia (KPIs influenciadores e de resultado) · `imagem_larga` com as tabelas de projeção e de KPIs · `bullets` com as considerações · alocação de verba (`grafico` e `imagem_larga`) · estratégia por Curva ABC · calendário de mídia · ROAS esperado · dependência de mídia paga |
+| 06. Plano de ação | divisória · estrutura de campanhas (imagem aprovada, se houver) · `bullets` sobre as campanhas · `imagem_larga` com os planos de ação (B2C, B2B) |
+| Fechamento | obrigado |
+
 Regras:
 - Ordem: capa → jornada → divisória 01 + slides → … → divisória 06 + slides → obrigado.
   Divisórias: "CENÁRIO **ATUAL**", "DESAFIOS", "ANÁLISE DE **BENCHMARKING**",
   "**METAS**", "**CENÁRIOS** E IMPACTOS **ESPERADOS**", "PLANO **DE AÇÃO**".
-- Um slide `grafico` por gráfico aprovado relevante; tabelas aprovadas usam
-  `tabela_lateral` (tabela alta) ou `imagem_larga` (tabela larga).
+- **Cobertura obrigatória:** todo gráfico e toda tabela de
+  `entrega/ativos-aprovados/graficos/` entra no deck, um slide cada (`grafico`;
+  tabelas em `tabela_lateral` quando altas ou `imagem_larga` quando largas). Só
+  sai se o analista pedir no ajuste do roteiro. O gerador avisa quando algum
+  aprovado ficou de fora: trate o aviso antes de propor o deck.
+- **Escala esperada:** 40 a 60 slides, como o deck de referência. Um deck
+  muito menor indica que faltou material ou cobertura; diga ao analista o que
+  falta em vez de enxugar.
 - Títulos curtos no padrão do deck ("Cenário Atual", "Metas do projeto"…);
   subtítulos com o destaque em `**negrito**`.
 - Conclusões: no máximo 3 por slide, frases curtas (até ~90 caracteres),
