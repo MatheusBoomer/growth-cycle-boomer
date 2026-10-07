@@ -39,7 +39,11 @@ Revisor independente: pronto com correções. Corrigidos com teste: comentários
 (perda de comentário ou ajuste em dobro em ações simultâneas), numeração da tela diferente
 da enviada ao agente, arraste deslocado por rolagem ou preso após perder o ponteiro. Também:
 o visualizador remonta a cada versão e o servidor completa o serviço de comentários num
-`next dev` que já estava rodando (não precisa reiniciar).
+`next dev` que já estava rodando.
+
+**Mas o app precisa ser reiniciado** depois desta branch: o `next dev` guarda os serviços na
+memória do processo, e um processo iniciado antes da Entrega A continua com a lista antiga de
+tipos (recusa `roteiro` e `apresentacao` no `propor_entregavel`). Visto no ADDA em 2026-10-08.
 
 ## Pendente: conferência na tela
 
