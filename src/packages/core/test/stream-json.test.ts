@@ -42,6 +42,27 @@ describe("parseLinhaStreamJson", () => {
     expect(parseLinhaStreamJson(linha)).toEqual([{ tipo: "limite", status: "rejected", resetsAt: 1790651400 }])
   })
 
+  it("lê o uso da assinatura por janela (5 horas e semana), mesmo com status allowed", () => {
+    const linha = JSON.stringify({
+      type: "rate_limit_event",
+      rate_limit_info: {
+        status: "allowed",
+        resetsAt: 1790651400,
+        rateLimitType: "five_hour",
+        unifiedWindows: { five_hour: { utilization: 0.82, resetsAt: 1790651400 }, seven_day: { utilization: 0.4, resetsAt: 1791219600 }, lixo: "x" },
+      },
+    })
+    expect(parseLinhaStreamJson(linha)).toEqual([
+      {
+        tipo: "uso",
+        janelas: [
+          { janela: "five_hour", utilizacao: 0.82, resetsAt: 1790651400 },
+          { janela: "seven_day", utilizacao: 0.4, resetsAt: 1791219600 },
+        ],
+      },
+    ])
+  })
+
   it("resultado com erro vira fim com mensagem", () => {
     const linha = JSON.stringify({ type: "result", subtype: "error_during_execution", is_error: true, session_id: SID })
     expect(parseLinhaStreamJson(linha)).toEqual([{ tipo: "fim", ok: false, erro: "error_during_execution", sessionId: SID }])

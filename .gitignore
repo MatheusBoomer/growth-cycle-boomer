@@ -30,3 +30,6 @@ clientes/**/.app/
 # Gerados pelo next dev (agentRules)
 src/apps/web/AGENTS.md
 src/apps/web/CLAUDE.md
+
+# Estado local do app que vale para a máquina (uso da assinatura)
+/.app/

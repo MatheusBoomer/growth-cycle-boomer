@@ -5,6 +5,7 @@ export type EventoExecutor =
   | { tipo: "ferramenta"; id: string; nome: string; entrada: unknown }
   | { tipo: "ferramenta_resultado"; id: string; erro: boolean }
   | { tipo: "limite"; status: string; resetsAt: number | null }
+  | { tipo: "uso"; janelas: JanelaUso[] }
   | { tipo: "fim"; ok: boolean; erro: string | null; sessionId: string | null }
 
 export interface PedidoTurno {
@@ -22,4 +23,11 @@ export interface PedidoTurno {
 /** Fronteira trocável: v1 é o CLI headless; a Fase 2 troca por Agent SDK sem mexer no resto. */
 export interface Executor {
   executar(pedido: PedidoTurno, sinal: AbortSignal): AsyncIterable<EventoExecutor>
+}
+
+/** Quanto da assinatura já foi usado numa janela de limite (five_hour, seven_day…), de 0 a 1. */
+export interface JanelaUso {
+  janela: string
+  utilizacao: number
+  resetsAt: number | null
 }

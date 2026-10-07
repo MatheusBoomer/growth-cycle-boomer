@@ -5,6 +5,7 @@ import Link from "next/link"
 import type { Catalogo, EtapaId, Estado } from "@workspace/core/tipos"
 import { Button } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
+import { UsoAssinaturaBarra } from "@/components/sistema/uso-assinatura"
 import { IconeStatus, ROTULO_STATUS } from "./icone-status"
 
 export function TrilhaEtapas({
@@ -47,6 +48,9 @@ export function TrilhaEtapas({
           )
         })}
       </nav>
+      <div className="mt-auto pt-4">
+        <UsoAssinaturaBarra />
+      </div>
     </aside>
   )
 }

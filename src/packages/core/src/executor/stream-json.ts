@@ -1,4 +1,4 @@
-import type { EventoExecutor } from "./tipos"
+import type { EventoExecutor, JanelaUso } from "./tipos"
 
 // O stream-json do Claude Code é um formato externo e sem tipos publicados: lemos como JSON solto
 // e validamos campo a campo.
@@ -53,9 +53,17 @@ export function parseLinhaStreamJson(linha: string): EventoExecutor[] {
     }
     case "rate_limit_event": {
       const info = obj(o.rate_limit_info)
+      const eventos: EventoExecutor[] = []
+      const janelas = Object.entries(obj(info?.unifiedWindows) ?? {}).flatMap(([janela, v]): JanelaUso[] => {
+        const j = obj(v)
+        return typeof j?.utilization === "number"
+          ? [{ janela, utilizacao: j.utilization, resetsAt: typeof j.resetsAt === "number" ? j.resetsAt : null }]
+          : []
+      })
+      if (janelas.length > 0) eventos.push({ tipo: "uso", janelas })
       const status = str(info?.status)
-      if (!status || status === "allowed") return []
-      return [{ tipo: "limite", status, resetsAt: typeof info?.resetsAt === "number" ? info.resetsAt : null }]
+      if (status && status !== "allowed") eventos.push({ tipo: "limite", status, resetsAt: typeof info?.resetsAt === "number" ? info.resetsAt : null })
+      return eventos
     }
     case "result": {
       const ok = o.subtype === "success" && o.is_error !== true

@@ -8,6 +8,7 @@ import type { Executor, PedidoTurno } from "./executor/tipos"
 import { promptInicialEtapa, systemPromptModoInterface } from "./prompts"
 import type { ServicoPlanejamento } from "./servico-planejamento"
 import type { Catalogo, EtapaId, EventoConversa } from "./tipos"
+import { RegistroUso, type UsoAssinatura } from "./uso-assinatura"
 
 /** Tudo o que o agente pode usar sem pedir permissão (o modo -p não pergunta). */
 export const FERRAMENTAS_PERMITIDAS = [
@@ -100,6 +101,15 @@ export class ServicoTurnos {
   /** Trabalho em andamento por prospect (turnos e disparos da fila), base do aguardarOcioso. */
   private readonly pendentes = new Map<string, Set<Promise<void>>>()
 
+  private readonly registroUso: RegistroUso
+  /** Janelas de limite já avisadas ("chegando perto"): o Claude repete o aviso a cada resposta. */
+  private readonly avisados = new Set<string>()
+
+  /** Último uso da assinatura informado pelo Claude (null antes da primeira resposta). */
+  uso(): Promise<UsoAssinatura | null> {
+    return this.registroUso.ler()
+  }
+
   constructor(d: DependenciasTurnos) {
     this.servico = d.servico
     this.executor = d.executor
@@ -107,6 +117,7 @@ export class ServicoTurnos {
     this.catalogo = d.catalogo
     this.config = d.config
     this.agora = d.agora ?? (() => new Date().toISOString())
+    this.registroUso = new RegistroUso(d.config.raiz)
     this.servico.conectarTurnos({
       aoEnfileirar: (slug) => this.acompanhar(slug, this.processarFila(slug)),
       estaOcupado: (slug) => this.ativos.has(slug),
@@ -252,7 +263,12 @@ export class ServicoTurnos {
         } else if (ev.tipo === "ferramenta") {
           const atividade = descreverAtividade(ev.nome, ev.entrada, this.config.raiz)
           if (atividade) await this.registrar(slug, etapa, { tipo: "atividade", ...atividade, em: this.agora() })
+        } else if (ev.tipo === "uso") {
+          await this.registroUso.gravar(ev.janelas, this.agora())
         } else if (ev.tipo === "limite") {
+          const chave = `${ev.status}:${ev.resetsAt}`
+          if (ev.status !== "rejected" && this.avisados.has(chave)) continue
+          this.avisados.add(chave)
           const hora = horario(ev.resetsAt)
           await this.registrar(slug, etapa, {
             tipo: "aviso",

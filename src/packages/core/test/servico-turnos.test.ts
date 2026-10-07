@@ -219,3 +219,35 @@ describe("turnos", () => {
     expect(conversa.at(-1)).toMatchObject({ tipo: "turno_fim", status: "erro", detalhe: "usage limit reached" })
   })
 })
+
+describe("uso da assinatura", () => {
+  const usoAlto = { tipo: "uso" as const, janelas: [{ janela: "five_hour", utilizacao: 0.82, resetsAt: 1790651400 }] }
+
+  it("guarda o último uso informado pelo Claude e o mantém depois de reiniciar", async () => {
+    const { t } = turnos(async function* () {
+      yield usoAlto
+      yield { tipo: "fim", ok: true, erro: null, sessionId: null }
+    })
+    expect(await t.uso()).toBeNull()
+    const slug = await servico.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    expect(await t.uso()).toMatchObject({ janelas: usoAlto.janelas })
+    const { t: depois } = turnos(roteiroSimples("x"))
+    expect((await depois.uso())?.janelas).toEqual(usoAlto.janelas)
+  })
+
+  it("aviso de 'chegando perto' aparece uma vez por janela, não a cada resposta", async () => {
+    const { t } = turnos(async function* () {
+      yield { tipo: "limite", status: "allowed_warning", resetsAt: 1790651400 }
+      yield { tipo: "fim", ok: true, erro: null, sessionId: null }
+    })
+    const slug = await servico.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    await t.enviarMensagem(slug, "01", "de novo")
+    await t.aguardarOcioso(slug)
+    const avisos = (await servico.conversa(slug, "01")).filter((e) => e.tipo === "aviso" && e.nivel === "alerta")
+    expect(avisos).toHaveLength(1)
+  })
+})
