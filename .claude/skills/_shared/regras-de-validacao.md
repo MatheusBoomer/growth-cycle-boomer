@@ -105,4 +105,6 @@ está rodando dentro da interface web, e estas regras substituem o jeito
 - Scripts que geram arquivo (ex.: `preencher_projecao_xlsx.py`,
   `preencher_plano_acao_docx.py`) recebem `--output` apontando para
   `.app/rascunhos/`, e o resultado é proposto com `propor_entregavel`
-  (tipo `planilha` ou `documento`).
+  (tipo `planilha` ou `documento`). Na etapa final, o roteiro da apresentação é
+  proposto como tipo `roteiro` (`.json`) e `gerar_apresentacao.py` gera o tipo
+  `apresentacao` (`.pptx`).

@@ -1,4 +1,4 @@
 ---
-description: "Monta a apresentação final (subagente designer-apresentacao) — rodar só após a Skill 08"
+description: "Etapa final — roteiro e apresentação .pptx no molde da agência (Skill 09)"
 ---
-Acione o subagente `designer-apresentacao` para montar a apresentação final deste prospect, usando exclusivamente o conteúdo já aprovado em `entrega/ativos-aprovados/`.
+Use a skill `09-apresentacao-final` para montar a apresentação final do prospect em andamento nesta conversa.

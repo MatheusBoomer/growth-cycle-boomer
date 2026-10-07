@@ -84,8 +84,8 @@
       "numero": "",
       "titulo": "Apresentação final",
       "rotuloStatus": "Apresentação final",
-      "descricao": "Monta a apresentação no Canva a partir de tudo o que foi aprovado.",
-      "skill": null,
+      "descricao": "Monta a apresentação (.pptx) no molde da agência a partir de tudo o que foi aprovado.",
+      "skill": "09-apresentacao-final",
       "insumos": []
     }
   ],

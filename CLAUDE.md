@@ -40,7 +40,7 @@ certa pela descrição — ex.: `/03-diagnostico-performance`.
         ↓
 08-plano-de-acao
         ↓
-designer-apresentacao (subagente — roda uma vez, ao final; comando: /apresentacao-final)
+09-apresentacao-final (roteiro + .pptx no molde da agência; comando: /apresentacao-final)
 ```
 
 Nenhuma etapa avança sem a checagem manual da etapa anterior confirmada pelo
@@ -86,7 +86,7 @@ quando existirem — a regra padrão é não ter nenhum.
 
 - **`analista-dados`** — cálculo de KPIs, geração de gráficos, motor de projeção (`scripts/projecao.py`). Usado pelas Skills 03 e 05.
 - **`pesquisador-benchmark`** — pesquisa de mercado e referências via Firecrawl. Usado pela Skill 07 (e pontualmente pela 02). O benchmark de anúncios da Skill 06 não usa subagente: roda `scripts/coleta_meta_ads.py` (Apify) na própria conversa.
-- **`designer-apresentacao`** — montagem da apresentação final no Canva. Roda uma única vez, ao final, lendo apenas `entrega/ativos-aprovados/`.
+- **`designer-apresentacao`** — desativado; a apresentação final é gerada pela Skill 09 (.pptx no molde da agência).
 
 ## Pré-requisitos da Skill 06
 
