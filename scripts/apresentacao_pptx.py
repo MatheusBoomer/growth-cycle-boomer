@@ -180,7 +180,11 @@ def trocar_imagem(slide, shape, caminho: Path) -> None:
     """Troca a imagem mantendo a proporção da nova, centralizada na área original."""
     _, rid = slide.part.get_or_add_image_part(str(caminho))
     blip_fill = shape._element.find(qn("p:blipFill"))
-    blip_fill.find(qn("a:blip")).set(qn("r:embed"), rid)
+    blip = blip_fill.find(qn("a:blip"))
+    antigo = blip.get(qn("r:embed"))
+    blip.set(qn("r:embed"), rid)
+    if antigo and antigo != rid:
+        slide.part.drop_rel(antigo)  # só desanexa se nenhuma outra forma do slide ainda usa a imagem antiga
     recorte = blip_fill.find(qn("a:srcRect"))
     if recorte is not None:
         blip_fill.remove(recorte)

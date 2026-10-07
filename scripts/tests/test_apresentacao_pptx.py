@@ -157,3 +157,12 @@ def test_caixa_percentual(deck):
     prs, slide, _ = deck
     c = ap.caixa_percentual(prs, ap.campos(slide)["imagem"])
     assert c == {"x": 5.0, "y": pytest.approx(53.33, 0.01), "w": 40.0, "h": pytest.approx(35.56, 0.01)}
+
+
+def test_trocar_imagem_desanexa_a_imagem_antiga(deck):
+    prs, slide, tmp = deck
+    shape = ap.campos(slide)["imagem"]
+    antiga = shape.image.blob
+    ap.trocar_imagem(slide, shape, png(tmp / "nova.png", 300, 300, (0, 0, 0)))
+    blobs = [rel.target_part.blob for rel in slide.part.rels.values() if rel.reltype.endswith("/image")]
+    assert antiga not in blobs
