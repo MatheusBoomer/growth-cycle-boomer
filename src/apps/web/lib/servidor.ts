@@ -4,6 +4,8 @@ import { Barramento } from "@workspace/core/barramento"
 import { carregarCatalogo } from "@workspace/core/catalogo"
 import { ClaudeCliExecutor } from "@workspace/core/executor/claude-cli"
 import { criarExecutorDemo } from "@workspace/core/executor/fake"
+import { criarPreviaPython } from "@workspace/core/previa"
+import { ServicoComentarios } from "@workspace/core/servico-comentarios"
 import { ServicoPlanejamento } from "@workspace/core/servico-planejamento"
 import { ServicoTurnos } from "@workspace/core/servico-turnos"
 import type { Catalogo } from "@workspace/core/tipos"
@@ -16,6 +18,7 @@ interface Servidor {
   barramento: Barramento
   servico: ServicoPlanejamento
   turnos: ServicoTurnos
+  comentarios: ServicoComentarios
 }
 
 // Um só conjunto de serviços por processo, mesmo que o Next carregue este módulo em mais de uma rota.
@@ -30,6 +33,7 @@ export function servidor(): Servidor {
   const armazenamento = new FsArmazenamento(raiz)
   const barramento = new Barramento()
   const servico = new ServicoPlanejamento({ armazenamento, catalogo, barramento, validar: criarValidadorPython(raiz) })
+  const comentarios = new ServicoComentarios({ armazenamento, planejamento: servico, previa: criarPreviaPython(raiz) })
   const executor = process.env.PLANEJAMENTO_EXECUTOR === "demo" ? criarExecutorDemo() : new ClaudeCliExecutor()
   const pastaMcp = path.join(raiz, "src/packages/mcp-planejamento/src")
   const turnos = new ServicoTurnos({
@@ -45,6 +49,6 @@ export function servidor(): Servidor {
       comandoNode: process.execPath,
     },
   })
-  registro.__planejamento = { raiz, catalogo, armazenamento, barramento, servico, turnos }
+  registro.__planejamento = { raiz, catalogo, armazenamento, barramento, servico, turnos, comentarios }
   return registro.__planejamento
 }

@@ -1,3 +1,4 @@
+import type { Comentario, MapaPrevia, Regiao } from "@workspace/core/comentarios"
 import type { EtapaId, ResultadoValidacao } from "@workspace/core/tipos"
 
 export class ErroApi extends Error {
@@ -51,6 +52,15 @@ export const api = {
   aprovar: (slug: string, id: string) => chamar(`${base(slug)}/entregaveis/${id}`, comJson("POST", { acao: "aprovar" })),
   pedirAjuste: (slug: string, id: string, texto: string) =>
     chamar(`${base(slug)}/entregaveis/${id}`, comJson("POST", { acao: "ajuste", texto })),
+  previa: (slug: string, id: string) =>
+    chamar<{ disponivel: boolean; slides: string[]; mapa: MapaPrevia | null; erro: string | null }>(`${base(slug)}/entregaveis/${id}/previa`),
+  comentarios: (slug: string, id: string) => chamar<{ comentarios: Comentario[] }>(`${base(slug)}/entregaveis/${id}/comentarios`),
+  comentar: (slug: string, id: string, d: { slide: number; regiao: Regiao | null; texto: string }) =>
+    chamar<{ comentario: Comentario }>(`${base(slug)}/entregaveis/${id}/comentarios`, comJson("POST", d)),
+  editarComentario: (slug: string, id: string, cid: string, texto: string) =>
+    chamar(`${base(slug)}/entregaveis/${id}/comentarios/${cid}`, comJson("PATCH", { texto })),
+  apagarComentario: (slug: string, id: string, cid: string) => chamar(`${base(slug)}/entregaveis/${id}/comentarios/${cid}`, { method: "DELETE" }),
+  enviarComentarios: (slug: string, id: string) => chamar<{ enviados: number }>(`${base(slug)}/entregaveis/${id}/comentarios/enviar`, { method: "POST" }),
   enviarInsumo: (slug: string, etapa: EtapaId, insumoId: string, arquivo: File) =>
     chamar<ResultadoValidacao>(`${base(slug)}/etapas/${etapa}/insumos/${insumoId}`, multipart(arquivo)),
   enviarLink: (slug: string, etapa: EtapaId, insumoId: string, url: string) =>

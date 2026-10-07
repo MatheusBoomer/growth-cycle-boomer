@@ -120,20 +120,23 @@ export function pedirAjuste(estado: Estado, id: string, texto: string, em: strin
   }
 }
 
-/** O HTML que o visualizador mostra para um nome final: a versão não substituída mais recente (pendente ou aprovada). */
+/** Tipos que abrem no visualizador da coluna larga (HTML do benchmark e apresentação em slides). */
+export const TIPOS_VISUALIZADOR: TipoEntregavel[] = ["html", "apresentacao"]
+
+/** O HTML ou a apresentação que o visualizador mostra para um nome final: a versão não substituída mais recente (pendente ou aprovada). */
 export function entregavelVisivel(entregaveis: Entregavel[], etapa: EtapaId, nomeFinal: string): Entregavel | null {
   let visivel: Entregavel | null = null
   for (const e of entregaveis) {
-    if (e.tipo !== "html" || e.etapa !== etapa || e.nomeFinal !== nomeFinal || e.status === "substituido") continue
+    if (!TIPOS_VISUALIZADOR.includes(e.tipo) || e.etapa !== etapa || e.nomeFinal !== nomeFinal || e.status === "substituido") continue
     if (!visivel || e.criadoEm > visivel.criadoEm) visivel = e
   }
   return visivel
 }
 
-/** Nome final do HTML que acabou de chegar pendente na etapa aberta. null na primeira carga (`antes` = null). */
+/** Nome final do HTML ou da apresentação que acabou de chegar pendente na etapa aberta. null na primeira carga (`antes` = null). */
 export function htmlParaAbrir(antes: Entregavel[] | null, depois: Entregavel[], etapa: EtapaId): string | null {
   if (antes === null) return null
   const conhecidos = new Set(antes.map((e) => e.id))
-  const novo = depois.find((e) => !conhecidos.has(e.id) && e.tipo === "html" && e.status === "pendente" && e.etapa === etapa)
+  const novo = depois.find((e) => !conhecidos.has(e.id) && TIPOS_VISUALIZADOR.includes(e.tipo) && e.status === "pendente" && e.etapa === etapa)
   return novo ? novo.nomeFinal : null
 }

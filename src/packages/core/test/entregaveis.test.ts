@@ -158,3 +158,20 @@ describe("entregáveis da apresentação final", () => {
     ).not.toThrow()
   })
 })
+
+describe("visualizador também mostra a apresentação", () => {
+  const ap = (id: string, over: Partial<Entregavel> = {}): Entregavel => ({
+    ...html(id),
+    etapa: "final",
+    tipo: "apresentacao",
+    arquivoRascunho: `.app/propostas/${id}.pptx`,
+    nomeFinal: "apresentacao-final",
+    ...over,
+  })
+  it("entregavelVisivel aceita apresentação", () => {
+    expect(entregavelVisivel([ap("a1")], "final", "apresentacao-final")?.id).toBe("a1")
+  })
+  it("apresentação nova abre o visualizador sozinha", () => {
+    expect(htmlParaAbrir([], [ap("a1")], "final")).toBe("apresentacao-final")
+  })
+})
