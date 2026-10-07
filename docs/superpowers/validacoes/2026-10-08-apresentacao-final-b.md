@@ -33,9 +33,15 @@ o deck de teste do sottile-teste (14 slides), numa pasta temporária:
   os dois blocos e cortava no meio da palavra. Agora usa a 1ª linha do texto mais acima à
   esquerda ("Análises sobre o investimento"), com teste.
 
+## Revisão final
+
+Revisor independente: pronto com correções. Corrigidos com teste: comentários sem trava
+(perda de comentário ou ajuste em dobro em ações simultâneas), numeração da tela diferente
+da enviada ao agente, arraste deslocado por rolagem ou preso após perder o ponteiro. Também:
+o visualizador remonta a cada versão e o servidor completa o serviço de comentários num
+`next dev` que já estava rodando (não precisa reiniciar).
+
 ## Pendente: conferência na tela
 
-O app que já estava rodando na porta 3000 precisa ser **reiniciado**: o conjunto de serviços
-fica guardado no processo e foi criado antes de existir o serviço de comentários. Depois de
-reiniciar, o analista abre um prospect com a apresentação proposta, clica em "Abrir prévia",
-arrasta sobre um slide, comenta, envia e confere a mensagem que chega ao agente.
+O analista abre um prospect com a apresentação proposta, clica em "Abrir prévia", arrasta
+sobre um slide, comenta, envia e confere a mensagem que chega ao agente.
