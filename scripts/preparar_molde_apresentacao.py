@@ -128,6 +128,11 @@ def preparar(original: Path, saida: Path) -> None:
             el = ids[slide.part]
             lista.remove(el)
             lista.append(el)
+        # Autores e comentários do Google Slides (nomes da equipe) não vão para o deck do prospect.
+        for parte in [prs.part] + [s.part for s in prs.slides]:
+            for rid, rel in list(parte.rels.items()):
+                if rel.reltype.endswith("/commentAuthors") or rel.reltype.endswith("/comments"):
+                    parte.drop_rel(rid)
         saida.parent.mkdir(parents=True, exist_ok=True)
         prs.save(saida)
 

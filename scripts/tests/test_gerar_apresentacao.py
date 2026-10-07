@@ -152,3 +152,12 @@ def test_divisoria_com_titulo_em_duas_linhas_nao_gera_aviso(prospect, tmp_path):
     roteiro["slides"][2]["titulo"] = "**CENÁRIOS** E IMPACTOS **ESPERADOS**"
     r = ga.gerar(roteiro, prospect, tmp_path / "deck.pptx")
     assert not any("Slide 3" in a for a in r["avisos"]), r["avisos"]
+
+
+def test_benchmark_com_criativo_repetido(prospect, tmp_path):
+    roteiro = roteiro_basico()
+    img = "dados/benchmark-meta/x/midia/1/imagem-1.jpg"
+    roteiro["slides"][4]["imagens"] = [img, "entrega/ativos-aprovados/graficos/roas.png", img]
+    r = ga.gerar(roteiro, prospect, tmp_path / "deck.pptx")
+    c = ap.campos(Presentation(tmp_path / "deck.pptx").slides[4])
+    assert r["slides"] == 6 and c["imagem_1"].image.blob == c["imagem_3"].image.blob

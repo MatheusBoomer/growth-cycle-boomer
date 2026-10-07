@@ -166,3 +166,26 @@ def test_trocar_imagem_desanexa_a_imagem_antiga(deck):
     ap.trocar_imagem(slide, shape, png(tmp / "nova.png", 300, 300, (0, 0, 0)))
     blobs = [rel.target_part.blob for rel in slide.part.rels.values() if rel.reltype.endswith("/image")]
     assert antiga not in blobs
+
+
+def test_titulo_sem_marcacao_mantem_o_negrito_do_modelo(deck):
+    _, slide, _ = deck
+    shape = ap.campos(slide)["titulo"]  # modelo em negrito, como "Cenário Atual" no deck de referência
+    ap.preencher_texto(shape, "Cenário Atual")
+    assert [(r.text, r.font.bold) for r in shape.text_frame.paragraphs[0].runs] == [("Cenário Atual", True)]
+
+
+def test_imagem_compartilhada_por_duas_formas_nao_quebra_a_troca(tmp_path):
+    prs = Presentation()
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    img = png(tmp_path / "m.png", 200, 300)
+    a = slide.shapes.add_picture(str(img), Inches(0), Inches(0), Inches(1), Inches(1.5))
+    b = slide.shapes.add_picture(str(img), Inches(2), Inches(0), Inches(1), Inches(1.5))
+    ap.definir_texto_alternativo(a, "campo:imagem_1")
+    ap.definir_texto_alternativo(b, "campo:imagem_2")
+    ap.trocar_imagem(slide, a, png(tmp_path / "x.png", 100, 100, (0, 0, 0)))
+    ap.trocar_imagem(slide, b, png(tmp_path / "x.png", 100, 100, (0, 0, 0)))
+    saida = tmp_path / "s.pptx"
+    prs.save(saida)
+    c = ap.campos(Presentation(saida).slides[0])
+    assert c["imagem_1"].image.blob == c["imagem_2"].image.blob

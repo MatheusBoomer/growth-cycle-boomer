@@ -67,3 +67,11 @@ def test_nenhum_arquivo_do_pacote_cita_o_prospect_de_referencia():
                 texto = z.read(nome).decode("utf-8", "ignore").lower()
                 for proibido in ("sottile", "baunni", "jalecos", "drive.google"):
                     assert proibido not in texto, (nome, proibido)
+
+
+def test_molde_nao_leva_metadados_internos_ao_prospect():
+    import zipfile
+
+    with zipfile.ZipFile(MOLDE) as z:
+        nomes = z.namelist()
+    assert not any("commentAuthors" in n or n.startswith("ppt/comments/") for n in nomes), [n for n in nomes if "comment" in n]

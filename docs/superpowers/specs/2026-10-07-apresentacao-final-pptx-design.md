@@ -49,9 +49,9 @@ Extraídos do deck de referência (números de página do PDF):
 | `jornada` | fixo (6 seções) | p.2 |
 | `divisoria` | `numero`, `titulo` (com negrito parcial) | p.3 |
 | `grafico` | `titulo`, `subtitulo`, `imagem`, `conclusoes` (1 a 3) | p.4 |
-| `tabela_lateral` | `titulo`, `subtitulo`, `imagem`, `texto` | p.18 |
+| `tabela_lateral` | `titulo`, `subtitulo`, `imagem`, `conclusoes` (1 a 3) | p.18 |
 | `imagem_larga` | `titulo`, `imagem`, `texto` | p.55 |
-| `analises_2_colunas` | `titulo_esquerda`, `itens_esquerda`, `titulo_direita`, `itens_direita` | p.7 |
+| `analises_2_colunas` | `esquerda` e `direita`: `{ "titulo", "itens" (1 a 4) }` | p.7 |
 | `bullets` | `titulo`, `subtitulo`, `itens` (até 6) | p.27 |
 | `cartoes` | `titulo`, `subtitulo`, `cartoes` (3) | p.26 |
 | `benchmark` | `titulo`, `subtitulo`, `concorrente`, `imagens` (3), `conclusoes`, `link` | p.33 |
@@ -104,8 +104,9 @@ Regras para o agente:
   arquivo (mestre e layout originais).
 - Cada caixa de texto ou imagem que o script preenche tem **texto alternativo**
   `campo:<nome>` (ex.: `campo:titulo`, `campo:conclusoes`, `campo:imagem_2`) e o
-  slide-modelo tem `tipo:<tipo>` no texto alternativo de uma forma fixa (o logo),
-  para o script localizar o modelo de cada tipo.
+  slide-modelo tem `tipo:<tipo>` nas anotações do apresentador (a capa não tem
+  logo; as anotações também são editáveis no Google Slides), para o script
+  localizar o modelo de cada tipo.
 - Preparado uma vez por `scripts/preparar_molde_apresentacao.py` a partir do
   `.pptx` original (mapeamento página → tipo da seção 3); conferido pelo analista
   no Google Slides antes de ser versionado. O deck original (com dados do

@@ -117,10 +117,12 @@ def _paragrafo(modelo, texto: str):
         if filho.tag in (qn("a:r"), qn("a:br"), qn("a:fld")):
             p.remove(filho)
     fim = p.find(qn("a:endParaRPr"))
+    marcado = "**" in texto  # sem marcação, o negrito do modelo vale (ex.: títulos "Cenário Atual")
     for trecho, negrito in partes_negrito(texto) if texto else []:
         r = p.makeelement(qn("a:r"), {})
         novo_rpr = copy.deepcopy(rpr) if rpr is not None else r.makeelement(qn("a:rPr"), {"lang": "pt-BR"})
-        novo_rpr.set("b", "1" if negrito else "0")
+        if marcado:
+            novo_rpr.set("b", "1" if negrito else "0")
         r.append(novo_rpr)
         t = r.makeelement(qn("a:t"), {})
         t.text = trecho
@@ -183,8 +185,10 @@ def trocar_imagem(slide, shape, caminho: Path) -> None:
     blip = blip_fill.find(qn("a:blip"))
     antigo = blip.get(qn("r:embed"))
     blip.set(qn("r:embed"), rid)
-    if antigo and antigo != rid:
-        slide.part.drop_rel(antigo)  # só desanexa se nenhuma outra forma do slide ainda usa a imagem antiga
+    # Só desanexa a imagem antiga se nenhuma outra forma do slide ainda a usa (o molde tem
+    # áreas de criativo que compartilham a mesma imagem neutra).
+    if antigo and antigo != rid and f'"{antigo}"' not in slide._element.xml:
+        slide.part.drop_rel(antigo)
     recorte = blip_fill.find(qn("a:srcRect"))
     if recorte is not None:
         blip_fill.remove(recorte)
