@@ -27,6 +27,8 @@ RAIZ = Path(__file__).resolve().parent.parent
 CAMINHO_MOLDE = RAIZ / ".claude/skills/_shared/modelos-apresentacao/molde-apresentacao.pptx"
 EXTENSOES_IMAGEM = {".png", ".jpg", ".jpeg"}
 LIMITE_OCUPACAO = 1.1
+# Títulos grandes de capa e divisória quebram em duas linhas por desenho (ver p.42 do deck de referência).
+TIPOS_SEM_AVISO_DE_ESTOURO = {"capa", "divisoria"}
 
 # campo -> ("texto" | "lista" | "imagem" | "imagens" | "bloco" | "link", mínimo, máximo)
 ESQUEMA: Dict[str, Dict[str, tuple]] = {
@@ -138,6 +140,8 @@ def _preencher(prs, slide, tipo: str, dados: dict, pasta: Path, numero: int, avi
                     forma._element.getparent().remove(forma._element)
         elif modo == "link":
             ap.definir_link(c[campo], valor)
+    if tipo in TIPOS_SEM_AVISO_DE_ESTOURO:
+        return
     for nome, forma in ap.campos(slide).items():
         if forma.has_text_frame and ap.ocupacao(forma) > LIMITE_OCUPACAO:
             avisos.append(f"Slide {numero}, campo {nome}: o texto provavelmente não cabe na caixa ({ap.ocupacao(forma):.0%} do espaço).")

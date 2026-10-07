@@ -144,3 +144,11 @@ def test_cli_erro_em_portugues(prospect, tmp_path, capsys):
     codigo = ga.main(["--roteiro", str(caminho), "--prospect", str(prospect), "--output", str(tmp_path / "d.pptx")])
     assert codigo == 1
     assert "ERRO" in capsys.readouterr().err
+
+
+def test_divisoria_com_titulo_em_duas_linhas_nao_gera_aviso(prospect, tmp_path):
+    # No deck de referência (p.42) "CENÁRIOS E IMPACTOS ESPERADOS" ocupa duas linhas na mesma caixa.
+    roteiro = roteiro_basico()
+    roteiro["slides"][2]["titulo"] = "**CENÁRIOS** E IMPACTOS **ESPERADOS**"
+    r = ga.gerar(roteiro, prospect, tmp_path / "deck.pptx")
+    assert not any("Slide 3" in a for a in r["avisos"]), r["avisos"]
