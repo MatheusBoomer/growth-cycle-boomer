@@ -1,0 +1,199 @@
+#!/usr/bin/env python3
+"""
+scripts/gerar_apresentacao.py: gera a apresentação final (.pptx) a partir do
+roteiro aprovado (roteiro-apresentacao.json), duplicando os slides-modelo do
+molde da agência e preenchendo textos e imagens.
+
+    python3 scripts/gerar_apresentacao.py --roteiro <roteiro.json> --prospect clientes/<slug> --output <arquivo.pptx>
+
+Valida o roteiro antes de gerar (erros: código 1, nada é gravado). Avisos
+(slide pulado por pendência, texto que provavelmente estoura a caixa) saem na
+tela. Grava mapa-slides.json ao lado do .pptx (áreas dos campos em % do slide).
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+from typing import Dict, List, Tuple
+
+from pptx import Presentation
+
+import apresentacao_pptx as ap
+
+RAIZ = Path(__file__).resolve().parent.parent
+CAMINHO_MOLDE = RAIZ / ".claude/skills/_shared/modelos-apresentacao/molde-apresentacao.pptx"
+EXTENSOES_IMAGEM = {".png", ".jpg", ".jpeg"}
+LIMITE_OCUPACAO = 1.1
+
+# campo -> ("texto" | "lista" | "imagem" | "imagens" | "bloco" | "link", mínimo, máximo)
+ESQUEMA: Dict[str, Dict[str, tuple]] = {
+    "capa": {"prospect": ("texto", 1, 1)},
+    "jornada": {},
+    "divisoria": {"numero": ("texto", 1, 1), "titulo": ("texto", 1, 1)},
+    "grafico": {"titulo": ("texto", 1, 1), "subtitulo": ("texto", 1, 1), "imagem": ("imagem", 1, 1), "conclusoes": ("lista", 1, 3)},
+    "tabela_lateral": {"titulo": ("texto", 1, 1), "subtitulo": ("texto", 1, 1), "imagem": ("imagem", 1, 1), "conclusoes": ("lista", 1, 3)},
+    "imagem_larga": {"titulo": ("texto", 1, 1), "imagem": ("imagem", 1, 1), "texto": ("texto", 1, 1)},
+    "analises_2_colunas": {"esquerda": ("bloco", 1, 4), "direita": ("bloco", 1, 4)},
+    "bullets": {"titulo": ("texto", 1, 1), "subtitulo": ("texto", 1, 1), "itens": ("lista", 1, 6)},
+    "cartoes": {"titulo": ("texto", 1, 1), "subtitulo": ("texto", 1, 1), "cartoes": ("lista", 3, 3)},
+    "benchmark": {
+        "titulo": ("texto", 1, 1), "subtitulo": ("texto", 1, 1), "concorrente": ("texto", 1, 1),
+        "imagens": ("imagens", 1, 3), "conclusoes": ("lista", 1, 3), "link": ("link", 1, 1),
+    },
+    "obrigado": {},
+}
+
+
+class ErroRoteiro(Exception):
+    """Roteiro inválido; a mensagem lista os problemas, um por linha."""
+
+
+def _textos(valor) -> bool:
+    return isinstance(valor, list) and all(isinstance(v, str) and v.strip() for v in valor)
+
+
+def _validar_imagem(rel, pasta: Path, onde: str, erros: List[str]) -> None:
+    if not isinstance(rel, str) or not rel.strip():
+        erros.append(f"{onde}: caminho de imagem vazio.")
+        return
+    alvo = (pasta / rel).resolve()
+    if Path(rel).is_absolute() or pasta.resolve() not in alvo.parents:
+        erros.append(f"{onde}: imagem fora da pasta do prospect ({rel}).")
+    elif alvo.suffix.lower() not in EXTENSOES_IMAGEM:
+        erros.append(f"{onde}: a imagem precisa ser png ou jpg ({rel}).")
+    elif not alvo.is_file():
+        erros.append(f"{onde}: imagem não encontrada ({rel}).")
+
+
+def validar_roteiro(roteiro: dict, pasta_prospect: Path, tipos_do_molde: set) -> Tuple[List[str], List[str]]:
+    erros: List[str] = []
+    avisos: List[str] = []
+    slides = roteiro.get("slides") if isinstance(roteiro, dict) else None
+    if not isinstance(slides, list) or not slides:
+        return ["Slide -: o roteiro não tem a lista \"slides\"."], avisos
+    for i, s in enumerate(slides, start=1):
+        if not isinstance(s, dict):
+            erros.append(f"Slide {i}: formato inválido.")
+            continue
+        tipo = s.get("tipo")
+        if tipo not in ESQUEMA or tipo not in tipos_do_molde:
+            erros.append(f"Slide {i}: tipo \"{tipo}\" não existe no molde.")
+            continue
+        if s.get("pendencia"):
+            continue
+        for campo, (modo, minimo, maximo) in ESQUEMA[tipo].items():
+            onde = f"Slide {i} ({tipo}), campo {campo}"
+            valor = s.get(campo)
+            if valor is None:
+                erros.append(f"{onde}: obrigatório.")
+            elif modo in ("texto", "link") and (not isinstance(valor, str) or not valor.strip()):
+                erros.append(f"{onde}: precisa ser um texto.")
+            elif modo == "link" and not valor.startswith(("https://", "http://")):
+                erros.append(f"{onde}: o link precisa começar com https://.")
+            elif modo == "lista" and (not _textos(valor) or not minimo <= len(valor) <= maximo):
+                erros.append(f"{onde}: precisa ter de {minimo} a {maximo} itens de texto.")
+            elif modo == "imagem":
+                _validar_imagem(valor, pasta_prospect, onde, erros)
+            elif modo == "imagens":
+                if not isinstance(valor, list) or not minimo <= len(valor) <= maximo:
+                    erros.append(f"{onde}: precisa ter de {minimo} a {maximo} imagens.")
+                else:
+                    for img in valor:
+                        _validar_imagem(img, pasta_prospect, onde, erros)
+            elif modo == "bloco":
+                if not isinstance(valor, dict) or not isinstance(valor.get("titulo"), str) or not _textos(valor.get("itens")) \
+                        or not minimo <= len(valor["itens"]) <= maximo:
+                    erros.append(f"{onde}: precisa de \"titulo\" e de {minimo} a {maximo} \"itens\".")
+    return erros, avisos
+
+
+def _preencher(prs, slide, tipo: str, dados: dict, pasta: Path, numero: int, avisos: List[str]) -> None:
+    c = ap.campos(slide)
+    for campo, (modo, _, _) in ESQUEMA[tipo].items():
+        valor = dados[campo]
+        if tipo == "capa":
+            ap.substituir_token(slide, "{{prospect}}", valor)
+        elif modo == "texto" and campo in c:
+            ap.preencher_texto(c[campo], valor)
+        elif modo == "lista" and tipo == "cartoes":
+            for j, texto in enumerate(valor, start=1):
+                ap.preencher_texto(c[f"cartao_{j}"], texto)
+        elif modo == "lista":
+            ap.preencher_lista(c[campo], valor)
+        elif modo == "bloco":
+            ap.preencher_bloco(c[campo], valor["titulo"], valor["itens"])
+        elif modo == "imagem":
+            ap.trocar_imagem(slide, c[campo], pasta / valor)
+        elif modo == "imagens":
+            for j in range(1, 4):
+                forma = c.get(f"imagem_{j}")
+                if forma is None:
+                    continue
+                if j <= len(valor):
+                    ap.trocar_imagem(slide, forma, pasta / valor[j - 1])
+                else:
+                    forma._element.getparent().remove(forma._element)
+        elif modo == "link":
+            ap.definir_link(c[campo], valor)
+    for nome, forma in ap.campos(slide).items():
+        if forma.has_text_frame and ap.ocupacao(forma) > LIMITE_OCUPACAO:
+            avisos.append(f"Slide {numero}, campo {nome}: o texto provavelmente não cabe na caixa ({ap.ocupacao(forma):.0%} do espaço).")
+
+
+def gerar(roteiro: dict, pasta_prospect: Path, saida: Path, molde: Path = CAMINHO_MOLDE) -> dict:
+    prs = Presentation(molde)
+    modelos = {ap.tipo_do_slide(s): s for s in prs.slides}
+    erros, avisos = validar_roteiro(roteiro, pasta_prospect, set(modelos))
+    if erros:
+        raise ErroRoteiro("\n".join(erros))
+    mapa = []
+    numero = 0
+    for indice, s in enumerate(roteiro["slides"]):
+        if s.get("pendencia"):
+            avisos.append(f"Slide do roteiro #{indice + 1} ({s['tipo']}) pulado: {s['pendencia']}")
+            continue
+        numero += 1
+        novo = ap.duplicar_slide(prs, modelos[s["tipo"]])
+        _preencher(prs, novo, s["tipo"], s, pasta_prospect, numero, avisos)
+        mapa.append({
+            "numero": numero,
+            "tipo": s["tipo"],
+            "roteiro": indice,
+            "campos": {nome: ap.caixa_percentual(prs, forma) for nome, forma in ap.campos(novo).items()},
+        })
+    for modelo in modelos.values():
+        ap.remover_slide(prs, modelo)
+    saida.parent.mkdir(parents=True, exist_ok=True)
+    prs.save(saida)
+    caminho_mapa = saida.with_name("mapa-slides.json")
+    caminho_mapa.write_text(json.dumps({"slides": mapa}, ensure_ascii=False, indent=2), encoding="utf-8")
+    return {"slides": numero, "avisos": avisos, "mapa": caminho_mapa}
+
+
+def main(argv=None) -> int:
+    p = argparse.ArgumentParser(description="Gera a apresentação final (.pptx) a partir do roteiro.")
+    p.add_argument("--roteiro", required=True, type=Path)
+    p.add_argument("--prospect", required=True, type=Path)
+    p.add_argument("--output", required=True, type=Path)
+    p.add_argument("--molde", type=Path, default=CAMINHO_MOLDE)
+    a = p.parse_args(argv)
+    try:
+        roteiro = json.loads(a.roteiro.read_text(encoding="utf-8"))
+        r = gerar(roteiro, a.prospect, a.output, a.molde)
+    except json.JSONDecodeError as e:
+        print(f"ERRO: o roteiro não é um JSON válido (linha {e.lineno}): {e.msg}", file=sys.stderr)
+        return 1
+    except ErroRoteiro as e:
+        print(f"ERRO: roteiro inválido:\n{e}", file=sys.stderr)
+        return 1
+    print(f"Apresentação gerada: {a.output} ({r['slides']} slides)")
+    for aviso in r["avisos"]:
+        print(f"- Aviso: {aviso}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
