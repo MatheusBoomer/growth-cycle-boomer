@@ -85,6 +85,8 @@ export function CardEntregavel({ slug, entregavel: e }: { slug: string; entregav
           slug={slug}
           tipo={e.tipo}
           caminho={e.arquivoRascunho}
+          entregavelId={e.id}
+          podeComentar={e.status === "pendente"}
           titulo={e.titulo}
           aoAbrir={e.tipo === "html" || e.tipo === "apresentacao" ? () => abrir(e.etapa, e.nomeFinal) : () => abrirArquivo(e.arquivoRascunho)}
         />

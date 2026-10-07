@@ -108,9 +108,22 @@ python3 scripts/gerar_apresentacao.py --roteiro <roteiro.json> --prospect client
 
 ## Ajustes
 
-Pedido de ajuste (inclusive comentários por slide) → altere **só** o roteiro
-nos slides citados, regere o deck e proponha de novo (roteiro, se mudou o
-conteúdo; apresentação, sempre). Nunca edite o `.pptx` à mão.
+Os ajustes chegam de dois jeitos: o texto livre do "Pedir ajuste" ou a lista
+estruturada que o app monta a partir dos comentários do analista, no formato:
+
+    Ajustes em "Apresentação final" (2):
+    1. Slide 12 · "Cenário Atual · ROAS Global" · região: conclusoes (recorte: clientes/<slug>/.app/comentarios/<id>/c1.png)
+       "a 2ª conclusão está errada, a média é 0,40%"
+    2. Slide 18 · "Benchmarking · Baunni" · slide inteiro
+       "esse slide pode sair"
+
+- Abra cada recorte com Read antes de corrigir: ele mostra a área marcada
+  (contorno laranja).
+- "Slide N" é a posição no deck gerado (slides com pendência foram pulados);
+  ache o slide no roteiro pelo título citado. No roteiro, "Slide N do roteiro"
+  é a posição no próprio roteiro.
+- Altere **só** os slides citados, regere o deck e proponha de novo (roteiro,
+  se mudou o conteúdo; apresentação, sempre). Nunca edite o `.pptx` à mão.
 
 ## Encerramento e handoff
 

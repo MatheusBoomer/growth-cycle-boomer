@@ -16,12 +16,16 @@ export function PreviaArquivo({
   caminho,
   titulo,
   aoAbrir,
+  entregavelId,
+  podeComentar,
 }: {
   slug: string
   tipo: TipoEntregavel
   caminho: string
   titulo: string
   aoAbrir?: () => void
+  entregavelId?: string
+  podeComentar?: boolean
 }) {
   const url = urlArquivo(slug, caminho)
   const [texto, setTexto] = useState<string | null>(null)
@@ -81,7 +85,7 @@ export function PreviaArquivo({
       </Attachment>
     )
   }
-  if (tipo === "roteiro") return <PreviaRoteiro slug={slug} caminho={caminho} />
+  if (tipo === "roteiro") return <PreviaRoteiro slug={slug} caminho={caminho} entregavelId={entregavelId} podeComentar={podeComentar} />
   if (tipo === "apresentacao") {
     return (
       <Attachment state="done">
