@@ -26,6 +26,7 @@ import { ROTULO_STATUS } from "./icone-status"
 import { PainelEtapa } from "./painel-etapa"
 import { TrilhaEtapas } from "./trilha-etapas"
 import { VisualizadorArquivo } from "./visualizador-arquivo"
+import { VisualizadorApresentacao } from "./visualizador-apresentacao"
 import { VisualizadorHtml } from "./visualizador-html"
 
 export function escolherEtapaInicial(estado: Estado): EtapaId {
@@ -58,7 +59,7 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   const colunaDireitaRef = useGroupRef()
   const inserirNoCompositor = useRef<((texto: string) => void) | null>(null)
 
-  // HTML novo proposto na etapa aberta abre o visualizador sozinho, uma vez por nome final.
+  // HTML ou apresentação nova proposta na etapa aberta abre o visualizador sozinho, uma vez por nome final.
   // Estado ajustado durante a renderização: é o padrão do React para reagir a dado novo sem efeito.
   if (dados && etapa && dados.estado.entregaveis !== entregaveisVistos) {
     setEntregaveisVistos(dados.estado.entregaveis)
@@ -172,14 +173,10 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
     // Só grava quando o layout corresponde ao estado atual (não no meio de uma troca).
     if ((layout.visualizador ?? 0) > 0 === visualizadorAberto) salvarLayout(chaveColunas(visualizadorAberto), layout)
   }
+  const aberto = visualizadorAberto ? entregavelVisivel(dados.estado.entregaveis, etapa, visualizador.nomeFinal) : null
+  const Visualizador = aberto?.tipo === "apresentacao" ? VisualizadorApresentacao : VisualizadorHtml
   const painelVisualizador = visualizadorAberto ? (
-    <VisualizadorHtml
-      slug={slug}
-      entregavel={entregavelVisivel(dados.estado.entregaveis, etapa, visualizador.nomeFinal)}
-      telaCheia={telaCheia}
-      aoAlternarTelaCheia={alternarTelaCheia}
-      aoFechar={fechar}
-    />
+    <Visualizador slug={slug} entregavel={aberto} telaCheia={telaCheia} aoAlternarTelaCheia={alternarTelaCheia} aoFechar={fechar} />
   ) : null
 
   // O iframe do visualizador captura o mouse: durante o arraste de uma alça, ele deixa de receber eventos.

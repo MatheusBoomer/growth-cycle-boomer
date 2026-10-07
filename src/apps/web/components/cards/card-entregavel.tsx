@@ -86,7 +86,7 @@ export function CardEntregavel({ slug, entregavel: e }: { slug: string; entregav
           tipo={e.tipo}
           caminho={e.arquivoRascunho}
           titulo={e.titulo}
-          aoAbrir={e.tipo === "html" ? () => abrir(e.etapa, e.nomeFinal) : () => abrirArquivo(e.arquivoRascunho)}
+          aoAbrir={e.tipo === "html" || e.tipo === "apresentacao" ? () => abrir(e.etapa, e.nomeFinal) : () => abrirArquivo(e.arquivoRascunho)}
         />
         {(e.tipo === "grafico" || e.tipo === "tabela") && e.status === "pendente" && (
           <p className="text-sm">Confirme se os valores representados no gráfico correspondem exatamente aos dados enviados.</p>

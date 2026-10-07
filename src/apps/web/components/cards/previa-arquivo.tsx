@@ -93,6 +93,11 @@ export function PreviaArquivo({
           <AttachmentDescription>PowerPoint · abra no Google Slides (Arquivo → Importar slides) ou no PowerPoint</AttachmentDescription>
         </AttachmentContent>
         <AttachmentActions>
+          {aoAbrir && (
+            <Button size="sm" variant="outline" onClick={aoAbrir}>
+              <PanelRightOpenIcon /> Abrir prévia
+            </Button>
+          )}
           <AttachmentAction render={<a href={urlArquivo(slug, caminho, true)} download aria-label="Baixar" />} nativeButton={false}>
             <DownloadIcon />
           </AttachmentAction>
