@@ -1,6 +1,6 @@
 "use client"
 
-import { DownloadIcon, FileCode2Icon, FileSpreadsheetIcon, FileTextIcon, PanelRightOpenIcon } from "lucide-react"
+import { DownloadIcon, FileCode2Icon, FileSpreadsheetIcon, FileTextIcon, PanelRightOpenIcon, PresentationIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 import type { TipoEntregavel } from "@workspace/core/tipos"
 import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from "@workspace/ui/components/attachment"
@@ -8,6 +8,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { Markdown } from "@/components/markdown"
 import { urlArquivo } from "@/lib/api"
+import { PreviaRoteiro } from "./previa-roteiro"
 
 export function PreviaArquivo({
   slug,
@@ -77,6 +78,25 @@ export function PreviaArquivo({
             </Button>
           </AttachmentActions>
         )}
+      </Attachment>
+    )
+  }
+  if (tipo === "roteiro") return <PreviaRoteiro slug={slug} caminho={caminho} />
+  if (tipo === "apresentacao") {
+    return (
+      <Attachment state="done">
+        <AttachmentMedia variant="icon">
+          <PresentationIcon />
+        </AttachmentMedia>
+        <AttachmentContent>
+          <AttachmentTitle>{titulo}</AttachmentTitle>
+          <AttachmentDescription>PowerPoint · abra no Google Slides (Arquivo → Importar slides) ou no PowerPoint</AttachmentDescription>
+        </AttachmentContent>
+        <AttachmentActions>
+          <AttachmentAction render={<a href={urlArquivo(slug, caminho, true)} download aria-label="Baixar" />} nativeButton={false}>
+            <DownloadIcon />
+          </AttachmentAction>
+        </AttachmentActions>
       </Attachment>
     )
   }

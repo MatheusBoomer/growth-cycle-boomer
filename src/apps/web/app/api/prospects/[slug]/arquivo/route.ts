@@ -10,6 +10,8 @@ const TIPOS: Record<string, string> = {
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
   ".md": "text/markdown; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   ".html": "text/html; charset=utf-8",
   ".pdf": "application/pdf",
   ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

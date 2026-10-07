@@ -22,6 +22,8 @@ const ROTULO_TIPO: Record<TipoEntregavel, string> = {
   planilha: "Planilha",
   documento: "Documento",
   html: "Relatório HTML",
+  roteiro: "Roteiro da apresentação",
+  apresentacao: "Apresentação (.pptx)",
 }
 export const ROTULO_STATUS_ENTREGAVEL: Record<StatusEntregavel, string> = { pendente: "Aguardando aprovação", aprovado: "Aprovado", substituido: "Substituído" }
 
