@@ -17,6 +17,7 @@ interface Sistema {
   python: { ok: boolean; detalhe: string | null }
   ffmpeg: boolean
   apify: boolean
+  previa: boolean
 }
 
 export function VerificacaoSistema() {
@@ -43,6 +44,7 @@ export function VerificacaoSistema() {
     !sistema.ffmpeg && "instale o ffmpeg (brew install ffmpeg)",
     !sistema.apify && "coloque o APIFY_TOKEN no arquivo .env da raiz do projeto (modelo em .env.example)",
   ].filter(Boolean) as string[]
+  const semPrevia = !sistema.previa
 
   return (
     <>
@@ -76,7 +78,7 @@ export function VerificacaoSistema() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {(cobrado || faltasBenchmark.length > 0) && (
+      {(cobrado || faltasBenchmark.length > 0 || semPrevia) && (
         <div className="fixed right-4 bottom-4 z-50 flex max-w-sm flex-col gap-2">
           {cobrado && (
             <Alert>
@@ -89,6 +91,13 @@ export function VerificacaoSistema() {
             <Alert>
               <AlertDescription>
                 Para o benchmark de anúncios (etapa 06): {faltasBenchmark.join("; ")}. As outras etapas funcionam normalmente.
+              </AlertDescription>
+            </Alert>
+          )}
+          {semPrevia && (
+            <Alert>
+              <AlertDescription>
+                Para ver a prévia da apresentação no app, instale LibreOffice e poppler (brew install --cask libreoffice; brew install poppler). O download do .pptx funciona normalmente.
               </AlertDescription>
             </Alert>
           )}

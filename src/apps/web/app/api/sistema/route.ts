@@ -52,5 +52,22 @@ export async function GET() {
     // sem .env: vale só o ambiente
   }
   const apify = tokenApifyConfigurado(process.env, conteudoEnv)
-  return Response.json({ claude, python, ffmpeg, apify })
+  const soffice = await (async () => {
+    for (const cmd of ["soffice", "/Applications/LibreOffice.app/Contents/MacOS/soffice"]) {
+      try {
+        await exec(cmd, ["--version"], { timeout: 20_000 })
+        return true
+      } catch {
+        // tenta o próximo
+      }
+    }
+    return false
+  })()
+  let poppler = true
+  try {
+    await exec("pdftoppm", ["-v"], { timeout: 10_000 })
+  } catch {
+    poppler = false
+  }
+  return Response.json({ claude, python, ffmpeg, apify, previa: soffice && poppler })
 }
