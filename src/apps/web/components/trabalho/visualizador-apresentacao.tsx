@@ -3,7 +3,7 @@
 import { DownloadIcon, Maximize2Icon, MessageSquarePlusIcon, Minimize2Icon, SendIcon, Trash2Icon, XIcon } from "lucide-react"
 import { useCallback, useEffect, useState, type PointerEvent as EventoPonteiro } from "react"
 import { toast } from "sonner"
-import type { Comentario, MapaPrevia, Regiao } from "@workspace/core/comentarios"
+import { emOrdemDeEnvio, type Comentario, type MapaPrevia, type Regiao } from "@workspace/core/comentarios"
 import type { Entregavel } from "@workspace/core/tipos"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
@@ -14,7 +14,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import { ROTULO_STATUS_ENTREGAVEL } from "@/components/cards/card-entregavel"
 import { api, mensagemDeErro, urlArquivo } from "@/lib/api"
 import { alvoDeDigitacao } from "@/lib/layout-colunas"
-import { regiaoDoArraste, type Ponto } from "@/lib/regiao"
+import { pontoNoSlide, regiaoEntre, type Ponto } from "@/lib/regiao"
 
 type Previa = { disponivel: boolean; slides: string[]; mapa: MapaPrevia | null; erro: string | null }
 type Rascunho = { slide: number; regiao: Regiao | null }
@@ -40,9 +40,9 @@ export function VisualizadorApresentacao({
   const [comentarios, setComentarios] = useState<Comentario[]>([])
   const [rascunho, setRascunho] = useState<Rascunho | null>(null)
   const [texto, setTexto] = useState("")
-  const [arraste, setArraste] = useState<{ slide: number; inicio: Ponto; atual: Ponto; caixa: DOMRect } | null>(null)
+  const [arraste, setArraste] = useState<{ slide: number; inicio: Ponto; atual: Ponto } | null>(null)
   const [ocupado, setOcupado] = useState(false)
-  const pendentes = comentarios.filter((c) => !c.enviadoEm)
+  const pendentes = emOrdemDeEnvio(comentarios)
   const enviados = comentarios.filter((c) => c.enviadoEm)
   const podeComentar = entregavel?.status === "pendente"
   const dados = previa && previa.id === id ? previa.dados : undefined
@@ -85,13 +85,14 @@ export function VisualizadorApresentacao({
   function iniciarArraste(slide: number, ev: EventoPonteiro<HTMLDivElement>) {
     if (!podeComentar || ev.button !== 0) return
     ev.currentTarget.setPointerCapture(ev.pointerId)
-    const p = { x: ev.clientX, y: ev.clientY }
-    setArraste({ slide, inicio: p, atual: p, caixa: ev.currentTarget.getBoundingClientRect() })
+    // Em % do slide, medido na hora: se a lista rolar durante o arraste, a região não se desloca.
+    const p = pontoNoSlide({ x: ev.clientX, y: ev.clientY }, ev.currentTarget.getBoundingClientRect())
+    setArraste({ slide, inicio: p, atual: p })
   }
 
   function terminarArraste() {
     if (!arraste) return
-    const regiao = regiaoDoArraste(arraste.inicio, arraste.atual, arraste.caixa)
+    const regiao = regiaoEntre(arraste.inicio, arraste.atual)
     setArraste(null)
     if (regiao) {
       setRascunho({ slide: arraste.slide, regiao })
@@ -139,7 +140,7 @@ export function VisualizadorApresentacao({
   }
 
   const numeroDe = (c: Comentario) => pendentes.indexOf(c) + 1
-  const regiaoAoVivo = arraste ? regiaoDoArraste(arraste.inicio, arraste.atual, arraste.caixa) : null
+  const regiaoAoVivo = arraste ? regiaoEntre(arraste.inicio, arraste.atual) : null
 
   return (
     <section className="bg-background flex h-full min-h-0 flex-col" aria-label="Visualizador da apresentação">
@@ -217,8 +218,13 @@ export function VisualizadorApresentacao({
                   <div
                     className={cn("relative select-none", podeComentar && "cursor-crosshair")}
                     onPointerDown={(ev) => iniciarArraste(numero, ev)}
-                    onPointerMove={(ev) => arraste && setArraste({ ...arraste, atual: { x: ev.clientX, y: ev.clientY } })}
+                    onPointerMove={(ev) =>
+                      arraste &&
+                      setArraste({ ...arraste, atual: pontoNoSlide({ x: ev.clientX, y: ev.clientY }, ev.currentTarget.getBoundingClientRect()) })
+                    }
                     onPointerUp={terminarArraste}
+                    onPointerCancel={() => setArraste(null)}
+                    onLostPointerCapture={() => setArraste(null)}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element -- arquivo local servido pela rota do app */}
                     <img src={urlArquivo(slug, caminho)} alt={`Slide ${numero}`} draggable={false} className="w-full rounded-md border" />

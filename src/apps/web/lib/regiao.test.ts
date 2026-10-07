@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { regiaoDoArraste } from "./regiao"
+import { pontoNoSlide, regiaoDoArraste, regiaoEntre } from "./regiao"
 
 const caixa = { left: 100, top: 50, width: 1000, height: 562.5 }
 
@@ -12,5 +12,16 @@ describe("região arrastada sobre o slide", () => {
   })
   it("clique sem arrastar não vira região", () => {
     expect(regiaoDoArraste({ x: 500, y: 300 }, { x: 503, y: 302 }, caixa)).toBeNull()
+  })
+})
+
+describe("arraste com rolagem no meio", () => {
+  it("início guardado em % do slide não se desloca quando a lista rola", () => {
+    const inicio = pontoNoSlide({ x: 400, y: 100 }, caixa)
+    const rolada = { ...caixa, top: caixa.top - 200 }
+    expect(regiaoEntre(inicio, pontoNoSlide({ x: 700, y: 0 }, rolada))).toEqual({ x: 30, y: 8.89, w: 30, h: 17.78 })
+  })
+  it("clique sem arrastar não vira região", () => {
+    expect(regiaoEntre({ x: 10, y: 10 }, { x: 11, y: 10.5 })).toBeNull()
   })
 })

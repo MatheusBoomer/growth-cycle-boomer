@@ -1,4 +1,4 @@
-import { campoDaRegiao, regiaoValida, textoDoAjuste, type Comentario, type MapaPrevia, type Regiao } from "./comentarios"
+import { campoDaRegiao, emOrdemDeEnvio, regiaoValida, textoDoAjuste, type Comentario, type MapaPrevia, type Regiao } from "./comentarios"
 import type { FsArmazenamento } from "./armazenamento"
 import { encontrarEntregavel } from "./entregaveis"
 import { ErroEntrada, TransicaoInvalida } from "./erros"
@@ -25,6 +25,20 @@ export class ServicoComentarios {
   private readonly gerarId: () => string
   /** Conversões em andamento por pasta: duas aberturas simultâneas esperam a mesma. */
   private readonly gerando = new Map<string, Promise<{ slides: number } | { erro: string }>>()
+  /** Fila por versão: criar, editar, apagar e enviar leem e regravam o mesmo arquivo, um de cada vez. */
+  private readonly filas = new Map<string, Promise<unknown>>()
+
+  private exclusivo<T>(slug: string, id: string, f: () => Promise<T>): Promise<T> {
+    const chave = `${slug}/${id}`
+    const anterior = this.filas.get(chave) ?? Promise.resolve()
+    const atual = anterior.catch(() => {}).then(f)
+    const cauda = atual.catch(() => {})
+    this.filas.set(chave, cauda)
+    void cauda.then(() => {
+      if (this.filas.get(chave) === cauda) this.filas.delete(chave)
+    })
+    return atual
+  }
 
   constructor(d: DependenciasComentarios) {
     this.arm = d.armazenamento
@@ -85,7 +99,11 @@ export class ServicoComentarios {
     return e
   }
 
-  async criar(slug: string, id: string, d: { slide: number; regiao: Regiao | null; texto: string }): Promise<Comentario> {
+  criar(slug: string, id: string, d: { slide: number; regiao: Regiao | null; texto: string }): Promise<Comentario> {
+    return this.exclusivo(slug, id, () => this.criarAgora(slug, id, d))
+  }
+
+  private async criarAgora(slug: string, id: string, d: { slide: number; regiao: Regiao | null; texto: string }): Promise<Comentario> {
     const e = await this.exigirPendente(slug, id)
     const texto = (d.texto ?? "").trim()
     if (!texto) throw new ErroEntrada("Escreva o comentário.")
@@ -107,7 +125,11 @@ export class ServicoComentarios {
     return c
   }
 
-  private async alterar(slug: string, id: string, cid: string, f: (c: Comentario) => Comentario | null): Promise<void> {
+  private alterar(slug: string, id: string, cid: string, f: (c: Comentario) => Comentario | null): Promise<void> {
+    return this.exclusivo(slug, id, () => this.alterarAgora(slug, id, cid, f))
+  }
+
+  private async alterarAgora(slug: string, id: string, cid: string, f: (c: Comentario) => Comentario | null): Promise<void> {
     await this.exigirPendente(slug, id)
     const lista = await this.listar(slug, id)
     const alvo = lista.find((c) => c.id === cid)
@@ -126,10 +148,14 @@ export class ServicoComentarios {
     await this.alterar(slug, id, cid, () => null)
   }
 
-  async enviar(slug: string, id: string): Promise<number> {
+  enviar(slug: string, id: string): Promise<number> {
+    return this.exclusivo(slug, id, () => this.enviarAgora(slug, id))
+  }
+
+  private async enviarAgora(slug: string, id: string): Promise<number> {
     const e = await this.exigirPendente(slug, id)
     const lista = await this.listar(slug, id)
-    const pendentes = lista.filter((c) => !c.enviadoEm).sort((a, b) => a.slide - b.slide)
+    const pendentes = emOrdemDeEnvio(lista)
     if (pendentes.length === 0) throw new ErroEntrada("Nenhum comentário novo para enviar.")
     const recortes: Record<string, string> = {}
     let rotulo: (n: number) => string

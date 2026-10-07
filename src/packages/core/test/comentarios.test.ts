@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { campoDaRegiao, regiaoValida, textoDoAjuste, type Comentario } from "../src/comentarios"
+import { campoDaRegiao, emOrdemDeEnvio, regiaoValida, textoDoAjuste, type Comentario } from "../src/comentarios"
 
 const campos = {
   titulo: { x: 4.4, y: 7, w: 84, h: 9 },
@@ -42,5 +42,13 @@ describe("comentários de slide", () => {
     expect(t).toContain('   "a 2ª conclusão está errada"')
     expect(t).toContain("2. Slide 18 · slide inteiro")
     expect(t).toContain("Corrija só o roteiro nos slides citados")
+  })
+})
+
+describe("ordem dos comentários", () => {
+  it("pendentes por slide e, no mesmo slide, por criação (a mesma numeração na tela e no ajuste)", () => {
+    const c = (id: string, slide: number, criadoEm: string, enviadoEm: string | null = null): Comentario => ({ id, slide, regiao: null, campo: null, texto: id, criadoEm, enviadoEm })
+    const lista = [c("a", 20, "1"), c("b", 3, "2"), c("x", 1, "0", "9"), c("d", 3, "1")]
+    expect(emOrdemDeEnvio(lista).map((x) => x.id)).toEqual(["d", "b", "a"])
   })
 })

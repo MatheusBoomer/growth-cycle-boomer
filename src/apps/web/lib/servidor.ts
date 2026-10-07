@@ -26,7 +26,12 @@ const registro = globalThis as unknown as { __planejamento?: Servidor }
 
 /** Só para código de servidor (rotas e páginas). Nunca importar em componente "use client". */
 export function servidor(): Servidor {
-  if (registro.__planejamento) return registro.__planejamento
+  const atual = registro.__planejamento
+  if (atual) {
+    // Processo do next dev que já rodava antes do serviço de comentários existir: completa sem recriar os demais.
+    atual.comentarios ??= new ServicoComentarios({ armazenamento: atual.armazenamento, planejamento: atual.servico, previa: criarPreviaPython(atual.raiz) })
+    return atual
+  }
   // `next dev` roda em src/apps/web → a raiz do projeto de planejamento fica três níveis acima.
   const raiz = process.env.PLANEJAMENTO_ROOT ?? path.resolve(process.cwd(), "../../..")
   const catalogo = carregarCatalogo(raiz)

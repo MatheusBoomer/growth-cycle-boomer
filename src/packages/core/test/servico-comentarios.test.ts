@@ -144,6 +144,18 @@ describe("comentários", () => {
     await expect(s.editar(SLUG, "e1", "c1", "x")).rejects.toThrow("enviado")
   })
 
+  it("comentário criado durante o envio não se perde, e envios simultâneos pedem um ajuste só", async () => {
+    const s = servico()
+    await s.previa(SLUG, "e1")
+    await s.criar(SLUG, "e1", { slide: 2, regiao: { x: 70, y: 40, w: 20, h: 20 }, texto: "primeiro" })
+    const resultados = await Promise.allSettled([s.enviar(SLUG, "e1"), s.criar(SLUG, "e1", { slide: 1, regiao: null, texto: "durante" }), s.enviar(SLUG, "e1")])
+    expect(ajustes).toHaveLength(2)
+    expect(ajustes[0]!.texto).toContain("primeiro")
+    expect(ajustes[1]!.texto).toContain("durante")
+    expect(resultados.every((r) => r.status === "fulfilled")).toBe(true)
+    expect((await s.listar(SLUG, "e1")).map((c) => c.texto).sort()).toEqual(["durante", "primeiro"])
+  })
+
   it("enviar sem pendentes recusa e não pede ajuste", async () => {
     await expect(servico().enviar(SLUG, "e1")).rejects.toThrow("Nenhum comentário")
     expect(ajustes).toHaveLength(0)

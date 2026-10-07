@@ -176,7 +176,8 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   const aberto = visualizadorAberto ? entregavelVisivel(dados.estado.entregaveis, etapa, visualizador.nomeFinal) : null
   const Visualizador = aberto?.tipo === "apresentacao" ? VisualizadorApresentacao : VisualizadorHtml
   const painelVisualizador = visualizadorAberto ? (
-    <Visualizador slug={slug} entregavel={aberto} telaCheia={telaCheia} aoAlternarTelaCheia={alternarTelaCheia} aoFechar={fechar} />
+    // key: versão nova remonta o visualizador, sem levar rascunho de comentário da anterior.
+    <Visualizador key={aberto?.id ?? "nenhum"} slug={slug} entregavel={aberto} telaCheia={telaCheia} aoAlternarTelaCheia={alternarTelaCheia} aoFechar={fechar} />
   ) : null
 
   // O iframe do visualizador captura o mouse: durante o arraste de uma alça, ele deixa de receber eventos.

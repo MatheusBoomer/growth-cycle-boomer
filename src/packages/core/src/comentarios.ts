@@ -46,6 +46,13 @@ export function campoDaRegiao(r: Regiao, campos: Record<string, Regiao>): string
   return maior >= 0.2 * r.w * r.h ? melhor : null
 }
 
+/** Comentários ainda não enviados, na ordem em que vão numerados ao agente (e na tela). */
+export function emOrdemDeEnvio(comentarios: Comentario[]): Comentario[] {
+  return comentarios
+    .filter((c) => !c.enviadoEm)
+    .sort((a, b) => a.slide - b.slide || a.criadoEm.localeCompare(b.criadoEm))
+}
+
 export function textoDoAjuste(p: {
   titulo: string
   comentarios: Comentario[]
