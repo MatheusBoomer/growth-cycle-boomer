@@ -81,3 +81,16 @@ def test_cli_gerar_grava_mapa(deck, tmp_path, capsys):
 def test_cli_pptx_inexistente(tmp_path, capsys):
     assert pv.main(["gerar", "--pptx", str(tmp_path / "nao.pptx"), "--saida", str(tmp_path / "p")]) == 1
     assert "ERRO" in capsys.readouterr().err
+
+
+def test_titulo_sem_campo_de_titulo_usa_primeira_linha_do_bloco_da_esquerda(tmp_path):
+    pasta = tmp_path / "clientes" / "teste"
+    pasta.mkdir(parents=True)
+    roteiro = {"versao": 1, "prospect": "Marca", "slides": [
+        {"tipo": "analises_2_colunas",
+         "esquerda": {"titulo": "Análises sobre o **investimento**", "itens": ["Item A"]},
+         "direita": {"titulo": "Análises sobre a **receita**", "itens": ["Item B"]}},
+    ]}
+    saida = tmp_path / "deck.pptx"
+    ga.gerar(roteiro, pasta, saida)
+    assert pv.mapa_do_pptx(saida)["slides"][0]["titulo"] == "Análises sobre o investimento"

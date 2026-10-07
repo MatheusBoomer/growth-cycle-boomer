@@ -62,10 +62,12 @@ def _titulo(slide) -> str:
             if texto:
                 partes.append(texto)
     if not partes:
-        for forma in slide.shapes:
-            if forma.has_text_frame and forma.text_frame.text.strip():
-                partes.append(" ".join(forma.text_frame.text.split())[:80])
-                break
+        # Sem campo de título (análises em 2 colunas, jornada…): 1ª linha do texto mais acima à esquerda.
+        textos = [f for f in slide.shapes if f.has_text_frame and f.text_frame.text.strip()]
+        textos.sort(key=lambda f: ((f.top or 0) // 100000, f.left or 0))
+        for forma in textos[:1]:
+            linha = next(p.text for p in forma.text_frame.paragraphs if p.text.strip())
+            partes.append(" ".join(linha.split())[:80])
     return " · ".join(partes)
 
 
