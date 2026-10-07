@@ -138,3 +138,23 @@ describe("abertura automática do visualizador", () => {
     expect(htmlParaAbrir([], [html("e1", { tipo: "secao", arquivoRascunho: ".app/propostas/e1.md" })], "06")).toBeNull()
   })
 })
+
+describe("entregáveis da apresentação final", () => {
+  it("roteiro vai para ativos-aprovados/apresentacao", () => {
+    expect(destinoAprovado({ tipo: "roteiro", nomeFinal: "roteiro-apresentacao", etapa: "final" })).toBe(
+      "entrega/ativos-aprovados/apresentacao/roteiro-apresentacao.json",
+    )
+  })
+  it("apresentação aprovada vai sempre para entrega/apresentacao-final.pptx", () => {
+    expect(destinoAprovado({ tipo: "apresentacao", nomeFinal: "qualquer", etapa: "final" })).toBe("entrega/apresentacao-final.pptx")
+  })
+  it("proposta exige a extensão do tipo", () => {
+    const base = estadoInicial({ slug: "x", nome: "X", site: null }, EM)
+    expect(() =>
+      proporEntregavel(base, { etapa: "final", tipo: "apresentacao", titulo: "Deck", arquivoRascunho: ".app/propostas/a.pdf", nomeFinal: "deck" }, "a1", EM),
+    ).toThrow(".pptx")
+    expect(() =>
+      proporEntregavel(base, { etapa: "final", tipo: "roteiro", titulo: "Roteiro", arquivoRascunho: ".app/propostas/r.json", nomeFinal: "roteiro-apresentacao" }, "r1", EM),
+    ).not.toThrow()
+  })
+})

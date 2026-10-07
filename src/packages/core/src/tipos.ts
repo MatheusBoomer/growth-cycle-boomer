@@ -9,7 +9,7 @@ export type StatusEtapa =
   | "concluida"
   | "desatualizada"
 
-export const TIPOS_ENTREGAVEL = ["grafico", "tabela", "secao", "planilha", "documento", "html"] as const
+export const TIPOS_ENTREGAVEL = ["grafico", "tabela", "secao", "planilha", "documento", "html", "roteiro", "apresentacao"] as const
 export type TipoEntregavel = (typeof TIPOS_ENTREGAVEL)[number]
 
 export interface InsumoCatalogo {

@@ -36,11 +36,11 @@ servidor.registerTool(
   {
     title: "Propor entregável para aprovação",
     description:
-      "Mostra ao analista um card com Aprovar / Pedir ajuste para um gráfico, tabela, seção de texto, planilha, documento ou HTML já salvo em clientes/<slug>/.app/rascunhos/. Substitui pedir 'ok' no chat. Depois de chamar, encerre a resposta e espere a decisão, que chega como nova mensagem.",
+      "Mostra ao analista um card com Aprovar / Pedir ajuste para um gráfico, tabela, seção de texto, planilha, documento, HTML, roteiro ou apresentação já salvo em clientes/<slug>/.app/rascunhos/. Substitui pedir 'ok' no chat. Depois de chamar, encerre a resposta e espere a decisão, que chega como nova mensagem.",
     inputSchema: {
       tipo: z
-        .enum(["grafico", "tabela", "secao", "planilha", "documento", "html"])
-        .describe("grafico/tabela = PNG; secao = .md; planilha = .xlsx; documento = .docx; html = .html"),
+        .enum(["grafico", "tabela", "secao", "planilha", "documento", "html", "roteiro", "apresentacao"])
+        .describe("grafico/tabela = PNG; secao = .md; planilha = .xlsx; documento = .docx; html = .html; roteiro = .json (roteiro da apresentação); apresentacao = .pptx"),
       titulo: z.string().describe("Título curto que o analista vê no card"),
       arquivo_rascunho: z.string().describe("Caminho do arquivo em clientes/<slug>/.app/rascunhos/"),
       nome_final: z

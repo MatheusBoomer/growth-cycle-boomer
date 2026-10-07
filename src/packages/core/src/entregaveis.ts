@@ -8,6 +8,8 @@ export const EXTENSAO_POR_TIPO: Record<TipoEntregavel, string> = {
   planilha: ".xlsx",
   documento: ".docx",
   html: ".html",
+  roteiro: ".json",
+  apresentacao: ".pptx",
 }
 
 const PASTA_POR_TIPO: Record<TipoEntregavel, string> = {
@@ -17,6 +19,8 @@ const PASTA_POR_TIPO: Record<TipoEntregavel, string> = {
   planilha: "projecao",
   documento: "plano-de-acao",
   html: "benchmark",
+  roteiro: "apresentacao",
+  apresentacao: "apresentacao",
 }
 
 const NOME_FINAL = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -41,6 +45,7 @@ export function normalizarNomeFinal(tipo: TipoEntregavel, nomeFinal: string, eta
 }
 
 export function destinoAprovado(e: Pick<Entregavel, "tipo" | "nomeFinal" | "etapa">): string {
+  if (e.tipo === "apresentacao") return "entrega/apresentacao-final.pptx"
   const nome = e.tipo === "secao" ? `${e.etapa}-${e.nomeFinal}` : e.nomeFinal
   return `entrega/ativos-aprovados/${PASTA_POR_TIPO[e.tipo]}/${nome}${EXTENSAO_POR_TIPO[e.tipo]}`
 }
