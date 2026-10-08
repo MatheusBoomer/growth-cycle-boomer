@@ -27,7 +27,8 @@ clientes/*
 # Estado local do app (chats, rascunhos) — por prospect
 clientes/**/.app/
 
-# Gerados pelo next dev (agentRules)
+# Gerados pelo next dev e pelo turbo (regras para agentes)
+/AGENTS.md
 src/apps/web/AGENTS.md
 src/apps/web/CLAUDE.md
 
