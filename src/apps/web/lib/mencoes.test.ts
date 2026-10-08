@@ -63,6 +63,13 @@ describe("anexos na mensagem", () => {
     expect(extrairAnexos(t)).toEqual([anexo])
   })
 
+  it("mensagem só com anexo depois do trim (como a rota salva) também some e vira etiqueta", () => {
+    const t = textoParaAgente("", "p", [anexo]).trim()
+    expect(t).toBe(`[Anexos]\n- ${anexo}`)
+    expect(semRodape(t)).toBe("")
+    expect(extrairAnexos(t)).toEqual([anexo])
+  })
+
   it("sem anexos não muda nada e texto com [Anexos] no meio da linha não é cortado", () => {
     expect(textoParaAgente("oi", "p", [])).toBe("oi")
     expect(extrairAnexos("oi")).toEqual([])

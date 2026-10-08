@@ -20,18 +20,24 @@ export function textoParaAgente(texto: string, slug: string, anexos: string[] = 
   return saida
 }
 
+/** Posição do rodapé; aceita também no início do texto, pois a rota guarda a mensagem com trim (sem as quebras iniciais). */
+function posicaoDoRodape(texto: string, rodape: string): number {
+  return texto.startsWith(rodape.slice(2)) ? 0 : texto.indexOf(rodape)
+}
+
 /** Mensagem como o analista escreveu, sem os rodapés técnicos para o agente. */
 export function semRodape(texto: string): string {
-  const cortes = [texto.indexOf(RODAPE), texto.indexOf(RODAPE_ANEXOS)].filter((i) => i !== -1)
+  const cortes = [posicaoDoRodape(texto, RODAPE), posicaoDoRodape(texto, RODAPE_ANEXOS)].filter((i) => i !== -1)
   return cortes.length === 0 ? texto : texto.slice(0, Math.min(...cortes))
 }
 
 /** Caminhos do rodapé [Anexos] (como o app devolveu no upload). */
 export function extrairAnexos(texto: string): string[] {
-  const i = texto.indexOf(RODAPE_ANEXOS)
+  const i = posicaoDoRodape(texto, RODAPE_ANEXOS)
   if (i === -1) return []
+  const inicio = i === 0 && texto.startsWith(RODAPE_ANEXOS.slice(2)) ? RODAPE_ANEXOS.length - 2 : i + RODAPE_ANEXOS.length
   return texto
-    .slice(i + RODAPE_ANEXOS.length)
+    .slice(inicio)
     .split("\n")
     .map((l) => l.match(/^- (.+)$/)?.[1])
     .filter((c): c is string => c !== undefined)
