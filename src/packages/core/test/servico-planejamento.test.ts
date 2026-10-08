@@ -4,7 +4,7 @@ import path from "node:path"
 import { beforeEach, describe, expect, it } from "vitest"
 import { FsArmazenamento } from "../src/armazenamento"
 import { Barramento } from "../src/barramento"
-import { ErroEntrada, ErroProspectExistente, ErroTurnoAtivo } from "../src/erros"
+import { ErroEntrada, ErroNaoEncontrado, ErroProspectExistente, ErroTurnoAtivo, TransicaoInvalida } from "../src/erros"
 import { ServicoPlanejamento } from "../src/servico-planejamento"
 import type { EventoTempoReal, ResultadoValidacao } from "../src/tipos"
 import { catalogoReal, raizTemporaria } from "./ajuda"
@@ -258,5 +258,72 @@ describe("robustez", () => {
     await servico.iniciarEtapa(slug, "01")
     expect(eventos.map((e) => e.tipo)).toContain("estado")
     expect(eventos.map((e) => e.tipo)).toContain("conversa")
+  })
+})
+
+describe("card de perguntas", () => {
+  const perguntas = [
+    { enunciado: "Qual cenário usar como meta?", multipla: false, opcoes: [{ rotulo: "Pessimista" }, { rotulo: "Realista" }, { rotulo: "Otimista" }] },
+    { enunciado: "Quais canais priorizar?", multipla: true, opcoes: [{ rotulo: "Meta Ads" }, { rotulo: "Google Ads" }] },
+  ]
+  const respostas = [
+    { selecionadas: ["Realista"], outra: null },
+    { selecionadas: ["Meta Ads", "Google Ads"], outra: "testar TikTok só no Q4" },
+  ]
+
+  async function comPerguntas() {
+    const slug = await prospectNaEtapa03()
+    const r = await servico.ferramenta(ctx03, "fazer_perguntas", { perguntas })
+    expect(r.ok).toBe(true)
+    const id = (await servico.estado(slug)).perguntas.at(-1)!.id
+    return { slug, id, r }
+  }
+
+  it("fazer_perguntas cria o conjunto pendente, o card e pede para encerrar", async () => {
+    const { slug, id, r } = await comPerguntas()
+    expect(r.mensagem).toContain("Encerre sua resposta")
+    const e = await servico.estado(slug)
+    expect(e.perguntas).toHaveLength(1)
+    expect(e.perguntas[0]).toMatchObject({ id, etapa: "03", status: "pendente" })
+    expect((await servico.conversa(slug, "03")).some((ev) => ev.tipo === "card_perguntas" && ev.conjuntoId === id)).toBe(true)
+  })
+
+  it("fazer_perguntas inválida volta como erro para o agente, sem criar card", async () => {
+    const slug = await prospectNaEtapa03()
+    const r = await servico.ferramenta(ctx03, "fazer_perguntas", { perguntas: [] })
+    expect(r.ok).toBe(false)
+    expect(r.mensagem).toContain("1 a 4")
+    expect((await servico.estado(slug)).perguntas).toEqual([])
+  })
+
+  it("responder marca respondida e enfileira as respostas formatadas", async () => {
+    const { slug, id } = await comPerguntas()
+    await servico.responderPerguntas(slug, id, respostas)
+    expect((await servico.estado(slug)).perguntas[0]?.status).toBe("respondida")
+    expect(enfileirados).toEqual([slug])
+    const texto = (await servico.retirarFila(slug))?.texto ?? ""
+    expect(texto.split("\n")[0]).toContain("RESPONDEU")
+    expect(texto).toContain("1. Qual cenário usar como meta? → Realista")
+    expect(texto).toContain("2. Quais canais priorizar? → Meta Ads; Google Ads; Outra: \"testar TikTok só no Q4\"")
+    await expect(servico.responderPerguntas(slug, id, respostas)).rejects.toBeInstanceOf(TransicaoInvalida)
+  })
+
+  it("pergunta nova substitui a pendente; a antiga não aceita resposta", async () => {
+    const { slug, id } = await comPerguntas()
+    await servico.ferramenta(ctx03, "fazer_perguntas", { perguntas })
+    expect((await servico.estado(slug)).perguntas.map((c) => c.status)).toEqual(["sem_resposta", "pendente"])
+    await expect(servico.responderPerguntas(slug, id, respostas)).rejects.toBeInstanceOf(TransicaoInvalida)
+    expect(enfileirados).toEqual([])
+  })
+
+  it("resposta inválida, conjunto inexistente e etapa fechada são recusados sem enfileirar", async () => {
+    const { slug, id } = await comPerguntas()
+    await expect(servico.responderPerguntas(slug, id, [respostas[0]])).rejects.toBeInstanceOf(ErroEntrada)
+    await expect(servico.responderPerguntas(slug, "nao-existe", respostas)).rejects.toBeInstanceOf(ErroNaoEncontrado)
+    const e = await servico.estado(slug)
+    e.etapas["03"].status = "concluida"
+    await writeFile(path.join(raiz, "clientes", slug, ".app/estado.json"), JSON.stringify(e))
+    await expect(servico.responderPerguntas(slug, id, respostas)).rejects.toBeInstanceOf(TransicaoInvalida)
+    expect(enfileirados).toEqual([])
   })
 })

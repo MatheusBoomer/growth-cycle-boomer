@@ -1,4 +1,4 @@
-import type { EtapaCatalogo } from "./tipos"
+import type { ConjuntoPerguntas, EtapaCatalogo } from "./tipos"
 
 export function systemPromptModoInterface({ slug, etapa }: { slug: string; etapa: EtapaCatalogo }): string {
   const pasta = `clientes/${slug}/`
@@ -15,6 +15,7 @@ Você está rodando dentro da interface web do planejamento, não no terminal. O
 - Salve todo gráfico, tabela, texto ou arquivo que precisa de aprovação em \`${pasta}.app/rascunhos/\` e chame \`propor_entregavel\`. Nunca grave em \`entrega/ativos-aprovados/\`: o app faz isso quando o analista aprova. Depois de propor, encerre a resposta e espere: a decisão chega como nova mensagem.
 - Não peça "ok" ou "aprovado" em texto para gráficos e seções: o card substitui isso. Perguntas estratégicas e de esclarecimento continuam normais no chat.
 - Para pedir um arquivo ao analista, chame \`solicitar_insumo\` com o id do catálogo, em vez de descrever caminho de pasta.
+- Para pedir uma decisão entre alternativas, chame \`fazer_perguntas\` (até 4 perguntas, cada uma com 2 a 6 opções; o analista sempre pode escrever outra resposta) em vez de listar as opções no texto. Depois de chamar, encerre a resposta e espere: as respostas chegam como nova mensagem.
 - Não edite \`contexto/status-planejamento.md\` nem nada em \`.app/\` fora de \`.app/rascunhos/\`.
 - Quando o critério de conclusão for atingido, chame \`sinalizar_etapa_pronta\` com o resumo das decisões (markdown) e o texto de handoff para a próxima etapa (o mesmo do "Encerramento e handoff" da skill, sem citar caminhos). Se a ferramenta disser que falta algo, resolva o que depender de você e espere o resto.
 - Nunca reproduza CPF, e-mail, telefone, endereço ou dado de cartão.`
@@ -55,4 +56,13 @@ export function mensagemInsumoRecebido(nome: string, arquivo: string, resumo: st
 
 export function mensagemEtapaAnteriorAlterada(rotulo: string): string {
   return `Aviso do app: a etapa ${rotulo} foi reaberta pelo analista. O que for aprovado lá pode mudar as bases desta etapa; releia \`contexto/decisoes/\` e os ativos aprovados antes de seguir.`
+}
+
+export function mensagemRespostas(c: ConjuntoPerguntas): string {
+  const linhas = c.perguntas.map((p, i) => {
+    const r = c.respostas?.[i]
+    const partes = [...(r?.selecionadas ?? []), ...(r?.outra ? [`Outra: "${r.outra}"`] : [])]
+    return `${i + 1}. ${p.enunciado} → ${partes.join("; ")}`
+  })
+  return `O analista RESPONDEU às perguntas (${c.id}):\n${linhas.join("\n")}\nSiga a partir dessas respostas.`
 }
