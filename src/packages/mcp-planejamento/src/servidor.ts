@@ -78,4 +78,30 @@ servidor.registerTool(
   async (args) => chamarApp("sinalizar_etapa_pronta", args),
 )
 
+servidor.registerTool(
+  "fazer_perguntas",
+  {
+    title: "Fazer perguntas ao analista",
+    description:
+      "Mostra ao analista um card com até 4 perguntas de alternativas. Use quando precisar de uma decisão entre opções definidas, em vez de listar opções no texto. Toda pergunta já tem um campo de resposta livre. Depois de chamar, encerre a resposta e aguarde: as respostas chegam como nova mensagem.",
+    inputSchema: {
+      perguntas: z
+        .array(
+          z.object({
+            enunciado: z.string().describe("A pergunta, curta e direta"),
+            descricao: z.string().optional().describe("Contexto opcional mostrado abaixo da pergunta"),
+            multipla: z.boolean().describe("true = o analista pode marcar várias opções"),
+            opcoes: z
+              .array(z.object({ rotulo: z.string(), descricao: z.string().optional() }))
+              .min(2)
+              .max(6),
+          }),
+        )
+        .min(1)
+        .max(4),
+    },
+  },
+  async (args) => chamarApp("fazer_perguntas", args),
+)
+
 await servidor.connect(new StdioServerTransport())

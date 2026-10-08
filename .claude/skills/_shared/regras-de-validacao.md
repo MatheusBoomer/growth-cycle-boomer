@@ -86,7 +86,7 @@ grava esse arquivo; no modo interface (Regra 7), quem grava é o app, com o
 ## 7. Modo interface
 
 Quando as ferramentas do MCP `planejamento` estiverem disponíveis
-(`propor_entregavel`, `solicitar_insumo`, `sinalizar_etapa_pronta`), a skill
+(`propor_entregavel`, `solicitar_insumo`, `fazer_perguntas`, `sinalizar_etapa_pronta`), a skill
 está rodando dentro da interface web, e estas regras substituem o jeito
 "terminal" de fazer as Regras 1, 2 e 6:
 
@@ -98,6 +98,12 @@ está rodando dentro da interface web, e estas regras substituem o jeito
   mensagem ("APROVOU" ou "AJUSTE").
 - **Insumos:** peça arquivos com `solicitar_insumo` (ids em
   `.claude/skills/_shared/etapas.json`), não descrevendo caminhos de pasta.
+- **Decisões entre alternativas:** quando precisar que o analista escolha
+  entre opções definidas (cenário, prioridade, premissa), chame
+  `fazer_perguntas` com até 4 perguntas em vez de listar as opções no texto.
+  Toda pergunta já aceita resposta livre. Depois de chamar, encerre a
+  resposta; as respostas chegam como nova mensagem ("RESPONDEU").
+  Perguntas abertas de esclarecimento continuam no chat normal.
 - **Encerramento (Regra 6):** não edite `contexto/status-planejamento.md`.
   Chame `sinalizar_etapa_pronta` com o resumo de decisões (markdown) e o
   mesmo texto de handoff do "Encerramento e handoff" da skill.
