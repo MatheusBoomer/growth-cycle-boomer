@@ -61,7 +61,7 @@ export function mensagemEtapaAnteriorAlterada(rotulo: string): string {
 export function mensagemRespostas(c: ConjuntoPerguntas): string {
   const linhas = c.perguntas.map((p, i) => {
     const r = c.respostas?.[i]
-    const partes = [...(r?.selecionadas ?? []), ...(r?.outra ? [`Outra: "${r.outra}"`] : [])]
+    const partes = [...(r?.selecionadas ?? []), ...(r?.outra ? [`Outra: "${r.outra.replace(/\s*[\r\n]+\s*/g, " ")}"`] : [])]
     return `${i + 1}. ${p.enunciado} → ${partes.join("; ")}`
   })
   return `O analista RESPONDEU às perguntas (${c.id}):\n${linhas.join("\n")}\nSiga a partir dessas respostas.`

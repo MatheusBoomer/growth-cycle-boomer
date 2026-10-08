@@ -308,6 +308,17 @@ describe("card de perguntas", () => {
     await expect(servico.responderPerguntas(slug, id, respostas)).rejects.toBeInstanceOf(TransicaoInvalida)
   })
 
+  it("Outra com várias linhas continua na linha numerada da resposta", async () => {
+    const { slug, id } = await comPerguntas()
+    await servico.responderPerguntas(slug, id, [
+      { selecionadas: ["Realista"], outra: null },
+      { selecionadas: [], outra: "testar TikTok\n\n2. no Q4\r\n  e depois revisar" },
+    ])
+    const texto = (await servico.retirarFila(slug))?.texto ?? ""
+    expect(texto).toContain("2. Quais canais priorizar? → Outra: \"testar TikTok 2. no Q4 e depois revisar\"")
+    expect(texto.split("\n")).toHaveLength(4)
+  })
+
   it("pergunta nova substitui a pendente; a antiga não aceita resposta", async () => {
     const { slug, id } = await comPerguntas()
     await servico.ferramenta(ctx03, "fazer_perguntas", { perguntas })
