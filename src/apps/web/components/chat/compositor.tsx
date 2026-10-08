@@ -4,6 +4,7 @@ import { FileIcon, PaperclipIcon, PanelRightOpenIcon, SendIcon, SquareIcon } fro
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import type { EtapaId } from "@workspace/core/tipos"
+import { AttachmentGroup } from "@workspace/ui/components/attachment"
 import { Button } from "@workspace/ui/components/button"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { Textarea } from "@workspace/ui/components/textarea"
@@ -11,8 +12,17 @@ import { cn } from "@workspace/ui/lib/utils"
 import { useVisualizador } from "@/components/trabalho/contexto-visualizador"
 import { api, mensagemDeErro } from "@/lib/api"
 import { consultaDeMencao, textoParaAgente } from "@/lib/mencoes"
+import { EtiquetaAnexo } from "./etiqueta-anexo"
 
 const MAX_SUGESTOES = 8
+
+interface AnexoCompositor {
+  id: number
+  nome: string
+  caminho: string | null
+  estado: "uploading" | "done" | "error"
+  erro: string | null
+}
 
 export function Compositor({
   slug,
@@ -29,7 +39,11 @@ export function Compositor({
 }) {
   const [texto, setTexto] = useState("")
   const [enviando, setEnviando] = useState(false)
-  const [anexando, setAnexando] = useState(false)
+  const [anexos, setAnexos] = useState<AnexoCompositor[]>([])
+  const proximoAnexo = useRef(0)
+  const [arrastando, setArrastando] = useState(false)
+  const subindo = anexos.some((a) => a.estado === "uploading")
+  const prontos = anexos.filter((a) => a.estado === "done" && a.caminho).map((a) => a.caminho!)
   const entradaArquivo = useRef<HTMLInputElement>(null)
   const campo = useRef<HTMLTextAreaElement>(null)
   const { registrarCompositor, abrirArquivo } = useVisualizador()
@@ -108,11 +122,12 @@ export function Compositor({
 
   async function enviar() {
     const limpo = texto.trim()
-    if (!limpo) return
+    if (!limpo && prontos.length === 0) return
     setEnviando(true)
     try {
-      await api.enviarMensagem(slug, etapa, textoParaAgente(limpo, slug))
+      await api.enviarMensagem(slug, etapa, textoParaAgente(limpo, slug, prontos))
       setTexto("")
+      setAnexos([])
     } catch (e) {
       toast.error(mensagemDeErro(e))
     } finally {
@@ -120,26 +135,61 @@ export function Compositor({
     }
   }
 
-  async function anexar(arquivos: FileList | null) {
-    if (!arquivos?.length) return
-    setAnexando(true)
-    try {
-      for (const arquivo of Array.from(arquivos)) {
-        const { caminho } = await api.enviarAnexo(slug, etapa, arquivo)
-        setTexto((t) => `${t}${t ? "\n" : ""}[Anexo: ${caminho}]`)
-      }
-    } catch (e) {
-      toast.error(mensagemDeErro(e))
-    } finally {
-      setAnexando(false)
-      if (entradaArquivo.current) entradaArquivo.current.value = ""
-    }
+  async function anexar(lista: FileList | File[] | null) {
+    const arquivos = lista ? Array.from(lista) : []
+    if (entradaArquivo.current) entradaArquivo.current.value = ""
+    await Promise.all(
+      arquivos.map(async (arquivo) => {
+        const id = ++proximoAnexo.current
+        setAnexos((a) => [...a, { id, nome: arquivo.name, caminho: null, estado: "uploading", erro: null }])
+        try {
+          const { caminho } = await api.enviarAnexo(slug, etapa, arquivo)
+          setAnexos((a) => a.map((x) => (x.id === id ? { ...x, caminho, estado: "done" } : x)))
+        } catch (e) {
+          setAnexos((a) => a.map((x) => (x.id === id ? { ...x, estado: "error", erro: mensagemDeErro(e) } : x)))
+        }
+      }),
+    )
   }
+
+  const podeEnviar = !desabilitado && !enviando && !subindo && (texto.trim() !== "" || prontos.length > 0)
 
   return (
     <div className="border-t p-3">
-      <div className="mx-auto flex max-w-3xl flex-col gap-2">
+      <div
+        className={cn(
+          "mx-auto flex max-w-3xl flex-col gap-2 rounded-lg transition-shadow",
+          arrastando && "ring-primary/50 ring-2 ring-offset-4 ring-offset-background",
+        )}
+        onDragOver={(e) => {
+          if (desabilitado || !e.dataTransfer.types.includes("Files")) return
+          e.preventDefault()
+          setArrastando(true)
+        }}
+        onDragLeave={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setArrastando(false)
+        }}
+        onDrop={(e) => {
+          if (!e.dataTransfer.types.includes("Files")) return
+          e.preventDefault()
+          setArrastando(false)
+          if (!desabilitado) void anexar(e.dataTransfer.files)
+        }}
+      >
         {motivo && <p className="text-muted-foreground text-xs">{motivo}</p>}
+        {anexos.length > 0 && (
+          <AttachmentGroup>
+            {anexos.map((a) => (
+              <EtiquetaAnexo
+                key={a.id}
+                nome={a.nome}
+                estado={a.estado}
+                erro={a.erro}
+                aoRemover={() => setAnexos((lista) => lista.filter((x) => x.id !== a.id))}
+              />
+            ))}
+          </AttachmentGroup>
+        )}
         <div className="relative">
           {listaAberta && (
             <ul
@@ -192,6 +242,12 @@ export function Compositor({
             atualizarConsulta(e.target.value, e.target.selectionStart)
           }}
           onBlur={() => setConsulta(null)}
+          onPaste={(e) => {
+            const arquivos = Array.from(e.clipboardData.files)
+            if (arquivos.length === 0 || desabilitado) return
+            e.preventDefault()
+            void anexar(arquivos)
+          }}
           onKeyDown={(e) => {
             if (listaAberta) {
               if (e.key === "ArrowDown" || e.key === "ArrowUp") {
@@ -218,10 +274,10 @@ export function Compositor({
             }
             if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
               e.preventDefault()
-              if (!desabilitado && !enviando) void enviar()
+              if (podeEnviar) void enviar()
             }
           }}
-          placeholder="Escreva para o agente… (@ menciona um arquivo, Enter envia, Shift+Enter quebra linha)"
+          placeholder="Escreva para o agente… (@ menciona um arquivo, arraste ou cole para anexar, Enter envia)"
           disabled={desabilitado}
           rows={3}
           aria-label="Mensagem para o agente"
@@ -233,10 +289,10 @@ export function Compositor({
             variant="ghost"
             size="icon"
             aria-label="Anexar arquivo"
-            disabled={desabilitado || anexando}
+            disabled={desabilitado}
             onClick={() => entradaArquivo.current?.click()}
           >
-            {anexando ? <Spinner /> : <PaperclipIcon />}
+            <PaperclipIcon />
           </Button>
           {ativoAqui ? (
             <Button
@@ -247,7 +303,7 @@ export function Compositor({
               <SquareIcon /> Parar
             </Button>
           ) : (
-            <Button className="ml-auto" onClick={() => void enviar()} disabled={desabilitado || enviando || !texto.trim()}>
+            <Button className="ml-auto" onClick={() => void enviar()} disabled={!podeEnviar}>
               {enviando ? <Spinner /> : <SendIcon />} Enviar
             </Button>
           )}

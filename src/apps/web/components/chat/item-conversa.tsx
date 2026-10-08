@@ -3,6 +3,7 @@
 import { InfoIcon, WrenchIcon } from "lucide-react"
 import type { EtapaId, EventoConversa, RespostaEstado } from "@workspace/core/tipos"
 import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert"
+import { AttachmentGroup } from "@workspace/ui/components/attachment"
 import { Bubble, BubbleContent } from "@workspace/ui/components/bubble"
 import { Button } from "@workspace/ui/components/button"
 import { Marker, MarkerContent, MarkerIcon } from "@workspace/ui/components/marker"
@@ -12,7 +13,8 @@ import { CardInsumo } from "@/components/cards/card-insumo"
 import { CardPerguntas } from "@/components/cards/card-perguntas"
 import { Markdown } from "@/components/markdown"
 import { useVisualizador } from "@/components/trabalho/contexto-visualizador"
-import { partesComMencoes, semRodape } from "@/lib/mencoes"
+import { caminhoNoProspect, extrairAnexos, nomeDoAnexo, partesComMencoes, semRodape } from "@/lib/mencoes"
+import { EtiquetaAnexo } from "./etiqueta-anexo"
 
 /** Mensagem do analista com as menções "@arquivo" como etiquetas que abrem o arquivo. */
 function TextoComMencoes({ texto }: { texto: string }) {
@@ -35,6 +37,20 @@ function TextoComMencoes({ texto }: { texto: string }) {
         ),
       )}
     </>
+  )
+}
+
+/** Anexos enviados junto com a mensagem; clicar abre o arquivo na lateral. */
+function AnexosDaMensagem({ texto, slug }: { texto: string; slug: string }) {
+  const { abrirArquivo } = useVisualizador()
+  const anexos = extrairAnexos(texto)
+  if (anexos.length === 0) return null
+  return (
+    <AttachmentGroup className="justify-end">
+      {anexos.map((c) => (
+        <EtiquetaAnexo key={c} nome={nomeDoAnexo(c)} aoAbrir={() => abrirArquivo(caminhoNoProspect(c, slug))} />
+      ))}
+    </AttachmentGroup>
   )
 }
 
@@ -67,11 +83,14 @@ export function ItemConversa({
       ) : (
         <Message align="end">
           <MessageContent>
-            <Bubble variant="default" align="end">
-              <BubbleContent className="whitespace-pre-wrap">
-                <TextoComMencoes texto={evento.texto} />
-              </BubbleContent>
-            </Bubble>
+            {semRodape(evento.texto).trim() && (
+              <Bubble variant="default" align="end">
+                <BubbleContent className="whitespace-pre-wrap">
+                  <TextoComMencoes texto={evento.texto} />
+                </BubbleContent>
+              </Bubble>
+            )}
+            <AnexosDaMensagem texto={evento.texto} slug={slug} />
           </MessageContent>
         </Message>
       )
