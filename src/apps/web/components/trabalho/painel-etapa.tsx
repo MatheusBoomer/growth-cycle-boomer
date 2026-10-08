@@ -1,7 +1,9 @@
 "use client"
 
+import { DownloadIcon, FolderOpenIcon, PresentationIcon } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
+import { apresentacaoFinal, TIPOS_VISUALIZADOR } from "@workspace/core/entregaveis"
 import type { EtapaId, RespostaEstado, StatusEntregavel } from "@workspace/core/tipos"
 import {
   AlertDialog,
@@ -18,7 +20,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
 import { CardInsumo } from "@/components/cards/card-insumo"
-import { api, mensagemDeErro, type AcaoEtapa } from "@/lib/api"
+import { api, mensagemDeErro, urlArquivo, type AcaoEtapa } from "@/lib/api"
 import { useVisualizador } from "./contexto-visualizador"
 
 const COR: Record<StatusEntregavel, string> = { pendente: "bg-amber-500", aprovado: "bg-primary", substituido: "bg-muted-foreground/40" }
@@ -30,6 +32,7 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
   const condicoes = dados.condicoes[etapa]
   const [ocupado, setOcupado] = useState<AcaoEtapa | null>(null)
   const { abrir, abrirArquivo } = useVisualizador()
+  const final = apresentacaoFinal(dados.estado.entregaveis.filter((e) => e.etapa === etapa))
 
   async function executar(acao: AcaoEtapa, sucesso: string) {
     setOcupado(acao)
@@ -50,6 +53,33 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
   return (
     <aside className="flex min-h-0 flex-col">
       <div className="flex-1 space-y-6 overflow-y-auto p-4">
+        {final && (
+          <section className="space-y-2 rounded-md border p-3">
+            <h3 className="flex items-center gap-2 text-sm font-medium">
+              <PresentationIcon className="size-4" /> Apresentação pronta
+            </h3>
+            <p className="text-muted-foreground text-xs">Abra no Google Slides (Arquivo → Importar slides) ou no PowerPoint.</p>
+            <div className="flex flex-col gap-1.5">
+              <Button size="sm" variant="outline" onClick={() => abrir(final.entregavel.etapa, final.entregavel.nomeFinal)}>
+                <PresentationIcon /> Ver prévia
+              </Button>
+              <Button
+                size="sm"
+                render={<a href={urlArquivo(slug, final.caminho, true, `Planejamento Estratégico - ${dados.estado.prospect.nome}`)} download />}
+                nativeButton={false}
+              >
+                <DownloadIcon /> Baixar .pptx
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => void api.mostrarNoFinder(slug, final.caminho).catch((e) => toast.error(mensagemDeErro(e)))}
+              >
+                <FolderOpenIcon /> Mostrar no Finder
+              </Button>
+            </div>
+          </section>
+        )}
         <section>
           <h3 className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">Entregáveis da etapa</h3>
           {entregaveis.length === 0 ? (
@@ -59,7 +89,7 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
               {entregaveis.map((e) => (
                 <li key={e.id} className="flex items-center gap-2 text-sm">
                   <span className={cn("size-2 shrink-0 rounded-full", COR[e.status])} aria-hidden />
-                  {e.tipo === "html" ? (
+                  {TIPOS_VISUALIZADOR.includes(e.tipo) ? (
                     <button type="button" className="truncate text-left hover:underline" onClick={() => abrir(e.etapa, e.nomeFinal)}>
                       {e.titulo}
                     </button>

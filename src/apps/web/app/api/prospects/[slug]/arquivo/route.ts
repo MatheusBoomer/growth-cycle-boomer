@@ -3,6 +3,7 @@ import path from "node:path"
 import type { NextRequest } from "next/server"
 import { politicaDeConteudoArquivo } from "@workspace/core/seguranca"
 import { json, respostaDeErro } from "@/lib/http"
+import { nomeDeDownload } from "@/lib/nome-download"
 import { servidor } from "@/lib/servidor"
 
 const TIPOS: Record<string, string> = {
@@ -36,7 +37,7 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/prospects/[s
     }
     const politica = politicaDeConteudoArquivo(path.extname(abs))
     if (politica) headers["content-security-policy"] = politica
-    if (download) headers["content-disposition"] = `attachment; filename*=UTF-8''${encodeURIComponent(path.basename(abs))}`
+    if (download) headers["content-disposition"] = `attachment; filename*=UTF-8''${encodeURIComponent(nomeDeDownload(req.nextUrl.searchParams.get("nome"), abs))}`
     return new Response(new Uint8Array(dados), { headers })
   } catch (e) {
     return respostaDeErro(e)

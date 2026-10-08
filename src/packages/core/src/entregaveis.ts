@@ -140,3 +140,12 @@ export function htmlParaAbrir(antes: Entregavel[] | null, depois: Entregavel[], 
   const novo = depois.find((e) => !conhecidos.has(e.id) && TIPOS_VISUALIZADOR.includes(e.tipo) && e.status === "pendente" && e.etapa === etapa)
   return novo ? novo.nomeFinal : null
 }
+
+/** A apresentação aprovada mais recente e onde está o arquivo final (para baixar e ver a prévia). */
+export function apresentacaoFinal(entregaveis: Entregavel[]): { entregavel: Entregavel; caminho: string } | null {
+  let final: Entregavel | null = null
+  for (const e of entregaveis) {
+    if (e.tipo === "apresentacao" && e.status === "aprovado" && (!final || e.criadoEm > final.criadoEm)) final = e
+  }
+  return final ? { entregavel: final, caminho: destinoAprovado(final) } : null
+}

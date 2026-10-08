@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  apresentacaoFinal,
   aprovarEntregavel,
   destinoAprovado,
   normalizarNomeFinal,
@@ -173,5 +174,24 @@ describe("visualizador também mostra a apresentação", () => {
   })
   it("apresentação nova abre o visualizador sozinha", () => {
     expect(htmlParaAbrir([], [ap("a1")], "final")).toBe("apresentacao-final")
+  })
+})
+
+describe("apresentação final pronta para baixar", () => {
+  const ap = (id: string, over: Partial<Entregavel> = {}): Entregavel => ({
+    ...html(id),
+    etapa: "final",
+    tipo: "apresentacao",
+    arquivoRascunho: `.app/propostas/${id}.pptx`,
+    nomeFinal: "apresentacao-final",
+    status: "aprovado",
+    ...over,
+  })
+  it("a aprovada mais recente, com o caminho do arquivo final", () => {
+    const lista = [ap("a1", { status: "substituido" }), ap("a2"), html("h1", { status: "aprovado" })]
+    expect(apresentacaoFinal(lista)).toEqual({ entregavel: lista[1], caminho: "entrega/apresentacao-final.pptx" })
+  })
+  it("nada enquanto só houver versão aguardando aprovação", () => {
+    expect(apresentacaoFinal([ap("a1", { status: "pendente" })])).toBeNull()
   })
 })

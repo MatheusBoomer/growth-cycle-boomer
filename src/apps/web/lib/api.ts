@@ -46,6 +46,7 @@ export const api = {
   criarProspect: (nome: string, site: string) => chamar<{ slug: string }>("/api/prospects", comJson("POST", { nome, site })),
   excluirProspect: (slug: string, confirmacao: string) => chamar(base(slug), comJson("DELETE", { confirmacao })),
   abrirPasta: (slug: string) => chamar(`${base(slug)}/abrir-pasta`, { method: "POST" }),
+  mostrarNoFinder: (slug: string, caminho: string) => chamar(`${base(slug)}/abrir-pasta`, comJson("POST", { caminho })),
   acaoEtapa: (slug: string, etapa: EtapaId, acao: AcaoEtapa) => chamar(`${base(slug)}/etapas/${etapa}/acoes`, comJson("POST", { acao })),
   enviarMensagem: (slug: string, etapa: EtapaId, texto: string) =>
     chamar(`${base(slug)}/etapas/${etapa}/mensagens`, comJson("POST", { texto })),
@@ -70,8 +71,9 @@ export const api = {
     chamar<{ caminho: string }>(`${base(slug)}/etapas/${etapa}/anexos`, multipart(arquivo)),
 }
 
-export function urlArquivo(slug: string, caminho: string, download = false): string {
-  return `${base(slug)}/arquivo?caminho=${encodeURIComponent(caminho)}${download ? "&download=1" : ""}`
+/** `nome` (só com download): nome do arquivo baixado, sem extensão. */
+export function urlArquivo(slug: string, caminho: string, download = false, nome?: string): string {
+  return `${base(slug)}/arquivo?caminho=${encodeURIComponent(caminho)}${download ? "&download=1" : ""}${download && nome ? `&nome=${encodeURIComponent(nome)}` : ""}`
 }
 
 export function mensagemDeErro(e: unknown): string {
