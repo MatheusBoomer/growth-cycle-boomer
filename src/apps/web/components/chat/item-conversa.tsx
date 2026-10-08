@@ -9,6 +9,7 @@ import { Marker, MarkerContent, MarkerIcon } from "@workspace/ui/components/mark
 import { Message, MessageContent } from "@workspace/ui/components/message"
 import { CardEntregavel } from "@/components/cards/card-entregavel"
 import { CardInsumo } from "@/components/cards/card-insumo"
+import { CardPerguntas } from "@/components/cards/card-perguntas"
 import { Markdown } from "@/components/markdown"
 import { useVisualizador } from "@/components/trabalho/contexto-visualizador"
 import { partesComMencoes, semRodape } from "@/lib/mencoes"
@@ -115,6 +116,16 @@ export function ItemConversa({
           />
         </div>
       )
+    }
+    case "card_perguntas": {
+      const conjunto = dados.estado.perguntas.find((c) => c.id === evento.conjuntoId)
+      if (!conjunto) return null
+      const status = dados.estado.etapas[etapa].status
+      const bloqueado =
+        status === "concluida" || status === "desatualizada"
+          ? "Etapa fechada para conversa. Use Reabrir ou Revisar no painel para responder."
+          : null
+      return <CardPerguntas slug={slug} conjunto={conjunto} bloqueado={bloqueado} />
     }
     case "aviso":
       return (

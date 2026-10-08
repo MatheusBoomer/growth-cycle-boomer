@@ -1,5 +1,5 @@
 import type { Comentario, MapaPrevia, Regiao } from "@workspace/core/comentarios"
-import type { EtapaId, ResultadoValidacao } from "@workspace/core/tipos"
+import type { EtapaId, RespostaPergunta, ResultadoValidacao } from "@workspace/core/tipos"
 
 export class ErroApi extends Error {
   readonly status: number
@@ -53,6 +53,8 @@ export const api = {
   aprovar: (slug: string, id: string) => chamar(`${base(slug)}/entregaveis/${id}`, comJson("POST", { acao: "aprovar" })),
   pedirAjuste: (slug: string, id: string, texto: string) =>
     chamar(`${base(slug)}/entregaveis/${id}`, comJson("POST", { acao: "ajuste", texto })),
+  responderPerguntas: (slug: string, id: string, respostas: RespostaPergunta[]) =>
+    chamar(`${base(slug)}/perguntas/${encodeURIComponent(id)}`, comJson("POST", { respostas })),
   previa: (slug: string, id: string) =>
     chamar<{ disponivel: boolean; slides: string[]; mapa: MapaPrevia | null; erro: string | null }>(`${base(slug)}/entregaveis/${id}/previa`),
   comentarios: (slug: string, id: string) => chamar<{ comentarios: Comentario[] }>(`${base(slug)}/entregaveis/${id}/comentarios`),
