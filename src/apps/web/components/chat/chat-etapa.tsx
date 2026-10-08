@@ -1,9 +1,21 @@
 "use client"
 
-import { ChevronRightIcon, WrenchIcon } from "lucide-react"
+import {
+  BotIcon,
+  FileTextIcon,
+  GlobeIcon,
+  MessageSquareTextIcon,
+  PencilLineIcon,
+  SearchIcon,
+  SparklesIcon,
+  TerminalIcon,
+  WrenchIcon,
+  type LucideIcon,
+} from "lucide-react"
 import { toast } from "sonner"
 import type { EtapaId, EventoConversa, RespostaEstado } from "@workspace/core/tipos"
 import { Bubble, BubbleContent } from "@workspace/ui/components/bubble"
+import { ChainOfThought, ChainOfThoughtContent, ChainOfThoughtHeader, ChainOfThoughtStep } from "@workspace/ui/components/chain-of-thought"
 import { Marker, MarkerContent } from "@workspace/ui/components/marker"
 import { Message, MessageContent } from "@workspace/ui/components/message"
 import {
@@ -16,7 +28,7 @@ import {
 } from "@workspace/ui/components/message-scroller"
 import { Markdown } from "@/components/markdown"
 import { api, mensagemDeErro } from "@/lib/api"
-import { agruparProcesso, separarProcessoAoVivo, type EventoProcesso } from "@/lib/passos"
+import { agruparProcesso, iconeDoPasso, separarProcessoAoVivo, statusDosPassos, type EventoProcesso, type IconePasso } from "@/lib/passos"
 import { Compositor } from "./compositor"
 import { ItemConversa } from "./item-conversa"
 
@@ -34,29 +46,45 @@ function linhaDoProcesso(e: EventoProcesso, slug: string): string {
   return (e.texto.split("\n").find((l) => l.trim()) ?? "").replace(/[*_`#>]/g, "").trim()
 }
 
-/** Processo de um trecho do turno (passos + falas intermediárias): uma linha recolhida que expande. */
-function ListaDeProcesso({ itens, slug, resumo }: { itens: EventoProcesso[]; slug: string; resumo: string }) {
+const ICONES: Record<IconePasso, LucideIcon> = {
+  ler: FileTextIcon,
+  escrever: PencilLineIcon,
+  script: TerminalIcon,
+  busca: SearchIcon,
+  web: GlobeIcon,
+  skill: SparklesIcon,
+  subagente: BotIcon,
+  fala: MessageSquareTextIcon,
+  outro: WrenchIcon,
+}
+
+/** Processo de um trecho do turno (passos + falas intermediárias). Ao vivo, abre expandido com o último passo ativo. */
+function ListaDeProcesso({ itens, slug, resumo, aoVivo = false }: { itens: EventoProcesso[]; slug: string; resumo: string; aoVivo?: boolean }) {
+  const status = statusDosPassos(itens.length, aoVivo)
   return (
-    <details className="group text-muted-foreground text-xs">
-      <summary className="hover:text-foreground flex cursor-pointer list-none items-center gap-1.5 select-none">
-        <ChevronRightIcon className="size-3.5 transition-transform group-open:rotate-90" />
-        <WrenchIcon className="size-3.5" />
-        {resumo}
-      </summary>
-      <ol className="mt-2 ml-5 space-y-1.5 border-l pl-3">
-        {itens.map((e, i) =>
-          e.tipo === "atividade" ? (
-            <li key={`${e.em}-${i}`} className="truncate" title={e.detalhe}>
-              {linhaDoProcesso(e, slug)}
-            </li>
-          ) : (
-            <li key={`${e.em}-${i}`} className="text-foreground/80 text-sm">
-              <Markdown>{e.texto}</Markdown>
-            </li>
-          ),
-        )}
-      </ol>
-    </details>
+    <ChainOfThought defaultOpen={aoVivo}>
+      <ChainOfThoughtHeader icon={WrenchIcon}>{resumo}</ChainOfThoughtHeader>
+      <ChainOfThoughtContent className="pl-0.5">
+        {itens.map((e, i) => (
+          <ChainOfThoughtStep
+            key={`${e.em}-${i}`}
+            icon={ICONES[iconeDoPasso(e)]}
+            status={status[i]}
+            label={
+              e.tipo === "atividade" ? (
+                <span className="block truncate" title={e.detalhe}>
+                  {linhaDoProcesso(e, slug)}
+                </span>
+              ) : (
+                <div className="text-foreground/80 text-sm">
+                  <Markdown>{e.texto}</Markdown>
+                </div>
+              )
+            }
+          />
+        ))}
+      </ChainOfThoughtContent>
+    </ChainOfThought>
   )
 }
 
@@ -80,7 +108,6 @@ export function ChatEtapa({ slug, etapa, dados, eventos, delta }: PropsChatEtapa
       : null
 
   const { itens, aoVivo } = separarProcessoAoVivo(agruparProcesso(eventos, ativoAqui), ativoAqui)
-  const atual = aoVivo.at(-1)
 
   const tentarDeNovo = () =>
     api.enviarMensagem(slug, etapa, "Continue de onde parou.").catch((e) => toast.error(mensagemDeErro(e)))
@@ -117,18 +144,14 @@ export function ChatEtapa({ slug, etapa, dados, eventos, delta }: PropsChatEtapa
                 <MessageScrollerItem messageId="ao-vivo">
                   <Message align="start">
                     <MessageContent>
-                      <Bubble variant="muted">
-                        <BubbleContent>
-                          {delta ? (
-                            <Markdown>{delta}</Markdown>
-                          ) : (
-                            <span className="shimmer block truncate">
-                              {atual ? `${linhaDoProcesso(atual, slug)}…` : "Pensando…"}
-                            </span>
-                          )}
-                        </BubbleContent>
-                      </Bubble>
-                      {aoVivo.length > 0 && <ListaDeProcesso itens={aoVivo} slug={slug} resumo={`Ver processo (${aoVivo.length})`} />}
+                      {(delta || aoVivo.length === 0) && (
+                        <Bubble variant="muted">
+                          <BubbleContent>
+                            {delta ? <Markdown>{delta}</Markdown> : <span className="shimmer block truncate">Pensando…</span>}
+                          </BubbleContent>
+                        </Bubble>
+                      )}
+                      {aoVivo.length > 0 && <ListaDeProcesso itens={aoVivo} slug={slug} resumo={resumoDoProcesso(aoVivo)} aoVivo />}
                     </MessageContent>
                   </Message>
                 </MessageScrollerItem>

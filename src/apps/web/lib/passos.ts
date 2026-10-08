@@ -58,3 +58,24 @@ export function separarProcessoAoVivo(itens: ItemChat[], turnoAtivo: boolean): {
   if (!turnoAtivo || ultimo?.tipo !== "processo") return { itens, aoVivo: [] }
   return { itens: itens.slice(0, -1), aoVivo: ultimo.itens }
 }
+
+export type IconePasso = "ler" | "escrever" | "script" | "busca" | "web" | "skill" | "subagente" | "fala" | "outro"
+
+/** Ícone do passo pelo nome da ferramenta (o mesmo `nome` que `descreverAtividade` grava). */
+export function iconeDoPasso(e: EventoProcesso): IconePasso {
+  if (e.tipo === "texto_agente") return "fala"
+  const n = e.nome
+  if (n === "Read") return "ler"
+  if (n === "Write" || n === "Edit" || n === "MultiEdit") return "escrever"
+  if (n === "Bash") return "script"
+  if (n === "Glob" || n === "Grep") return "busca"
+  if (n === "WebSearch" || n === "WebFetch" || n.startsWith("mcp__firecrawl")) return "web"
+  if (n === "Skill") return "skill"
+  if (n === "Agent" || n === "Task") return "subagente"
+  return "outro"
+}
+
+/** Com o turno em andamento, o último passo é o que o agente está fazendo agora. */
+export function statusDosPassos(quantidade: number, aoVivo: boolean): ("complete" | "active")[] {
+  return Array.from({ length: quantidade }, (_, i) => (aoVivo && i === quantidade - 1 ? "active" : "complete"))
+}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { EventoConversa } from "@workspace/core/tipos"
-import { agruparProcesso, separarProcessoAoVivo, type ItemChat } from "./passos"
+import { agruparProcesso, iconeDoPasso, separarProcessoAoVivo, statusDosPassos, type ItemChat } from "./passos"
 
 const em = "2026-10-01T00:00:00.000Z"
 const msg = (texto: string): EventoConversa => ({ tipo: "mensagem_analista", texto, automatica: false, em })
@@ -110,5 +110,38 @@ describe("processo ao vivo durante o turno", () => {
   it("sem turno ativo, nada é separado", () => {
     const agrupados = agruparProcesso([msg("oi"), passo("a"), fala("ok")], false)
     expect(separarProcessoAoVivo(agrupados, false)).toEqual({ itens: agrupados, aoVivo: [] })
+  })
+})
+
+describe("passos no ChainOfThought", () => {
+  const atividade = (nome: string): EventoConversa => ({ tipo: "atividade", nome, detalhe: "x", em })
+
+  it.each([
+    ["Read", "ler"],
+    ["Write", "escrever"],
+    ["Edit", "escrever"],
+    ["MultiEdit", "escrever"],
+    ["Bash", "script"],
+    ["Glob", "busca"],
+    ["Grep", "busca"],
+    ["WebSearch", "web"],
+    ["WebFetch", "web"],
+    ["mcp__firecrawl__firecrawl_scrape", "web"],
+    ["Skill", "skill"],
+    ["Agent", "subagente"],
+    ["Task", "subagente"],
+    ["mcp__claude_ai_Canva__export-design", "outro"],
+  ])("%s usa o ícone %s", (nome, icone) => {
+    expect(iconeDoPasso(atividade(nome) as Extract<EventoConversa, { tipo: "atividade" }>)).toBe(icone)
+  })
+
+  it("fala intermediária usa o ícone de fala", () => {
+    expect(iconeDoPasso({ tipo: "texto_agente", texto: "vou ler", em })).toBe("fala")
+  })
+
+  it("ao vivo, só o último passo está ativo; encerrado, todos concluídos", () => {
+    expect(statusDosPassos(3, true)).toEqual(["complete", "complete", "active"])
+    expect(statusDosPassos(3, false)).toEqual(["complete", "complete", "complete"])
+    expect(statusDosPassos(0, true)).toEqual([])
   })
 })
