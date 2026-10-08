@@ -11,6 +11,7 @@ import { Textarea } from "@workspace/ui/components/textarea"
 import { cn } from "@workspace/ui/lib/utils"
 import { useVisualizador } from "@/components/trabalho/contexto-visualizador"
 import { api, mensagemDeErro } from "@/lib/api"
+import { separadorAntes } from "@/lib/citacao"
 import { consultaDeMencao, textoParaAgente } from "@/lib/mencoes"
 import { EtiquetaAnexo } from "./etiqueta-anexo"
 
@@ -60,7 +61,7 @@ export function Compositor({
       setTexto((atual) => {
         const pos = el && document.activeElement === el ? el.selectionStart : atual.length
         const antes = atual.slice(0, pos)
-        const separador = antes && !/\s$/.test(antes) ? " " : ""
+        const separador = separadorAntes(antes, trecho)
         return `${antes}${separador}${trecho}${atual.slice(pos)}`
       })
       el?.focus()

@@ -88,12 +88,13 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   )
   const fecharArquivo = useCallback(() => setArquivoAberto(null), [])
   const mencionar = useCallback((caminho: string) => inserirNoCompositor.current?.(`@${caminho} `), [])
+  const inserirTexto = useCallback((texto: string) => inserirNoCompositor.current?.(texto), [])
   const registrarCompositor = useCallback((inserir: ((texto: string) => void) | null) => {
     inserirNoCompositor.current = inserir
   }, [])
   const controle = useMemo(
-    () => ({ abrir, abrirArquivo, mencionar, registrarCompositor }),
-    [abrir, abrirArquivo, mencionar, registrarCompositor],
+    () => ({ abrir, abrirArquivo, mencionar, inserirNoCompositor: inserirTexto, registrarCompositor }),
+    [abrir, abrirArquivo, mencionar, inserirTexto, registrarCompositor],
   )
 
   // Arquivo aberto (janela embaixo do painel da etapa): mesmo princípio do visualizador de

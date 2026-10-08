@@ -109,6 +109,11 @@ export function ChatEtapa({ slug, etapa, dados, eventos, delta }: PropsChatEtapa
 
   const { itens, aoVivo } = separarProcessoAoVivo(agruparProcesso(eventos, ativoAqui), ativoAqui)
 
+  const indiceUltimaResposta = itens.reduce(
+    (ultimo, i, posicao) => (i.tipo === "evento" && i.evento.tipo === "texto_agente" ? posicao : ultimo),
+    -1,
+  )
+
   const tentarDeNovo = () =>
     api.enviarMensagem(slug, etapa, "Continue de onde parou.").catch((e) => toast.error(mensagemDeErro(e)))
 
@@ -125,7 +130,7 @@ export function ChatEtapa({ slug, etapa, dados, eventos, delta }: PropsChatEtapa
                   </Marker>
                 </MessageScrollerItem>
               )}
-              {itens.map((item) =>
+              {itens.map((item, posicao) =>
                 item.tipo === "processo" ? (
                   <MessageScrollerItem key={`passos-${item.indice}`} messageId={`evento-${item.indice}`}>
                     <ListaDeProcesso itens={item.itens} slug={slug} resumo={resumoDoProcesso(item.itens)} />
@@ -136,7 +141,14 @@ export function ChatEtapa({ slug, etapa, dados, eventos, delta }: PropsChatEtapa
                     messageId={`evento-${item.indice}`}
                     scrollAnchor={item.evento.tipo === "mensagem_analista" && !item.evento.automatica}
                   >
-                    <ItemConversa evento={item.evento} slug={slug} etapa={etapa} dados={dados} aoTentarDeNovo={tentarDeNovo} />
+                    <ItemConversa
+                      evento={item.evento}
+                      slug={slug}
+                      etapa={etapa}
+                      dados={dados}
+                      aoTentarDeNovo={tentarDeNovo}
+                      ultima={posicao === indiceUltimaResposta}
+                    />
                   </MessageScrollerItem>
                 ),
               )}

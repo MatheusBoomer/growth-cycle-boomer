@@ -10,6 +10,8 @@ export interface ControleVisualizador {
   abrirArquivo: (caminho: string) => void
   /** Insere "@caminho" no campo de mensagem, na posição do cursor. */
   mencionar: (caminho: string) => void
+  /** Insere um texto qualquer (ex.: citação) no campo de mensagem, na posição do cursor. */
+  inserirNoCompositor: (texto: string) => void
   /** O campo de mensagem se registra aqui para receber as menções. */
   registrarCompositor: (inserir: ((texto: string) => void) | null) => void
 }
@@ -18,6 +20,7 @@ export const ContextoVisualizador = createContext<ControleVisualizador>({
   abrir: () => {},
   abrirArquivo: () => {},
   mencionar: () => {},
+  inserirNoCompositor: () => {},
   registrarCompositor: () => {},
 })
 

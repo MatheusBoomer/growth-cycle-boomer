@@ -11,10 +11,10 @@ import { Message, MessageContent } from "@workspace/ui/components/message"
 import { CardEntregavel } from "@/components/cards/card-entregavel"
 import { CardInsumo } from "@/components/cards/card-insumo"
 import { CardPerguntas } from "@/components/cards/card-perguntas"
-import { Markdown } from "@/components/markdown"
 import { useVisualizador } from "@/components/trabalho/contexto-visualizador"
 import { caminhoNoProspect, extrairAnexos, nomeDoAnexo, partesComMencoes, semRodape } from "@/lib/mencoes"
 import { EtiquetaAnexo } from "./etiqueta-anexo"
+import { RespostaAgente } from "./resposta-agente"
 
 /** Mensagem do analista com as menções "@arquivo" como etiquetas que abrem o arquivo. */
 function TextoComMencoes({ texto }: { texto: string }) {
@@ -65,12 +65,14 @@ export function ItemConversa({
   etapa,
   dados,
   aoTentarDeNovo,
+  ultima = false,
 }: {
   evento: EventoConversa
   slug: string
   etapa: EtapaId
   dados: RespostaEstado
   aoTentarDeNovo: () => void
+  ultima?: boolean
 }) {
   switch (evento.tipo) {
     case "turno_inicio":
@@ -95,17 +97,7 @@ export function ItemConversa({
         </Message>
       )
     case "texto_agente":
-      return (
-        <Message align="start">
-          <MessageContent>
-            <Bubble variant="muted">
-              <BubbleContent>
-                <Markdown>{evento.texto}</Markdown>
-              </BubbleContent>
-            </Bubble>
-          </MessageContent>
-        </Message>
-      )
+      return <RespostaAgente texto={evento.texto} ultima={ultima} />
     case "atividade":
       return (
         <Marker>
