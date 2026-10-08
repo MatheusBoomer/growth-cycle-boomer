@@ -51,7 +51,8 @@ export function agruparProcesso(eventos: EventoConversa[], turnoAtivo: boolean):
 
 /**
  * Com o turno em andamento, o bloco de processo mais recente é o que o agente está fazendo
- * agora: sai da lista e aparece no balão "Pensando…".
+ * agora: sai da lista e aparece como um ChainOfThought expandido. O balão "Pensando…" só
+ * aparece quando não há nada ao vivo.
  */
 export function separarProcessoAoVivo(itens: ItemChat[], turnoAtivo: boolean): { itens: ItemChat[]; aoVivo: EventoProcesso[] } {
   const ultimo = itens.at(-1)

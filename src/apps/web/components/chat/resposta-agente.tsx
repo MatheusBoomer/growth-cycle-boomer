@@ -24,6 +24,10 @@ export function RespostaAgente({ texto, ultima }: { texto: string; ultima: boole
   }, [copiado])
 
   function copiar() {
+    if (!navigator.clipboard) {
+      toast.error("Não consegui copiar.")
+      return
+    }
     navigator.clipboard.writeText(texto).then(
       () => setCopiado(true),
       () => toast.error("Não consegui copiar."),

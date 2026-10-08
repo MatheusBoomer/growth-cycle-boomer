@@ -163,9 +163,9 @@ export function Compositor({
           arrastando && "ring-primary/50 ring-2 ring-offset-4 ring-offset-background",
         )}
         onDragOver={(e) => {
-          if (desabilitado || !e.dataTransfer.types.includes("Files")) return
+          if (!e.dataTransfer.types.includes("Files")) return
           e.preventDefault()
-          setArrastando(true)
+          if (!desabilitado) setArrastando(true)
         }}
         onDragLeave={(e) => {
           if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setArrastando(false)
@@ -245,7 +245,8 @@ export function Compositor({
           onBlur={() => setConsulta(null)}
           onPaste={(e) => {
             const arquivos = Array.from(e.clipboardData.files)
-            if (arquivos.length === 0 || desabilitado) return
+            // Colar de planilha/Word traz texto e uma imagem: com texto, deixa a colagem normal acontecer.
+            if (arquivos.length === 0 || desabilitado || e.clipboardData.getData("text/plain") !== "") return
             e.preventDefault()
             void anexar(arquivos)
           }}

@@ -68,9 +68,9 @@ export function CardPerguntas({
         conjunto.id,
         respostas.map((r) => ({ selecionadas: r.selecionadas, outra: r.outra?.trim() || null })),
       )
+      // Sucesso: mantém `enviando` até o estado atualizado virar "respondida" (o botão some), para não reenviar.
     } catch (e) {
       toast.error(mensagemDeErro(e))
-    } finally {
       setEnviando(false)
     }
   }
