@@ -1,9 +1,10 @@
 // Menções de arquivo no chat: no campo de mensagem o analista vê "@caminho" (relativo à pasta do
 // prospect); o agente roda na raiz do projeto, então ao enviar acrescenta-se um rodapé com o
-// caminho completo de cada arquivo mencionado, como já acontece com os anexos.
+// caminho completo de cada arquivo mencionado e com os anexos enviados.
 
 const MENCAO = /(^|\s)@([\p{L}\p{N}_\-./~$]+\.[\p{L}\p{N}]{1,5})/gu
 const RODAPE = "\n\n[Arquivos mencionados]\n"
+const RODAPE_ANEXOS = "\n\n[Anexos]\n"
 
 export function extrairMencoes(texto: string): string[] {
   const vistos = new Set<string>()
@@ -11,16 +12,40 @@ export function extrairMencoes(texto: string): string[] {
   return [...vistos]
 }
 
-export function textoParaAgente(texto: string, slug: string): string {
+export function textoParaAgente(texto: string, slug: string, anexos: string[] = []): string {
   const mencoes = extrairMencoes(texto)
-  if (mencoes.length === 0) return texto
-  return `${texto}${RODAPE}${mencoes.map((m) => `- clientes/${slug}/${m}`).join("\n")}`
+  let saida = texto
+  if (mencoes.length > 0) saida += `${RODAPE}${mencoes.map((m) => `- clientes/${slug}/${m}`).join("\n")}`
+  if (anexos.length > 0) saida += `${RODAPE_ANEXOS}${anexos.map((c) => `- ${c}`).join("\n")}`
+  return saida
 }
 
-/** Mensagem como o analista escreveu, sem o rodapé técnico para o agente. */
+/** Mensagem como o analista escreveu, sem os rodapés técnicos para o agente. */
 export function semRodape(texto: string): string {
-  const i = texto.indexOf(RODAPE)
-  return i === -1 ? texto : texto.slice(0, i)
+  const cortes = [texto.indexOf(RODAPE), texto.indexOf(RODAPE_ANEXOS)].filter((i) => i !== -1)
+  return cortes.length === 0 ? texto : texto.slice(0, Math.min(...cortes))
+}
+
+/** Caminhos do rodapé [Anexos] (como o app devolveu no upload). */
+export function extrairAnexos(texto: string): string[] {
+  const i = texto.indexOf(RODAPE_ANEXOS)
+  if (i === -1) return []
+  return texto
+    .slice(i + RODAPE_ANEXOS.length)
+    .split("\n")
+    .map((l) => l.match(/^- (.+)$/)?.[1])
+    .filter((c): c is string => c !== undefined)
+}
+
+/** Nome para mostrar: último trecho do caminho, sem o prefixo numérico que o upload acrescenta. */
+export function nomeDoAnexo(caminho: string): string {
+  return (caminho.split("/").pop() ?? caminho).replace(/^\d+-/, "")
+}
+
+/** Caminho relativo à pasta do prospect (o que o visualizador espera). */
+export function caminhoNoProspect(caminho: string, slug: string): string {
+  const prefixo = `clientes/${slug}/`
+  return caminho.startsWith(prefixo) ? caminho.slice(prefixo.length) : caminho
 }
 
 /** O "@termo" sendo digitado na posição do cursor, se houver. */

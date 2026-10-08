@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { consultaDeMencao, extrairMencoes, semRodape, textoParaAgente } from "./mencoes"
+import { caminhoNoProspect, consultaDeMencao, extrairAnexos, extrairMencoes, nomeDoAnexo, semRodape, textoParaAgente } from "./mencoes"
 
 describe("menções de arquivo no chat", () => {
   it("extrai os caminhos mencionados, sem repetir", () => {
@@ -41,5 +41,40 @@ describe("etiquetas de menção na mensagem", () => {
       { tipo: "texto", valor: " agora" },
     ])
     expect(partesComMencoes("sem nada")).toEqual([{ tipo: "texto", valor: "sem nada" }])
+  })
+})
+
+describe("anexos na mensagem", () => {
+  const anexo = "clientes/p/.app/anexos/1728300000000-historico mensal.xlsx"
+
+  it("acrescenta o rodapé [Anexos] depois do de menções e some na hora de mostrar", () => {
+    const t = textoParaAgente("olha o @dados/x.xlsx", "p", [anexo, "clientes/p/.app/anexos/2-print.png"])
+    expect(t).toBe(
+      "olha o @dados/x.xlsx\n\n[Arquivos mencionados]\n- clientes/p/dados/x.xlsx\n\n[Anexos]\n- clientes/p/.app/anexos/1728300000000-historico mensal.xlsx\n- clientes/p/.app/anexos/2-print.png",
+    )
+    expect(semRodape(t)).toBe("olha o @dados/x.xlsx")
+    expect(extrairAnexos(t)).toEqual([anexo, "clientes/p/.app/anexos/2-print.png"])
+  })
+
+  it("mensagem só com anexo", () => {
+    const t = textoParaAgente("", "p", [anexo])
+    expect(t).toBe(`\n\n[Anexos]\n- ${anexo}`)
+    expect(semRodape(t)).toBe("")
+    expect(extrairAnexos(t)).toEqual([anexo])
+  })
+
+  it("sem anexos não muda nada e texto com [Anexos] no meio da linha não é cortado", () => {
+    expect(textoParaAgente("oi", "p", [])).toBe("oi")
+    expect(extrairAnexos("oi")).toEqual([])
+    const literal = "veja a seção [Anexos] do relatório"
+    expect(semRodape(literal)).toBe(literal)
+    expect(extrairAnexos(literal)).toEqual([])
+  })
+
+  it("nome e caminho do anexo para mostrar e abrir", () => {
+    expect(nomeDoAnexo(anexo)).toBe("historico mensal.xlsx")
+    expect(nomeDoAnexo("clientes/p/dados/x.xlsx")).toBe("x.xlsx")
+    expect(caminhoNoProspect(anexo, "p")).toBe(".app/anexos/1728300000000-historico mensal.xlsx")
+    expect(caminhoNoProspect("dados/x.xlsx", "p")).toBe("dados/x.xlsx")
   })
 })
