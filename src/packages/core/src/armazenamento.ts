@@ -117,7 +117,10 @@ export class FsArmazenamento {
 
   async lerEstado(slug: string): Promise<Estado | null> {
     const texto = await this.lerTexto(slug, ARQUIVO_ESTADO)
-    return texto ? (JSON.parse(texto) as Estado) : null
+    if (!texto) return null
+    const estado = JSON.parse(texto) as Estado
+    // estado.json gravado antes do card de perguntas não tem o campo
+    return { ...estado, perguntas: estado.perguntas ?? [] }
   }
 
   gravarEstado(slug: string, estado: Estado): Promise<void> {

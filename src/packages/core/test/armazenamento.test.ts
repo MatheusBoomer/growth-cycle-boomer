@@ -100,4 +100,13 @@ describe("FsArmazenamento", () => {
     await arm.excluir("a")
     expect(lixeira).toEqual([path.join(raiz, "clientes", "a")])
   })
+
+  it("estado gravado antes do card de perguntas é lido com perguntas vazias", async () => {
+    await arm.criarPasta("iszi")
+    const antigo: Record<string, unknown> = { ...estadoInicial({ slug: "iszi", nome: "Iszi", site: null }, "2026-10-07T10:00:00.000Z") }
+    delete antigo.perguntas
+    await mkdir(path.join(raiz, "clientes/iszi/.app"), { recursive: true })
+    await writeFile(path.join(raiz, "clientes/iszi/.app/estado.json"), JSON.stringify(antigo))
+    expect((await arm.lerEstado("iszi"))?.perguntas).toEqual([])
+  })
 })

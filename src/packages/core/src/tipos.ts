@@ -94,12 +94,43 @@ export interface ItemFila {
   texto: string
 }
 
+export interface OpcaoPergunta {
+  rotulo: string
+  descricao: string | null
+}
+
+export interface Pergunta {
+  enunciado: string
+  descricao: string | null
+  multipla: boolean
+  opcoes: OpcaoPergunta[]
+}
+
+export interface RespostaPergunta {
+  selecionadas: string[]
+  outra: string | null
+}
+
+export type StatusPerguntas = "pendente" | "respondida" | "sem_resposta"
+
+/** Card de perguntas do agente (ferramenta fazer_perguntas). `respostas` segue a ordem de `perguntas`. */
+export interface ConjuntoPerguntas {
+  id: string
+  etapa: EtapaId
+  perguntas: Pergunta[]
+  status: StatusPerguntas
+  respostas: RespostaPergunta[] | null
+  criadoEm: string
+  respondidoEm: string | null
+}
+
 export interface Estado {
   versao: 1
   prospect: { slug: string; nome: string; site: string | null; criadoEm: string }
   etapas: Record<EtapaId, EstadoEtapa>
   entregaveis: Entregavel[]
   insumos: EstadoInsumo[]
+  perguntas: ConjuntoPerguntas[]
   filaAutomatica: ItemFila[]
   atualizadoEm: string
 }
@@ -111,6 +142,7 @@ export type EventoConversa =
   | { tipo: "atividade"; nome: string; detalhe: string; em: string }
   | { tipo: "card_entregavel"; entregavelId: string; em: string }
   | { tipo: "card_insumo"; insumoId: string; em: string }
+  | { tipo: "card_perguntas"; conjuntoId: string; em: string }
   | { tipo: "aviso"; nivel: "info" | "alerta" | "erro"; texto: string; em: string }
   | { tipo: "turno_fim"; status: "ok" | "interrompido" | "erro"; detalhe: string | null; em: string }
 

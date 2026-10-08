@@ -25,6 +25,7 @@ export function estadoInicial(prospect: { slug: string; nome: string; site: stri
     etapas,
     entregaveis: [],
     insumos: [],
+    perguntas: [],
     filaAutomatica: [],
     atualizadoEm: em,
   }
