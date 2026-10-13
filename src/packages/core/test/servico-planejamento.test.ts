@@ -4,7 +4,7 @@ import path from "node:path"
 import { beforeEach, describe, expect, it } from "vitest"
 import { FsArmazenamento } from "../src/armazenamento"
 import { Barramento } from "../src/barramento"
-import { ErroEntrada, ErroProspectExistente, ErroTurnoAtivo } from "../src/erros"
+import { ErroCaminhoForaDoProspect, ErroEntrada, ErroNaoEncontrado, ErroProspectExistente, ErroTurnoAtivo } from "../src/erros"
 import { ServicoPlanejamento } from "../src/servico-planejamento"
 import type { EventoTempoReal, ResultadoValidacao } from "../src/tipos"
 import { catalogoReal, raizTemporaria } from "./ajuda"
@@ -258,5 +258,66 @@ describe("robustez", () => {
     await servico.iniciarEtapa(slug, "01")
     expect(eventos.map((e) => e.tipo)).toContain("estado")
     expect(eventos.map((e) => e.tipo)).toContain("conversa")
+  })
+})
+
+describe("biblioteca", () => {
+  async function imagem(slug: string, rel: string) {
+    const abs = path.join(raiz, "clientes", slug, rel)
+    await mkdir(path.dirname(abs), { recursive: true })
+    await writeFile(abs, "png")
+  }
+
+  it("anexo vai para a pasta da etapa, aparece na biblioteca e avisa as telas abertas", async () => {
+    const slug = await servico.criarProspect("Iszi Cosméticos", null)
+    barramento.assinar(slug, (ev) => eventos.push(ev))
+    const caminho = await servico.salvarAnexo(slug, "02", "Print Ads.png", new Uint8Array([1]))
+    expect(caminho).toMatch(/^clientes\/iszi-cosmeticos\/\.app\/anexos\/02\/\d+-Print_Ads\.png$/)
+    expect(eventos).toContainEqual({ tipo: "estado" })
+    const anexo = (await servico.listarBiblioteca(slug)).find((i) => i.origem === "anexo")
+    expect(anexo).toMatchObject({ etapa: "02", titulo: "Print Ads" })
+  })
+
+  it("ajusta etapa e título; título vazio volta ao automático; avisa as telas", async () => {
+    const slug = await servico.criarProspect("Iszi Cosméticos", null)
+    const rel = "entrega/ativos-aprovados/graficos/cac-mensal.png"
+    await imagem(slug, rel)
+    barramento.assinar(slug, (ev) => eventos.push(ev))
+
+    let item = await servico.ajustarBiblioteca(slug, rel, { etapa: "04", titulo: "CAC mensal (12 meses)" })
+    expect(item).toMatchObject({ caminho: rel, etapa: "04", titulo: "CAC mensal (12 meses)" })
+    expect(eventos).toContainEqual({ tipo: "estado" })
+    const salvo = JSON.parse(await readFile(path.join(raiz, "clientes", slug, ".app/biblioteca.json"), "utf8"))
+    expect(salvo).toEqual({ [rel]: { etapa: "04", titulo: "CAC mensal (12 meses)" } })
+
+    item = await servico.ajustarBiblioteca(slug, rel, { titulo: "  " })
+    expect(item).toMatchObject({ etapa: "04", titulo: "Cac mensal" })
+  })
+
+  it("recusa etapa inválida, título não texto, caminho fora do prospect e arquivo que não é imagem da biblioteca", async () => {
+    const slug = await servico.criarProspect("Iszi Cosméticos", null)
+    const rel = "entrega/ativos-aprovados/graficos/cac.png"
+    await imagem(slug, rel)
+    await expect(servico.ajustarBiblioteca(slug, rel, { etapa: "09" })).rejects.toBeInstanceOf(ErroEntrada)
+    await expect(servico.ajustarBiblioteca(slug, rel, { titulo: 5 })).rejects.toBeInstanceOf(ErroEntrada)
+    await expect(servico.ajustarBiblioteca(slug, "../outro/x.png", { etapa: "03" })).rejects.toBeInstanceOf(ErroCaminhoForaDoProspect)
+    await expect(servico.ajustarBiblioteca(slug, "CLAUDE.md", { etapa: "03" })).rejects.toBeInstanceOf(ErroNaoEncontrado)
+    await expect(servico.ajustarBiblioteca(slug, "entrega/ativos-aprovados/graficos/nao-existe.png", { etapa: "03" })).rejects.toBeInstanceOf(
+      ErroNaoEncontrado,
+    )
+    expect(existsSync(path.join(raiz, "clientes", slug, ".app/biblioteca.json"))).toBe(false)
+  })
+
+  it("biblioteca.json corrompido é lido como vazio e reescrito no próximo ajuste; ajuste de arquivo apagado sai", async () => {
+    const slug = await servico.criarProspect("Iszi Cosméticos", null)
+    const rel = "entrega/ativos-aprovados/graficos/cac.png"
+    await imagem(slug, rel)
+    const arquivoAjustes = path.join(raiz, "clientes", slug, ".app/biblioteca.json")
+    await writeFile(arquivoAjustes, "{oops")
+    expect((await servico.listarBiblioteca(slug)).map((i) => i.etapa)).toEqual(["sem-etapa"])
+
+    await writeFile(arquivoAjustes, JSON.stringify({ "entrega/ativos-aprovados/graficos/apagado.png": { etapa: "02" } }))
+    await servico.ajustarBiblioteca(slug, rel, { etapa: "03" })
+    expect(JSON.parse(await readFile(arquivoAjustes, "utf8"))).toEqual({ [rel]: { etapa: "03" } })
   })
 })

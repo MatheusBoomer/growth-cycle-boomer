@@ -101,3 +101,26 @@ describe("FsArmazenamento", () => {
     expect(lixeira).toEqual([path.join(raiz, "clientes", "a")])
   })
 })
+
+describe("imagens do prospect para a biblioteca", () => {
+  it("lista imagens de qualquer pasta, inclusive .app, sem ocultos nem não imagens", async () => {
+    await arm.criarPasta("iszi")
+    const um = new Uint8Array([1])
+    await arm.gravarBinario("iszi", "entrega/ativos-aprovados/graficos/cac.png", um)
+    await arm.gravarBinario("iszi", ".app/previas/x/slide-01.png", um)
+    await arm.gravarBinario("iszi", "dados/benchmark-meta/m/midia/1/capa.JPG", um)
+    await arm.gravarBinario("iszi", "dados/.oculto.png", um)
+    await arm.gravarTexto("iszi", "contexto/notas.md", "x")
+    const caminhos = (await arm.listarImagensDoProspect("iszi")).map((a) => a.caminho)
+    expect(caminhos).toEqual(
+      expect.arrayContaining([
+        "entrega/ativos-aprovados/graficos/cac.png",
+        ".app/previas/x/slide-01.png",
+        "dados/benchmark-meta/m/midia/1/capa.JPG",
+      ]),
+    )
+    expect(caminhos).not.toContain("dados/.oculto.png")
+    expect(caminhos).not.toContain("contexto/notas.md")
+    expect((await arm.listarImagensDoProspect("iszi"))[0]!.modificadoEm).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+  })
+})

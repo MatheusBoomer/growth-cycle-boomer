@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { appendFile, copyFile, cp, mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises"
 import path from "node:path"
+import { ehImagem } from "./biblioteca"
 import { ErroCaminhoForaDoProspect, ErroEntrada, ErroNaoEncontrado, ErroProspectExistente } from "./erros"
 import { normalizarSlug } from "./slug"
 import type { Estado, EtapaId, EventoConversa } from "./tipos"
@@ -198,6 +199,26 @@ export class FsArmazenamento {
       arquivos.push({ caminho, modificadoEm: info.mtime.toISOString() })
     }
     return arquivos.sort((a, b) => (a.modificadoEm < b.modificadoEm ? 1 : a.modificadoEm > b.modificadoEm ? -1 : 0))
+  }
+
+  /** Todas as imagens do prospect, inclusive em .app/ (a biblioteca decide o que mostra). */
+  async listarImagensDoProspect(slug: string): Promise<ArquivoProspect[]> {
+    const pasta = this.pastaProspect(slug)
+    let itens
+    try {
+      itens = await readdir(pasta, { recursive: true, withFileTypes: true })
+    } catch (e) {
+      if (codigoErro(e) === "ENOENT") return []
+      throw e
+    }
+    const imagens: ArquivoProspect[] = []
+    for (const i of itens) {
+      if (!i.isFile() || i.name.startsWith(".") || !ehImagem(i.name)) continue
+      const abs = path.join(i.parentPath, i.name)
+      const info = await stat(abs)
+      imagens.push({ caminho: emBarras(path.relative(pasta, abs)), modificadoEm: info.mtime.toISOString() })
+    }
+    return imagens
   }
 
   async listarAprovados(slug: string): Promise<string[]> {
