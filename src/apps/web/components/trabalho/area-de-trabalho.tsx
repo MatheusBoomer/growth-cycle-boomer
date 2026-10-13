@@ -3,6 +3,7 @@
 import { PanelLeftCloseIcon, PanelLeftOpenIcon, PanelRightCloseIcon, PanelRightOpenIcon } from "lucide-react"
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as EventoPonteiro } from "react"
+import { toast } from "sonner"
 import { entregavelVisivel, htmlParaAbrir } from "@workspace/core/entregaveis"
 import { ORDEM_ETAPAS, type Entregavel, type EtapaId, type Estado, type StatusEtapa } from "@workspace/core/tipos"
 import { Badge } from "@workspace/ui/components/badge"
@@ -17,8 +18,11 @@ import {
 } from "@workspace/ui/components/resizable"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
+import { Biblioteca } from "@/components/biblioteca/biblioteca"
 import { ChatEtapa } from "@/components/chat/chat-etapa"
 import { useAreaDeTrabalho } from "@/hooks/use-area-de-trabalho"
+import { useBiblioteca } from "@/hooks/use-biblioteca"
+import { totalVisivel } from "@/lib/biblioteca"
 import { CHAVE_COLUNA_DIREITA, chaveColunas, layoutParaVisualizador, lerLayout, salvarLayout, type Layout } from "@/lib/layout-colunas"
 import { ContextoVisualizador } from "./contexto-visualizador"
 import { EtapaLiberada } from "./etapa-liberada"
@@ -58,6 +62,12 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   const [arquivoAberto, setArquivoAberto] = useState<string | null>(null)
   const colunaDireitaRef = useGroupRef()
   const inserirNoCompositor = useRef<((texto: string) => void) | null>(null)
+  const [bibliotecaAberta, setBibliotecaAberta] = useState(false)
+  // `dados` muda a cada evento de estado (aprovação, anexo, ajuste): a biblioteca recarrega junto.
+  const biblioteca = useBiblioteca(slug, dados)
+  const trilhaCaixaRef = useRef<HTMLDivElement>(null)
+  const [larguraTrilha, setLarguraTrilha] = useState(0)
+  const carregado = dados !== null
 
   // HTML ou apresentação nova proposta na etapa aberta abre o visualizador sozinho, uma vez por nome final.
   // Estado ajustado durante a renderização: é o padrão do React para reagir a dado novo sem efeito.
@@ -91,6 +101,29 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   const registrarCompositor = useCallback((inserir: ((texto: string) => void) | null) => {
     inserirNoCompositor.current = inserir
   }, [])
+  const selecionarEtapa = useCallback((id: EtapaId) => {
+    setBibliotecaAberta(false)
+    setSelecionada(id)
+  }, [])
+  const fecharBiblioteca = useCallback(() => setBibliotecaAberta(false), [])
+  // Menciona no chat da etapa selecionada na trilha (não na etapa da imagem): o chat fica montado por baixo da biblioteca.
+  const mencionarDaBiblioteca = useCallback((caminho: string) => {
+    setBibliotecaAberta(false)
+    if (!inserirNoCompositor.current) {
+      toast.error("Abra uma etapa com chat para mencionar a imagem.")
+      return
+    }
+    inserirNoCompositor.current(`@${caminho} `)
+  }, [])
+
+  // A biblioteca cobre tudo à direita da trilha; a largura da trilha muda quando o analista arrasta a alça.
+  useEffect(() => {
+    const el = trilhaCaixaRef.current
+    if (!el) return
+    const observador = new ResizeObserver(([entrada]) => setLarguraTrilha(entrada?.contentRect.width ?? 0))
+    observador.observe(el)
+    return () => observador.disconnect()
+  }, [carregado])
   const controle = useMemo(
     () => ({ abrir, abrirArquivo, mencionar, registrarCompositor }),
     [abrir, abrirArquivo, mencionar, registrarCompositor],
@@ -187,7 +220,7 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
 
   return (
     <ContextoVisualizador.Provider value={controle}>
-      <div className={cn("h-svh", arrastando && "[&_iframe]:pointer-events-none")} onPointerDownCapture={aoApertar}>
+      <div className={cn("relative h-svh", arrastando && "[&_iframe]:pointer-events-none")} onPointerDownCapture={aoApertar}>
         <ResizablePanelGroup groupRef={grupoRef} orientation="horizontal" defaultLayout={layoutInicial} onLayoutChanged={aoMudarLayout}>
           <ResizablePanel
             id="trilha"
@@ -199,7 +232,17 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
             collapsedSize="0%"
             onResize={(tamanho) => setTrilhaRecolhida(tamanho.asPercentage === 0)}
           >
-            <TrilhaEtapas catalogo={dados.catalogo} estado={dados.estado} selecionada={etapa} aoSelecionar={setSelecionada} />
+            <div ref={trilhaCaixaRef} className="h-full">
+              <TrilhaEtapas
+                catalogo={dados.catalogo}
+                estado={dados.estado}
+                selecionada={etapa}
+                aoSelecionar={selecionarEtapa}
+                bibliotecaAberta={bibliotecaAberta}
+                totalBiblioteca={biblioteca.itens ? totalVisivel(biblioteca.itens) : null}
+                aoAbrirBiblioteca={() => setBibliotecaAberta(true)}
+              />
+            </div>
           </ResizablePanel>
           <ResizableHandle withHandle />
           <ResizablePanel id="chat" minSize="360px">
@@ -292,6 +335,19 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
             </ResizablePanelGroup>
           </ResizablePanel>
         </ResizablePanelGroup>
+        {bibliotecaAberta && (
+          <div className="bg-background absolute inset-y-0 right-0 z-30 border-l" style={{ left: larguraTrilha }}>
+            <Biblioteca
+              slug={slug}
+              catalogo={dados.catalogo}
+              itens={biblioteca.itens}
+              erro={biblioteca.erro}
+              aoAjustar={(caminho, mudanca) => void biblioteca.ajustar(caminho, mudanca)}
+              aoMencionar={mencionarDaBiblioteca}
+              aoFechar={fecharBiblioteca}
+            />
+          </div>
+        )}
         {visualizadorAberto && telaCheia && <div className="fixed inset-0 z-40">{painelVisualizador}</div>}
       </div>
     </ContextoVisualizador.Provider>

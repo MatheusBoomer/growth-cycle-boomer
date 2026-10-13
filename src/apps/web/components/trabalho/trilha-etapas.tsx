@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeftIcon } from "lucide-react"
+import { ArrowLeftIcon, ImagesIcon } from "lucide-react"
 import Link from "next/link"
 import type { Catalogo, EtapaId, Estado } from "@workspace/core/tipos"
 import { Button } from "@workspace/ui/components/button"
@@ -13,11 +13,18 @@ export function TrilhaEtapas({
   estado,
   selecionada,
   aoSelecionar,
+  bibliotecaAberta,
+  totalBiblioteca,
+  aoAbrirBiblioteca,
 }: {
   catalogo: Catalogo
   estado: Estado
   selecionada: EtapaId
   aoSelecionar: (etapa: EtapaId) => void
+  bibliotecaAberta: boolean
+  /** null enquanto a lista não carregou. */
+  totalBiblioteca: number | null
+  aoAbrirBiblioteca: () => void
 }) {
   return (
     <aside className="flex min-h-0 flex-col gap-1 overflow-y-auto p-3">
@@ -48,6 +55,17 @@ export function TrilhaEtapas({
           )
         })}
       </nav>
+      <p className="text-muted-foreground px-2 pt-4 pb-1 text-xs font-medium tracking-wide uppercase">Arquivos</p>
+      <Button
+        variant="ghost"
+        className={cn("h-auto justify-start gap-2 px-2 py-1.5 font-normal", bibliotecaAberta && "bg-muted font-medium")}
+        aria-pressed={bibliotecaAberta}
+        onClick={aoAbrirBiblioteca}
+      >
+        <ImagesIcon className="size-4" />
+        <span className="flex-1 truncate text-left">Biblioteca</span>
+        {totalBiblioteca !== null && <span className="text-muted-foreground text-xs tabular-nums">{totalBiblioteca}</span>}
+      </Button>
       <div className="mt-auto pt-4">
         <UsoAssinaturaBarra />
       </div>
