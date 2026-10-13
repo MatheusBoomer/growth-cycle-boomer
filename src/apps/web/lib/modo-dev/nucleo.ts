@@ -272,3 +272,46 @@ export function textoVisivel(el: Element): string {
   const bruto = (el as { innerText?: string }).innerText ?? el.textContent ?? ""
   return bruto.replace(/\s+/g, " ").trim().slice(0, LIMITE_TEXTO)
 }
+
+// --- Resumo para o terminal e argumentos do script ---
+
+const RECUO_PEDIDO = " ".repeat("   pedido: ".length)
+
+/** `pasta` é o caminho absoluto de .dev-comentarios; os recortes saem como caminho absoluto. */
+export function resumoEmTexto(comentarios: ComentarioDev[], pasta: string): string {
+  if (comentarios.length === 0) return "Nenhum comentário aberto."
+  const porPagina = new Map<string, ComentarioDev[]>()
+  for (const c of [...comentarios].sort((a, b) => a.numero - b.numero)) {
+    porPagina.set(c.pagina, [...(porPagina.get(c.pagina) ?? []), c])
+  }
+  const total = comentarios.length
+  const linhas = [`${total} ${total === 1 ? "comentário aberto" : "comentários abertos"} em ${pasta}`]
+  for (const [pagina, lista] of porPagina) {
+    linhas.push("", `## ${pagina}`)
+    for (const c of lista) {
+      linhas.push(`#${c.numero} · ${c.cadeia.length ? c.cadeia.join(" ← ") : "(componente não identificado)"}`)
+      linhas.push(`   elemento: <${c.tag}> ${c.caixa.largura}×${c.caixa.altura}, tela ${c.caixa.larguraTela}×${c.caixa.alturaTela}`)
+      linhas.push(`   seletor: ${c.seletor}`)
+      if (c.texto) linhas.push(`   texto: "${c.texto}"`)
+      linhas.push(`   recorte: ${c.captura ? `${pasta}/${c.captura}` : "(sem recorte)"}`)
+      linhas.push(`   pedido: ${c.comentario.split("\n").join(`\n${RECUO_PEDIDO}`)}`)
+    }
+  }
+  return linhas.join("\n")
+}
+
+export type Comando = { acao: "listar" } | { acao: "limpar"; numeros: number[] | null }
+
+export function interpretarArgumentos(args: string[]): Comando {
+  if (args.length === 0) return { acao: "listar" }
+  if (args[0] !== "--limpar") {
+    throw new ErroValidacaoDev(`Argumento não reconhecido: ${args.join(" ")}. Use --limpar ou --limpar 3,5.`)
+  }
+  const lista = args.slice(1).join(",")
+  if (!lista) return { acao: "limpar", numeros: null }
+  const numeros = lista.split(",").map((p) => p.trim()).filter(Boolean).map(Number)
+  if (numeros.length === 0 || !numeros.every((n) => Number.isInteger(n) && n > 0)) {
+    throw new ErroValidacaoDev(`Números inválidos em --limpar: ${args.slice(1).join(" ")}. Use, por exemplo, --limpar 3,5.`)
+  }
+  return { acao: "limpar", numeros: [...new Set(numeros)] }
+}
