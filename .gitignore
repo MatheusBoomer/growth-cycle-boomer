@@ -34,3 +34,6 @@ src/apps/web/CLAUDE.md
 
 # Estado local do app que vale para a máquina (uso da assinatura)
 /.app/
+
+# Modo dev de comentários (ferramenta local de desenvolvimento da interface)
+/.dev-comentarios/

@@ -8,7 +8,8 @@
     "lint": "turbo lint",
     "format": "turbo format",
     "typecheck": "turbo typecheck",
-    "test": "turbo test"
+    "test": "turbo test",
+    "dev:comentarios": "node apps/web/scripts/dev-comentarios.ts"
   },
   "devDependencies": {
     "@workspace/eslint-config": "*",
