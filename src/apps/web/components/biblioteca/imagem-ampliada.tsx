@@ -1,7 +1,7 @@
 "use client"
 
 import { AtSignIcon, ChevronLeftIcon, ChevronRightIcon, DownloadIcon, FolderOpenIcon, ImageOffIcon, PencilIcon } from "lucide-react"
-import { useState, type KeyboardEvent } from "react"
+import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { ORDEM_BIBLIOTECA, type AjusteBiblioteca, type EtapaBiblioteca, type ItemBiblioteca } from "@workspace/core/biblioteca"
 import type { Catalogo } from "@workspace/core/tipos"
@@ -49,25 +49,36 @@ function Conteudo({ slug, catalogo, itens, indice, item, aoMudarIndice, aoAjusta
     if (prox >= 0 && prox < itens.length) aoMudarIndice(prox)
   }
 
-  function aoTeclar(ev: KeyboardEvent<HTMLDivElement>) {
-    const alvo = ev.target as HTMLElement
-    if (alvo.tagName === "INPUT" || alvo.tagName === "TEXTAREA" || alvo.tagName === "SELECT") return
-    if (ev.key === "ArrowRight") {
-      ev.preventDefault()
-      ir(1)
-    } else if (ev.key === "ArrowLeft") {
-      ev.preventDefault()
-      ir(-1)
+  // No document: o foco some quando o item troca (Conteudo remonta) e o teclado precisa continuar valendo.
+  useEffect(() => {
+    function aoTeclar(ev: globalThis.KeyboardEvent) {
+      const alvo = ev.target as HTMLElement | null
+      if (alvo && (alvo.tagName === "INPUT" || alvo.tagName === "TEXTAREA" || alvo.tagName === "SELECT")) return
+      if (ev.key === "ArrowRight") {
+        ev.preventDefault()
+        ir(1)
+      } else if (ev.key === "ArrowLeft") {
+        ev.preventDefault()
+        ir(-1)
+      }
     }
-  }
+    document.addEventListener("keydown", aoTeclar)
+    return () => document.removeEventListener("keydown", aoTeclar)
+  })
 
+  // Esc descarta e Enter já salvou: o blur que vem do desmonte do input não salva de novo.
+  const encerrada = useRef(false)
   function salvarTitulo() {
-    if (titulo !== null && titulo.trim() !== item.titulo) aoAjustar(item.caminho, { titulo })
+    if (encerrada.current) {
+      encerrada.current = false
+      return
+    }
+    if (titulo !== null && titulo.trim() !== item.titulo) aoAjustar(item.caminho, { titulo: titulo.trim() })
     setTitulo(null)
   }
 
   return (
-    <div className="grid h-full min-h-0 grid-rows-[1fr_auto] md:grid-cols-[1fr_300px] md:grid-rows-1" onKeyDown={aoTeclar}>
+    <div className="grid h-full min-h-0 grid-rows-[1fr_auto] md:grid-cols-[1fr_300px] md:grid-rows-1">
       <div className="bg-muted relative flex min-h-0 items-center justify-center overflow-hidden rounded-l-xl p-4">
         {quebrada === atual ? (
           <div className="text-muted-foreground flex flex-col items-center gap-2 text-sm">
@@ -94,7 +105,10 @@ function Conteudo({ slug, catalogo, itens, indice, item, aoMudarIndice, aoAjusta
         {titulo === null ? (
           <div className="flex items-start gap-1 pr-8">
             <DialogTitle className="min-w-0 flex-1 text-base break-words">{item.titulo}</DialogTitle>
-            <Button variant="ghost" size="icon-sm" aria-label="Editar título" title="Editar título" onClick={() => setTitulo(item.titulo)}>
+            <Button variant="ghost" size="icon-sm" aria-label="Editar título" title="Editar título" onClick={() => {
+                encerrada.current = false
+                setTitulo(item.titulo)
+              }}>
               <PencilIcon />
             </Button>
           </div>
@@ -104,6 +118,7 @@ function Conteudo({ slug, catalogo, itens, indice, item, aoMudarIndice, aoAjusta
             onSubmit={(ev) => {
               ev.preventDefault()
               salvarTitulo()
+              encerrada.current = true
             }}
           >
             <DialogTitle className="sr-only">{item.titulo}</DialogTitle>
@@ -117,6 +132,7 @@ function Conteudo({ slug, catalogo, itens, indice, item, aoMudarIndice, aoAjusta
                 if (ev.key === "Escape") {
                   ev.preventDefault()
                   ev.stopPropagation()
+                  encerrada.current = true
                   setTitulo(null)
                 }
               }}
