@@ -4,6 +4,15 @@ import { rm } from "node:fs/promises"
 import path from "node:path"
 import type { FsArmazenamento } from "./armazenamento"
 import type { Barramento } from "./barramento"
+import {
+  aplicarAjuste,
+  classificarBiblioteca,
+  etapaBibliotecaValida,
+  sanearAjustes,
+  type AjustesBiblioteca,
+  type EtapaBiblioteca,
+  type ItemBiblioteca,
+} from "./biblioteca"
 import { etapaDoCatalogo, insumoDoCatalogo } from "./catalogo"
 import { extrairOverrides, montarDossie, type AnteriorDossie } from "./dossie"
 import {
@@ -44,6 +53,7 @@ const CONTEXTO_PERSISTIDO = [
   "contexto/site-referencia.md",
 ]
 const ARQUIVO_STATUS = "contexto/status-planejamento.md"
+const ARQUIVO_BIBLIOTECA = ".app/biblioteca.json"
 
 export interface DependenciasServico {
   armazenamento: FsArmazenamento
@@ -207,6 +217,50 @@ export class ServicoPlanejamento {
 
   estado(slug: string): Promise<Estado> {
     return this.exclusivo(slug, () => this.carregar(slug))
+  }
+
+  async listarBiblioteca(slug: string): Promise<ItemBiblioteca[]> {
+    const estado = await this.estado(slug)
+    const [arquivos, ajustes] = await Promise.all([this.arm.listarImagensDoProspect(slug), this.lerAjustesBiblioteca(slug)])
+    return classificarBiblioteca({ arquivos, estado, catalogo: this.catalogo, ajustes })
+  }
+
+  /** Etapa e título escolhidos pelo analista; o arquivo no disco não muda. */
+  async ajustarBiblioteca(slug: string, caminho: string, mudanca: { etapa?: unknown; titulo?: unknown }): Promise<ItemBiblioteca> {
+    const rel = this.arm.relativoAoProspect(slug, caminho)
+    if (mudanca.etapa !== undefined && !etapaBibliotecaValida(mudanca.etapa)) {
+      throw new ErroEntrada(`Etapa inválida: ${JSON.stringify(mudanca.etapa)}`)
+    }
+    if (mudanca.titulo !== undefined && typeof mudanca.titulo !== "string") throw new ErroEntrada("O título precisa ser texto.")
+    if (!(await this.listarBiblioteca(slug)).some((i) => i.caminho === rel)) {
+      throw new ErroNaoEncontrado(`Imagem não encontrada na biblioteca: ${rel}`)
+    }
+    await this.exclusivo(slug, async () => {
+      const ajustes = aplicarAjuste(await this.lerAjustesBiblioteca(slug), rel, {
+        etapa: mudanca.etapa as EtapaBiblioteca | undefined,
+        titulo: mudanca.titulo as string | undefined,
+      })
+      const vivos: AjustesBiblioteca = {}
+      for (const [k, v] of Object.entries(ajustes)) {
+        if (await this.arm.existeArquivo(slug, k).catch(() => false)) vivos[k] = v
+      }
+      await this.arm.gravarTexto(slug, ARQUIVO_BIBLIOTECA, JSON.stringify(vivos, null, 2))
+    })
+    this.barramento.publicar(slug, { tipo: "estado" })
+    const item = (await this.listarBiblioteca(slug)).find((i) => i.caminho === rel)
+    if (!item) throw new ErroNaoEncontrado(`Imagem não encontrada na biblioteca: ${rel}`)
+    return item
+  }
+
+  private async lerAjustesBiblioteca(slug: string): Promise<AjustesBiblioteca> {
+    const texto = await this.arm.lerTexto(slug, ARQUIVO_BIBLIOTECA)
+    if (!texto) return {}
+    try {
+      return sanearAjustes(JSON.parse(texto))
+    } catch (e) {
+      console.error(`${ARQUIVO_BIBLIOTECA} inválido em ${slug}; tratado como vazio.`, e)
+      return {}
+    }
   }
 
   async respostaEstado(slug: string, turnoAtivo: EtapaId | null): Promise<RespostaEstado> {
@@ -497,9 +551,11 @@ export class ServicoPlanejamento {
     }
   }
 
-  async salvarAnexo(slug: string, nomeOriginal: string, dados: Uint8Array): Promise<string> {
-    const rel = `.app/anexos/${Date.now()}-${nomeSeguro(nomeOriginal)}`
+  async salvarAnexo(slug: string, etapa: EtapaId, nomeOriginal: string, dados: Uint8Array): Promise<string> {
+    const rel = `.app/anexos/${etapa}/${Date.now()}-${nomeSeguro(nomeOriginal)}`
     await this.arm.gravarBinario(slug, rel, dados)
+    // A biblioteca aberta recarrega com o anexo novo.
+    this.barramento.publicar(slug, { tipo: "estado" })
     return `clientes/${slug}/${rel}`
   }
 
