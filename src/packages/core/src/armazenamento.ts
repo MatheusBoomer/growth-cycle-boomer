@@ -215,8 +215,14 @@ export class FsArmazenamento {
     for (const i of itens) {
       if (!i.isFile() || i.name.startsWith(".") || !ehImagem(i.name)) continue
       const abs = path.join(i.parentPath, i.name)
-      const info = await stat(abs)
-      imagens.push({ caminho: emBarras(path.relative(pasta, abs)), modificadoEm: info.mtime.toISOString() })
+      const caminho = emBarras(path.relative(pasta, abs))
+      if (caminho.startsWith(".app/rascunhos/") || caminho.startsWith(".app/comentarios/")) continue
+      try {
+        const info = await stat(abs)
+        imagens.push({ caminho, modificadoEm: info.mtime.toISOString() })
+      } catch (e) {
+        if (codigoErro(e) !== "ENOENT") throw e
+      }
     }
     return imagens
   }

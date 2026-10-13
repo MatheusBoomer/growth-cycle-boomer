@@ -123,4 +123,15 @@ describe("imagens do prospect para a biblioteca", () => {
     expect(caminhos).not.toContain("contexto/notas.md")
     expect((await arm.listarImagensDoProspect("iszi"))[0]!.modificadoEm).toMatch(/^\d{4}-\d{2}-\d{2}T/)
   })
+
+  it("não lista imagens de rascunhos (inclusive _work) nem de comentários", async () => {
+    await arm.criarPasta("iszi")
+    const um = new Uint8Array([1])
+    await arm.gravarBinario("iszi", ".app/rascunhos/a/x.png", um)
+    await arm.gravarBinario("iszi", ".app/rascunhos/_work/y.png", um)
+    await arm.gravarBinario("iszi", ".app/comentarios/c/z.png", um)
+    await arm.gravarBinario("iszi", ".app/previas/x/slide-01.png", um)
+    const caminhos = (await arm.listarImagensDoProspect("iszi")).map((a) => a.caminho)
+    expect(caminhos).toEqual([".app/previas/x/slide-01.png"])
+  })
 })

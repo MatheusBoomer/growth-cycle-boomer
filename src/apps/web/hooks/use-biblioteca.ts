@@ -37,7 +37,7 @@ export function useBiblioteca(slug: string, sinal: unknown) {
       )
       try {
         const { item } = await api.ajustarBiblioteca(slug, caminho, mudanca)
-        setItens((atual) => atual?.map((i) => (i.caminho === caminho ? item : i)) ?? null)
+        if (item) setItens((atual) => atual?.map((i) => (i.caminho === caminho ? item : i)) ?? null)
       } catch (e) {
         toast.error(mensagemDeErro(e))
         await recarregar()

@@ -240,7 +240,10 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
                 aoSelecionar={selecionarEtapa}
                 bibliotecaAberta={bibliotecaAberta}
                 totalBiblioteca={biblioteca.itens ? totalVisivel(biblioteca.itens) : null}
-                aoAbrirBiblioteca={() => setBibliotecaAberta(true)}
+                aoAbrirBiblioteca={() => {
+                  setBibliotecaAberta(true)
+                  void biblioteca.recarregar()
+                }}
               />
             </div>
           </ResizablePanel>

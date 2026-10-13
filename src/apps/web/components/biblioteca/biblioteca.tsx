@@ -52,14 +52,27 @@ export function Biblioteca({
   aoFechar: () => void
 }) {
   const [filtros, setFiltros] = useState<FiltrosBiblioteca>(FILTROS_INICIAIS)
-  const [aberto, setAberto] = useState<number | null>(null)
+  const [aberto, setAberto] = useState<{ id: string; indice: number } | null>(null)
   const contagem = useMemo(() => contarPorEtapa(itens ?? [], filtros), [itens, filtros])
   const visiveis = useMemo(() => ordemDeExibicao(filtrarItens(itens ?? [], filtros)), [itens, filtros])
   const indicePorId = useMemo(() => new Map(visiveis.map((i, n) => [i.id, n])), [visiveis])
 
-  // Lista encolheu abaixo do item aberto: fecha, para o diálogo não reabrir sozinho quando a lista crescer.
-  // Estado ajustado durante a renderização (padrão do React), sem efeito.
-  if (aberto !== null && aberto >= visiveis.length) setAberto(null)
+  // O item aberto é rastreado por id: reordenar (etapa otimista, recarga por SSE) não troca a imagem do diálogo.
+  // Se o id saiu da lista (ex.: movido para fora da etapa filtrada), vale o item que agora ocupa o mesmo índice
+  // (fluxo de triagem de "Sem etapa"); sem item nesse índice, fecha. Estado ajustado durante a renderização, sem efeito.
+  let indiceAberto: number | null = null
+  if (aberto !== null) {
+    const atual = indicePorId.get(aberto.id)
+    if (atual !== undefined) {
+      indiceAberto = atual
+      if (atual !== aberto.indice) setAberto({ id: aberto.id, indice: atual })
+    } else if (aberto.indice < visiveis.length) {
+      indiceAberto = aberto.indice
+      setAberto({ id: visiveis[aberto.indice]!.id, indice: aberto.indice })
+    } else {
+      setAberto(null)
+    }
+  }
 
   useEffect(() => {
     function aoTeclar(ev: KeyboardEvent) {
@@ -67,10 +80,13 @@ export function Biblioteca({
       const ativo = document.activeElement as HTMLElement | null
       // Esc dentro de um menu (ex.: Origem) fecha só o menu.
       if (ativo?.closest('[role="menu"]')) return
-      if (!alvoDeDigitacao(ativo)) aoFechar()
+      if (alvoDeDigitacao(ativo)) return
+      // Captura + stopPropagation: visualizadores montados por baixo não fecham junto.
+      ev.stopPropagation()
+      aoFechar()
     }
-    window.addEventListener("keydown", aoTeclar)
-    return () => window.removeEventListener("keydown", aoTeclar)
+    window.addEventListener("keydown", aoTeclar, { capture: true })
+    return () => window.removeEventListener("keydown", aoTeclar, { capture: true })
   }, [aoFechar])
 
   const mudar = (parcial: Partial<FiltrosBiblioteca>) => setFiltros((f) => ({ ...f, ...parcial }))
@@ -117,7 +133,7 @@ export function Biblioteca({
                 {m.marca && <h4 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">{m.marca}</h4>}
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3">
                   {m.itens.map((i) => (
-                    <CardImagem key={i.id} slug={slug} item={i} aoAbrir={() => setAberto(indicePorId.get(i.id) ?? null)} />
+                    <CardImagem key={i.id} slug={slug} item={i} aoAbrir={() => setAberto({ id: i.id, indice: indicePorId.get(i.id) ?? 0 })} />
                   ))}
                 </div>
               </div>
@@ -191,8 +207,8 @@ export function Biblioteca({
         slug={slug}
         catalogo={catalogo}
         itens={visiveis}
-        indice={aberto}
-        aoMudarIndice={setAberto}
+        indice={indiceAberto}
+        aoMudarIndice={(n) => setAberto(n !== null && visiveis[n] ? { id: visiveis[n].id, indice: n } : null)}
         aoAjustar={aoAjustar}
         aoMencionar={(caminho) => {
           setAberto(null)

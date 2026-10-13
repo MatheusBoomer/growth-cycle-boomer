@@ -246,7 +246,9 @@ export class ServicoPlanejamento {
       await this.arm.gravarTexto(slug, ARQUIVO_BIBLIOTECA, JSON.stringify(vivos, null, 2))
     })
     this.barramento.publicar(slug, { tipo: "estado" })
-    return (await this.listarBiblioteca(slug)).find((i) => i.caminho === rel)!
+    const item = (await this.listarBiblioteca(slug)).find((i) => i.caminho === rel)
+    if (!item) throw new ErroNaoEncontrado(`Imagem não encontrada na biblioteca: ${rel}`)
+    return item
   }
 
   private async lerAjustesBiblioteca(slug: string): Promise<AjustesBiblioteca> {
