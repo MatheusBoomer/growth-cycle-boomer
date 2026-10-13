@@ -63,7 +63,11 @@ export function Biblioteca({
 
   useEffect(() => {
     function aoTeclar(ev: KeyboardEvent) {
-      if (ev.key === "Escape" && !alvoDeDigitacao(document.activeElement as HTMLElement | null)) aoFechar()
+      if (ev.key !== "Escape" || ev.defaultPrevented) return
+      const ativo = document.activeElement as HTMLElement | null
+      // Esc dentro de um menu (ex.: Origem) fecha só o menu.
+      if (ativo?.closest('[role="menu"]')) return
+      if (!alvoDeDigitacao(ativo)) aoFechar()
     }
     window.addEventListener("keydown", aoTeclar)
     return () => window.removeEventListener("keydown", aoTeclar)

@@ -27,7 +27,7 @@ export function TrilhaEtapas({
   aoAbrirBiblioteca: () => void
 }) {
   return (
-    <aside className="flex min-h-0 flex-col gap-1 overflow-y-auto p-3">
+    <aside className="flex h-full min-h-0 flex-col gap-1 overflow-y-auto p-3">
       <Button variant="ghost" size="sm" className="justify-start" render={<Link href="/" />} nativeButton={false}>
         <ArrowLeftIcon /> Prospects
       </Button>
