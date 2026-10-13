@@ -116,3 +116,99 @@ export function validarEdicao(entrada: unknown): string {
   if (!ehObjeto(entrada)) throw new ErroValidacaoDev("Corpo da requisição inválido.")
   return lerComentario(entrada.comentario)
 }
+
+// --- Cadeia de componentes (fiber do React, só existe com nomes legíveis em desenvolvimento) ---
+
+/** Componentes genéricos de packages/ui: o ajuste quase sempre é no componente do app que os usa. */
+const GENERICOS_UI = new Set([
+  "Alert", "AlertAction", "AlertDescription", "AlertTitle",
+  "AlertDialog", "AlertDialogAction", "AlertDialogCancel", "AlertDialogContent", "AlertDialogDescription",
+  "AlertDialogFooter", "AlertDialogHeader", "AlertDialogMedia", "AlertDialogOverlay", "AlertDialogPortal",
+  "AlertDialogTitle", "AlertDialogTrigger",
+  "Attachment", "AttachmentAction", "AttachmentActions", "AttachmentContent", "AttachmentDescription",
+  "AttachmentGroup", "AttachmentMedia", "AttachmentTitle", "AttachmentTrigger",
+  "Badge",
+  "Bubble", "BubbleContent", "BubbleGroup", "BubbleReactions",
+  "Button",
+  "Card", "CardAction", "CardContent", "CardDescription", "CardFooter", "CardHeader", "CardTitle",
+  "ChainOfThought", "ChainOfThoughtContent", "ChainOfThoughtHeader", "ChainOfThoughtStep",
+  "Dialog", "DialogClose", "DialogContent", "DialogDescription", "DialogFooter", "DialogHeader",
+  "DialogOverlay", "DialogPortal", "DialogTitle", "DialogTrigger",
+  "DropdownMenu", "DropdownMenuCheckboxItem", "DropdownMenuContent", "DropdownMenuGroup", "DropdownMenuItem",
+  "DropdownMenuLabel", "DropdownMenuPortal", "DropdownMenuRadioGroup", "DropdownMenuRadioItem",
+  "DropdownMenuSeparator", "DropdownMenuShortcut", "DropdownMenuSub", "DropdownMenuSubContent",
+  "DropdownMenuSubTrigger", "DropdownMenuTrigger",
+  "Empty", "EmptyContent", "EmptyDescription", "EmptyHeader", "EmptyMedia", "EmptyTitle",
+  "Field", "FieldContent", "FieldDescription", "FieldError", "FieldGroup", "FieldLabel", "FieldLegend",
+  "FieldSeparator", "FieldSet", "FieldTitle",
+  "Input", "Label",
+  "Marker", "MarkerContent", "MarkerIcon",
+  "Message", "MessageAvatar", "MessageContent", "MessageFooter", "MessageGroup", "MessageHeader",
+  "MessageScroller", "MessageScrollerButton", "MessageScrollerContent", "MessageScrollerItem",
+  "MessageScrollerProvider", "MessageScrollerViewport",
+  "Progress", "ProgressIndicator", "ProgressLabel", "ProgressTrack", "ProgressValue",
+  "Question", "QuestionDescription", "QuestionInput", "QuestionOption", "QuestionOptions", "QuestionPrompt",
+  "ResizableHandle", "ResizablePanel", "ResizablePanelGroup",
+  "Separator", "Skeleton", "Spinner", "Textarea", "Toaster",
+])
+
+/** Internos do React/Next e primitivos de Radix/Base UI. Se aparecer outro no teste manual, acrescente aqui. */
+const INTERNOS = new Set([
+  "Suspense", "Fragment", "StrictMode", "Profiler", "Activity",
+  "Root", "ServerRoot", "AppRouter", "HotReload", "Head", "HistoryUpdater", "RuntimeStyles",
+  "InnerLayoutRouter", "OuterLayoutRouter", "RenderFromTemplateContext",
+  "ScrollAndFocusHandler", "InnerScrollAndFocusHandler", "LoadingBoundary",
+  "ClientPageRoot", "ClientSegmentRoot", "SegmentViewNode", "MetadataOutlet", "ViewportOutlet",
+  "Slot", "Slottable", "Presence", "Portal", "FocusScope", "DismissableLayer",
+])
+const PREFIXOS_INTERNOS = ["_", "Primitive", "Radix"]
+const SUFIXOS_INTERNOS = ["Boundary", "Provider", "Router", "Context", "Handler"]
+
+export function nomeIgnorado(nome: string): boolean {
+  return (
+    GENERICOS_UI.has(nome) ||
+    INTERNOS.has(nome) ||
+    PREFIXOS_INTERNOS.some((prefixo) => nome.startsWith(prefixo)) ||
+    SUFIXOS_INTERNOS.some((sufixo) => nome.endsWith(sufixo))
+  )
+}
+
+interface FiberParcial {
+  type?: unknown
+  return?: FiberParcial | null
+}
+
+function nomeDoTipo(tipo: unknown): string | null {
+  if (typeof tipo === "function") {
+    const fn = tipo as { displayName?: unknown; name?: unknown }
+    const nome = typeof fn.displayName === "string" && fn.displayName ? fn.displayName : fn.name
+    return typeof nome === "string" && nome ? nome : null
+  }
+  if (typeof tipo === "object" && tipo !== null) {
+    // memo guarda o componente em `type`; forwardRef, em `render`. Contexto e lazy não têm nenhum dos dois.
+    const embrulho = tipo as { displayName?: unknown; render?: unknown; type?: unknown }
+    if (typeof embrulho.displayName === "string" && embrulho.displayName) return embrulho.displayName
+    return nomeDoTipo(embrulho.render) ?? nomeDoTipo(embrulho.type)
+  }
+  return null
+}
+
+function fiberDoNo(no: object): FiberParcial | undefined {
+  for (let atual: object | null = no; atual; atual = (atual as { parentElement?: object | null }).parentElement ?? null) {
+    const chave = Object.keys(atual).find((k) => k.startsWith("__reactFiber$"))
+    if (chave) return (atual as Record<string, unknown>)[chave] as FiberParcial | undefined
+  }
+  return undefined
+}
+
+/** Nomes dos componentes do mais interno para o externo, até 8, sem internos e genéricos. */
+export function cadeiaDeComponentes(no: object): string[] {
+  const cadeia: string[] = []
+  let fiber = fiberDoNo(no)
+  for (let passos = 0; fiber && cadeia.length < LIMITE_CADEIA && passos < 1000; passos++) {
+    const nome = nomeDoTipo(fiber.type)
+    if (nome && !nomeIgnorado(nome) && cadeia.at(-1) !== nome) cadeia.push(nome)
+    fiber = fiber.return ?? undefined
+  }
+  return cadeia
+}
