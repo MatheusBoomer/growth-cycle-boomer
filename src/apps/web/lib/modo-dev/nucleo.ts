@@ -212,3 +212,63 @@ export function cadeiaDeComponentes(no: object): string[] {
   }
   return cadeia
 }
+
+// --- Seletor CSS estável e texto visível ---
+
+const ID_SIMPLES = /^[A-Za-z][\w-]*$/
+// useId do React (_r_1_, :r1:, «r1»), Radix e Base UI: mudam entre carregamentos.
+const ID_GERADO = /^(_r_|:r|«r|radix-|base-ui-)/
+
+function entreAspas(valor: string): string {
+  return `"${valor.replace(/["\\]/g, "\\$&")}"`
+}
+
+function posicaoEntreIrmaos(el: Element): number {
+  let posicao = 1
+  for (let irmao = el.previousElementSibling; irmao; irmao = irmao.previousElementSibling) {
+    if (irmao.tagName === el.tagName) posicao++
+  }
+  return posicao
+}
+
+function idEstavel(el: Element): string | null {
+  const id = el.getAttribute("id")
+  if (!id || !ID_SIMPLES.test(id) || ID_GERADO.test(id)) return null
+  return el.ownerDocument.querySelectorAll(`#${id}`).length === 1 ? id : null
+}
+
+function parteDoNivel(el: Element): string {
+  const tag = el.tagName.toLowerCase()
+  for (const atributo of ["data-slot", "aria-label"]) {
+    const valor = el.getAttribute(atributo)
+    if (!valor) continue
+    const base = `${tag}[${atributo}=${entreAspas(valor)}]`
+    const iguais = el.parentElement
+      ? Array.from(el.parentElement.children).filter((i) => i.tagName === el.tagName && i.getAttribute(atributo) === valor)
+      : [el]
+    return iguais.length > 1 ? `${base}:nth-of-type(${posicaoEntreIrmaos(el)})` : base
+  }
+  return `${tag}:nth-of-type(${posicaoEntreIrmaos(el)})`
+}
+
+/** id estável → data-slot → aria-label → tag:nth-of-type, subindo até 8 níveis. */
+export function seletorDoElemento(el: Element): string {
+  const partes: string[] = []
+  let atual: Element | null = el
+  while (atual && atual.tagName !== "BODY" && atual.tagName !== "HTML" && partes.length < LIMITE_CADEIA) {
+    const id = idEstavel(atual)
+    if (id) {
+      partes.unshift(`#${id}`)
+      return partes.join(" > ")
+    }
+    partes.unshift(parteDoNivel(atual))
+    atual = atual.parentElement
+  }
+  if (atual?.tagName === "BODY") partes.unshift("body")
+  return partes.join(" > ")
+}
+
+export function textoVisivel(el: Element): string {
+  const bruto = (el as { innerText?: string }).innerText ?? el.textContent ?? ""
+  return bruto.replace(/\s+/g, " ").trim().slice(0, LIMITE_TEXTO)
+}
