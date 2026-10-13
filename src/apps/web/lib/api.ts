@@ -1,3 +1,4 @@
+import type { AjusteBiblioteca, ItemBiblioteca } from "@workspace/core/biblioteca"
 import type { Comentario, MapaPrevia, Regiao } from "@workspace/core/comentarios"
 import type { EtapaId, ResultadoValidacao } from "@workspace/core/tipos"
 
@@ -69,6 +70,9 @@ export const api = {
   listarArquivos: (slug: string) => chamar<{ arquivos: { caminho: string; modificadoEm: string }[] }>(`${base(slug)}/arquivos`),
   enviarAnexo: (slug: string, etapa: EtapaId, arquivo: File) =>
     chamar<{ caminho: string }>(`${base(slug)}/etapas/${etapa}/anexos`, multipart(arquivo)),
+  biblioteca: (slug: string) => chamar<{ itens: ItemBiblioteca[] }>(`${base(slug)}/biblioteca`, { cache: "no-store" }),
+  ajustarBiblioteca: (slug: string, caminho: string, mudanca: AjusteBiblioteca) =>
+    chamar<{ item: ItemBiblioteca }>(`${base(slug)}/biblioteca`, comJson("PATCH", { caminho, ...mudanca })),
 }
 
 /** `nome` (só com download): nome do arquivo baixado, sem extensão. */
