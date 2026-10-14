@@ -22,6 +22,7 @@ ESPERADO = {
     "cartoes": {"titulo", "subtitulo", "cartao_1", "cartao_2", "cartao_3"},
     "benchmark": {"titulo", "subtitulo", "concorrente", "conclusoes", "imagem_1", "imagem_2", "imagem_3", "link"},
     "obrigado": set(),
+    "desafio": {"titulo", "esquerda", "direita"},
 }
 
 
@@ -32,6 +33,13 @@ def test_molde_tem_um_slide_por_tipo_com_os_campos():
     assert len(prs.slides) == len(ESPERADO)
     for tipo, slide in tipos.items():
         assert set(ap.campos(slide)) == ESPERADO[tipo], tipo
+
+
+def test_desafio_nao_repete_id_de_forma():
+    prs = Presentation(MOLDE)
+    desafio = next(s for s in prs.slides if ap.tipo_do_slide(s) == "desafio")
+    ids = [sh.shape_id for sh in desafio.shapes]
+    assert len(ids) == len(set(ids)), ids
 
 
 def test_capa_tem_token_do_prospect():
