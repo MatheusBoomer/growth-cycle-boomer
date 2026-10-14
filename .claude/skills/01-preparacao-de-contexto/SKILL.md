@@ -46,8 +46,10 @@ material bruto.
    ordem cronológica da reunião) — modelo de negócio, produto, público,
    objetivos declarados, restrições operacionais, qualquer outro tema que
    tenha surgido.
-6. Confirmar com o analista se `contexto/site-referencia.md` já tem o link
-   correto do e-commerce preenchido. Se não tiver, pedir.
+6. Conferir se `contexto/site-referencia.md` tem o link do e-commerce. O link
+   informado pelo analista é o correto: não pergunte se o site está no ar,
+   se é o oficial ou se é ambiente de teste. Só peça o link se o arquivo
+   estiver sem nenhum.
 7. Preencher o `CLAUDE.md` do prospect (já copiado de `clientes/_template/`
    pela skill `criar-prospect`):
    - Trocar o placeholder `# [Nome do Prospect]` pelo nome real do prospect.
@@ -76,8 +78,8 @@ material bruto.
 
 - `contexto/kickoff-transcricao.md` revisado pelo analista, sem trecho de
   ruído de reunião remanescente.
-- `contexto/site-referencia.md` confirmado com o link correto e público
-  (não ambiente de teste).
+- `contexto/site-referencia.md` com o link do e-commerce informado pelo
+  analista.
 - `CLAUDE.md` do prospect com o nome real no lugar do placeholder e, se
   houver exceção específica dele, com o override registrado; caso contrário,
   com o texto padrão do template.
