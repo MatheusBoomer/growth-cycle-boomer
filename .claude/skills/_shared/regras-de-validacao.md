@@ -24,10 +24,9 @@ refazer um gráfico ou reescrever uma análise mais tarde, a nova versão
 aprovada **sobrescreve** a anterior no mesmo caminho — não criar `-v2`, `-v3`
 nem manter histórico. Só a versão aprovada mais recente importa.
 
-Isso desacopla a montagem da apresentação final (feita pelo subagente
-`designer-apresentacao`, ao final de tudo) da conversa em si: o
-`designer-apresentacao` lê apenas essa pasta, não precisa saber quantas
-iterações aconteceram em cada gráfico ou texto.
+Isso desacopla a montagem da apresentação final (feita pela Skill 10, ao
+final de tudo) da conversa em si: a Skill 10 lê apenas essa pasta, não precisa
+saber quantas iterações aconteceram em cada gráfico ou texto.
 
 ## 3. Regra do não-flat
 
@@ -114,3 +113,23 @@ está rodando dentro da interface web, e estas regras substituem o jeito
   (tipo `planilha` ou `documento`). Na etapa final, o roteiro da apresentação é
   proposto como tipo `roteiro` (`.json`) e `gerar_apresentacao.py` gera o tipo
   `apresentacao` (`.pptx`).
+
+## 8. Checklist de qualidade do diagnóstico
+
+Regra de ouro: nenhum problema sai do diagnóstico sem solução. Antes do
+checkpoint final, a Skill 05 (Soluções) e a Skill 10 (Apresentação final)
+apresentam ao analista os 5 itens abaixo, cada um marcado como atendido ou
+com o que falta:
+
+1. **Problema identificado = 1 a 3 soluções**, no próprio problema, não só no
+   plano de ação. Garantido por `scripts/validar_solucoes.py --modo registro`.
+2. **Hipótese de causa antes da ação**: "por que acontece" vem antes de "o que
+   fazer". Conferência do analista: a hipótese explica o dado?
+3. **Impacto estimado em R$ ou %**: o número que abre a conversa com o
+   cliente. Garantido pelo validador (`nao_quantificavel` só com
+   justificativa, e vira aviso).
+4. **Cada solução vira item do plano**, com dono, prazo e frente. Garantido
+   por `scripts/validar_solucoes.py --modo plano` na Skill 09.
+5. **Benchmarking termina em teste**: o que vamos aplicar, não só o que o
+   concorrente faz. Conferência do analista no bloco "O que testar" da
+   Skill 07.
