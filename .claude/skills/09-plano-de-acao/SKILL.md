@@ -34,6 +34,10 @@ diagnóstico, estratégia por Curva ABC, calendário estratégico, planejamento
 financeiro de mídia, estratégia de redução de dependências, achados de
 benchmark aplicáveis, cenários e KPIs influenciadores. Não buscar dado novo.
 
+Também é base obrigatória o registro `contexto/solucoes.json` (Skill 05): toda
+solução precisa virar ação. Leia o arquivo do disco, porque na interface cada
+etapa roda na própria conversa e o registro não está no contexto.
+
 ## Estrutura — 3 horizontes temporais
 
 - **Horizonte 1 — Imediato:** primeira semana após aprovação. Ações de maior
@@ -71,6 +75,7 @@ O QUÊ: [descrição clara e objetiva]
 QUANDO: [semana, mês ou período específico]
 POR QUEM: [Agência / Cliente / Agência + Cliente]
 COMO: [instrução prática — o suficiente para o cliente executar sem dúvida]
+SOLUÇÕES: [ids do registro que esta ação executa, ex.: P1.S1, P1.S2; vazio para governança]
 ```
 
 Consolidar ao final em uma tabela-resumo com todas as ações organizadas
@@ -100,6 +105,18 @@ explicitamente.
     --output "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.docx"
   ```
 
+- **Soluções no JSON:** cada ação leva `"solucoes": ["P1.S1"]`, com os ids do
+  registro que ela executa (lista vazia para ações de governança). Antes de
+  rodar `preencher_plano_acao_docx.py`, rode:
+
+  ```
+  python3 scripts/validar_solucoes.py --modo plano \
+    --registro clientes/<slug>/contexto/solucoes.json \
+    --plano <json_montado>
+  ```
+
+  `ERRO:` → crie ou ajuste ações até cobrir toda solução; nunca apague
+  solução do registro para passar.
 - **Saída:** `entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.docx`
   do prospect (nome estável, sobrescreve — ver `regras-de-validacao.md`).
 - Cada horizonte no JSON precisa do título (com o período already confirmado
@@ -127,6 +144,7 @@ explicitamente.
 - Tabela-resumo completa e cronologicamente coerente com a data atual.
 - Um analista deveria conseguir ler o plano e saber o que fazer no primeiro
   dia útil após a apresentação.
+- `validar_solucoes.py --modo plano` sem `ERRO:`.
 - Arquivo `.docx` gerado pelo `scripts/preencher_plano_acao_docx.py` a partir
   do modelo da Boomer, aprovado pelo analista e salvo em
   `entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.docx`.

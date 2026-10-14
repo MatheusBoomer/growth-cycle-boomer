@@ -17,7 +17,7 @@ Confira que existe material das 6 seções do deck em `entrega/ativos-aprovados/
 | Seção do deck | Onde está | Etapa de origem |
 |---|---|---|
 | 01. Cenário atual | `graficos/*`, `secoes/03-*.md`, `secoes/04-*.md` | 03 e 04 |
-| 02. Desafios | gargalos e hipóteses em `contexto/decisoes/`, `secoes/06-*.md` | 02 a 06 |
+| 02. Desafios | `contexto/solucoes.json`, `secoes/05-solucoes.md` | 05 |
 | 03. Benchmarking | `secoes/07-benchmark.md`, `dados/benchmark-meta/<marca>/` | 07 |
 | 04. Metas | `graficos/cenarios-*`, `graficos/tabela-cenarios-*`, `secoes/06-*.md` | 06 |
 | 05. Cenários e impactos | `secoes/06-*.md`, `secoes/08-midia-paga.md`, `graficos/tabela-*` | 06 e 08 |
@@ -44,6 +44,7 @@ dos campos é o `ESQUEMA` em `scripts/gerar_apresentacao.py`:
 | `analises_2_colunas` | `esquerda` e `direita`: `{ "titulo": "…", "itens": [1 a 4] }` |
 | `bullets` | `titulo`, `subtitulo`, `itens` (1 a 6) |
 | `cartoes` | `titulo`, `subtitulo`, `cartoes` (exatamente 3) |
+| `desafio` | `titulo`, `problema`, `hipoteses` (1 a 5), `solucoes` (1 a 3), `impacto`; opcional `problema_id` |
 | `benchmark` | `titulo`, `subtitulo`, `concorrente`, `imagens` (1 a 3), `conclusoes` (1 a 3), `link` |
 | `obrigado` | nenhum |
 
@@ -57,7 +58,7 @@ esta espinha e adapte ao material de cada prospect):
 |---|---|
 | Abertura | capa · jornada (6 seções) |
 | 01. Cenário atual | divisória · um `grafico` por gráfico do diagnóstico (investimento, receita captada x aprovada, taxa de quebra, ROAS global, ROAS por plataforma, sessões, dependência de mídia, conversão global, funil de eventos, conversão por plataforma, Curva ABC, top 10 produtos, CAC, novos x recorrentes) com 1 a 3 conclusões · `analises_2_colunas` depois de cada bloco (investimento e receita; conversão) · `tabela_lateral` por curva (A, B, C) · análise de criativos do próprio prospect quando houver imagem aprovada |
-| 02. Desafios | divisória · `bullets` com a lista de desafios · `cartoes` com os 3 pilares · um `bullets` por iniciativa de cada pilar (ex.: retenção de base, auditoria de rastreio, ofertas, sessões x conversão, ROAS) |
+| 02. Desafios | divisória · `bullets` com a lista de desafios (título e impacto de cada problema) · um `desafio` por problema do registro, na ordem de prioridade, com `problema_id` · `cartoes` com os 3 pilares · um `bullets` por iniciativa de cada pilar |
 | 03. Benchmarking | divisória · um `benchmark` por concorrente (3 criativos, conclusões, link da página) · `bullets` com as análises de benchmarking |
 | 04. Metas | divisória · `imagem_larga` com a tabela de metas e os 3 cenários · `grafico` com as curvas dos cenários |
 | 05. Cenários e impactos | divisória · `bullets` com a metodologia (KPIs influenciadores e de resultado) · `imagem_larga` com as tabelas de projeção e de KPIs · `bullets` com as considerações · alocação de verba (`grafico` e `imagem_larga`) · estratégia por Curva ABC · calendário de mídia · ROAS esperado · dependência de mídia paga |
@@ -73,6 +74,12 @@ Regras:
   tabelas em `tabela_lateral` quando altas ou `imagem_larga` quando largas). Só
   sai se o analista pedir no ajuste do roteiro. O gerador avisa quando algum
   aprovado ficou de fora: trate o aviso antes de propor o deck.
+- **Cobertura de desafios:** todo problema de `contexto/solucoes.json` entra
+  como slide `desafio`. O gerador avisa quando algum ficou de fora: trate o
+  aviso antes de propor o deck. Os textos vêm do registro, condensados; nunca
+  invente hipótese, solução ou impacto. O gerador acrescenta sozinho o prefixo
+  "Hipótese: " a cada hipótese e renderiza as soluções como bullets sem
+  numeração: escreva só o texto, sem esse prefixo e sem numerar.
 - **Escala esperada:** 40 a 60 slides, como o deck de referência. Um deck
   muito menor indica que faltou material ou cobertura; diga ao analista o que
   falta em vez de enxugar.
@@ -87,6 +94,10 @@ Regras:
   Biblioteca (`resumo.md`, "Página na Biblioteca").
 - Slide sem material: `{"tipo": "...", "pendencia": "o que falta e de qual etapa"}`.
 - PII: as regras do `CLAUDE.md` raiz valem para o deck.
+
+Antes de propor o deck, apresente ao analista o checklist da Regra 8 de
+`_shared/regras-de-validacao.md` (os 5 itens), cada um marcado como atendido
+ou com o que falta.
 
 Interface: `propor_entregavel` tipo `roteiro`, `nome_final` `roteiro-apresentacao`.
 Terminal: mostre o roteiro resumido slide a slide e peça a checagem.
