@@ -19,6 +19,7 @@ import {
 import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
 import { Biblioteca } from "@/components/biblioteca/biblioteca"
+import { BarraTopo } from "@/components/marca/barra-topo"
 import { ChatEtapa } from "@/components/chat/chat-etapa"
 import { useAreaDeTrabalho } from "@/hooks/use-area-de-trabalho"
 import { useBiblioteca } from "@/hooks/use-biblioteca"
@@ -221,138 +222,149 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
 
   return (
     <ContextoVisualizador.Provider value={controle}>
-      <div className={cn("relative h-svh", arrastando && "[&_iframe]:pointer-events-none")} onPointerDownCapture={aoApertar}>
-        <ResizablePanelGroup groupRef={grupoRef} orientation="horizontal" defaultLayout={layoutInicial} onLayoutChanged={aoMudarLayout}>
-          <ResizablePanel
-            id="trilha"
-            panelRef={trilhaRef}
-            defaultSize="240px"
-            minSize="180px"
-            maxSize="30%"
-            collapsible
-            collapsedSize="0%"
-            onResize={(tamanho) => setTrilhaRecolhida(tamanho.asPercentage === 0)}
-          >
-            <div ref={trilhaCaixaRef} className="h-full">
-              <TrilhaEtapas
-                catalogo={dados.catalogo}
-                estado={dados.estado}
-                selecionada={etapa}
-                aoSelecionar={selecionarEtapa}
-                bibliotecaAberta={bibliotecaAberta}
-                totalBiblioteca={biblioteca.itens ? totalVisivel(biblioteca.itens) : null}
-                aoAbrirBiblioteca={() => {
-                  setBibliotecaAberta(true)
-                  void biblioteca.recarregar()
-                }}
-              />
-            </div>
-          </ResizablePanel>
-          <ResizableHandle withHandle />
-          <ResizablePanel id="chat" minSize="360px">
-            <main className="flex h-full min-h-0 flex-col">
-              <header className="flex items-center gap-3 border-b px-4 py-3">
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label={trilhaRecolhida ? "Mostrar etapas" : "Recolher etapas"}
-                  onClick={() => (trilhaRecolhida ? trilhaRef.current?.expand() : trilhaRef.current?.collapse())}
-                >
-                  {trilhaRecolhida ? <PanelLeftOpenIcon /> : <PanelLeftCloseIcon />}
-                </Button>
-                <h1 className="font-semibold">{etapaCat.rotuloStatus}</h1>
-                <Badge variant="secondary">{ROTULO_STATUS[estadoEtapa.status]}</Badge>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  className="ml-auto"
-                  aria-label={painelRecolhido ? "Mostrar painel" : "Recolher painel"}
-                  onClick={() => (painelRecolhido ? painelRef.current?.expand() : painelRef.current?.collapse())}
-                >
-                  {painelRecolhido ? <PanelRightOpenIcon /> : <PanelRightCloseIcon />}
-                </Button>
-              </header>
-              {mostrarChat ? (
-                <ChatEtapa slug={slug} etapa={etapa} dados={dados} eventos={conversas[etapa] ?? []} delta={deltas[etapa] ?? ""} />
-              ) : (
-                <EtapaLiberada slug={slug} etapa={etapa} dados={dados} handoffAnterior={anterior ? dados.estado.etapas[anterior].handoff : null} />
-              )}
-            </main>
-          </ResizablePanel>
-          <ResizableHandle withHandle className={cn(!visualizadorAberto && "hidden")} />
-          <ResizablePanel
-            id="visualizador"
-            defaultSize="0%"
-            minSize="320px"
-            collapsible
-            collapsedSize="0%"
-            onResize={(tamanho) => {
-              // Arrastar o visualizador até sumir é o mesmo que fechá-lo.
-              if (tamanho.asPercentage === 0 && visualizadorAberto) fechar()
-            }}
-          >
-            {/* Em tela cheia o conteúdo vai para a camada fixa abaixo; o painel fica vazio. */}
-            {telaCheia ? null : painelVisualizador}
-          </ResizablePanel>
-          <ResizableHandle withHandle />
-          <ResizablePanel
-            id="painel"
-            panelRef={painelRef}
-            defaultSize="320px"
-            minSize="240px"
-            maxSize="40%"
-            collapsible
-            collapsedSize="0%"
-            onResize={(tamanho) => setPainelRecolhido(tamanho.asPercentage === 0)}
-          >
-            <ResizablePanelGroup
-              groupRef={colunaDireitaRef}
-              orientation="vertical"
-              onLayoutChanged={(layout: Layout) => {
-                if (temArquivo && (layout.arquivo ?? 0) > 0) salvarLayout(CHAVE_COLUNA_DIREITA, layout)
+      <div className="flex h-svh flex-col">
+        <BarraTopo titulo="Planejamento estratégico" subtitulo={dados.estado.prospect.nome} />
+        <div className={cn("relative min-h-0 flex-1 p-3", arrastando && "[&_iframe]:pointer-events-none")} onPointerDownCapture={aoApertar}>
+          <ResizablePanelGroup groupRef={grupoRef} orientation="horizontal" defaultLayout={layoutInicial} onLayoutChanged={aoMudarLayout}>
+            <ResizablePanel
+              id="trilha"
+              panelRef={trilhaRef}
+              defaultSize="240px"
+              minSize="180px"
+              maxSize="30%"
+              collapsible
+              collapsedSize="0%"
+              onResize={(tamanho) => setTrilhaRecolhida(tamanho.asPercentage === 0)}
+            >
+              <div ref={trilhaCaixaRef} className="vidro h-full overflow-hidden rounded-2xl">
+                <TrilhaEtapas
+                  catalogo={dados.catalogo}
+                  estado={dados.estado}
+                  selecionada={etapa}
+                  aoSelecionar={selecionarEtapa}
+                  bibliotecaAberta={bibliotecaAberta}
+                  totalBiblioteca={biblioteca.itens ? totalVisivel(biblioteca.itens) : null}
+                  aoAbrirBiblioteca={() => {
+                    setBibliotecaAberta(true)
+                    void biblioteca.recarregar()
+                  }}
+                />
+              </div>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel id="chat" minSize="360px">
+              <main className="vidro flex h-full min-h-0 flex-col overflow-hidden rounded-2xl">
+                <header className="flex items-center gap-3 border-b px-4 py-3">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={trilhaRecolhida ? "Mostrar etapas" : "Recolher etapas"}
+                    onClick={() => (trilhaRecolhida ? trilhaRef.current?.expand() : trilhaRef.current?.collapse())}
+                  >
+                    {trilhaRecolhida ? <PanelLeftOpenIcon /> : <PanelLeftCloseIcon />}
+                  </Button>
+                  <h1 className="text-sm font-semibold tracking-tight">{etapaCat.rotuloStatus}</h1>
+                  <Badge variant="secondary">{ROTULO_STATUS[estadoEtapa.status]}</Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="ml-auto"
+                    aria-label={painelRecolhido ? "Mostrar painel" : "Recolher painel"}
+                    onClick={() => (painelRecolhido ? painelRef.current?.expand() : painelRef.current?.collapse())}
+                  >
+                    {painelRecolhido ? <PanelRightOpenIcon /> : <PanelRightCloseIcon />}
+                  </Button>
+                </header>
+                {mostrarChat ? (
+                  <ChatEtapa slug={slug} etapa={etapa} dados={dados} eventos={conversas[etapa] ?? []} delta={deltas[etapa] ?? ""} />
+                ) : (
+                  <EtapaLiberada slug={slug} etapa={etapa} dados={dados} handoffAnterior={anterior ? dados.estado.etapas[anterior].handoff : null} />
+                )}
+              </main>
+            </ResizablePanel>
+            <ResizableHandle withHandle className={cn(!visualizadorAberto && "hidden")} />
+            <ResizablePanel
+              id="visualizador"
+              defaultSize="0%"
+              minSize="320px"
+              collapsible
+              collapsedSize="0%"
+              onResize={(tamanho) => {
+                // Arrastar o visualizador até sumir é o mesmo que fechá-lo.
+                if (tamanho.asPercentage === 0 && visualizadorAberto) fechar()
               }}
             >
-              <ResizablePanel id="etapa" minSize="120px">
-                <PainelEtapa slug={slug} etapa={etapa} dados={dados} />
-              </ResizablePanel>
-              <ResizableHandle withHandle className={cn(!temArquivo && "hidden")} />
-              <ResizablePanel
-                id="arquivo"
-                defaultSize="0%"
-                minSize="160px"
-                collapsible
-                collapsedSize="0%"
-                onResize={(tamanho) => {
-                  // Arrastar a janela do arquivo até sumir é o mesmo que fechá-la.
-                  if (tamanho.asPercentage === 0 && temArquivo) fecharArquivo()
+              {/* Em tela cheia o conteúdo vai para a camada fixa abaixo; o painel fica vazio. */}
+              {telaCheia ? null : <div className="vidro h-full overflow-hidden rounded-2xl">{painelVisualizador}</div>}
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel
+              id="painel"
+              panelRef={painelRef}
+              defaultSize="320px"
+              minSize="240px"
+              maxSize="40%"
+              collapsible
+              collapsedSize="0%"
+              onResize={(tamanho) => setPainelRecolhido(tamanho.asPercentage === 0)}
+            >
+              <ResizablePanelGroup
+                groupRef={colunaDireitaRef}
+                orientation="vertical"
+                onLayoutChanged={(layout: Layout) => {
+                  if (temArquivo && (layout.arquivo ?? 0) > 0) salvarLayout(CHAVE_COLUNA_DIREITA, layout)
                 }}
               >
-                {arquivoAberto && (
-                  <VisualizadorArquivo
-                    slug={slug}
-                    caminho={arquivoAberto}
-                    aoMencionar={() => mencionar(arquivoAberto)}
-                    aoFechar={fecharArquivo}
-                  />
-                )}
-              </ResizablePanel>
-            </ResizablePanelGroup>
-          </ResizablePanel>
-        </ResizablePanelGroup>
-        {bibliotecaAberta && (
-          <div className="bg-background absolute inset-y-0 right-0 z-30 border-l" style={{ left: larguraTrilha }}>
-            <Biblioteca
-              slug={slug}
-              catalogo={dados.catalogo}
-              itens={biblioteca.itens}
-              erro={biblioteca.erro}
-              aoAjustar={(caminho, mudanca) => void biblioteca.ajustar(caminho, mudanca)}
-              aoMencionar={mencionarDaBiblioteca}
-              aoFechar={fecharBiblioteca}
-            />
-          </div>
-        )}
-        {visualizadorAberto && telaCheia && <div className="fixed inset-0 z-40">{painelVisualizador}</div>}
+                <ResizablePanel id="etapa" minSize="120px">
+                  <div className="vidro h-full overflow-hidden rounded-2xl">
+                    <PainelEtapa slug={slug} etapa={etapa} dados={dados} />
+                  </div>
+                </ResizablePanel>
+                <ResizableHandle withHandle className={cn(!temArquivo && "hidden")} />
+                <ResizablePanel
+                  id="arquivo"
+                  defaultSize="0%"
+                  minSize="160px"
+                  collapsible
+                  collapsedSize="0%"
+                  onResize={(tamanho) => {
+                    // Arrastar a janela do arquivo até sumir é o mesmo que fechá-la.
+                    if (tamanho.asPercentage === 0 && temArquivo) fecharArquivo()
+                  }}
+                >
+                  {arquivoAberto && (
+                    <div className="vidro h-full overflow-hidden rounded-2xl">
+                      <VisualizadorArquivo
+                        slug={slug}
+                        caminho={arquivoAberto}
+                        aoMencionar={() => mencionar(arquivoAberto)}
+                        aoFechar={fecharArquivo}
+                      />
+                    </div>
+                  )}
+                </ResizablePanel>
+              </ResizablePanelGroup>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+          {bibliotecaAberta && (
+            <div
+              className="vidro bg-background/95 absolute inset-y-3 right-3 z-30 overflow-hidden rounded-2xl backdrop-blur-xl"
+              // 12 px de borda externa + largura do card da trilha + 12 px da alça.
+              style={{ left: larguraTrilha > 0 ? larguraTrilha + 24 : 12 }}
+            >
+              <Biblioteca
+                slug={slug}
+                catalogo={dados.catalogo}
+                itens={biblioteca.itens}
+                erro={biblioteca.erro}
+                aoAjustar={(caminho, mudanca) => void biblioteca.ajustar(caminho, mudanca)}
+                aoMencionar={mencionarDaBiblioteca}
+                aoFechar={fecharBiblioteca}
+              />
+            </div>
+          )}
+          {visualizadorAberto && telaCheia && <div className="bg-background fixed inset-0 z-40">{painelVisualizador}</div>}
+        </div>
       </div>
     </ContextoVisualizador.Provider>
   )

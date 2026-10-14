@@ -53,7 +53,7 @@ export function VisualizadorHtml({
   }, [url])
 
   return (
-    <section className="bg-background flex h-full min-h-0 flex-col" aria-label="Visualizador de relatório">
+    <section className="flex h-full min-h-0 flex-col" aria-label="Visualizador de relatório">
       <header className="flex items-center gap-2 border-b px-3 py-2">
         <h2 className="truncate text-sm font-medium">{entregavel?.titulo ?? "Relatório"}</h2>
         {entregavel && (

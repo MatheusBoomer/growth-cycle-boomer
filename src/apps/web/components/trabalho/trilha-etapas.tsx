@@ -1,7 +1,6 @@
 "use client"
 
-import { ArrowLeftIcon, ImagesIcon } from "lucide-react"
-import Link from "next/link"
+import { ImagesIcon } from "lucide-react"
 import type { Catalogo, EtapaId, Estado } from "@workspace/core/tipos"
 import { Button } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
@@ -28,11 +27,9 @@ export function TrilhaEtapas({
 }) {
   return (
     <aside className="flex h-full min-h-0 flex-col gap-1 overflow-y-auto p-3">
-      <Button variant="ghost" size="sm" className="justify-start" render={<Link href="/" />} nativeButton={false}>
-        <ArrowLeftIcon /> Prospects
-      </Button>
-      <h2 className="px-2 pt-2 pb-3 font-semibold">{estado.prospect.nome}</h2>
-      <p className="text-muted-foreground px-2 pb-1 text-xs font-medium tracking-wide uppercase">Etapas</p>
+      <p className="text-muted-foreground px-2 pt-1 text-[10px] font-medium tracking-[0.14em] uppercase">Prospect</p>
+      <h2 className="text-texto-forte px-2 pt-1 pb-3 text-base font-semibold tracking-tight">{estado.prospect.nome}</h2>
+      <p className="text-muted-foreground px-2 pb-1 text-[10px] font-medium tracking-[0.14em] uppercase">Etapas</p>
       <nav aria-label="Etapas do planejamento" className="flex flex-col gap-0.5">
         {catalogo.etapas.map((e) => {
           const status = estado.etapas[e.id].status
@@ -40,7 +37,7 @@ export function TrilhaEtapas({
             <Button
               key={e.id}
               variant="ghost"
-              className={cn("h-auto justify-start gap-2 px-2 py-1.5 font-normal", selecionada === e.id && "bg-muted font-medium")}
+              className={cn("text-muted-foreground h-auto justify-start gap-2 rounded-lg px-2 py-1.5 font-normal", selecionada === e.id && "bg-accent text-texto-forte font-medium shadow-[inset_0_1px_0_0_rgb(255_255_255/0.08)]")}
               disabled={status === "bloqueada"}
               aria-current={selecionada === e.id ? "step" : undefined}
               title={ROTULO_STATUS[status]}
@@ -55,10 +52,10 @@ export function TrilhaEtapas({
           )
         })}
       </nav>
-      <p className="text-muted-foreground px-2 pt-4 pb-1 text-xs font-medium tracking-wide uppercase">Arquivos</p>
+      <p className="text-muted-foreground px-2 pt-4 pb-1 text-[10px] font-medium tracking-[0.14em] uppercase">Arquivos</p>
       <Button
         variant="ghost"
-        className={cn("h-auto justify-start gap-2 px-2 py-1.5 font-normal", bibliotecaAberta && "bg-muted font-medium")}
+        className={cn("text-muted-foreground h-auto justify-start gap-2 rounded-lg px-2 py-1.5 font-normal", bibliotecaAberta && "bg-accent text-texto-forte font-medium shadow-[inset_0_1px_0_0_rgb(255_255_255/0.08)]")}
         aria-pressed={bibliotecaAberta}
         onClick={aoAbrirBiblioteca}
       >

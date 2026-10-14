@@ -83,7 +83,7 @@ export function VisualizadorArquivo({
   }
 
   return (
-    <section className="bg-background flex h-full min-h-0 flex-col" aria-label="Visualizador de arquivo">
+    <section className="flex h-full min-h-0 flex-col" aria-label="Visualizador de arquivo">
       <header className="flex items-center gap-1 border-b px-3 py-2">
         <h2 className="min-w-0 flex-1 truncate text-sm font-medium" title={caminho}>
           {nome}
