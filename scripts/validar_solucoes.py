@@ -108,8 +108,9 @@ def validar_registro(registro) -> Tuple[List[str], List[str]]:
             ids_solucao.add(sid)
             if not _texto(s.get("acao")):
                 erros.append(f"{onde}, solução {sid}: campo acao obrigatório.")
-            if s.get("hipotese") not in ids_hipotese:
-                erros.append(f"{onde}, solução {sid}: aponta para a hipótese \"{s.get('hipotese')}\", que não existe neste problema.")
+            hip = s.get("hipotese")
+            if not isinstance(hip, str) or hip not in ids_hipotese:
+                erros.append(f"{onde}, solução {sid}: aponta para a hipótese \"{hip}\", que não existe neste problema.")
 
         _validar_impacto(p.get("impacto"), onde, erros, avisos)
         if p.get("frente") not in FRENTES:

@@ -86,6 +86,13 @@ def test_registro_invalido_aponta_o_problema(alterar, trecho):
     assert any(trecho in e for e in erros), erros
 
 
+def test_hipotese_nao_texto_vira_erro_legivel():
+    r = registro_valido()
+    r["problemas"][0]["solucoes"][0]["hipotese"] = ["H1"]
+    erros, _ = vs.validar_registro(r)
+    assert any("não existe neste problema" in e for e in erros), erros
+
+
 def test_hipotese_de_outro_problema_nao_vale():
     # P2 tem H1; P1 só tem H1 e H2. Uma solução do P2 apontando para H2 precisa falhar.
     r = registro_valido()
