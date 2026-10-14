@@ -86,7 +86,7 @@ function Conteudo({ slug, catalogo, itens, indice, item, aoMudarIndice, aoAjusta
           </div>
         ) : (
           // eslint-disable-next-line @next/next/no-img-element -- arquivo local servido pela rota do app
-          <img key={atual} src={urlArquivo(slug, atual)} alt={item.titulo} onError={() => setQuebrada(atual)} className="max-h-full max-w-full rounded-md bg-white object-contain" />
+          <img key={atual} src={urlArquivo(slug, atual)} alt={item.titulo} onError={() => setQuebrada(atual)} className="max-h-full max-w-full rounded-md bg-papel object-contain" />
         )}
         <Button variant="secondary" size="icon" className="absolute top-1/2 left-3 -translate-y-1/2" aria-label="Anterior" disabled={!temAnterior} onClick={() => ir(-1)}>
           <ChevronLeftIcon />

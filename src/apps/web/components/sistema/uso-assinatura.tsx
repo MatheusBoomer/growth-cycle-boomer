@@ -5,7 +5,7 @@ import type { UsoAssinatura } from "@workspace/core/uso-assinatura"
 import { cn } from "@workspace/ui/lib/utils"
 import { resumoUso } from "@/lib/uso"
 
-const COR = { ok: "bg-primary", alerta: "bg-amber-500", critico: "bg-destructive" } as const
+const COR = { ok: "bg-volume", alerta: "bg-aviso", critico: "bg-destructive" } as const
 
 /**
  * Quanto da assinatura do Claude já foi usado (sessão de 5 h e semana). O número vem do próprio
@@ -42,7 +42,7 @@ export function UsoAssinaturaBarra() {
 
   return (
     <section aria-label="Uso da assinatura do Claude" className="space-y-2 border-t px-2 pt-3">
-      <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">Uso do Claude</p>
+      <p className="text-muted-foreground text-[10px] font-medium tracking-[0.14em] uppercase">Uso do Claude</p>
       {linhas.length === 0 ? (
         <p className="text-muted-foreground text-xs">Aparece depois da primeira resposta do agente.</p>
       ) : (

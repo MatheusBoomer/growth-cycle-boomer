@@ -30,7 +30,7 @@ function TextoComMencoes({ texto }: { texto: string }) {
             type="button"
             title={p.caminho}
             onClick={() => abrirArquivo(p.caminho)}
-            className="bg-primary-foreground/15 hover:bg-primary-foreground/25 mx-0.5 inline rounded px-1 font-mono text-[0.85em] underline-offset-2 hover:underline"
+            className="bg-foreground/8 hover:bg-foreground/15 mx-0.5 inline rounded px-1 font-mono text-[0.85em] underline-offset-2 hover:underline"
           >
             @{p.caminho.split("/").pop()}
           </button>
@@ -86,7 +86,7 @@ export function ItemConversa({
         <Message align="end">
           <MessageContent>
             {semRodape(evento.texto).trim() && (
-              <Bubble variant="default" align="end">
+              <Bubble variant="tinted" align="end">
                 <BubbleContent className="whitespace-pre-wrap">
                   <TextoComMencoes texto={evento.texto} />
                 </BubbleContent>

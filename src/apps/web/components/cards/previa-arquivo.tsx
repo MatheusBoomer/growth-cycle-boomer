@@ -46,7 +46,7 @@ export function PreviaArquivo({
       <div className="group relative">
         <button type="button" className="block w-full cursor-zoom-in" onClick={aoAbrir} aria-label={`Abrir ${titulo}`} disabled={!aoAbrir}>
           {/* eslint-disable-next-line @next/next/no-img-element -- arquivo local servido pela rota do app */}
-          <img src={url} alt={titulo} className="w-full rounded-md border bg-white" />
+          <img src={url} alt={titulo} className="w-full rounded-md border bg-papel" />
         </button>
         {aoAbrir && (
           <Button size="sm" variant="secondary" className="absolute top-2 right-2" onClick={aoAbrir}>

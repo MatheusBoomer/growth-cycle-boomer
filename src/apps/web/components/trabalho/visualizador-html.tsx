@@ -91,7 +91,7 @@ export function VisualizadorHtml({
           srcDoc={html}
           title={entregavel.titulo}
           sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
-          className="min-h-0 w-full flex-1 bg-white"
+          className="min-h-0 w-full flex-1 bg-papel"
         />
       ) : (
         <Empty className="flex-1">

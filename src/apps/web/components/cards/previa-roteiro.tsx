@@ -100,7 +100,7 @@ export function PreviaRoteiro({
           const r = resumoDoSlide(s)
           const numero = i + 1
           return (
-            <li key={i} className={`rounded-md border p-2 text-sm ${s.pendencia ? "border-amber-500/60 bg-amber-500/5" : ""}`}>
+            <li key={i} className={`rounded-md border p-2 text-sm ${s.pendencia ? "border-aviso/60 bg-aviso-fundo" : ""}`}>
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground w-6 shrink-0 text-right font-mono text-xs">{numero}</span>
                 <Badge variant="outline" className="shrink-0 font-mono text-[10px]">
@@ -109,13 +109,13 @@ export function PreviaRoteiro({
                 <span className="truncate font-medium">{r.titulo}</span>
               </div>
               {s.pendencia ? (
-                <p className="mt-1 ml-8 text-xs text-amber-600">Pendência: {s.pendencia}</p>
+                <p className="mt-1 ml-8 text-xs text-aviso">Pendência: {s.pendencia}</p>
               ) : (
                 <div className="mt-1 ml-8 flex gap-2">
                   {r.imagens.map((img) => (
                     <button key={img} type="button" onClick={() => abrirArquivo(img)} className="shrink-0" title={img}>
                       {/* eslint-disable-next-line @next/next/no-img-element -- arquivo local servido pela rota do app */}
-                      <img src={urlArquivo(slug, img)} alt="" className="h-14 w-auto rounded border bg-white" />
+                      <img src={urlArquivo(slug, img)} alt="" className="h-14 w-auto rounded border bg-papel" />
                     </button>
                   ))}
                   {r.linhas.length > 0 && (

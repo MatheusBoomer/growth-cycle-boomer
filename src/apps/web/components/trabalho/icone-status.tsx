@@ -15,9 +15,9 @@ export function IconeStatus({ status, className }: { status: StatusEtapa; classN
   const classe = cn("size-4 shrink-0", className)
   switch (status) {
     case "concluida":
-      return <CircleCheckIcon className={cn(classe, "text-primary")} aria-label={ROTULO_STATUS[status]} />
+      return <CircleCheckIcon className={cn(classe, "text-sucesso")} aria-label={ROTULO_STATUS[status]} />
     case "desatualizada":
-      return <TriangleAlertIcon className={cn(classe, "text-amber-500")} aria-label={ROTULO_STATUS[status]} />
+      return <TriangleAlertIcon className={cn(classe, "text-aviso")} aria-label={ROTULO_STATUS[status]} />
     case "em_andamento":
     case "pronta":
       return <CircleDotIcon className={cn(classe, "text-primary")} aria-label={ROTULO_STATUS[status]} />

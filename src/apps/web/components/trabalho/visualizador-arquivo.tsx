@@ -52,7 +52,7 @@ export function VisualizadorArquivo({
   let conteudo: React.ReactNode
   if (IMAGEM.test(caminho)) {
     // eslint-disable-next-line @next/next/no-img-element -- arquivo local servido pela rota do app
-    conteudo = <img key={url} src={url} alt={nome} className="mx-auto max-w-full rounded-md border bg-white" />
+    conteudo = <img key={url} src={url} alt={nome} className="mx-auto max-w-full rounded-md border bg-papel" />
   } else if (comTexto && texto === undefined) {
     conteudo = (
       <div className="flex h-full items-center justify-center">
@@ -65,7 +65,7 @@ export function VisualizadorArquivo({
         srcDoc={texto}
         title={nome}
         sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
-        className="h-full w-full rounded-md border bg-white"
+        className="h-full w-full rounded-md border bg-papel"
       />
     )
   } else if (TEXTO.test(caminho) && texto) {

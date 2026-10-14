@@ -23,7 +23,7 @@ import { CardInsumo } from "@/components/cards/card-insumo"
 import { api, mensagemDeErro, urlArquivo, type AcaoEtapa } from "@/lib/api"
 import { useVisualizador } from "./contexto-visualizador"
 
-const COR: Record<StatusEntregavel, string> = { pendente: "bg-amber-500", aprovado: "bg-primary", substituido: "bg-muted-foreground/40" }
+const COR: Record<StatusEntregavel, string> = { pendente: "bg-aviso", aprovado: "bg-sucesso", substituido: "bg-muted-foreground/40" }
 
 export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: EtapaId; dados: RespostaEstado }) {
   const etapaCat = dados.catalogo.etapas.find((e) => e.id === etapa)!
