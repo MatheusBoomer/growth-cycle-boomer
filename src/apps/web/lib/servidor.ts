@@ -24,10 +24,18 @@ interface Servidor {
 // Um só conjunto de serviços por processo, mesmo que o Next carregue este módulo em mais de uma rota.
 const registro = globalThis as unknown as { __planejamento?: Servidor }
 
+/** Algum agente rodando? (lê o mapa interno: a instância pode ser de uma versão anterior da classe) */
+function turnoEmAndamento(s: Servidor): boolean {
+  return ((s.turnos as unknown as { ativos?: Map<string, unknown> }).ativos?.size ?? 0) > 0
+}
+
 /** Só para código de servidor (rotas e páginas). Nunca importar em componente "use client". */
 export function servidor(): Servidor {
   const atual = registro.__planejamento
-  if (atual) {
+  // No next dev, a instância sobrevive às recargas e manteria o código antigo do serviço (ex.: regras
+  // de fazer_perguntas). Com o código mudado e nenhum agente rodando, os serviços são recriados.
+  const desatualizado = atual !== undefined && !(atual.servico instanceof ServicoPlanejamento) && !turnoEmAndamento(atual)
+  if (atual && !desatualizado) {
     // Processo do next dev que já rodava antes do serviço de comentários existir: completa sem recriar os demais.
     atual.comentarios ??= new ServicoComentarios({ armazenamento: atual.armazenamento, planejamento: atual.servico, previa: criarPreviaPython(atual.raiz) })
     return atual
@@ -36,7 +44,8 @@ export function servidor(): Servidor {
   const raiz = process.env.PLANEJAMENTO_ROOT ?? path.resolve(process.cwd(), "../../..")
   const catalogo = carregarCatalogo(raiz)
   const armazenamento = new FsArmazenamento(raiz)
-  const barramento = new Barramento()
+  // Recriando: o barramento antigo continua, para as abas abertas seguirem recebendo os eventos.
+  const barramento = atual?.barramento ?? new Barramento()
   const servico = new ServicoPlanejamento({ armazenamento, catalogo, barramento, validar: criarValidadorPython(raiz) })
   const comentarios = new ServicoComentarios({ armazenamento, planejamento: servico, previa: criarPreviaPython(raiz) })
   const executor = process.env.PLANEJAMENTO_EXECUTOR === "demo" ? criarExecutorDemo() : new ClaudeCliExecutor()

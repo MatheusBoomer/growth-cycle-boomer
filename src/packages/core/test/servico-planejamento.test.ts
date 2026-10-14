@@ -600,6 +600,16 @@ describe("card de perguntas", () => {
     ).toBe(true)
   })
 
+  it("fazer_perguntas aceita as 10 perguntas estratégicas abertas da etapa 02 (sem opções)", async () => {
+    const slug = await prospectNaEtapa03()
+    const perguntas = Array.from({ length: 10 }, (_, i) => ({ enunciado: `Pergunta estratégica ${i + 1}?` }))
+    const r = await servico.ferramenta(ctx03, "fazer_perguntas", { perguntas })
+    expect(r.ok).toBe(true)
+    const conjunto = (await servico.estado(slug)).perguntas[0]!
+    expect(conjunto.perguntas).toHaveLength(10)
+    expect(conjunto.perguntas.every((p) => p.opcoes.length === 0)).toBe(true)
+  })
+
   it("fazer_perguntas inválida volta como erro para o agente, sem criar card", async () => {
     const slug = await prospectNaEtapa03()
     const r = await servico.ferramenta(ctx03, "fazer_perguntas", {
