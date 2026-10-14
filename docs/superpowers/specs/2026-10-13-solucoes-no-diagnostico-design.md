@@ -127,9 +127,12 @@ encontrado é tratado, esteja ou não no repertório.
 
 ### 4.4 Registro `solucoes.json`
 
-Fonte da verdade das soluções. Fica em `entrega/ativos-aprovados/solucoes/solucoes.json`
-(na interface, proposto de `.app/rascunhos/`). Nome estável e sem versionamento,
-como os demais aprovados.
+Fonte da verdade das soluções. Fica em `contexto/solucoes.json`, como dado de
+trabalho da etapa (mesmo papel do `contexto/contextualizacao-estrategica.md` da
+02), gravado pela própria skill nos dois modos. O que o analista aprova é a
+seção `secoes/05-solucoes.md`, gerada do registro pelo validador e proposta como
+tipo `secao` já existente. Nome estável e sem versionamento: uma revisão
+sobrescreve o arquivo.
 
 ```json
 {
@@ -227,10 +230,10 @@ seção 9.
 
 ### 5.7 09 Plano de ação (ex-08)
 
-- Cada ação no JSON de entrada do `.docx` ganha dois campos: `solucoes`, com os
-  ids que executa (ex.: `["P1.S1", "P1.S2"]`), e `frente` (hoje a frente só
-  existe na tabela-resumo). Uma ação pode não citar id (governança, por
-  exemplo).
+- Cada ação no JSON de entrada do `.docx` ganha o campo `solucoes`, com os ids
+  que executa (ex.: `["P1.S1", "P1.S2"]`). Uma ação pode não citar id
+  (governança, por exemplo). A frente continua na linha correspondente da
+  tabela-resumo, que já tem esse campo.
 - Antes de gerar o `.docx`, rodar `validar_solucoes.py --modo plano`.
 - `preencher_plano_acao_docx.py` aceita o campo novo. Ele não precisa aparecer
   no `.docx`.
@@ -266,7 +269,8 @@ recusa; `AVISO:` não bloqueia.
 **`--modo plano --registro <solucoes.json> --plano <plano.json>`**
 - Todo id de solução do registro aparece em pelo menos uma ação.
 - Nenhuma ação cita id inexistente.
-- Toda ação tem `quando`, `por_quem` e frente.
+- Toda ação tem `quando` e `por_quem` preenchidos e uma linha na tabela-resumo
+  (mesmo nome em `acao`) com `frente` preenchida.
 
 ## 7. Regras compartilhadas
 
@@ -288,8 +292,8 @@ recusa; `AVISO:` não bloqueia.
   Os itens 1, 3 e 4 são garantidos pelo validador; os itens 2 e 5 são conferência
   do analista. As etapas 05 e 10 apresentam o checklist antes do checkpoint
   final.
-- **Regra 2:** acrescentar `entrega/ativos-aprovados/solucoes/` aos destinos do
-  aprovado.
+- **Regra 2:** sem mudança de destinos; a seção `05-solucoes.md` vai para
+  `secoes/` como as demais.
 
 ## 8. Renumeração, app e migração
 
@@ -305,8 +309,11 @@ recusa; `AVISO:` não bloqueia.
   - `ORDEM_ETAPAS` em `src/packages/core/src/tipos.ts` ganha a etapa nova (o id
     `final` continua);
   - `etapas.json` ganha a etapa `05` e renumera as seguintes;
-  - `TIPOS_ENTREGAVEL` ganha `registro`: ao aprovar, o app copia o
-    `solucoes.json` e o `.md` gerado, e o visualizador mostra o `.md`;
+  - nenhum tipo de entregável novo: o registro fica em `contexto/` e a seção
+    gerada usa o tipo `secao`;
+  - `lerEstado` completa etapas ausentes no `estado.json` (prospects gravados
+    antes da etapa nova) com etapa vazia bloqueada, para o app não quebrar ao
+    abrir um prospect legado;
   - `prompts.ts`, `catalogo.ts` e `status-md.ts` revisados para a etapa nova.
 - **Prospects existentes:** sem migração. adda, adda-demo, sottile-teste e
   teste-interface ficam como legado (entregáveis antigos aparecem uma etapa
@@ -341,7 +348,8 @@ justificativa).
 - **`scripts/tests/test_validar_insumo.py`:** schema da quebra por meio de
   pagamento.
 - **Vitest (`src/packages/core/test/`):** `catalogo.test.ts` e
-  `prompts.test.ts` atualizados para 10 etapas e o tipo `registro`.
+  `prompts.test.ts` atualizados para 10 etapas; teste de `lerEstado` com
+  `estado.json` legado.
 - **Ponta a ponta manual:** rodar a 05 sobre os dados de `sottile-teste` (03 e
   04 já existem) e conferir registro, validador, seção gerada e card no deck.
 
