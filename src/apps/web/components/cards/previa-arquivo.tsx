@@ -49,7 +49,7 @@ export function PreviaArquivo({
           <img src={url} alt={titulo} className="w-full rounded-md border bg-papel" />
         </button>
         {aoAbrir && (
-          <Button size="sm" variant="secondary" className="absolute top-2 right-2" onClick={aoAbrir}>
+          <Button size="sm" variant="midia" className="absolute top-2 right-2" onClick={aoAbrir}>
             <PanelRightOpenIcon /> Abrir
           </Button>
         )}

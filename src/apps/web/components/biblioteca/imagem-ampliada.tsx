@@ -88,14 +88,14 @@ function Conteudo({ slug, catalogo, itens, indice, item, aoMudarIndice, aoAjusta
           // eslint-disable-next-line @next/next/no-img-element -- arquivo local servido pela rota do app
           <img key={atual} src={urlArquivo(slug, atual)} alt={item.titulo} onError={() => setQuebrada(atual)} className="max-h-full max-w-full rounded-md bg-papel object-contain" />
         )}
-        <Button variant="secondary" size="icon" className="absolute top-1/2 left-3 -translate-y-1/2" aria-label="Anterior" disabled={!temAnterior} onClick={() => ir(-1)}>
+        <Button variant="midia" size="icon" className="absolute top-1/2 left-3 -translate-y-1/2" aria-label="Anterior" disabled={!temAnterior} onClick={() => ir(-1)}>
           <ChevronLeftIcon />
         </Button>
-        <Button variant="secondary" size="icon" className="absolute top-1/2 right-3 -translate-y-1/2" aria-label="Próxima" disabled={!temProxima} onClick={() => ir(1)}>
+        <Button variant="midia" size="icon" className="absolute top-1/2 right-3 -translate-y-1/2" aria-label="Próxima" disabled={!temProxima} onClick={() => ir(1)}>
           <ChevronRightIcon />
         </Button>
         {item.imagens.length > 1 && (
-          <Badge variant="secondary" className="absolute bottom-3 left-1/2 -translate-x-1/2 tabular-nums">
+          <Badge variant="midia" className="absolute bottom-3 left-1/2 -translate-x-1/2 tabular-nums">
             {sub + 1} de {item.imagens.length}
           </Badge>
         )}

@@ -81,21 +81,21 @@ export function VerificacaoSistema() {
       {(cobrado || faltasBenchmark.length > 0 || semPrevia) && (
         <div className="fixed right-4 bottom-4 z-50 flex max-w-sm flex-col gap-2">
           {cobrado && (
-            <Alert>
+            <Alert className="bg-popover text-popover-foreground shadow-(--sombra-card)">
               <AlertDescription>
                 O Claude Code desta máquina está autenticado por chave de API ({sistema.claude.metodo}), não pela assinatura. O uso vai ser cobrado na API.
               </AlertDescription>
             </Alert>
           )}
           {faltasBenchmark.length > 0 && (
-            <Alert>
+            <Alert className="bg-popover text-popover-foreground shadow-(--sombra-card)">
               <AlertDescription>
                 Para o benchmark de anúncios (etapa 06): {faltasBenchmark.join("; ")}. As outras etapas funcionam normalmente.
               </AlertDescription>
             </Alert>
           )}
           {semPrevia && (
-            <Alert>
+            <Alert className="bg-popover text-popover-foreground shadow-(--sombra-card)">
               <AlertDescription>
                 Para ver a prévia da apresentação no app, instale LibreOffice e poppler (brew install --cask libreoffice; brew install poppler). O download do .pptx funciona normalmente.
               </AlertDescription>

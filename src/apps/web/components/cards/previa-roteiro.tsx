@@ -133,7 +133,7 @@ export function PreviaRoteiro({
                   {pendentes
                     .filter((c) => c.slide === numero)
                     .map((c) => (
-                      <p key={c.id} className="text-primary flex items-center gap-1 text-xs">
+                      <p key={c.id} className="text-link-acao flex items-center gap-1 text-xs">
                         <MessageSquareIcon className="size-3 shrink-0" /> {c.texto}
                         <button type="button" className="text-muted-foreground ml-1 hover:underline" onClick={() => apagar(c.id)} disabled={ocupado}>
                           apagar

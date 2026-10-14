@@ -17,7 +17,7 @@ export function CardImagem({ slug, item, aoAbrir }: { slug: string; item: ItemBi
       title={item.caminho}
       className="bg-card hover:border-primary/50 focus-visible:ring-ring/50 flex min-w-0 flex-col overflow-hidden rounded-lg border text-left transition-colors focus-visible:ring-[3px] focus-visible:outline-none"
     >
-      <div className="bg-muted relative flex aspect-[4/3] items-center justify-center overflow-hidden">
+      <div className="bg-papel relative flex aspect-[4/3] items-center justify-center overflow-hidden">
         {quebrada ? (
           <ImageOffIcon className="text-muted-foreground size-8" aria-label="Imagem não encontrada" />
         ) : (
@@ -32,7 +32,7 @@ export function CardImagem({ slug, item, aoAbrir }: { slug: string; item: ItemBi
           />
         )}
         {item.imagens.length > 1 && (
-          <Badge variant="secondary" className="absolute right-2 bottom-2 tabular-nums">
+          <Badge variant="midia" className="absolute right-2 bottom-2 tabular-nums">
             <LayersIcon /> {item.imagens.length}
           </Badge>
         )}

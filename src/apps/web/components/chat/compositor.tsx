@@ -213,7 +213,7 @@ export function Compositor({
                     }}
                     className={cn(
                       "flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm",
-                      i === destaque && (shift ? "bg-primary/15 text-primary" : "bg-muted"),
+                      i === destaque && (shift ? "bg-primary/15 text-link-acao" : "bg-muted"),
                     )}
                   >
                     {shift ? (
@@ -228,7 +228,7 @@ export function Compositor({
               ))}
               <li role="presentation" className="text-muted-foreground mt-1 border-t px-2 pt-1 pb-0.5 text-[11px]">
                 {shift ? (
-                  <span className="text-primary font-medium">Abrir na lateral para consultar · solte o Shift para mencionar</span>
+                  <span className="text-link-acao font-medium">Abrir na lateral para consultar · solte o Shift para mencionar</span>
                 ) : (
                   "Enter menciona · segure Shift para abrir na lateral"
                 )}

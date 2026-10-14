@@ -18,6 +18,8 @@ const buttonVariants = cva(
         destructive:
           "bg-perigo-fundo text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20",
         link: "text-link-acao underline-offset-4 hover:underline",
+        // Sobre o material do cliente (papel branco): fundo sólido para não sumir no branco.
+        midia: "border-border bg-popover/90 text-popover-foreground shadow-sm backdrop-blur-sm hover:bg-popover",
       },
       size: {
         default:
