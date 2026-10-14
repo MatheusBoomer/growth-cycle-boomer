@@ -14,8 +14,12 @@ ERRO: (código 1) bloqueia; AVISO: não bloqueia.
 
 from __future__ import annotations
 
+import argparse
+import json
 import re
-from typing import List, Tuple
+import sys
+from pathlib import Path
+from typing import List, Optional, Tuple
 
 FRENTES = (
     "Mídia Paga / Canal Principal",
@@ -116,3 +120,95 @@ def validar_registro(registro) -> Tuple[List[str], List[str]]:
         if p.get("frente") not in FRENTES:
             erros.append(f"{onde}: frente \"{p.get('frente')}\" inválida. Use uma de: {', '.join(FRENTES)}.")
     return erros, avisos
+
+
+class ErroEntrada(Exception):
+    """Arquivo ausente, JSON inválido ou argumento faltando."""
+
+
+def _impacto_md(impacto: dict) -> str:
+    if impacto["tipo"] == "nao_quantificavel":
+        return f"**Impacto:** não quantificável ({impacto['justificativa'].strip()})"
+    return f"**Impacto:** {impacto['valor'].strip()} ({impacto['calculo'].strip()})"
+
+
+def gerar_markdown(registro: dict) -> str:
+    """Seção aprovável gerada do registro já validado; nunca editar à mão."""
+    linhas = [f"# Soluções do diagnóstico: {registro.get('prospect', '').strip()}", ""]
+    for p in registro["problemas"]:
+        linhas += [
+            f"## {p['id']} · {p['titulo'].strip()}",
+            "",
+            f"**Origem:** {p['origem'].strip()}  ",
+            f"**Dado:** {p['dado'].strip()}  ",
+            f"**Benchmark:** {p['benchmark'].strip()}  ",
+            f"**Frente:** {p['frente']}",
+            "",
+            "**Hipóteses de causa**",
+            "",
+            *[f"- {h['id']} {h['texto'].strip()}" for h in p["hipoteses"]],
+            "",
+            "**Soluções**",
+            "",
+            *[f"- {s['id']} {s['acao'].strip()} (hipótese {s['hipotese']})" for s in p["solucoes"]],
+            "",
+            _impacto_md(p["impacto"]),
+            "",
+        ]
+    fortes = registro.get("pontos_fortes") or []
+    if fortes:
+        linhas += ["## Pontos fortes", ""]
+        linhas += [f"- **{f['titulo'].strip()}:** {f['dado'].strip()}. {f['uso'].strip()}" for f in fortes]
+    return "\n".join(linhas).rstrip() + "\n"
+
+
+def _ler_json(caminho: Path, nome: str):
+    try:
+        return json.loads(caminho.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        raise ErroEntrada(f"{nome} não encontrado: {caminho}")
+    except json.JSONDecodeError as e:
+        raise ErroEntrada(f"o {nome} não é um JSON válido (linha {e.lineno}): {e.msg}")
+
+
+def validar_plano(registro: dict, plano) -> Tuple[List[str], List[str]]:
+    """Preenchido na Tarefa 3."""
+    return [], []
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    p = argparse.ArgumentParser(description="Valida o registro de soluções e o plano de ação.")
+    p.add_argument("--modo", required=True, choices=["registro", "plano"])
+    p.add_argument("--registro", required=True, type=Path)
+    p.add_argument("--plano", type=Path)
+    p.add_argument("--markdown", type=Path)
+    a = p.parse_args(argv)
+    try:
+        registro = _ler_json(a.registro, "registro")
+        erros, avisos = validar_registro(registro)
+        if a.modo == "plano" and not erros:
+            if a.plano is None:
+                raise ErroEntrada("--modo plano precisa de --plano.")
+            erros_plano, avisos_plano = validar_plano(registro, _ler_json(a.plano, "plano"))
+            erros += erros_plano
+            avisos += avisos_plano
+    except ErroEntrada as e:
+        print(f"ERRO: {e}", file=sys.stderr)
+        return 1
+    for aviso in avisos:
+        print(f"AVISO: {aviso}")
+    if erros:
+        alvo = "plano de ação" if a.modo == "plano" else "registro de soluções"
+        print(f"ERRO: {alvo} inválido:\n" + "\n".join(f"- {e}" for e in erros), file=sys.stderr)
+        return 1
+    if a.markdown:
+        a.markdown.parent.mkdir(parents=True, exist_ok=True)
+        a.markdown.write_text(gerar_markdown(registro), encoding="utf-8")
+        print(f"Seção gerada: {a.markdown}")
+    total = sum(len(x["solucoes"]) for x in registro["problemas"])
+    print(f"OK: {len(registro['problemas'])} problemas, {total} soluções.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
