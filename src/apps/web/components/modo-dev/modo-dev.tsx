@@ -14,6 +14,19 @@ interface Alvo {
   el: Element | null
   cadeia: string[]
   editando: ComentarioDev | null
+  /** Posição no momento em que a caixa abriu, para ela não pular se o elemento sumir. */
+  rect: DOMRect | null
+  /** Tirada no clique: o elemento pode sumir ou ser recriado enquanto se escreve (diálogo fechando, re-render). */
+  foto: Foto | null
+}
+
+interface Foto {
+  pagina: string
+  seletor: string
+  tag: string
+  texto: string
+  caixa: { x: number; y: number; largura: number; altura: number; larguraTela: number; alturaTela: number }
+  png: Promise<string | null>
 }
 
 interface Destaque {
@@ -76,6 +89,25 @@ function elementoVisivel(seletor: string): Element | null {
 
 function destaqueDe(el: Element): Destaque {
   return { el, cadeia: cadeiaDeComponentes(el) }
+}
+
+function fotoDe(el: Element): Foto {
+  const rect = el.getBoundingClientRect()
+  return {
+    pagina: window.location.pathname,
+    seletor: seletorDoElemento(el),
+    tag: el.tagName.toLowerCase(),
+    texto: textoVisivel(el),
+    caixa: {
+      x: Math.round(rect.x),
+      y: Math.round(rect.y),
+      largura: Math.round(rect.width),
+      altura: Math.round(rect.height),
+      larguraTela: window.innerWidth,
+      alturaTela: window.innerHeight,
+    },
+    png: capturar(el),
+  }
 }
 
 function contornoDe(rect: DOMRect) {
@@ -164,7 +196,7 @@ export function ModoDev() {
     baseRef.current = null
     filhosRef.current = []
     setDestaque(null)
-    setAlvo({ el, cadeia: cadeiaDeComponentes(el), editando: null })
+    setAlvo({ el, cadeia: cadeiaDeComponentes(el), editando: null, rect: el.getBoundingClientRect(), foto: fotoDe(el) })
     setTexto("")
   }, [])
 
@@ -271,7 +303,7 @@ export function ModoDev() {
   function editar(comentario: ComentarioDev) {
     const el = comentario.pagina === pagina ? elementoVisivel(comentario.seletor) : null
     setDestaque(null)
-    setAlvo({ el, cadeia: comentario.cadeia, editando: comentario })
+    setAlvo({ el, cadeia: comentario.cadeia, editando: comentario, rect: el?.getBoundingClientRect() ?? null, foto: null })
     setTexto(comentario.comentario)
   }
 
@@ -296,30 +328,11 @@ export function ModoDev() {
     try {
       if (alvo.editando) {
         await chamar(`/api/dev/comentarios/${alvo.editando.id}`, { method: "PATCH", body: JSON.stringify({ comentario }) })
-      } else if (alvo.el) {
-        const el = alvo.el
-        const rect = el.getBoundingClientRect()
-        const png = await capturar(el)
+      } else if (alvo.foto) {
+        const { png, ...foto } = alvo.foto
         await chamar("/api/dev/comentarios", {
           method: "POST",
-          body: JSON.stringify({
-            pagina: window.location.pathname,
-            componente: alvo.cadeia[0] ?? null,
-            cadeia: alvo.cadeia,
-            seletor: seletorDoElemento(el),
-            tag: el.tagName.toLowerCase(),
-            texto: textoVisivel(el),
-            caixa: {
-              x: Math.round(rect.x),
-              y: Math.round(rect.y),
-              largura: Math.round(rect.width),
-              altura: Math.round(rect.height),
-              larguraTela: window.innerWidth,
-              alturaTela: window.innerHeight,
-            },
-            comentario,
-            png,
-          }),
+          body: JSON.stringify({ ...foto, componente: alvo.cadeia[0] ?? null, cadeia: alvo.cadeia, comentario, png: await png }),
         })
       }
       fecharCaixa()
@@ -373,7 +386,7 @@ export function ModoDev() {
       {alvo && (
         <div
           className="pointer-events-auto absolute flex flex-col gap-2 rounded-lg border bg-background p-3 text-foreground shadow-xl"
-          style={{ ...posicaoDaCaixa(rectAlvo), width: LARGURA_CAIXA }}
+          style={{ ...posicaoDaCaixa(rectAlvo ?? alvo.rect), width: LARGURA_CAIXA }}
         >
           <div className="truncate text-muted-foreground">
             {alvo.editando ? `Editando #${alvo.editando.numero} · ` : ""}
