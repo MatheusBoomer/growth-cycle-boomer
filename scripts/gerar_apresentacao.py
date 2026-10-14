@@ -121,8 +121,7 @@ def _preencher(prs, slide, tipo: str, dados: dict, pasta: Path, numero: int, avi
     if tipo == "desafio":
         ap.preencher_texto(c["titulo"], dados["titulo"])
         ap.preencher_bloco(c["esquerda"], f"**Problema:** {dados['problema']}", [f"Hipótese: {h}" for h in dados["hipoteses"]])
-        ap.preencher_bloco(c["direita"], f"**Impacto:** {dados['impacto']}",
-                           [f"{j}. {s}" for j, s in enumerate(dados["solucoes"], start=1)])
+        ap.preencher_bloco(c["direita"], f"**Impacto:** {dados['impacto']}", list(dados["solucoes"]))
     else:
         _preencher_campos(slide, c, tipo, dados, pasta)
     if tipo in TIPOS_SEM_AVISO_DE_ESTOURO:

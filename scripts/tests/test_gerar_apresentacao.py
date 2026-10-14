@@ -199,8 +199,9 @@ def test_desafio_preenche_problema_hipoteses_solucoes_e_impacto(prospect, tmp_pa
     ga.gerar(roteiro, prospect, saida)
     prs = Presentation(saida)
     texto = " ".join(sh.text_frame.text for s in prs.slides for sh in s.shapes if sh.has_text_frame)
-    for trecho in ("36,1% da receita", "Hipótese: Ruptura de estoque", "1. Recuperar PIX e boleto", "+R$ 16,4M/ano"):
+    for trecho in ("36,1% da receita", "Hipótese: Ruptura de estoque", "Recuperar PIX e boleto", "+R$ 16,4M/ano"):
         assert trecho in texto, trecho
+    assert "1. Recuperar" not in texto
 
 
 @pytest.mark.parametrize(
