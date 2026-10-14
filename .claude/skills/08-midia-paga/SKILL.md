@@ -22,7 +22,7 @@ configuração de campanhas ou plano de ação — é só estratégia de alocaç
 
 Usar exclusivamente o que já está na conversa: histórico por plataforma
 (Skill 03), Curva ABC (Skill 03), KPIs do cenário Realista mês a mês (Skill
-05), sazonalidade histórica identificada ao longo do diagnóstico.
+06), sazonalidade histórica identificada ao longo do diagnóstico.
 
 ## Etapa 1 — Alocação de verba mensal por plataforma
 

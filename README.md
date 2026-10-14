@@ -120,9 +120,9 @@ clientes/
   <prospect>/                  # uma pasta por prospect real
 ```
 
-## Token da Apify (Skill 06)
+## Token da Apify (Skill 07)
 
-O benchmark de anúncios da Skill 06 coleta a Biblioteca de Anúncios do Meta
+O benchmark de anúncios da Skill 07 coleta a Biblioteca de Anúncios do Meta
 pelo ator `apify/facebook-ads-scraper`. Uma vez por máquina:
 
 1. Crie uma conta em apify.com e gere um token em **Settings → API &
