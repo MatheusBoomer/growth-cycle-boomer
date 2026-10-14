@@ -26,9 +26,9 @@ export function CardProspect({ prospect: p }: { prospect: ResumoProspect }) {
 
   return (
     // O link do nome se estica sobre o card inteiro (::after); só o menu ⋯ fica por cima dele.
-    <Card className="hover:bg-muted/40 has-[a:focus-visible]:ring-ring relative transition-colors has-[a:focus-visible]:ring-2">
+    <Card className="has-[a:focus-visible]:ring-ring relative transition duration-300 hover:border-foreground/15 has-[a:focus-visible]:ring-2">
       <CardHeader>
-        <CardTitle>
+        <CardTitle className="text-texto-forte">
           <Link href={`/prospects/${p.slug}`} className="after:absolute after:inset-0 after:rounded-[inherit] focus-visible:outline-none">
             {p.nome}
           </Link>
@@ -55,17 +55,17 @@ export function CardProspect({ prospect: p }: { prospect: ResumoProspect }) {
       <CardContent className="space-y-2">
         <Progress value={(p.concluidas / p.totalEtapas) * 100} aria-label={`${p.concluidas} de ${p.totalEtapas} etapas`} />
         <div className="flex flex-wrap gap-1.5">
-          <Badge variant={concluido ? "default" : "secondary"}>
+          <Badge variant={concluido ? "sucesso" : "secondary"}>
             {p.concluidas} de {p.totalEtapas}
           </Badge>
           {p.pendencias > 0 && (
-            <Badge variant="outline">
+            <Badge variant="aviso">
               {p.pendencias} aprovaç{p.pendencias === 1 ? "ão pendente" : "ões pendentes"}
             </Badge>
           )}
         </div>
       </CardContent>
-      <CardFooter className="text-muted-foreground text-xs">Atualizado em {quando(p.atualizadoEm)}</CardFooter>
+      <CardFooter className="text-muted-foreground text-[11px]">Atualizado em {quando(p.atualizadoEm)}</CardFooter>
       <DialogoExcluirProspect prospect={p} aberto={excluindo} aoMudar={setExcluindo} />
     </Card>
   )
