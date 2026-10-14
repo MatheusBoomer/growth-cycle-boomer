@@ -12,7 +12,10 @@ const fontMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
 
 export const metadata: Metadata = { title: "Planejamento Estratégico · Boomer" }
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  // Modo dev de comentários: só no next dev. Em produção a condição vira false no build e o import some.
+  const ModoDev =
+    process.env.NODE_ENV === "development" ? (await import("@/components/modo-dev/carregador")).CarregadorModoDev : null
   return (
     <html lang="pt-BR" suppressHydrationWarning className={cn("antialiased", fontMono.variable, "font-sans", geist.variable)}>
       <body>
@@ -20,6 +23,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           {children}
           <VerificacaoSistema />
           <Toaster richColors />
+          {ModoDev && <ModoDev />}
         </ThemeProvider>
       </body>
     </html>

@@ -38,6 +38,20 @@ describe("cadeiaDeComponentes", () => {
     expect(cadeiaDeComponentes(no)).toEqual(["CardProspect", "GradeProspects"])
   })
 
+  it("ignora o Link do Next, internos vistos no next dev e nomes abreviados de bibliotecas", () => {
+    const no = noComFiber([
+      "a",
+      componente("LinkComponent"),
+      componente("CardProspect"),
+      componente("GradeProspects"),
+      componente("InnerScrollHandlerNew"),
+      componente("V"),
+      componente("J"),
+      componente("Pagina"),
+    ])
+    expect(cadeiaDeComponentes(no)).toEqual(["CardProspect", "GradeProspects", "Pagina"])
+  })
+
   it("não ignora componentes do app que começam com nome genérico", () => {
     for (const nome of ["CardEntregavel", "CardProspect", "DialogoNovoProspect", "IconeStatus"]) {
       expect(nomeIgnorado(nome), nome).toBe(false)
@@ -57,7 +71,8 @@ describe("cadeiaDeComponentes", () => {
   })
 
   it("não repete nomes consecutivos", () => {
-    expect(cadeiaDeComponentes(noComFiber(["div", componente("A"), componente("A"), componente("B")]))).toEqual(["A", "B"])
+    const no = noComFiber(["div", componente("Painel"), componente("Painel"), componente("Lista")])
+    expect(cadeiaDeComponentes(no)).toEqual(["Painel", "Lista"])
   })
 
   it("para em 8 nomes", () => {

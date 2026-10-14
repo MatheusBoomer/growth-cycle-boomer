@@ -57,6 +57,11 @@ histórico de comentários resolvidos.
 - O elemento sob o cursor ganha contorno e uma etiqueta com a cadeia de
   componentes (até 3 nomes, do mais interno para fora) e as dimensões
   (`largura × altura`).
+- Níveis: ↑ sobe o destaque para o elemento pai (até o filho direto do
+  `body`) e ↓ volta ao filho de onde subiu. O nível vale enquanto o cursor
+  fica sobre o mesmo elemento; o clique fixa o elemento destacado, não o que
+  está sob o cursor. As setas não rolam a página com o modo ativo e a caixa
+  fechada.
 - Cliques, `pointerdown`/`mousedown` e envios de formulário do site ficam
   bloqueados: listeners em fase de captura no `document` com
   `preventDefault` + `stopPropagation`, ignorando eventos que nascem dentro
@@ -66,7 +71,7 @@ histórico de comentários resolvidos.
 
 ### Comentar
 
-- O clique fixa o elemento (o contorno fica parado) e abre uma caixa ao lado,
+- O clique fixa o elemento destacado, no nível escolhido (o contorno fica parado) e abre uma caixa ao lado,
   posicionada para caber na janela.
 - Ctrl/⌘ + Enter salva; Esc cancela.
 - Ao salvar: gera o recorte, envia ao servidor e mostra o pino. Em caso de

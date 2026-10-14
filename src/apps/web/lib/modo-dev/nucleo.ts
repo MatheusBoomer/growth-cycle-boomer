@@ -159,6 +159,7 @@ const INTERNOS = new Set([
   "InnerLayoutRouter", "OuterLayoutRouter", "RenderFromTemplateContext",
   "ScrollAndFocusHandler", "InnerScrollAndFocusHandler", "LoadingBoundary",
   "ClientPageRoot", "ClientSegmentRoot", "SegmentViewNode", "MetadataOutlet", "ViewportOutlet",
+  "InnerScrollHandlerNew", "LinkComponent", "Link",
   "Slot", "Slottable", "Presence", "Portal", "FocusScope", "DismissableLayer",
 ])
 const PREFIXOS_INTERNOS = ["_", "Primitive", "Radix"]
@@ -166,6 +167,8 @@ const SUFIXOS_INTERNOS = ["Boundary", "Provider", "Router", "Context", "Handler"
 
 export function nomeIgnorado(nome: string): boolean {
   return (
+    // Nomes de 1–2 letras vêm de bibliotecas já minificadas, mesmo no next dev.
+    nome.length <= 2 ||
     GENERICOS_UI.has(nome) ||
     INTERNOS.has(nome) ||
     PREFIXOS_INTERNOS.some((prefixo) => nome.startsWith(prefixo)) ||
