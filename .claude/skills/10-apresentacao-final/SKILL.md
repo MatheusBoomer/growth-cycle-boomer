@@ -44,7 +44,7 @@ dos campos é o `ESQUEMA` em `scripts/gerar_apresentacao.py`:
 | `analises_2_colunas` | `esquerda` e `direita`: `{ "titulo": "…", "itens": [1 a 4] }` |
 | `bullets` | `titulo`, `subtitulo`, `itens` (1 a 6) |
 | `cartoes` | `titulo`, `subtitulo`, `cartoes` (exatamente 3) |
-| `desafio` | `titulo`, `problema`, `hipoteses` (1 a 5), `solucoes` (1 a 3), `impacto`; opcional `problema_id` |
+| `desafio` | `titulo`, `problema`, `hipoteses` (1 a 5), `solucoes` (1 a 3), `impacto`; `problema_id` obrigatório quando houver registro |
 | `benchmark` | `titulo`, `subtitulo`, `concorrente`, `imagens` (1 a 3), `conclusoes` (1 a 3), `link` |
 | `obrigado` | nenhum |
 
@@ -58,7 +58,7 @@ esta espinha e adapte ao material de cada prospect):
 |---|---|
 | Abertura | capa · jornada (6 seções) |
 | 01. Cenário atual | divisória · um `grafico` por gráfico do diagnóstico (investimento, receita captada x aprovada, taxa de quebra, ROAS global, ROAS por plataforma, sessões, dependência de mídia, conversão global, funil de eventos, conversão por plataforma, Curva ABC, top 10 produtos, CAC, novos x recorrentes) com 1 a 3 conclusões · `analises_2_colunas` depois de cada bloco (investimento e receita; conversão) · `tabela_lateral` por curva (A, B, C) · análise de criativos do próprio prospect quando houver imagem aprovada |
-| 02. Desafios | divisória · `bullets` com a lista de desafios (título e impacto de cada problema) · um `desafio` por problema do registro, na ordem de prioridade, com `problema_id` · `cartoes` com os 3 pilares · um `bullets` por iniciativa de cada pilar |
+| 02. Desafios | divisória · `bullets` com a lista de desafios (título e impacto de cada problema) · um `desafio` por problema do registro, na ordem de prioridade, com `problema_id` · `cartoes` com os 3 pilares · um `bullets` por iniciativa de cada pilar (pilares e iniciativas vêm do analista; ver regras) |
 | 03. Benchmarking | divisória · um `benchmark` por concorrente (3 criativos, conclusões, link da página) · `bullets` com as análises de benchmarking |
 | 04. Metas | divisória · `imagem_larga` com a tabela de metas e os 3 cenários · `grafico` com as curvas dos cenários |
 | 05. Cenários e impactos | divisória · `bullets` com a metodologia (KPIs influenciadores e de resultado) · `imagem_larga` com as tabelas de projeção e de KPIs · `bullets` com as considerações · alocação de verba (`grafico` e `imagem_larga`) · estratégia por Curva ABC · calendário de mídia · ROAS esperado · dependência de mídia paga |
@@ -77,9 +77,24 @@ Regras:
 - **Cobertura de desafios:** todo problema de `contexto/solucoes.json` entra
   como slide `desafio`. O gerador avisa quando algum ficou de fora: trate o
   aviso antes de propor o deck. Os textos vêm do registro, condensados; nunca
-  invente hipótese, solução ou impacto. O gerador acrescenta sozinho o prefixo
-  "Hipótese: " a cada hipótese e renderiza as soluções como bullets sem
-  numeração: escreva só o texto, sem esse prefixo e sem numerar.
+  invente hipótese, solução ou impacto. O gerador acrescenta sozinho os
+  prefixos "Hipótese: " e "Solução: " e renderiza as soluções como bullets sem
+  numeração: escreva só o texto, sem esses prefixos e sem numerar.
+- **`problema_id` obrigatório:** sempre que `contexto/solucoes.json` existir,
+  todo slide `desafio` leva `problema_id` (ex.: "P1"), porque a checagem de
+  cobertura depende dele.
+- **Limites do `desafio`** (caracteres por item do roteiro, sem os prefixos):
+  título ≤ 60, problema ≤ 140, cada hipótese ≤ 90, cada solução ≤ 100,
+  impacto ≤ 100. O gerador recusa o roteiro acima disso; condense o texto.
+  Título no formato "<Tema>: **<frase curta do achado>**". Confira a prévia
+  de cada desafio antes de propor o deck.
+- **Pilares (`cartoes`) e iniciativas:** os 3 pilares e os bullets de cada
+  pilar vêm do analista. Com o aval dele, podem ser as 3 frentes com mais
+  problemas no registro. Sem isso, emita o slide com `pendencia` dizendo o que
+  falta. Nunca invente pilar.
+- **Lista de desafios (`bullets`):** no máximo 6 itens; com mais de 6
+  problemas, divida em dois slides de lista. A ordem é a do array `problemas`
+  de `contexto/solucoes.json` (a Skill 05 grava por prioridade).
 - **Escala esperada:** 40 a 60 slides, como o deck de referência. Um deck
   muito menor indica que faltou material ou cobertura; diga ao analista o que
   falta em vez de enxugar.

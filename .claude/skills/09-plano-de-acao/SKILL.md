@@ -57,13 +57,16 @@ etapa roda na própria conversa e o registro não está no contexto.
 4. Responsabilidade clara — um responsável principal por ação, mesmo que
    outro apoie.
 
-## Frentes obrigatórias (adaptar nomes ao contexto do prospect)
+## Frentes obrigatórias
 
-1. Mídia Paga / Canal Principal de Aquisição
-2. Eficiência Operacional (taxa de quebra, conversão, CRO)
-3. Produto / Mix / Portfólio
-4. Redução de Dependências
-5. Monitoramento e Governança (dashboard de KPIs, cadência, gatilhos de
+Os nomes são exatos, para bater com o registro de soluções; a descrição de
+cada frente pode ser adaptada ao contexto do prospect.
+
+1. `Mídia Paga / Canal Principal`
+2. `Eficiência Operacional` (taxa de quebra, conversão, CRO)
+3. `Produto / Mix / Portfólio`
+4. `Redução de Dependências`
+5. `Monitoramento e Governança` (dashboard de KPIs, cadência, gatilhos de
    escala/contenção)
 
 ## Formato de entrega, por ação
@@ -119,7 +122,7 @@ explicitamente.
   solução do registro para passar.
 - **Saída:** `entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.docx`
   do prospect (nome estável, sobrescreve — ver `regras-de-validacao.md`).
-- Cada horizonte no JSON precisa do título (com o período already confirmado
+- Cada horizonte no JSON precisa do título (com o período já confirmado
   com o analista) e, para Horizonte 2 e 3, a frase de intro de contexto (cinza,
   ver modelo) — Horizonte 1 normalmente não tem intro. Cada ação vai com os 4
   campos (`o_que`, `quando`, `por_quem`, `como`) exatamente como aprovados no
@@ -156,8 +159,8 @@ Ao concluir, marque "09 · Plano de ação" como ✅ em
 natural, sem citar caminho de arquivo:
 
 "Etapa concluída — esta era a última etapa de conteúdo! Não preciso de nada
-novo — só confirma se o modelo de apresentação já está publicado no Canva, e
-eu já monto o deck final.
+novo. O próximo passo é montar a apresentação final, um arquivo .pptx editável
+no molde da agência, com o roteiro slide a slide para você aprovar antes.
 
 Quando estiver pronto, rode `/apresentacao-final`."
 

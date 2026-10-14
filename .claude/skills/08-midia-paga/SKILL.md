@@ -24,6 +24,10 @@ Usar exclusivamente o que já está na conversa: histórico por plataforma
 (Skill 03), Curva ABC (Skill 03), KPIs do cenário Realista mês a mês (Skill
 06), sazonalidade histórica identificada ao longo do diagnóstico.
 
+Também é base o registro `contexto/solucoes.json` (Skill 05). Leia o arquivo
+do disco, porque na interface cada etapa roda na própria conversa e o registro
+não está no contexto.
+
 ## Etapa 1 — Alocação de verba mensal por plataforma
 
 Distribuir o investimento total mensal do cenário Realista entre Google Ads e
