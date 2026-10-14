@@ -119,6 +119,16 @@ def validar_registro(registro) -> Tuple[List[str], List[str]]:
         _validar_impacto(p.get("impacto"), onde, erros, avisos)
         if p.get("frente") not in FRENTES:
             erros.append(f"{onde}: frente \"{p.get('frente')}\" inválida. Use uma de: {', '.join(FRENTES)}.")
+    if not _texto(registro.get("prospect")):
+        erros.append("campo prospect obrigatório.")
+    fortes = registro.get("pontos_fortes")
+    if fortes is not None:
+        if not isinstance(fortes, list):
+            erros.append("pontos_fortes precisa ser uma lista.")
+        else:
+            for i, f in enumerate(fortes, start=1):
+                if not isinstance(f, dict) or not all(_texto(f.get(c)) for c in ("titulo", "dado", "uso")):
+                    erros.append(f"Ponto forte #{i}: campos titulo, dado e uso obrigatórios.")
     return erros, avisos
 
 

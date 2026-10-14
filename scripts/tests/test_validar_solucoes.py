@@ -78,6 +78,9 @@ def test_registro_valido_passa_com_aviso_do_nao_quantificavel():
         (lambda r: r["problemas"][0]["solucoes"][0].update(id="P2.S9"), "precisa começar com P1."),
         (lambda r: r["problemas"][0].update(dado=""), "campo dado obrigatório"),
         (lambda r: r.update(problemas=[]), "lista \"problemas\""),
+        (lambda r: r.pop("prospect"), "campo prospect obrigatório"),
+        (lambda r: r.update(pontos_fortes=[{"titulo": "x", "uso": "y"}]), "Ponto forte #1: campos titulo, dado e uso obrigatórios"),
+        (lambda r: r.update(pontos_fortes=["texto solto"]), "Ponto forte #1: campos titulo, dado e uso obrigatórios"),
     ],
 )
 def test_registro_invalido_aponta_o_problema(alterar, trecho):
