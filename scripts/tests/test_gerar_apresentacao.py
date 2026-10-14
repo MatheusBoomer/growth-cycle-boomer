@@ -176,3 +176,78 @@ def test_aviso_de_graficos_aprovados_fora_do_roteiro(prospect, tmp_path):
 def test_sem_aviso_quando_todos_os_graficos_estao_no_roteiro(prospect, tmp_path):
     r = ga.gerar(roteiro_basico(), prospect, tmp_path / "deck.pptx")
     assert not any("não entraram" in a for a in r["avisos"])
+
+
+def slide_desafio(**extra):
+    s = {
+        "tipo": "desafio",
+        "problema_id": "P1",
+        "titulo": "Quebra: **hipótese antes da ação**",
+        "problema": "36,1% da receita captada não vira caixa",
+        "hipoteses": ["Boleto como meio de pagamento", "Ruptura de estoque"],
+        "solucoes": ["Recuperar PIX e boleto", "Checar ruptura de estoque"],
+        "impacto": "+R$ 16,4M/ano",
+    }
+    s.update(extra)
+    return s
+
+
+def test_desafio_preenche_problema_hipoteses_solucoes_e_impacto(prospect, tmp_path):
+    roteiro = roteiro_basico()
+    roteiro["slides"].insert(-1, slide_desafio())
+    saida = tmp_path / "deck.pptx"
+    ga.gerar(roteiro, prospect, saida)
+    prs = Presentation(saida)
+    texto = " ".join(sh.text_frame.text for s in prs.slides for sh in s.shapes if sh.has_text_frame)
+    for trecho in ("36,1% da receita", "Hipótese: Ruptura de estoque", "1. Recuperar PIX e boleto", "+R$ 16,4M/ano"):
+        assert trecho in texto, trecho
+
+
+@pytest.mark.parametrize(
+    "extra, trecho",
+    [
+        ({"solucoes": ["a", "b", "c", "d"]}, "campo solucoes: precisa ter de 1 a 3"),
+        ({"hipoteses": []}, "campo hipoteses: precisa ter de 1 a 5"),
+        ({"impacto": ""}, "campo impacto: precisa ser um texto"),
+    ],
+)
+def test_desafio_invalido(prospect, extra, trecho):
+    roteiro = roteiro_basico()
+    roteiro["slides"].insert(-1, slide_desafio(**extra))
+    modelos = {ap.tipo_do_slide(s) for s in Presentation(ga.CAMINHO_MOLDE).slides}
+    erros, _ = ga.validar_roteiro(roteiro, prospect, modelos)
+    assert any(trecho in e for e in erros), erros
+
+
+def _registro(pasta, ids):
+    (pasta / "contexto").mkdir(parents=True, exist_ok=True)
+    (pasta / "contexto/solucoes.json").write_text(
+        json.dumps({"problemas": [{"id": i} for i in ids]}), encoding="utf-8"
+    )
+
+
+def test_aviso_de_problema_do_registro_fora_do_deck(prospect, tmp_path):
+    _registro(prospect, ["P1", "P2", "P3"])
+    roteiro = roteiro_basico()
+    roteiro["slides"].insert(-1, slide_desafio())
+    r = ga.gerar(roteiro, prospect, tmp_path / "deck.pptx")
+    assert any("2 problemas do registro de soluções não entraram no deck: P2, P3." in a for a in r["avisos"]), r["avisos"]
+
+
+def test_sem_registro_nao_avisa_nem_quebra(prospect, tmp_path):
+    r = ga.gerar(roteiro_basico(), prospect, tmp_path / "deck.pptx")
+    assert not any("registro de soluções" in a for a in r["avisos"])
+
+
+def test_registro_malformado_vira_aviso(prospect, tmp_path):
+    (prospect / "contexto").mkdir(parents=True, exist_ok=True)
+    (prospect / "contexto/solucoes.json").write_text("{ruim", encoding="utf-8")
+    r = ga.gerar(roteiro_basico(), prospect, tmp_path / "deck.pptx")
+    assert any("contexto/solucoes.json não pôde ser lido" in a for a in r["avisos"]), r["avisos"]
+
+
+def test_desafio_com_texto_longo_avisa_estouro(prospect, tmp_path):
+    roteiro = roteiro_basico()
+    roteiro["slides"].insert(-1, slide_desafio(problema="dado muito longo " * 80))
+    r = ga.gerar(roteiro, prospect, tmp_path / "deck.pptx")
+    assert any("não cabe na caixa" in a for a in r["avisos"]), r["avisos"]

@@ -45,6 +45,10 @@ ESQUEMA: Dict[str, Dict[str, tuple]] = {
         "titulo": ("texto", 1, 1), "subtitulo": ("texto", 1, 1), "concorrente": ("texto", 1, 1),
         "imagens": ("imagens", 1, 3), "conclusoes": ("lista", 1, 3), "link": ("link", 1, 1),
     },
+    "desafio": {
+        "titulo": ("texto", 1, 1), "problema": ("texto", 1, 1), "hipoteses": ("lista", 1, 5),
+        "solucoes": ("lista", 1, 3), "impacto": ("texto", 1, 1),
+    },
     "obrigado": {},
 }
 
@@ -114,6 +118,21 @@ def validar_roteiro(roteiro: dict, pasta_prospect: Path, tipos_do_molde: set) ->
 
 def _preencher(prs, slide, tipo: str, dados: dict, pasta: Path, numero: int, avisos: List[str]) -> None:
     c = ap.campos(slide)
+    if tipo == "desafio":
+        ap.preencher_texto(c["titulo"], dados["titulo"])
+        ap.preencher_bloco(c["esquerda"], f"**Problema:** {dados['problema']}", [f"Hipótese: {h}" for h in dados["hipoteses"]])
+        ap.preencher_bloco(c["direita"], f"**Impacto:** {dados['impacto']}",
+                           [f"{j}. {s}" for j, s in enumerate(dados["solucoes"], start=1)])
+    else:
+        _preencher_campos(slide, c, tipo, dados, pasta)
+    if tipo in TIPOS_SEM_AVISO_DE_ESTOURO:
+        return
+    for nome, forma in ap.campos(slide).items():
+        if forma.has_text_frame and ap.ocupacao(forma) > LIMITE_OCUPACAO:
+            avisos.append(f"Slide {numero}, campo {nome}: o texto provavelmente não cabe na caixa ({ap.ocupacao(forma):.0%} do espaço).")
+
+
+def _preencher_campos(slide, c, tipo: str, dados: dict, pasta: Path) -> None:
     for campo, (modo, _, _) in ESQUEMA[tipo].items():
         valor = dados[campo]
         if tipo == "capa":
@@ -140,11 +159,6 @@ def _preencher(prs, slide, tipo: str, dados: dict, pasta: Path, numero: int, avi
                     forma._element.getparent().remove(forma._element)
         elif modo == "link":
             ap.definir_link(c[campo], valor)
-    if tipo in TIPOS_SEM_AVISO_DE_ESTOURO:
-        return
-    for nome, forma in ap.campos(slide).items():
-        if forma.has_text_frame and ap.ocupacao(forma) > LIMITE_OCUPACAO:
-            avisos.append(f"Slide {numero}, campo {nome}: o texto provavelmente não cabe na caixa ({ap.ocupacao(forma):.0%} do espaço).")
 
 
 def _graficos_fora_do_roteiro(roteiro: dict, pasta: Path) -> List[str]:
@@ -156,6 +170,25 @@ def _graficos_fora_do_roteiro(roteiro: dict, pasta: Path) -> List[str]:
                 usados.add((pasta / valor).resolve())
     aprovados = sorted((pasta / "entrega/ativos-aprovados/graficos").glob("*.png"))
     return [p.name for p in aprovados if p.resolve() not in usados]
+
+
+def _problemas_fora_do_roteiro(roteiro: dict, pasta: Path, avisos: List[str]) -> None:
+    """Todo problema do registro de soluções deve ter um slide desafio na seção 02. Desafios."""
+    caminho = pasta / "contexto/solucoes.json"
+    if not caminho.is_file():
+        return
+    try:
+        problemas = json.loads(caminho.read_text(encoding="utf-8"))["problemas"]
+        if not isinstance(problemas, list):
+            raise TypeError("problemas não é uma lista")
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, KeyError, TypeError):
+        avisos.append("contexto/solucoes.json não pôde ser lido; confira o registro de soluções.")
+        return
+    ids = [p["id"] for p in problemas if isinstance(p, dict) and isinstance(p.get("id"), str)]
+    usados = {s.get("problema_id") for s in roteiro["slides"] if s.get("tipo") == "desafio"}
+    fora = [i for i in ids if i not in usados]
+    if fora:
+        avisos.append(f"{len(fora)} problemas do registro de soluções não entraram no deck: {', '.join(fora)}.")
 
 
 def gerar(roteiro: dict, pasta_prospect: Path, saida: Path, molde: Path = CAMINHO_MOLDE) -> dict:
@@ -184,6 +217,7 @@ def gerar(roteiro: dict, pasta_prospect: Path, saida: Path, molde: Path = CAMINH
     fora = _graficos_fora_do_roteiro(roteiro, pasta_prospect)
     if fora:
         avisos.append(f"{len(fora)} gráficos aprovados não entraram no roteiro: {', '.join(fora)}.")
+    _problemas_fora_do_roteiro(roteiro, pasta_prospect, avisos)
     saida.parent.mkdir(parents=True, exist_ok=True)
     prs.save(saida)
     caminho_mapa = saida.with_name("mapa-slides.json")
