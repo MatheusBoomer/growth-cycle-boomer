@@ -23,7 +23,8 @@ Uso:
           "titulo": "HORIZONTE 1 — IMEDIATO (Semana 1, ...)",
           "intro": null,                         // opcional — frase de contexto em cinza
           "acoes": [
-            {"acao": "...", "o_que": "...", "quando": "...", "por_quem": "...", "como": "..."},
+            {"acao": "...", "o_que": "...", "quando": "...", "por_quem": "...", "como": "...",
+             "solucoes": ["P1.S1"]},              // opcional: ids do contexto/solucoes.json que a ação executa
             ...
           ]
         },

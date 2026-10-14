@@ -146,3 +146,70 @@ def test_cli_arquivo_ausente_ou_malformado(tmp_path, capsys, conteudo, trecho):
     assert vs.main(["--modo", "registro", "--registro", str(reg)]) == 1
     err = capsys.readouterr().err
     assert err.startswith("ERRO:") and trecho in err and "Traceback" not in err
+
+
+def plano_valido() -> dict:
+    def acao(nome, solucoes):
+        return {"acao": nome, "o_que": "x", "quando": "Semana 1", "por_quem": "Agência", "como": "y", "solucoes": solucoes}
+
+    return {
+        "prospect": "Marca Teste",
+        "horizontes": [
+            {"titulo": "H1", "intro": None, "acoes": [acao("Recuperar PIX", ["P1.S1"]), acao("Corrigir GA4", ["P2.S1"])]},
+            {"titulo": "H2", "intro": "i", "acoes": [acao("Monitorar estoque", ["P1.S2"])]},
+            {"titulo": "H3", "intro": "i", "acoes": [acao("Dashboard de KPIs", [])]},
+        ],
+        "tabela": [
+            {"num": 1, "acao": "Recuperar PIX", "frente": "Eficiência Operacional", "horizonte": "Imediato", "quando": "S1", "por_quem": "Agência"},
+            {"num": 2, "acao": "Corrigir GA4", "frente": "Governança", "horizonte": "Imediato", "quando": "S1", "por_quem": "Agência"},
+            {"num": 3, "acao": "Monitorar estoque", "frente": "Eficiência Operacional", "horizonte": "Curto Prazo", "quando": "M1", "por_quem": "Cliente"},
+            {"num": 4, "acao": "Dashboard de KPIs", "frente": "Governança", "horizonte": "Médio Prazo", "quando": "M3", "por_quem": "Agência"},
+        ],
+    }
+
+
+def test_plano_valido_passa():
+    assert vs.validar_plano(registro_valido(), plano_valido()) == ([], [])
+
+
+def test_solucao_sem_acao_bloqueia():
+    plano = plano_valido()
+    plano["horizontes"][1]["acoes"][0]["solucoes"] = []
+    erros, _ = vs.validar_plano(registro_valido(), plano)
+    assert any("P1.S2" in e and "não virou nenhuma ação" in e for e in erros), erros
+
+
+def test_acao_citando_solucao_inexistente():
+    plano = plano_valido()
+    plano["horizontes"][0]["acoes"][0]["solucoes"].append("P9.S1")
+    erros, _ = vs.validar_plano(registro_valido(), plano)
+    assert any("P9.S1" in e and "não existe no registro" in e for e in erros), erros
+
+
+def test_acao_com_nome_diferente_na_tabela():
+    plano = plano_valido()
+    plano["tabela"][0]["acao"] = "Recuperar PIX "
+    erros, _ = vs.validar_plano(registro_valido(), plano)
+    assert any("\"Recuperar PIX\"" in e and "tabela-resumo" in e for e in erros), erros
+
+
+def test_frente_vazia_e_quando_vazio():
+    plano = plano_valido()
+    plano["tabela"][2]["frente"] = ""
+    plano["horizontes"][0]["acoes"][1]["quando"] = ""
+    erros, _ = vs.validar_plano(registro_valido(), plano)
+    assert any("Monitorar estoque" in e and "frente vazia" in e for e in erros), erros
+    assert any("Corrigir GA4" in e and "quando" in e for e in erros), erros
+
+
+def test_cli_modo_plano(tmp_path, capsys):
+    reg = tmp_path / "solucoes.json"
+    reg.write_text(json.dumps(registro_valido(), ensure_ascii=False), encoding="utf-8")
+    pl = tmp_path / "plano.json"
+    plano = plano_valido()
+    plano["horizontes"][1]["acoes"][0]["solucoes"] = []
+    pl.write_text(json.dumps(plano, ensure_ascii=False), encoding="utf-8")
+    assert vs.main(["--modo", "plano", "--registro", str(reg), "--plano", str(pl)]) == 1
+    assert "plano de ação inválido" in capsys.readouterr().err
+    assert vs.main(["--modo", "plano", "--registro", str(reg)]) == 1
+    assert "--modo plano precisa de --plano" in capsys.readouterr().err

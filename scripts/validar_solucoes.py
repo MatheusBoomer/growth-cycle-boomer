@@ -182,8 +182,37 @@ def _ler_json(caminho: Path, nome: str):
 
 
 def validar_plano(registro: dict, plano) -> Tuple[List[str], List[str]]:
-    """Preenchido na Tarefa 3."""
-    return [], []
+    erros: List[str] = []
+    if not isinstance(plano, dict) or not isinstance(plano.get("horizontes"), list):
+        return ["o plano não tem a lista \"horizontes\"."], []
+    ids = [s["id"] for p in registro["problemas"] for s in p["solucoes"]]
+    conhecidos = set(ids)
+    cobertos = set()
+    tabela = {linha.get("acao"): linha for linha in plano.get("tabela") or [] if isinstance(linha, dict)}
+    for horizonte in plano["horizontes"]:
+        for acao in horizonte.get("acoes") or []:
+            nome = acao.get("acao") or "(sem nome)"
+            for campo in ("quando", "por_quem"):
+                if not _texto(acao.get(campo)):
+                    erros.append(f"Ação \"{nome}\": campo {campo} obrigatório.")
+            linha = tabela.get(acao.get("acao"))
+            if linha is None:
+                erros.append(f"Ação \"{nome}\": não aparece na tabela-resumo (mesmo nome em \"acao\").")
+            elif not _texto(linha.get("frente")):
+                erros.append(f"Ação \"{nome}\": frente vazia na tabela-resumo.")
+            solucoes = acao.get("solucoes", [])
+            if not isinstance(solucoes, list):
+                erros.append(f"Ação \"{nome}\": \"solucoes\" precisa ser uma lista de ids (ex.: [\"P1.S1\"]).")
+                continue
+            for sid in solucoes:
+                if sid in conhecidos:
+                    cobertos.add(sid)
+                else:
+                    erros.append(f"Ação \"{nome}\": cita a solução {sid}, que não existe no registro.")
+    for sid in ids:
+        if sid not in cobertos:
+            erros.append(f"Solução {sid} do registro não virou nenhuma ação do plano.")
+    return erros, []
 
 
 def main(argv: Optional[List[str]] = None) -> int:
