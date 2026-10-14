@@ -28,11 +28,11 @@ function item(p: Partial<ItemBiblioteca> & Pick<ItemBiblioteca, "caminho">): Ite
 }
 
 const cac = item({ caminho: "g/cac-mensal.png", titulo: "CAC mensal", etapa: "04" })
-const acao = item({ caminho: "g/acao.png", titulo: "Ação de mídia", etapa: "07", origem: "anexo" })
-const velho = item({ caminho: "p/velho.png", titulo: "Cenários antigos", etapa: "05", origem: "substituido" })
-const pendente = item({ caminho: "p/novo.png", titulo: "Cenários", etapa: "05", origem: "proposta" })
-const insider = item({ caminho: "b/insider/1", etapa: "06", origem: "benchmark", grupo: { tipo: "anuncio", marca: "insider" } })
-const alpha = item({ caminho: "b/alpha/1", etapa: "06", origem: "benchmark", grupo: { tipo: "anuncio", marca: "alpha" } })
+const acao = item({ caminho: "g/acao.png", titulo: "Ação de mídia", etapa: "08", origem: "anexo" })
+const velho = item({ caminho: "p/velho.png", titulo: "Cenários antigos", etapa: "06", origem: "substituido" })
+const pendente = item({ caminho: "p/novo.png", titulo: "Cenários", etapa: "06", origem: "proposta" })
+const insider = item({ caminho: "b/insider/1", etapa: "07", origem: "benchmark", grupo: { tipo: "anuncio", marca: "insider" } })
+const alpha = item({ caminho: "b/alpha/1", etapa: "07", origem: "benchmark", grupo: { tipo: "anuncio", marca: "alpha" } })
 const solto = item({ caminho: "x/solto.png", etapa: "sem-etapa" })
 const todos = [cac, acao, velho, pendente, insider, alpha, solto]
 
@@ -50,7 +50,7 @@ describe("filtros da biblioteca", () => {
   })
 
   it("filtra por etapa e por origem", () => {
-    expect(filtrarItens(todos, com({ etapa: "06" }))).toEqual([insider, alpha])
+    expect(filtrarItens(todos, com({ etapa: "07" }))).toEqual([insider, alpha])
     expect(filtrarItens(todos, com({ origens: new Set(["anexo"]) }))).toEqual([acao])
   })
 
@@ -62,8 +62,8 @@ describe("filtros da biblioteca", () => {
   it("contagem por etapa respeita busca e origem, mas não a etapa escolhida", () => {
     const c = contarPorEtapa(todos, com({ etapa: "04" }))
     expect(c.todas).toBe(6)
-    expect(c["06"]).toBe(2)
-    expect(c["05"]).toBe(1)
+    expect(c["07"]).toBe(2)
+    expect(c["06"]).toBe(1)
     expect(c["01"]).toBe(0)
     expect(c["sem-etapa"]).toBe(1)
   })
@@ -75,7 +75,7 @@ describe("filtros da biblioteca", () => {
 
 describe("agrupamentos", () => {
   it("por etapa na ordem do planejamento, sem etapa no fim, grupos vazios fora", () => {
-    expect(agruparPorEtapa([solto, cac, insider]).map((g) => g.etapa)).toEqual(["04", "06", "sem-etapa"])
+    expect(agruparPorEtapa([solto, cac, insider]).map((g) => g.etapa)).toEqual(["04", "07", "sem-etapa"])
   })
 
   it("por marca: soltos primeiro, depois marcas em ordem alfabética", () => {

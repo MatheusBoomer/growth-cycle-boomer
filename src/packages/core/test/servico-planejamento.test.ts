@@ -632,7 +632,7 @@ describe("biblioteca", () => {
     const rel = "entrega/ativos-aprovados/graficos/cac.png"
     await imagem(slug, rel)
     await expect(
-      servico.ajustarBiblioteca(slug, rel, { etapa: "09" })
+      servico.ajustarBiblioteca(slug, rel, { etapa: "10" })
     ).rejects.toBeInstanceOf(ErroEntrada)
     await expect(
       servico.ajustarBiblioteca(slug, rel, { titulo: 5 })

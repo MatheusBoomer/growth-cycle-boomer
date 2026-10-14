@@ -16,10 +16,11 @@ const MD_TERMINAL = `# Status do Planejamento — Adda
 | 02 · Contextualização estratégica | ✅ | 2026-09-21 | |
 | 03 · Diagnóstico de performance | ✅ | 2026-09-22 | Histórico insuficiente (3/12 meses com dado) |
 | 04 · Unidade econômica | ⬜ | | |
-| 05 · Metas e cenários | ⬜ | | |
-| 06 · Briefing e benchmark | ⬜ | | |
-| 07 · Mídia paga | ⬜ | | |
-| 08 · Plano de ação | ⬜ | | |
+| 05 · Soluções | ⬜ | | |
+| 06 · Metas e cenários | ⬜ | | |
+| 07 · Briefing e benchmark | ⬜ | | |
+| 08 · Mídia paga | ⬜ | | |
+| 09 · Plano de ação | ⬜ | | |
 | Apresentação final | ⬜ | | |
 
 ## Próximo passo

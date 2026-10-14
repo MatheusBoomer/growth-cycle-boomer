@@ -3,9 +3,9 @@ name: briefing-e-benchmark
 description: Consolida tudo que foi construído nas skills anteriores num briefing estruturado e faz o benchmark de anúncios dos concorrentes na Biblioteca do Meta (coleta via Apify) — substitui o antigo processo manual de sair do chat e entrar no Cowork. Use após metas-e-cenarios, ao concluir o diagnóstico e a projeção.
 ---
 
-# Skill 06 — Briefing e Benchmark de Concorrentes
+# Skill 07 — Briefing e Benchmark de Concorrentes
 
-Skill 6 de 8. Corresponde ao Prompt 7 (Produção de Briefing) do processo
+Skill 7 de 10. Corresponde ao Prompt 7 (Produção de Briefing) do processo
 original, mais a etapa de pesquisa de concorrentes que antes não tinha skill
 própria e dependia de um salto manual para o Cowork (e, depois, da extensão
 do Claude no Chrome). Aqui, a coleta dos anúncios da Biblioteca do Meta é
@@ -14,7 +14,7 @@ própria conversa, sem sair do planejamento.
 
 ## Antes de começar (checklist do analista)
 
-- [ ] Skills 01 a 05 concluídas e aprovadas.
+- [ ] Skills 01 a 06 concluídas e aprovadas.
 - [ ] Lista de até 4 concorrentes, com site ou @ de cada um, se já tiver
       pensado nisso (se não tiver, a skill pergunta antes da Fase 2).
 - [ ] `APIFY_TOKEN` configurado no `.env` da raiz e `ffmpeg` instalado (a
@@ -25,7 +25,7 @@ própria conversa, sem sair do planejamento.
 ### Objetivo
 
 Consolidar em um único documento estruturado todo o conhecimento construído
-nas Skills 01 a 05.
+nas Skills 01 a 06.
 
 ### Processo
 
@@ -45,7 +45,7 @@ nas Skills 01 a 05.
    analista quais 4 são prioridade (sem preferência, sugira os que
    provavelmente têm mais anúncios ativos).
 
-### Template do briefing (`entrega/ativos-aprovados/secoes/06-briefing.md`)
+### Template do briefing (`entrega/ativos-aprovados/secoes/07-briefing.md`)
 
 ```markdown
 # Briefing do Cliente — [Nome do Prospect]
@@ -66,10 +66,10 @@ Sessões, dependência de mídia paga, conversão por plataforma, Curva ABC.
 ## 4. Unidade Econômica (Skill 04)
 CAC, novos vs recorrentes, LTV, LTV/CAC.
 
-## 5. Metas do Projeto (Skill 05, parte 1)
+## 5. Metas do Projeto (Skill 06, parte 1)
 Meta oficial, distribuição mensal, lógica de distribuição.
 
-## 6. Cenários e Impactos Esperados (Skill 05, parte 2)
+## 6. Cenários e Impactos Esperados (Skill 06, parte 2)
 Resumo dos 3 cenários, alavancas, riscos, alavanca principal.
 
 ## 7. Concorrentes para Pesquisa de Benchmark
@@ -147,12 +147,12 @@ sair com `ERRO:`.
    `benchmark`; terminal: checagem no chat e, aprovado, salvar em
    `entrega/ativos-aprovados/benchmark/benchmark.html`).
 2. Depois do HTML aprovado, escrever a camada estratégica em
-   `entrega/ativos-aprovados/secoes/06-benchmark.md` (na interface, pelo
+   `entrega/ativos-aprovados/secoes/07-benchmark.md` (na interface, pelo
    `propor_entregavel` tipo `secao`, `nome_final` `benchmark`), um bloco por
    concorrente:
    - **Lição:** o que o concorrente faz de relevante nos anúncios,
      conectado a uma aplicação direta e específica para o prospect, amarrada
-     aos gargalos do diagnóstico (Skills 02 a 05). Nunca observação genérica.
+     aos gargalos do diagnóstico (Skills 02 a 06). Nunca observação genérica.
    - **Evidência:** total de anúncios ativos (do `resumo.md`, com a data da
      coleta) + 1 a 3 criativos que sustentam a lição, cada um com o link da
      Biblioteca.
@@ -181,7 +181,7 @@ sair com `ERRO:`.
 
 ## Encerramento e handoff
 
-Ao concluir, marque "06 · Briefing e benchmark" como ✅ em
+Ao concluir, marque "07 · Briefing e benchmark" como ✅ em
 `contexto/status-planejamento.md` e converse com o analista em linguagem
 natural, sem citar caminho de arquivo:
 
@@ -190,7 +190,7 @@ cenário Realista como base para a próxima etapa. Se quiser, pode me mandar
 prints de tela (imagens) das campanhas atuais das plataformas, mas isso é
 opcional.
 
-Quando estiver pronto, rode `/07-midia-paga`."
+Quando estiver pronto, rode `/08-midia-paga`."
 
 Reescreva também o bloco "Próximo passo" de `contexto/status-planejamento.md`
 com esse mesmo pedido.

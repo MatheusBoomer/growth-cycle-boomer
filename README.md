@@ -39,15 +39,15 @@ Estratégico entregue a prospects.
    > "Vamos iniciar o planejamento estratégico do [nome do prospect]. Use a
    > skill `preparacao-de-contexto`."
 
-4. **Siga a sequência das 8 skills, em ordem**, confirmando cada checagem
+4. **Siga a sequência das 9 skills, em ordem**, confirmando cada checagem
    manual que a skill pedir. Não pule etapas — use os comandos
-   `/01-preparacao-de-contexto` até `/08-plano-de-acao`, na ordem:
+   `/01-preparacao-de-contexto` até `/09-plano-de-acao`, na ordem:
 
    ```
    01-preparacao-de-contexto → 02-contextualizacao-estrategica →
    03-diagnostico-performance → 04-unidade-economica →
-   05-metas-e-cenarios → 06-briefing-e-benchmark →
-   07-midia-paga → 08-plano-de-acao
+   05-solucoes → 06-metas-e-cenarios →
+   07-briefing-e-benchmark → 08-midia-paga → 09-plano-de-acao
    ```
 
    Ao final de cada etapa, a skill já avisa em linguagem natural o que
@@ -56,7 +56,7 @@ Estratégico entregue a prospects.
    qualquer momento para ver em que etapa o prospect está e o que falta,
    mesmo reabrindo o projeto em outro dia.
 
-5. **Depois da Skill 08 concluída**, rode o comando `/apresentacao-final`
+5. **Depois da Skill 09 concluída**, rode o comando `/apresentacao-final`
    para montar a apresentação — o subagente `designer-apresentacao` lê só
    `entrega/ativos-aprovados/` e produz o arquivo final em `entrega/`.
 
@@ -100,17 +100,18 @@ CLAUDE.md                      # regras gerais da agência
     02-contextualizacao-estrategica/
     03-diagnostico-performance/
     04-unidade-economica/
-    05-metas-e-cenarios/
-    06-briefing-e-benchmark/
-    07-midia-paga/
-    08-plano-de-acao/
+    05-solucoes/
+    06-metas-e-cenarios/
+    07-briefing-e-benchmark/
+    08-midia-paga/
+    09-plano-de-acao/
   agents/
     analista-dados.md          # cálculo, gráficos, motor de projeção
     pesquisador-benchmark.md   # pesquisa de concorrentes via Firecrawl
     designer-apresentacao.md   # montagem final no Canva
   commands/                    # atalho direto pra cada skill/subagente
     novo-prospect.md           # /novo-prospect [nome]
-    01-preparacao-de-contexto.md ... 08-plano-de-acao.md
+    01-preparacao-de-contexto.md ... 09-plano-de-acao.md
     apresentacao-final.md      # /apresentacao-final
 scripts/
   projecao.py                  # motor de projeção (testado — ver spec)

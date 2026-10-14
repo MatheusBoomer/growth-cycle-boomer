@@ -32,15 +32,17 @@ certa pela descrição — ex.: `/03-diagnostico-performance`.
         ↓
 04-unidade-economica
         ↓
-05-metas-e-cenarios
+05-solucoes
         ↓
-06-briefing-e-benchmark
+06-metas-e-cenarios
         ↓
-07-midia-paga
+07-briefing-e-benchmark
         ↓
-08-plano-de-acao
+08-midia-paga
         ↓
-09-apresentacao-final (roteiro + .pptx no molde da agência; comando: /apresentacao-final)
+09-plano-de-acao
+        ↓
+10-apresentacao-final (roteiro + .pptx no molde da agência; comando: /apresentacao-final)
 ```
 
 Nenhuma etapa avança sem a checagem manual da etapa anterior confirmada pelo
@@ -84,11 +86,11 @@ quando existirem — a regra padrão é não ter nenhum.
 
 ## Subagentes disponíveis
 
-- **`analista-dados`** — cálculo de KPIs, geração de gráficos, motor de projeção (`scripts/projecao.py`). Usado pelas Skills 03 e 05.
-- **`pesquisador-benchmark`** — pesquisa de mercado e referências via Firecrawl. Usado pela Skill 07 (e pontualmente pela 02). O benchmark de anúncios da Skill 06 não usa subagente: roda `scripts/coleta_meta_ads.py` (Apify) na própria conversa.
-- **`designer-apresentacao`** — desativado; a apresentação final é gerada pela Skill 09 (.pptx no molde da agência).
+- **`analista-dados`** — cálculo de KPIs, geração de gráficos, motor de projeção (`scripts/projecao.py`). Usado pelas Skills 03, 05 e 06.
+- **`pesquisador-benchmark`** — pesquisa de mercado e referências via Firecrawl. Usado pela Skill 08 (e pontualmente pelas 02 e 05). O benchmark de anúncios da Skill 07 não usa subagente: roda `scripts/coleta_meta_ads.py` (Apify) na própria conversa.
+- **`designer-apresentacao`** — desativado; a apresentação final é gerada pela Skill 10 (.pptx no molde da agência).
 
-## Pré-requisitos da Skill 06
+## Pré-requisitos da Skill 07
 
 O benchmark de anúncios coleta a Biblioteca de Anúncios do Meta pela Apify:
 precisa de `APIFY_TOKEN` no `.env` da raiz (modelo em `.env.example`) e do

@@ -90,7 +90,7 @@ export function VerificacaoSistema() {
           {faltasBenchmark.length > 0 && (
             <Alert className="bg-popover text-popover-foreground shadow-(--sombra-card)">
               <AlertDescription>
-                Para o benchmark de anúncios (etapa 06): {faltasBenchmark.join("; ")}. As outras etapas funcionam normalmente.
+                Para o benchmark de anúncios (etapa 07): {faltasBenchmark.join("; ")}. As outras etapas funcionam normalmente.
               </AlertDescription>
             </Alert>
           )}

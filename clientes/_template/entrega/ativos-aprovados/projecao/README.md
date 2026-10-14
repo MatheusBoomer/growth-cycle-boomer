@@ -1,5 +1,5 @@
 A planilha de Projeção de Cenários (`projecao-de-cenarios.xlsx`) é salva aqui
-pela Skill 05 (`metas-e-cenarios`), no final, depois que os 3 cenários são
+pela Skill 06 (`metas-e-cenarios`), no final, depois que os 3 cenários são
 aprovados pelo analista. É um entregável do cliente — vai para a apresentação e
 pode ser enviado ao prospect.
 

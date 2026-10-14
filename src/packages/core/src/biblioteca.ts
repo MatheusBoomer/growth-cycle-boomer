@@ -135,7 +135,7 @@ export function classificarBiblioteca({
       id: pasta,
       caminho: pasta,
       origem: "benchmark",
-      etapa: "06",
+      etapa: "07",
       titulo: `${g.marca} · anúncio ${g.anuncio}`,
       nomeArquivo: g.anuncio,
       grupo: { tipo: "anuncio", marca: g.marca },

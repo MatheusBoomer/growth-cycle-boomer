@@ -5,7 +5,7 @@ description: Constrói o entendimento estratégico do negócio do prospect — m
 
 # Skill 02 — Contextualização Estratégica
 
-Skill 2 de 8. Corresponde ao Prompt 1 do processo original.
+Skill 2 de 10. Corresponde ao Prompt 1 do processo original.
 
 ## Antes de começar (checklist do analista)
 
@@ -77,7 +77,7 @@ Objetivo Declarado, Hipóteses Estratégicas Iniciais, Possíveis Gargalos
 Estruturais) e feche com um bloco **Definições da conversa**, registrando o que
 as respostas do analista esclareceram sobre cada pergunta que estava pendente.
 
-Este arquivo é a fonte de contexto estratégico que as Skills 03–08 assumem já
+Este arquivo é a fonte de contexto estratégico que as Skills 03–09 assumem já
 construída — em especial quando a conversa é reaberta numa janela nova ou
 compactada por excesso de histórico. Por isso ele precisa **bastar sozinho**,
 sem depender do que ficou dito no chat. Ele está registrado como rota de

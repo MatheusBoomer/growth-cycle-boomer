@@ -1,9 +1,9 @@
 ---
-name: 09-apresentacao-final
-description: Monta a apresentação final do planejamento para o prospect, no padrão visual da agência, como um .pptx editável. Escreve o roteiro slide a slide a partir do que foi aprovado (gráficos e seções), passa pela aprovação do analista e gera o arquivo com scripts/gerar_apresentacao.py. Use depois da Skill 08 (plano-de-acao) concluída, quando o analista pedir a apresentação final.
+name: 10-apresentacao-final
+description: Monta a apresentação final do planejamento para o prospect, no padrão visual da agência, como um .pptx editável. Escreve o roteiro slide a slide a partir do que foi aprovado (gráficos e seções), passa pela aprovação do analista e gera o arquivo com scripts/gerar_apresentacao.py. Use depois da Skill 09 (plano-de-acao) concluída, quando o analista pedir a apresentação final.
 ---
 
-# Skill 09 — Apresentação final
+# Skill 10 — Apresentação final
 
 Última etapa. Transforma o que foi aprovado em `entrega/ativos-aprovados/` na
 apresentação que vai para o prospect, no molde da agência
@@ -17,11 +17,11 @@ Confira que existe material das 6 seções do deck em `entrega/ativos-aprovados/
 | Seção do deck | Onde está | Etapa de origem |
 |---|---|---|
 | 01. Cenário atual | `graficos/*`, `secoes/03-*.md`, `secoes/04-*.md` | 03 e 04 |
-| 02. Desafios | gargalos e hipóteses em `contexto/decisoes/`, `secoes/05-*.md` | 02 a 05 |
-| 03. Benchmarking | `secoes/06-benchmark.md`, `dados/benchmark-meta/<marca>/` | 06 |
-| 04. Metas | `graficos/cenarios-*`, `graficos/tabela-cenarios-*`, `secoes/05-*.md` | 05 |
-| 05. Cenários e impactos | `secoes/05-*.md`, `secoes/07-midia-paga.md`, `graficos/tabela-*` | 05 e 07 |
-| 06. Plano de ação | `plano-de-acao/*.docx`, `secoes/07-*.md` | 08 |
+| 02. Desafios | gargalos e hipóteses em `contexto/decisoes/`, `secoes/06-*.md` | 02 a 06 |
+| 03. Benchmarking | `secoes/07-benchmark.md`, `dados/benchmark-meta/<marca>/` | 07 |
+| 04. Metas | `graficos/cenarios-*`, `graficos/tabela-cenarios-*`, `secoes/06-*.md` | 06 |
+| 05. Cenários e impactos | `secoes/06-*.md`, `secoes/08-midia-paga.md`, `graficos/tabela-*` | 06 e 08 |
+| 06. Plano de ação | `plano-de-acao/*.docx`, `secoes/08-*.md` | 09 |
 
 Faltando material de uma seção, diga ao analista o que falta e de qual etapa
 vem; não monte um deck incompleto em silêncio.

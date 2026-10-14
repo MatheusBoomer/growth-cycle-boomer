@@ -75,13 +75,13 @@ describe("aprovados", () => {
 describe("propostas", () => {
   it("pendente vira proposta, substituída vira substituido, órfã fica de fora", () => {
     const estado = estadoCom([
-      entregavel({ id: "p1", etapa: "05", titulo: "Cenários" }),
-      entregavel({ id: "p0", etapa: "05", status: "substituido", titulo: "Cenários antigos" }),
+      entregavel({ id: "p1", etapa: "06", titulo: "Cenários" }),
+      entregavel({ id: "p0", etapa: "06", status: "substituido", titulo: "Cenários antigos" }),
     ])
     const itens = classificar([arq(".app/propostas/p1.png"), arq(".app/propostas/p0.png"), arq(".app/propostas/orfa.png")], estado)
     expect(itens.map((i) => [i.caminho, i.origem, i.etapa, i.titulo])).toEqual([
-      [".app/propostas/p0.png", "substituido", "05", "Cenários antigos"],
-      [".app/propostas/p1.png", "proposta", "05", "Cenários"],
+      [".app/propostas/p0.png", "substituido", "06", "Cenários antigos"],
+      [".app/propostas/p1.png", "proposta", "06", "Cenários"],
     ])
   })
 })
@@ -104,12 +104,12 @@ describe("anexos e insumos", () => {
 
   it("imagem na pasta de um insumo do catálogo fica na etapa dona do insumo", () => {
     const itens = classificar([arq("contexto/brutos/prints-campanhas/meta.jpg"), arq("contexto/brutos/prints-campanhas/relatorio.pdf")])
-    expect(itens.map((i) => [i.caminho, i.origem, i.etapa])).toEqual([["contexto/brutos/prints-campanhas/meta.jpg", "insumo", "07"]])
+    expect(itens.map((i) => [i.caminho, i.origem, i.etapa])).toEqual([["contexto/brutos/prints-campanhas/meta.jpg", "insumo", "08"]])
   })
 })
 
 describe("benchmark", () => {
-  it("um item por anúncio, capa primeiro, etapa 06; pasta sem imagem não gera item", () => {
+  it("um item por anúncio, capa primeiro, etapa 07; pasta sem imagem não gera item", () => {
     const base = "dados/benchmark-meta/insider/midia"
     const itens = classificar([
       arq(`${base}/123/video-1-quadro-1.jpg`),
@@ -121,7 +121,7 @@ describe("benchmark", () => {
     const anuncio = itens.find((i) => i.caminho === `${base}/123`)!
     expect(anuncio).toMatchObject({
       origem: "benchmark",
-      etapa: "06",
+      etapa: "07",
       titulo: "insider · anúncio 123",
       nomeArquivo: "123",
       grupo: { tipo: "anuncio", marca: "insider" },

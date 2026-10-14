@@ -23,9 +23,9 @@ describe("prompts", () => {
     expect(p).toContain("DOSSIE-AQUI")
   })
 
-  it("a etapa final usa a skill 09 (roteiro e pptx), não mais o subagente do Canva", () => {
+  it("a etapa final usa a skill 10 (roteiro e pptx), não mais o subagente do Canva", () => {
     const p = promptInicialEtapa({ slug: "iszi", etapa: etapaDoCatalogo(cat, "final"), dossie: "" })
-    expect(p).toContain("09-apresentacao-final")
+    expect(p).toContain("10-apresentacao-final")
     expect(p).not.toContain("designer-apresentacao")
   })
 })

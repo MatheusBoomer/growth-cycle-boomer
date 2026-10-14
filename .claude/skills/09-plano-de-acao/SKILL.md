@@ -3,16 +3,16 @@ name: plano-de-acao
 description: Organiza cronologicamente tudo que foi proposto no planejamento em um plano de ação priorizado, com responsável, prazo e forma de execução para cada item. Última etapa de conteúdo antes da montagem da apresentação final. Use após midia-paga, com o planejamento completo aprovado.
 ---
 
-# Skill 08 — Plano de Ação Estratégico
+# Skill 09 — Plano de Ação Estratégico
 
-Skill 8 de 8 — última etapa de conteúdo. Corresponde ao Prompt 10 do processo
+Skill 9 de 10 — última etapa de conteúdo. Corresponde ao Prompt 10 do processo
 original (numerado internamente como "Prompt 8" nos documentos antigos —
 ignore essa numeração). Só organização e sequenciamento do que já foi
 decidido — não cria novo direcionamento estratégico.
 
 ## Antes de começar (checklist do analista)
 
-- [ ] Skills 01 a 07 concluídas e aprovadas.
+- [ ] Skills 01 a 08 concluídas e aprovadas.
 - [ ] Confirmar a **data de hoje**, para que nenhuma ação seja proposta em
       período já passado.
 - [ ] Confirmar o **cenário base** (Realista, salvo indicação contrária).
@@ -133,7 +133,7 @@ explicitamente.
 
 ## Encerramento e handoff
 
-Ao concluir, marque "08 · Plano de ação" como ✅ em
+Ao concluir, marque "09 · Plano de ação" como ✅ em
 `contexto/status-planejamento.md` e converse com o analista em linguagem
 natural, sem citar caminho de arquivo:
 

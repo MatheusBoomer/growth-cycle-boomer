@@ -1,11 +1,11 @@
 # Relatório de benchmark Meta Ads
 
-Referenciado pela Skill 06 (`briefing-e-benchmark`, Fase 2). Não copie este
+Referenciado pela Skill 07 (`briefing-e-benchmark`, Fase 2). Não copie este
 conteúdo para dentro de uma skill — referencie este arquivo.
 
 Adaptado de `docs/referencias/benchmark-meta-ads/references/geracao-relatorio.md`.
-Vale **apenas para a pesquisa de concorrentes** (Skill 06). O benchmarking de
-mercado da Skill 07 continua em texto livre.
+Vale **apenas para a pesquisa de concorrentes** (Skill 07). O benchmarking de
+mercado da Skill 08 continua em texto livre.
 
 ## O que é
 
@@ -13,7 +13,7 @@ Um relatório HTML autocontido que apresenta a análise dos anúncios ativos de
 cada concorrente na Biblioteca de Anúncios do Meta, do próprio prospect, as
 respostas às perguntas estratégicas e o ranking de intensidade de mídia. É o
 artefato visual que pode ser mostrado ao prospect; **não substitui** a camada
-Lição + Evidência (`secoes/06-benchmark.md`).
+Lição + Evidência (`secoes/07-benchmark.md`).
 
 ## Template
 

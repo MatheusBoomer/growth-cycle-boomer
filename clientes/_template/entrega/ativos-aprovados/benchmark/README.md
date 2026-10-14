@@ -1,5 +1,5 @@
 O relatório detalhado de benchmark de concorrentes (`benchmark.html`) é salvo
-aqui pela Skill 06 (`briefing-e-benchmark`, Fase 2), depois da checagem manual
+aqui pela Skill 07 (`briefing-e-benchmark`, Fase 2), depois da checagem manual
 do analista. Arquivo autocontido (HTML com CSS inline), no padrão visual da
 boomer — abre direto no navegador e pode ser mostrado ao prospect.
 

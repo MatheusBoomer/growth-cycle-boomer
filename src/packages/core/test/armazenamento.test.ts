@@ -109,6 +109,18 @@ describe("FsArmazenamento", () => {
     await writeFile(path.join(raiz, "clientes/iszi/.app/estado.json"), JSON.stringify(antigo))
     expect((await arm.lerEstado("iszi"))?.perguntas).toEqual([])
   })
+
+  it("estado gravado antes da etapa de soluções é lido com as etapas novas bloqueadas", async () => {
+    await arm.criarPasta("iszi")
+    const antigo = estadoInicial({ slug: "iszi", nome: "Iszi", site: null }, "2026-10-07T10:00:00.000Z") as unknown as {
+      etapas: Record<string, unknown>
+    }
+    delete antigo.etapas["09"]
+    await mkdir(path.join(raiz, "clientes/iszi/.app"), { recursive: true })
+    await writeFile(path.join(raiz, "clientes/iszi/.app/estado.json"), JSON.stringify(antigo))
+    const lido = await arm.lerEstado("iszi")
+    expect(lido?.etapas["09"]?.status).toBe("bloqueada")
+  })
 })
 
 describe("imagens do prospect para a biblioteca", () => {

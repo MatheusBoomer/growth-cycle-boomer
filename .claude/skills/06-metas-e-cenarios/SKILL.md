@@ -3,9 +3,9 @@ name: metas-e-cenarios
 description: Define a meta do projeto, quebra ela mês a mês respeitando sazonalidade histórica (nunca de forma flat), e constrói os 3 cenários (Pessimista/Realista/Otimista) com a cadeia de KPIs Influenciadores para KPIs Resultado. Use após unidade-economica, com o diagnóstico completo já concluído.
 ---
 
-# Skill 05 — Metas e Cenários
+# Skill 06 — Metas e Cenários
 
-Skill 5 de 8. Corresponde aos Prompts 5 (Metas do Projeto) e 6
+Skill 6 de 10. Corresponde aos Prompts 5 (Metas do Projeto) e 6
 (Cenários/Impactos Esperados) do processo original. O Diagnóstico Atual está
 concluído — esta skill define o alvo e a engenharia matemática que sustenta
 os cenários.
@@ -192,7 +192,7 @@ linha) corresponde à coluna de mês do histórico da Skill 03**, sem inversão?
 ## Restrições
 
 - Não definir estrutura de campanha ou plano de mídia ainda — isso é a
-  Skill 07.
+  Skill 08.
 - Um KPI Influenciador pode (e deve) ser "compensado" por outro para que os
   KPIs Resultado batam com a meta — não force todos os KPIs a melhorarem
   igualmente.
@@ -210,14 +210,14 @@ linha) corresponde à coluna de mês do histórico da Skill 03**, sem inversão?
 
 ## Encerramento e handoff
 
-Ao concluir, marque "05 · Metas e cenários" como ✅ em
+Ao concluir, marque "06 · Metas e cenários" como ✅ em
 `contexto/status-planejamento.md` e converse com o analista em linguagem
 natural, sem citar caminho de arquivo:
 
 "Etapa concluída! Não preciso de nada novo — só pensa numa lista de
 concorrentes que você quer que eu pesquise na próxima etapa.
 
-Quando estiver pronto, rode `/06-briefing-e-benchmark`."
+Quando estiver pronto, rode `/07-briefing-e-benchmark`."
 
 Reescreva também o bloco "Próximo passo" de `contexto/status-planejamento.md`
 com esse mesmo pedido.

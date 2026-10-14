@@ -3,14 +3,14 @@ name: midia-paga
 description: Constrói o planejamento estratégico de mídia paga — alocação de verba por plataforma, estratégia por Curva ABC, calendário estratégico anual, ROAS esperado e redução de dependência — com base em tudo que foi diagnosticado e projetado. Use após briefing-e-benchmark, com o cenário Realista já validado.
 ---
 
-# Skill 07 — Planejamento de Mídia Paga
+# Skill 08 — Planejamento de Mídia Paga
 
-Skill 7 de 8. Corresponde ao Prompt 9 do processo original. Ainda não é a etapa de criação de criativos,
+Skill 8 de 10. Corresponde ao Prompt 9 do processo original. Ainda não é a etapa de criação de criativos,
 configuração de campanhas ou plano de ação — é só estratégia de alocação e direcionamento.
 
 ## Antes de começar (checklist do analista)
 
-- [ ] Skills 01 a 06 concluídas e aprovadas — toda a base necessária já está
+- [ ] Skills 01 a 07 concluídas e aprovadas — toda a base necessária já está
       na conversa, não é preciso reenviar nenhum arquivo.
 - [ ] Confirmar qual cenário serve de base (Realista, salvo indicação
       contrária do analista).
@@ -38,7 +38,7 @@ dois — não é opcional:
   do mês no topo de cada barra e o % de cada plataforma dentro do próprio
   segmento colorido.
 - **Tabela-imagem** (PNG, via `analista-dados`/matplotlib, mesmo padrão
-  visual das tabelas-imagem da Skill 05 — cabeçalho azul escuro com texto
+  visual das tabelas-imagem da Skill 06 — cabeçalho azul escuro com texto
   branco, linhas alternadas, linha de TOTAL destacada): colunas Mês |
   Invest. Total | % Meta | % Google | Meta (R$) | Google (R$) | Justificativa.
 
@@ -116,7 +116,7 @@ avançar se houver inconsistência.
 - Não propor estrutura de anúncio no nível de criativo/copy/público.
 - Não propor estratégia de conteúdo orgânico detalhada, plano de CRM
   operacional, ou estratégia de influenciadores específicos.
-- Não montar o plano de ação ainda — isso é a Skill 08.
+- Não montar o plano de ação ainda — isso é a Skill 09.
 
 ## Critério de conclusão
 
@@ -128,7 +128,7 @@ avançar se houver inconsistência.
 
 ## Encerramento e handoff
 
-Ao concluir, marque "07 · Mídia paga" como ✅ em
+Ao concluir, marque "08 · Mídia paga" como ✅ em
 `contexto/status-planejamento.md` e converse com o analista em linguagem
 natural, sem citar caminho de arquivo:
 
@@ -136,7 +136,7 @@ natural, sem citar caminho de arquivo:
 hoje, se seguimos com o cenário Realista, e quais são as 2–3 frentes mais
 urgentes que você quer priorizar no plano de ação.
 
-Quando estiver pronto, rode `/08-plano-de-acao`."
+Quando estiver pronto, rode `/09-plano-de-acao`."
 
 Reescreva também o bloco "Próximo passo" de `contexto/status-planejamento.md`
 com esse mesmo pedido.

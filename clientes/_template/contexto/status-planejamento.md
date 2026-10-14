@@ -10,10 +10,11 @@ Atualizado pela própria skill ao final de cada etapa (ver Regra 6 em
 | 02 · Contextualização estratégica | ⬜ | | |
 | 03 · Diagnóstico de performance | ⬜ | | |
 | 04 · Unidade econômica | ⬜ | | |
-| 05 · Metas e cenários | ⬜ | | |
-| 06 · Briefing e benchmark | ⬜ | | |
-| 07 · Mídia paga | ⬜ | | |
-| 08 · Plano de ação | ⬜ | | |
+| 05 · Soluções | ⬜ | | |
+| 06 · Metas e cenários | ⬜ | | |
+| 07 · Briefing e benchmark | ⬜ | | |
+| 08 · Mídia paga | ⬜ | | |
+| 09 · Plano de ação | ⬜ | | |
 | Apresentação final | ⬜ | | |
 
 ## Próximo passo

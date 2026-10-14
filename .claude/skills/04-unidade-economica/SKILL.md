@@ -5,7 +5,7 @@ description: Calcula CAC, LTV histórico e a relação LTV/CAC do prospect a par
 
 # Skill 04 — Unidade Econômica e Estabilidade
 
-Skill 4 de 8. Corresponde ao Prompt 4 do processo original. Isolada das
+Skill 4 de 10. Corresponde ao Prompt 4 do processo original. Isolada das
 demais skills de diagnóstico por ser a única que processa dado potencialmente
 sensível (PII). Ainda estamos no Diagnóstico Atual — não propor metas,
 cenários, plano de mídia ou soluções.

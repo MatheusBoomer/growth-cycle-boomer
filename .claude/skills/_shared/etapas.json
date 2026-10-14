@@ -46,37 +46,46 @@
     {
       "id": "05",
       "numero": "05",
-      "titulo": "Metas e cenários",
-      "rotuloStatus": "05 · Metas e cenários",
-      "descricao": "Define a meta, quebra mês a mês pela sazonalidade real e monta os cenários Pessimista, Realista e Otimista.",
-      "skill": "05-metas-e-cenarios",
+      "titulo": "Soluções",
+      "rotuloStatus": "05 · Soluções",
+      "descricao": "Abre cada problema do diagnóstico em hipóteses de causa, 1 a 3 soluções e impacto em R$ ou %.",
+      "skill": "05-solucoes",
       "insumos": []
     },
     {
       "id": "06",
       "numero": "06",
-      "titulo": "Briefing e benchmark",
-      "rotuloStatus": "06 · Briefing e benchmark",
-      "descricao": "Consolida o briefing do planejamento e pesquisa os concorrentes.",
-      "skill": "06-briefing-e-benchmark",
+      "titulo": "Metas e cenários",
+      "rotuloStatus": "06 · Metas e cenários",
+      "descricao": "Define a meta, quebra mês a mês pela sazonalidade real e monta os cenários Pessimista, Realista e Otimista.",
+      "skill": "06-metas-e-cenarios",
       "insumos": []
     },
     {
       "id": "07",
       "numero": "07",
-      "titulo": "Mídia paga",
-      "rotuloStatus": "07 · Mídia paga",
-      "descricao": "Planeja verba por plataforma, estratégia por Curva ABC, calendário anual, ROAS esperado e redução de dependência.",
-      "skill": "07-midia-paga",
-      "insumos": [{ "id": "prints-campanhas", "obrigatorio": false }]
+      "titulo": "Briefing e benchmark",
+      "rotuloStatus": "07 · Briefing e benchmark",
+      "descricao": "Consolida o briefing do planejamento e pesquisa os concorrentes.",
+      "skill": "07-briefing-e-benchmark",
+      "insumos": []
     },
     {
       "id": "08",
       "numero": "08",
+      "titulo": "Mídia paga",
+      "rotuloStatus": "08 · Mídia paga",
+      "descricao": "Planeja verba por plataforma, estratégia por Curva ABC, calendário anual, ROAS esperado e redução de dependência.",
+      "skill": "08-midia-paga",
+      "insumos": [{ "id": "prints-campanhas", "obrigatorio": false }]
+    },
+    {
+      "id": "09",
+      "numero": "09",
       "titulo": "Plano de ação",
-      "rotuloStatus": "08 · Plano de ação",
+      "rotuloStatus": "09 · Plano de ação",
       "descricao": "Organiza tudo o que foi proposto num plano de ação priorizado, com responsável, prazo e forma de execução.",
-      "skill": "08-plano-de-acao",
+      "skill": "09-plano-de-acao",
       "insumos": []
     },
     {
@@ -85,7 +94,7 @@
       "titulo": "Apresentação final",
       "rotuloStatus": "Apresentação final",
       "descricao": "Monta a apresentação (.pptx) no molde da agência a partir de tudo o que foi aprovado.",
-      "skill": "09-apresentacao-final",
+      "skill": "10-apresentacao-final",
       "insumos": []
     }
   ],

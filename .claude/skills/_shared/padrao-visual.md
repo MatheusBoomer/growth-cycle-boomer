@@ -1,7 +1,7 @@
 # Padrão visual obrigatório dos gráficos
 
 Referenciado por todas as skills que geram gráfico: `03-diagnostico-performance`,
-`04-unidade-economica`, `05-metas-e-cenarios`, `07-midia-paga`. Não copie este
+`04-unidade-economica`, `06-metas-e-cenarios`, `08-midia-paga`. Não copie este
 conteúdo para dentro de uma skill — referencie este arquivo.
 
 ## Regras de construção

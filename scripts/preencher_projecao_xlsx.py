@@ -3,7 +3,7 @@
 scripts/preencher_projecao_xlsx.py — preenche o modelo de Projeção de Cenários.
 
 Pega o arquivo-modelo `.claude/skills/_shared/[MODELO] Projeção de Cenários.xlsx`
-e escreve nele os KPIs Influenciadores já aprovados na Skill 05, deixando as
+e escreve nele os KPIs Influenciadores já aprovados na Skill 06, deixando as
 colunas de resultado (Sessões totais / Vendas / Receita) como estão — elas são
 FÓRMULAS no modelo e recalculam sozinhas quando o cliente abre o arquivo no
 Excel/Google Sheets. O script só escreve os campos de INPUT; nunca sobrescreve
@@ -22,7 +22,7 @@ POSIÇÃO, casando cada entrada das listas às linhas na ordem mais antigo→rec
 Quem estabelece a ordem correta é o subagente `analista-dados`, lendo a coluna
 de mês da Skill 03. Este script não adivinha calendário.
 
-## Fluxo (chamado pelo `analista-dados`, ao final da Skill 05)
+## Fluxo (chamado pelo `analista-dados`, ao final da Skill 06)
 
     python scripts/preencher_projecao_xlsx.py \
         --modelo ".claude/skills/_shared/[MODELO] Projeção de Cenários.xlsx" \

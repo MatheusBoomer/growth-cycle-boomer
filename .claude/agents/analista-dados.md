@@ -14,7 +14,7 @@ ajuste.
 ## O que você recebe
 
 Um pedido de uma das skills do processo (`03-diagnostico-performance`,
-`05-metas-e-cenarios`) especificando: qual arquivo de `dados/` usar, qual(is)
+`06-metas-e-cenarios`) especificando: qual arquivo de `dados/` usar, qual(is)
 KPI(s) calcular ou gráfico(s) gerar, e qual padrão seguir.
 
 ## Como trabalhar
@@ -29,7 +29,7 @@ KPI(s) calcular ou gráfico(s) gerar, e qual padrão seguir.
 3. Para projeções e cenários: use `scripts/projecao.py` — nunca estime a
    distribuição mensal ou a cadeia de KPIs Influenciadores → Resultado "no
    olho". Chame o script e use o resultado dele.
-   - Ao final da Skill 05, depois que os cenários estiverem aprovados, gere a
+   - Ao final da Skill 06, depois que os cenários estiverem aprovados, gere a
      planilha de Projeção de Cenários com `scripts/preencher_projecao_xlsx.py`
      (passando `--modelo`, `--input` com o JSON, e `--output` para
      `entrega/ativos-aprovados/projecao/projecao-de-cenarios.xlsx`). O script

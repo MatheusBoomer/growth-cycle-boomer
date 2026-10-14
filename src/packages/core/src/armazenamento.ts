@@ -3,8 +3,9 @@ import { appendFile, copyFile, cp, mkdir, readdir, readFile, rename, rm, stat, w
 import path from "node:path"
 import { ehImagem } from "./biblioteca"
 import { ErroCaminhoForaDoProspect, ErroEntrada, ErroNaoEncontrado, ErroProspectExistente } from "./erros"
+import { etapaVazia } from "./maquina-estados"
 import { normalizarSlug } from "./slug"
-import type { Estado, EtapaId, EventoConversa } from "./tipos"
+import { ORDEM_ETAPAS, type Estado, type EtapaId, type EventoConversa } from "./tipos"
 
 const ARQUIVO_ESTADO = ".app/estado.json"
 const IGNORAR = new Set(["README.md", ".DS_Store"])
@@ -120,8 +121,11 @@ export class FsArmazenamento {
     const texto = await this.lerTexto(slug, ARQUIVO_ESTADO)
     if (!texto) return null
     const estado = JSON.parse(texto) as Estado
+    // estado.json gravado antes de uma etapa nova (ex.: 05 · Soluções) não tem a chave dela
+    const etapas = { ...estado.etapas }
+    for (const id of ORDEM_ETAPAS) etapas[id] ??= etapaVazia("bloqueada")
     // estado.json gravado antes do card de perguntas não tem o campo
-    return { ...estado, perguntas: estado.perguntas ?? [] }
+    return { ...estado, etapas, perguntas: estado.perguntas ?? [] }
   }
 
   gravarEstado(slug: string, estado: Estado): Promise<void> {

@@ -28,19 +28,19 @@ describe("destino do entregável aprovado", () => {
     expect(destinoAprovado({ tipo: "grafico", nomeFinal: "roas-global-google-meta", etapa: "03" })).toBe(
       "entrega/ativos-aprovados/graficos/roas-global-google-meta.png",
     )
-    expect(destinoAprovado({ tipo: "tabela", nomeFinal: "tabela-cenarios-projecao", etapa: "05" })).toBe(
+    expect(destinoAprovado({ tipo: "tabela", nomeFinal: "tabela-cenarios-projecao", etapa: "06" })).toBe(
       "entrega/ativos-aprovados/graficos/tabela-cenarios-projecao.png",
     )
     expect(destinoAprovado({ tipo: "secao", nomeFinal: "macro-financeiro", etapa: "03" })).toBe(
       "entrega/ativos-aprovados/secoes/03-macro-financeiro.md",
     )
-    expect(destinoAprovado({ tipo: "planilha", nomeFinal: "projecao-de-cenarios", etapa: "05" })).toBe(
+    expect(destinoAprovado({ tipo: "planilha", nomeFinal: "projecao-de-cenarios", etapa: "06" })).toBe(
       "entrega/ativos-aprovados/projecao/projecao-de-cenarios.xlsx",
     )
-    expect(destinoAprovado({ tipo: "documento", nomeFinal: "plano-de-acao-estrategico", etapa: "08" })).toBe(
+    expect(destinoAprovado({ tipo: "documento", nomeFinal: "plano-de-acao-estrategico", etapa: "09" })).toBe(
       "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.docx",
     )
-    expect(destinoAprovado({ tipo: "html", nomeFinal: "benchmark", etapa: "06" })).toBe(
+    expect(destinoAprovado({ tipo: "html", nomeFinal: "benchmark", etapa: "07" })).toBe(
       "entrega/ativos-aprovados/benchmark/benchmark.html",
     )
   })
@@ -93,7 +93,7 @@ describe("ciclo do entregável", () => {
 
 const html = (id: string, over: Partial<Entregavel> = {}): Entregavel => ({
   id,
-  etapa: "06",
+  etapa: "07",
   tipo: "html",
   titulo: "Benchmark",
   arquivoRascunho: `.app/propostas/${id}.html`,
@@ -108,35 +108,35 @@ const html = (id: string, over: Partial<Entregavel> = {}): Entregavel => ({
 describe("entregável visível no visualizador", () => {
   it("mostra a versão não substituída mais recente", () => {
     const lista = [html("e1", { status: "substituido" }), html("e2", { status: "aprovado" }), html("e3")]
-    expect(entregavelVisivel(lista, "06", "benchmark")?.id).toBe("e3")
+    expect(entregavelVisivel(lista, "07", "benchmark")?.id).toBe("e3")
   })
   it("mostra o aprovado quando não há pendente", () => {
     const lista = [html("e1", { status: "substituido" }), html("e2", { status: "aprovado" })]
-    expect(entregavelVisivel(lista, "06", "benchmark")?.id).toBe("e2")
+    expect(entregavelVisivel(lista, "07", "benchmark")?.id).toBe("e2")
   })
   it("ignora a seção de texto com o mesmo nome final do HTML", () => {
     const lista = [html("e1"), html("e2", { tipo: "secao", arquivoRascunho: ".app/propostas/e2.md" })]
-    expect(entregavelVisivel(lista, "06", "benchmark")?.id).toBe("e1")
+    expect(entregavelVisivel(lista, "07", "benchmark")?.id).toBe("e1")
   })
   it("devolve null quando o entregável sumiu ou é de outra etapa", () => {
-    expect(entregavelVisivel([html("e1", { status: "substituido" })], "06", "benchmark")).toBeNull()
-    expect(entregavelVisivel([html("e1")], "05", "benchmark")).toBeNull()
-    expect(entregavelVisivel([], "06", "outro")).toBeNull()
+    expect(entregavelVisivel([html("e1", { status: "substituido" })], "07", "benchmark")).toBeNull()
+    expect(entregavelVisivel([html("e1")], "06", "benchmark")).toBeNull()
+    expect(entregavelVisivel([], "07", "outro")).toBeNull()
   })
 })
 
 describe("abertura automática do visualizador", () => {
   it("não abre na primeira carga", () => {
-    expect(htmlParaAbrir(null, [html("e1")], "06")).toBeNull()
+    expect(htmlParaAbrir(null, [html("e1")], "07")).toBeNull()
   })
   it("abre quando chega um HTML pendente novo da etapa aberta", () => {
-    expect(htmlParaAbrir([], [html("e1")], "06")).toBe("benchmark")
+    expect(htmlParaAbrir([], [html("e1")], "07")).toBe("benchmark")
   })
   it("ignora HTML já conhecido, de outra etapa, aprovado ou outro tipo", () => {
-    expect(htmlParaAbrir([html("e1")], [html("e1")], "06")).toBeNull()
-    expect(htmlParaAbrir([], [html("e1")], "05")).toBeNull()
-    expect(htmlParaAbrir([], [html("e1", { status: "aprovado" })], "06")).toBeNull()
-    expect(htmlParaAbrir([], [html("e1", { tipo: "secao", arquivoRascunho: ".app/propostas/e1.md" })], "06")).toBeNull()
+    expect(htmlParaAbrir([html("e1")], [html("e1")], "07")).toBeNull()
+    expect(htmlParaAbrir([], [html("e1")], "06")).toBeNull()
+    expect(htmlParaAbrir([], [html("e1", { status: "aprovado" })], "07")).toBeNull()
+    expect(htmlParaAbrir([], [html("e1", { tipo: "secao", arquivoRascunho: ".app/propostas/e1.md" })], "07")).toBeNull()
   })
 })
 

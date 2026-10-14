@@ -2,7 +2,7 @@
 """
 scripts/meta_ads_selecao.py: normaliza os anúncios devolvidos pela Apify
 (ator apify/facebook-ads-scraper) e aplica as regras mecânicas de seleção da
-Skill 06 (até 5 criativos, no máximo 1 catálogo, sem duplicados, sem anúncio
+Skill 07 (até 5 criativos, no máximo 1 catálogo, sem duplicados, sem anúncio
 sem mídia).
 
 Sem rede e sem disco: o download entra por uma função injetada, o que deixa
