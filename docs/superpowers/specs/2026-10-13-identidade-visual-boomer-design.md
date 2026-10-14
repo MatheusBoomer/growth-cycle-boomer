@@ -202,9 +202,10 @@ corrido usa essa combinação.
   `PreviaRoteiro`):** `amber-*` → `aviso`; `bg-primary` de "aprovado" →
   `sucesso`; barra de uso: ok `--volume`, alerta `--aviso`, crítico
   `--destructive`.
-- **Cabeçalhos de painel:** caixinha de ícone do spec (`size-8 rounded-lg
-  bg-muted ring-1 ring-border`, ícone lucide 16 px em `muted-foreground`)
-  onde hoje há ícone solto.
+- **Títulos de painel:** `text-sm font-semibold tracking-tight` com linha de
+  apoio `text-xs text-muted-foreground`; rótulos em caixa alta no estilo
+  eyebrow (`text-[10px] tracking-[0.14em]`). (A caixinha de ícone do spec de
+  origem não entra: o app não tem cabeçalho de painel com ícone.)
 - **Links de ação** ("Abrir…", "Ver…"): `text-link-acao`.
 
 ### 5.4 Material do cliente ("papel")
