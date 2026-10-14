@@ -40,7 +40,7 @@ export function CardImagem({ slug, item, aoAbrir }: { slug: string; item: ItemBi
       <div className="flex min-w-0 flex-col gap-1 p-2">
         <div className="flex min-w-0 items-center gap-1.5">
           <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.titulo}</span>
-          <Badge variant={item.origem === "aprovado" ? "default" : "outline"} className={cn(item.origem === "substituido" && "opacity-60")}>
+          <Badge variant={item.origem === "aprovado" ? "sucesso" : "outline"} className={cn(item.origem === "substituido" && "opacity-60")}>
             {ROTULO_ORIGEM[item.origem]}
           </Badge>
         </div>

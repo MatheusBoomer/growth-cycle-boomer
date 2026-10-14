@@ -75,7 +75,7 @@ export function CardEntregavel({ slug, entregavel: e }: { slug: string; entregav
           >
             <AtSignIcon />
           </Button>
-          <Badge variant={e.status === "aprovado" ? "default" : e.status === "pendente" ? "outline" : "secondary"}>
+          <Badge variant={e.status === "aprovado" ? "sucesso" : e.status === "pendente" ? "aviso" : "secondary"}>
             {ROTULO_STATUS_ENTREGAVEL[e.status]}
           </Badge>
         </CardAction>

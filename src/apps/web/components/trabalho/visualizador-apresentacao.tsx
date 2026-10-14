@@ -147,7 +147,7 @@ export function VisualizadorApresentacao({
       <header className="flex items-center gap-2 border-b px-3 py-2">
         <h2 className="truncate text-sm font-medium">{entregavel?.titulo ?? "Apresentação"}</h2>
         {entregavel && (
-          <Badge variant={entregavel.status === "aprovado" ? "default" : "outline"}>{ROTULO_STATUS_ENTREGAVEL[entregavel.status]}</Badge>
+          <Badge variant={entregavel.status === "aprovado" ? "sucesso" : entregavel.status === "pendente" ? "aviso" : "outline"}>{ROTULO_STATUS_ENTREGAVEL[entregavel.status]}</Badge>
         )}
         <div className="ml-auto flex items-center gap-1">
           {entregavel && (

@@ -69,7 +69,7 @@ export function CardInsumo({ slug, etapa, insumo, obrigatorio, estadoInsumo, tem
           {insumo.tipo === "link" ? "Link" : insumo.formatos.join(", ")}
         </CardDescription>
         <CardAction>
-          <Badge variant={status === "valido" ? "default" : status === "invalido" ? "destructive" : "outline"}>
+          <Badge variant={status === "valido" ? "sucesso" : status === "invalido" ? "perigo" : "outline"}>
             {status === "valido" ? "Recebido" : status === "invalido" ? "Com problemas" : obrigatorio ? "Obrigatório" : "Opcional"}
           </Badge>
         </CardAction>
