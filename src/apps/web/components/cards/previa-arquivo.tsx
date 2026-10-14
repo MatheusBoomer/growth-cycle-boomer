@@ -60,8 +60,15 @@ export function PreviaArquivo({
     return texto === null ? (
       <Skeleton className="h-24 w-full" />
     ) : (
-      <div className="max-h-96 overflow-y-auto rounded-md border p-3">
-        <Markdown>{texto}</Markdown>
+      <div className="relative">
+        <div className="max-h-96 overflow-y-auto rounded-md border p-3">
+          <Markdown>{texto}</Markdown>
+        </div>
+        {aoAbrir && (
+          <Button size="sm" variant="midia" className="absolute top-2 right-2" onClick={aoAbrir}>
+            <PanelRightOpenIcon /> Expandir
+          </Button>
+        )}
       </div>
     )
   }

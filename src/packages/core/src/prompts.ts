@@ -42,8 +42,11 @@ ${acao}
 ${dossie}`
 }
 
-export function mensagemAprovacao(titulo: string, nomeFinal: string, destino: string): string {
-  return `O analista APROVOU o entregável “${titulo}” (${nomeFinal}). O app já salvou em \`${destino}\`. Siga para o próximo passo da skill.`
+export function mensagemAprovacao(titulo: string, nomeFinal: string, destino: string, editado = false): string {
+  const edicao = editado
+    ? " O analista editou o texto antes de aprovar: releia o arquivo aprovado e use essa versão daqui em diante, não a que você escreveu."
+    : ""
+  return `O analista APROVOU o entregável “${titulo}” (${nomeFinal}). O app já salvou em \`${destino}\`.${edicao} Siga para o próximo passo da skill.`
 }
 
 export function mensagemAjuste(titulo: string, nomeFinal: string, texto: string): string {

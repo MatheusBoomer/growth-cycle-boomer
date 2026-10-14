@@ -52,6 +52,8 @@ export const api = {
   enviarMensagem: (slug: string, etapa: EtapaId, texto: string) =>
     chamar(`${base(slug)}/etapas/${etapa}/mensagens`, comJson("POST", { texto })),
   aprovar: (slug: string, id: string) => chamar(`${base(slug)}/entregaveis/${id}`, comJson("POST", { acao: "aprovar" })),
+  editarEntregavel: (slug: string, id: string, conteudo: string) =>
+    chamar(`${base(slug)}/entregaveis/${id}`, comJson("POST", { acao: "editar", conteudo })),
   pedirAjuste: (slug: string, id: string, texto: string) =>
     chamar(`${base(slug)}/entregaveis/${id}`, comJson("POST", { acao: "ajuste", texto })),
   responderPerguntas: (slug: string, id: string, respostas: RespostaPergunta[]) =>

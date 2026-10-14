@@ -20,6 +20,7 @@ import {
   destinoAprovado,
   encontrarEntregavel,
   EXTENSAO_POR_TIPO,
+  marcarEditado,
   pedirAjuste,
   proporEntregavel,
 } from "./entregaveis"
@@ -447,8 +448,18 @@ export class ServicoPlanejamento {
     await this.enfileirar(
       slug,
       aprovado.etapa,
-      mensagemAprovacao(aprovado.titulo, aprovado.nomeFinal, `clientes/${slug}/${aprovado.destino}`),
+      mensagemAprovacao(aprovado.titulo, aprovado.nomeFinal, `clientes/${slug}/${aprovado.destino}`, aprovado.editadoEm !== undefined),
     )
+  }
+
+  /** O analista corrige a seção pendente direto no visualizador; o texto vale como a proposta. */
+  async editarEntregavel(slug: string, id: string, conteudo: unknown): Promise<void> {
+    if (typeof conteudo !== "string" || !conteudo.trim()) throw new ErroEntrada("O texto não pode ficar vazio.")
+    await this.mutar(slug, async (e) => {
+      const novo = marcarEditado(e, id, this.agora())
+      await this.arm.gravarTexto(slug, encontrarEntregavel(e, id).arquivoRascunho, conteudo)
+      return { estado: novo, resultado: undefined }
+    })
   }
 
   async pedirAjuste(slug: string, id: string, texto: string): Promise<void> {

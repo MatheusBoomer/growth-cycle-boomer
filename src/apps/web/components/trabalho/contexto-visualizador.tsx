@@ -6,6 +6,8 @@ import type { EtapaId } from "@workspace/core/tipos"
 export interface ControleVisualizador {
   /** Abre o relatório HTML de um entregável na coluna larga. */
   abrir: (etapa: EtapaId, nomeFinal: string) => void
+  /** Abre uma seção de texto (markdown) na coluna larga, para ler, citar trechos e editar. */
+  abrirSecao: (etapa: EtapaId, nomeFinal: string) => void
   /** Abre um arquivo do prospect (caminho relativo à pasta dele) no visualizador embaixo do painel. */
   abrirArquivo: (caminho: string) => void
   /** Insere "@caminho" no campo de mensagem, na posição do cursor. */
@@ -20,6 +22,7 @@ export interface ControleVisualizador {
 
 export const ContextoVisualizador = createContext<ControleVisualizador>({
   abrir: () => {},
+  abrirSecao: () => {},
   abrirArquivo: () => {},
   mencionar: () => {},
   inserirNoCompositor: () => {},

@@ -118,6 +118,10 @@ describe("entregável visível no visualizador", () => {
     const lista = [html("e1"), html("e2", { tipo: "secao", arquivoRascunho: ".app/propostas/e2.md" })]
     expect(entregavelVisivel(lista, "07", "benchmark")?.id).toBe("e1")
   })
+  it("com tipos [secao], acha a seção de texto do mesmo nome final, não o HTML", () => {
+    const lista = [html("e1"), html("e2", { tipo: "secao", arquivoRascunho: ".app/propostas/e2.md" })]
+    expect(entregavelVisivel(lista, "07", "benchmark", ["secao"])?.id).toBe("e2")
+  })
   it("devolve null quando o entregável sumiu ou é de outra etapa", () => {
     expect(entregavelVisivel([html("e1", { status: "substituido" })], "07", "benchmark")).toBeNull()
     expect(entregavelVisivel([html("e1")], "06", "benchmark")).toBeNull()

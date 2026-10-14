@@ -73,6 +73,8 @@ export interface Entregavel {
   ajustePedido: string | null
   criadoEm: string
   decididoEm: string | null
+  /** Quando o analista editou o texto (seção) antes de decidir; a aprovação avisa a IA para reler. */
+  editadoEm?: string
 }
 
 export type StatusInsumo = "pendente" | "invalido" | "valido"

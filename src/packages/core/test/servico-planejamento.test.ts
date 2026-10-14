@@ -252,6 +252,50 @@ describe("ferramentas do agente", () => {
     expect(await servico.retirarFila(slug)).toBeNull()
   })
 
+  it("editar seção pendente grava o rascunho e a aprovação avisa a IA da edição", async () => {
+    const slug = await prospectNaEtapa03()
+    await rascunho(slug, "s.md", "# Texto da IA")
+    await servico.ferramenta(ctx03, "propor_entregavel", {
+      tipo: "secao",
+      titulo: "Macro financeiro",
+      arquivo_rascunho: `clientes/${slug}/.app/rascunhos/s.md`,
+      nome_final: "macro-financeiro",
+    })
+    await servico.editarEntregavel(slug, "id1", "# Texto corrigido pelo analista")
+    const e = await servico.estado(slug)
+    const alvo = e.entregaveis.find((x) => x.id === "id1")!
+    expect(alvo.editadoEm).toBe("2026-09-28T10:00:00.000Z")
+    expect(await readFile(path.join(raiz, "clientes", slug, alvo.arquivoRascunho), "utf8")).toBe("# Texto corrigido pelo analista")
+    await servico.aprovarEntregavel(slug, "id1")
+    expect(await readFile(path.join(raiz, "clientes", slug, "entrega/ativos-aprovados/secoes/03-macro-financeiro.md"), "utf8")).toBe(
+      "# Texto corrigido pelo analista",
+    )
+    expect((await servico.retirarFila(slug))?.texto).toMatch(/editou o texto antes de aprovar/)
+  })
+
+  it("editar recusa entregável que não é seção, já decidido ou texto vazio", async () => {
+    const slug = await prospectNaEtapa03()
+    await rascunho(slug, "g.png")
+    await servico.ferramenta(ctx03, "propor_entregavel", {
+      tipo: "grafico",
+      titulo: "Investimento",
+      arquivo_rascunho: `clientes/${slug}/.app/rascunhos/g.png`,
+      nome_final: "investimento-total-mensal",
+    })
+    await expect(servico.editarEntregavel(slug, "id1", "x")).rejects.toBeInstanceOf(ErroEntrada)
+    await rascunho(slug, "s.md", "# A")
+    await servico.ferramenta(ctx03, "propor_entregavel", {
+      tipo: "secao",
+      titulo: "Macro",
+      arquivo_rascunho: `clientes/${slug}/.app/rascunhos/s.md`,
+      nome_final: "macro-financeiro",
+    })
+    const secao = (await servico.estado(slug)).entregaveis.find((x) => x.tipo === "secao")!.id
+    await expect(servico.editarEntregavel(slug, secao, "   ")).rejects.toBeInstanceOf(ErroEntrada)
+    await servico.aprovarEntregavel(slug, secao)
+    await expect(servico.editarEntregavel(slug, secao, "# B")).rejects.toBeInstanceOf(TransicaoInvalida)
+  })
+
   it("solicitar_insumo só aceita insumo da etapa", async () => {
     const slug = await prospectNaEtapa03()
     expect(

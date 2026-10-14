@@ -120,14 +120,31 @@ export function pedirAjuste(estado: Estado, id: string, texto: string, em: strin
   }
 }
 
+/** O analista editou a seção pendente: só seção de texto, e só antes de aprovar ou pedir ajuste. */
+export function marcarEditado(estado: Estado, id: string, em: string): Estado {
+  const alvo = encontrarEntregavel(estado, id)
+  if (alvo.tipo !== "secao") throw new ErroEntrada("Só seções de texto podem ser editadas aqui.")
+  if (alvo.status !== "pendente") throw new TransicaoInvalida("Este entregável já foi decidido e não pode mais ser editado.")
+  return { ...estado, entregaveis: estado.entregaveis.map((e) => (e.id === id ? { ...e, editadoEm: em } : e)), atualizadoEm: em }
+}
+
 /** Tipos que abrem no visualizador da coluna larga (HTML do benchmark e apresentação em slides). */
 export const TIPOS_VISUALIZADOR: TipoEntregavel[] = ["html", "apresentacao"]
 
-/** O HTML ou a apresentação que o visualizador mostra para um nome final: a versão não substituída mais recente (pendente ou aprovada). */
-export function entregavelVisivel(entregaveis: Entregavel[], etapa: EtapaId, nomeFinal: string): Entregavel | null {
+/**
+ * O entregável que o visualizador mostra para um nome final: a versão não substituída mais recente
+ * (pendente ou aprovada). Por padrão, HTML ou apresentação; com `tipos` = ["secao"], a seção de
+ * texto (o benchmark tem HTML e seção com o mesmo nome final).
+ */
+export function entregavelVisivel(
+  entregaveis: Entregavel[],
+  etapa: EtapaId,
+  nomeFinal: string,
+  tipos: TipoEntregavel[] = TIPOS_VISUALIZADOR,
+): Entregavel | null {
   let visivel: Entregavel | null = null
   for (const e of entregaveis) {
-    if (!TIPOS_VISUALIZADOR.includes(e.tipo) || e.etapa !== etapa || e.nomeFinal !== nomeFinal || e.status === "substituido") continue
+    if (!tipos.includes(e.tipo) || e.etapa !== etapa || e.nomeFinal !== nomeFinal || e.status === "substituido") continue
     if (!visivel || e.criadoEm > visivel.criadoEm) visivel = e
   }
   return visivel
