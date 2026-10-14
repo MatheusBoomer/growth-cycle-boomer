@@ -83,22 +83,23 @@ servidor.registerTool(
   {
     title: "Fazer perguntas ao analista",
     description:
-      "Mostra ao analista um card com até 4 perguntas de alternativas. Use quando precisar de uma decisão entre opções definidas, em vez de listar opções no texto. Toda pergunta já tem um campo de resposta livre. Depois de chamar, encerre a resposta e aguarde: as respostas chegam como nova mensagem.",
+      "Mostra ao analista um card com até 10 perguntas, uma por vez, e uma revisão editável antes do envio. Pergunta com opções (2 a 6) serve para decidir entre alternativas definidas; pergunta sem opções é aberta, de resposta escrita (ex.: as perguntas estratégicas da etapa 02). Toda pergunta com opções também aceita resposta livre. Depois de chamar, encerre a resposta e aguarde: as respostas chegam como nova mensagem.",
     inputSchema: {
       perguntas: z
         .array(
           z.object({
             enunciado: z.string().describe("A pergunta, curta e direta"),
             descricao: z.string().optional().describe("Contexto opcional mostrado abaixo da pergunta"),
-            multipla: z.boolean().describe("true = o analista pode marcar várias opções"),
+            multipla: z.boolean().optional().describe("true = o analista pode marcar várias opções (só vale com opções)"),
             opcoes: z
               .array(z.object({ rotulo: z.string(), descricao: z.string().optional() }))
-              .min(2)
-              .max(6),
+              .max(6)
+              .optional()
+              .describe("2 a 6 alternativas; omita (ou deixe vazio) para pergunta aberta, de resposta escrita"),
           }),
         )
         .min(1)
-        .max(4),
+        .max(10),
     },
   },
   async (args) => chamarApp("fazer_perguntas", args),

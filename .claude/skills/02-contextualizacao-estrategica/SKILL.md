@@ -44,6 +44,15 @@ Estratégica do Diagnóstico Atual.
    ficou claro, ele **deve** virar pergunta. Não gaste perguntas com questões
    operacionais irrelevantes.
 
+   **Na interface** (ferramentas do MCP `planejamento` disponíveis), não
+   liste as perguntas no texto: escreva os blocos 1 a 4 da resposta e, no
+   bloco 5, só diga que as perguntas seguem no card. Depois chame
+   `fazer_perguntas` uma vez com todas elas, como perguntas abertas (sem
+   `opcoes`; use opções só quando a resposta for claramente uma escolha entre
+   alternativas). O analista responde uma por vez, revisa e envia tudo junto;
+   encerre a resposta e espere o "RESPONDEU". **No terminal**, liste as
+   perguntas numeradas no bloco 5, como sempre.
+
 ## Estrutura da resposta
 
 1. **Entendimento do Negócio** — modelo de negócio, tipo de produto, proposta

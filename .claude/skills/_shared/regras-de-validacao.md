@@ -99,10 +99,13 @@ está rodando dentro da interface web, e estas regras substituem o jeito
   `.claude/skills/_shared/etapas.json`), não descrevendo caminhos de pasta.
 - **Decisões entre alternativas:** quando precisar que o analista escolha
   entre opções definidas (cenário, prioridade, premissa), chame
-  `fazer_perguntas` com até 4 perguntas em vez de listar as opções no texto.
-  Toda pergunta já aceita resposta livre. Depois de chamar, encerre a
-  resposta; as respostas chegam como nova mensagem ("RESPONDEU").
-  Perguntas abertas de esclarecimento continuam no chat normal.
+  `fazer_perguntas` em vez de listar as opções no texto. O card aceita até
+  10 perguntas, mostra uma por vez e uma revisão editável antes do envio.
+  Pergunta com opções (2 a 6) já aceita resposta livre; pergunta sem opções é
+  aberta, de resposta escrita (é assim que a Skill 02 manda as perguntas
+  estratégicas). Depois de chamar, encerre a resposta; as respostas chegam
+  como nova mensagem ("RESPONDEU"). Uma dúvida pontual de esclarecimento
+  pode continuar no chat normal.
 - **Encerramento (Regra 6):** não edite `contexto/status-planejamento.md`.
   Chame `sinalizar_etapa_pronta` com o resumo de decisões (markdown) e o
   mesmo texto de handoff do "Encerramento e handoff" da skill.

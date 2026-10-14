@@ -29,7 +29,7 @@ describe("lerPerguntas", () => {
 
   it.each([
     ["nenhuma pergunta", []],
-    ["mais de 4 perguntas", Array(5).fill(entrada[1])],
+    ["mais de 10 perguntas", Array(11).fill(entrada[1])],
     ["não é lista", "x"],
     ["uma opção só", [{ enunciado: "A?", multipla: false, opcoes: [{ rotulo: "a" }] }]],
     ["7 opções", [{ enunciado: "A?", multipla: false, opcoes: Array.from({ length: 7 }, (_, i) => ({ rotulo: `o${i}` })) }]],
@@ -92,5 +92,23 @@ describe("criarConjunto e responderConjunto", () => {
   ])("recusa resposta com %s", (_, respostas) => {
     const e = criarConjunto(base(), "03", lerPerguntas(entrada), "a", em)
     expect(() => responderConjunto(e, "a", respostas, em)).toThrow(ErroEntrada)
+  })
+})
+
+describe("perguntas abertas (etapa 02: perguntas estratégicas)", () => {
+  const abertas = Array.from({ length: 10 }, (_, i) => ({ enunciado: `Pergunta ${i + 1}?`, multipla: false }))
+
+  it("aceita até 10 perguntas sem opções (resposta livre)", () => {
+    const ps = lerPerguntas(abertas)
+    expect(ps).toHaveLength(10)
+    expect(ps[0]?.opcoes).toEqual([])
+  })
+
+  it("pergunta aberta exige resposta escrita e não aceita opção marcada", () => {
+    const e = criarConjunto(base(), "02", lerPerguntas(abertas.slice(0, 2)), "q1", em)
+    expect(() => responderConjunto(e, "q1", [{ selecionadas: [], outra: "a" }, { selecionadas: [], outra: " " }], em)).toThrow(/Responda a pergunta 2/)
+    expect(() => responderConjunto(e, "q1", [{ selecionadas: ["x"], outra: "a" }, { selecionadas: [], outra: "b" }], em)).toThrow(ErroEntrada)
+    const ok = responderConjunto(e, "q1", [{ selecionadas: [], outra: "Margem de 60%" }, { selecionadas: [], outra: "O sócio" }], em)
+    expect(encontrarConjunto(ok, "q1").respostas?.[0]).toEqual({ selecionadas: [], outra: "Margem de 60%" })
   })
 })

@@ -2,7 +2,7 @@ import { ErroEntrada, ErroNaoEncontrado, TransicaoInvalida } from "./erros"
 import type { ConjuntoPerguntas, Estado, EtapaId, Pergunta, RespostaPergunta } from "./tipos"
 
 const MIN_PERGUNTAS = 1
-const MAX_PERGUNTAS = 4
+const MAX_PERGUNTAS = 10
 const MIN_OPCOES = 2
 const MAX_OPCOES = 6
 
@@ -28,9 +28,10 @@ export function lerPerguntas(entrada: unknown): Pergunta[] {
     const p = objeto(bruta)
     const n = i + 1
     const enunciado = textoObrigatorio(p.enunciado, `Pergunta ${n}: enunciado`)
+    // Sem opções = pergunta aberta (resposta só escrita), como as perguntas estratégicas da etapa 02.
     const brutas = Array.isArray(p.opcoes) ? p.opcoes : []
-    if (brutas.length < MIN_OPCOES || brutas.length > MAX_OPCOES) {
-      throw new ErroEntrada(`A pergunta ${n} precisa de ${MIN_OPCOES} a ${MAX_OPCOES} opções.`)
+    if (brutas.length > 0 && (brutas.length < MIN_OPCOES || brutas.length > MAX_OPCOES)) {
+      throw new ErroEntrada(`A pergunta ${n} precisa de ${MIN_OPCOES} a ${MAX_OPCOES} opções (ou nenhuma, para resposta livre).`)
     }
     const opcoes = brutas.map((o, j) => {
       const r = objeto(o)

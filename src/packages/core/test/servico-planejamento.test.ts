@@ -562,7 +562,7 @@ describe("card de perguntas", () => {
       perguntas: [],
     })
     expect(r.ok).toBe(false)
-    expect(r.mensagem).toContain("1 a 4")
+    expect(r.mensagem).toContain("1 a 10")
     expect((await servico.estado(slug)).perguntas).toEqual([])
   })
 
