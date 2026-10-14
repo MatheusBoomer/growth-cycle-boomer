@@ -264,7 +264,9 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
                     {trilhaRecolhida ? <PanelLeftOpenIcon /> : <PanelLeftCloseIcon />}
                   </Button>
                   <h1 className="text-sm font-semibold tracking-tight">{etapaCat.rotuloStatus}</h1>
-                  <Badge variant="secondary">{ROTULO_STATUS[estadoEtapa.status]}</Badge>
+                  <Badge variant={estadoEtapa.status === "concluida" ? "sucesso" : estadoEtapa.status === "desatualizada" ? "aviso" : "secondary"}>
+                    {ROTULO_STATUS[estadoEtapa.status]}
+                  </Badge>
                   <Button
                     variant="ghost"
                     size="icon-sm"

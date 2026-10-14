@@ -55,7 +55,7 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
       <div className="flex-1 space-y-6 overflow-y-auto p-4">
         {final && (
           <section className="space-y-2 rounded-md border p-3">
-            <h3 className="flex items-center gap-2 text-sm font-medium">
+            <h3 className="flex items-center gap-2 text-sm font-semibold tracking-tight">
               <PresentationIcon className="size-4" /> Apresentação pronta
             </h3>
             <p className="text-muted-foreground text-xs">Abra no Google Slides (Arquivo → Importar slides) ou no PowerPoint.</p>
@@ -81,7 +81,7 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
           </section>
         )}
         <section>
-          <h3 className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">Entregáveis da etapa</h3>
+          <h3 className="mb-2 text-sm font-semibold tracking-tight">Entregáveis da etapa</h3>
           {entregaveis.length === 0 ? (
             <p className="text-muted-foreground text-sm">Nada proposto ainda.</p>
           ) : (
@@ -107,7 +107,7 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
         {dados.aprovadosForaDaInterface.length > 0 && (
           <section>
             <details>
-              <summary className="text-muted-foreground cursor-pointer text-xs font-medium tracking-wide uppercase">
+              <summary className="text-muted-foreground cursor-pointer text-[10px] font-medium tracking-[0.14em] uppercase">
                 Aprovados fora da interface ({dados.aprovadosForaDaInterface.length})
               </summary>
               <p className="text-muted-foreground mt-2 text-xs">
@@ -126,7 +126,7 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
           </section>
         )}
         <section>
-          <h3 className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">Insumos</h3>
+          <h3 className="mb-2 text-sm font-semibold tracking-tight">Insumos</h3>
           {etapaCat.insumos.length === 0 ? (
             <p className="text-muted-foreground text-sm">Esta etapa não pede arquivos.</p>
           ) : (
