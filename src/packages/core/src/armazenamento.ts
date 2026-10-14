@@ -95,6 +95,12 @@ export class FsArmazenamento {
     await this.moverParaLixeira(pasta)
   }
 
+  /** Arquivo ou pasta do prospect para a lixeira do sistema (recuperável); ausente é ignorado. */
+  async moverParaLixeiraNoProspect(slug: string, relativo: string): Promise<void> {
+    const abs = this.caminhoAbsoluto(slug, relativo)
+    if (await existeCaminho(abs)) await this.moverParaLixeira(abs)
+  }
+
   caminhoAbsoluto(slug: string, relativo: string): string {
     const pasta = this.pastaProspect(slug)
     const abs = path.resolve(pasta, relativo)

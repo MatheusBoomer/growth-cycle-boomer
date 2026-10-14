@@ -24,3 +24,13 @@ export async function POST(req: Request, ctx: RouteContext<"/api/prospects/[slug
     return respostaDeErro(e)
   }
 }
+
+export async function DELETE(_req: Request, ctx: RouteContext<"/api/prospects/[slug]/etapas/[etapa]/insumos/[insumoId]">) {
+  try {
+    const { slug, etapa: bruta, insumoId } = await ctx.params
+    await servidor().servico.removerInsumo(slug, validarEtapa(bruta), insumoId)
+    return json({ ok: true })
+  } catch (e) {
+    return respostaDeErro(e)
+  }
+}

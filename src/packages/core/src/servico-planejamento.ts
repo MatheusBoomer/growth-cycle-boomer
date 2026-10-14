@@ -521,6 +521,30 @@ export class ServicoPlanejamento {
     return resultado
   }
 
+  /** Desfaz um envio errado: o arquivo vai para a lixeira do sistema e o registro sai do estado. */
+  async removerInsumo(slug: string, etapa: EtapaId, insumoId: string): Promise<void> {
+    const insumo = this.insumoDaEtapa(etapa, insumoId)
+    if (insumo.tipo !== "arquivo") throw new ErroEntrada("Links não são excluídos: salve o link certo por cima.")
+    if (this.turnos.estaOcupado(slug)) throw new ErroTurnoAtivo()
+    const atual = await this.estado(slug)
+    const status = atual.etapas[etapa].status
+    if (status === "concluida" || status === "desatualizada") {
+      throw new ErroEntrada("Reabra a etapa para excluir um arquivo dela.")
+    }
+    const registro = atual.insumos.find((i) => i.etapa === etapa && i.insumoId === insumoId)
+    if (!registro) throw new ErroNaoEncontrado(`Nenhum arquivo enviado para "${insumo.nome}".`)
+    // Primeiro o disco: o estado relê arquivos presentes na pasta como insumos válidos.
+    if (registro.arquivo) await this.arm.moverParaLixeiraNoProspect(slug, registro.arquivo)
+    await this.mutar(slug, (e) => {
+      const semRegistro: Estado = {
+        ...e,
+        insumos: e.insumos.filter((i) => !(i.etapa === etapa && i.insumoId === insumoId)),
+        atualizadoEm: this.agora(),
+      }
+      return { estado: me.reavaliarPronta(semRegistro, etapa, this.catalogo, this.agora()), resultado: undefined }
+    })
+  }
+
   private async registrarResultadoInsumo(
     slug: string,
     etapa: EtapaId,

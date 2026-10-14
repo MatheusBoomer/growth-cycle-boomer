@@ -67,6 +67,8 @@ export const api = {
   enviarComentarios: (slug: string, id: string) => chamar<{ enviados: number }>(`${base(slug)}/entregaveis/${id}/comentarios/enviar`, { method: "POST" }),
   enviarInsumo: (slug: string, etapa: EtapaId, insumoId: string, arquivo: File) =>
     chamar<ResultadoValidacao>(`${base(slug)}/etapas/${etapa}/insumos/${insumoId}`, multipart(arquivo)),
+  removerInsumo: (slug: string, etapa: EtapaId, insumoId: string) =>
+    chamar(`${base(slug)}/etapas/${etapa}/insumos/${insumoId}`, { method: "DELETE" }),
   enviarLink: (slug: string, etapa: EtapaId, insumoId: string, url: string) =>
     chamar<ResultadoValidacao>(`${base(slug)}/etapas/${etapa}/insumos/${insumoId}`, comJson("POST", { url })),
   listarArquivos: (slug: string) => chamar<{ arquivos: { caminho: string; modificadoEm: string }[] }>(`${base(slug)}/arquivos`),

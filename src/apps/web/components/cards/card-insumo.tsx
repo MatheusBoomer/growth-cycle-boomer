@@ -1,10 +1,21 @@
 "use client"
 
-import { CircleCheckIcon, DownloadIcon, FileSpreadsheetIcon, FileTextIcon, LinkIcon } from "lucide-react"
+import { CircleCheckIcon, DownloadIcon, FileSpreadsheetIcon, FileTextIcon, LinkIcon, XIcon } from "lucide-react"
 import { useRef, useState } from "react"
 import { toast } from "sonner"
 import type { EstadoInsumo, EtapaId, InsumoCatalogo } from "@workspace/core/tipos"
-import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert"
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@workspace/ui/components/alert"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@workspace/ui/components/alert-dialog"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@workspace/ui/components/card"
@@ -20,9 +31,36 @@ export interface PropsCardInsumo {
   obrigatorio: boolean
   estadoInsumo: EstadoInsumo | null
   temModelo: boolean
+  /** Falso com a etapa concluída ou desatualizada: o envio só pode ser desfeito com a etapa aberta. */
+  removivel?: boolean
 }
 
-export function CardInsumo({ slug, etapa, insumo, obrigatorio, estadoInsumo, temModelo }: PropsCardInsumo) {
+/** "x" do arquivo enviado: confirma e manda o arquivo para a lixeira do sistema. */
+function ExcluirEnvio({ nome, aoExcluir }: { nome: string; aoExcluir: () => void }) {
+  return (
+    <AlertAction>
+      <AlertDialog>
+        <AlertDialogTrigger render={<Button variant="ghost" size="icon-xs" aria-label={`Excluir o arquivo de ${nome}`} />}>
+          <XIcon />
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir este arquivo?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O arquivo de {nome} vai para a Lixeira do computador e sai desta etapa. Depois é só enviar o arquivo certo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={aoExcluir}>Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </AlertAction>
+  )
+}
+
+export function CardInsumo({ slug, etapa, insumo, obrigatorio, estadoInsumo, temModelo, removivel = true }: PropsCardInsumo) {
   const [enviando, setEnviando] = useState(false)
   const [arrastando, setArrastando] = useState(false)
   const [url, setUrl] = useState(estadoInsumo?.resumo ?? "")
@@ -46,6 +84,19 @@ export function CardInsumo({ slug, etapa, insumo, obrigatorio, estadoInsumo, tem
       if (entrada.current) entrada.current.value = ""
     }
   }
+
+  async function excluir() {
+    setEnviando(true)
+    try {
+      await api.removerInsumo(slug, etapa, insumo.id)
+      toast.success(`${insumo.nome}: arquivo excluído`)
+    } catch (e) {
+      toast.error(mensagemDeErro(e))
+    } finally {
+      setEnviando(false)
+    }
+  }
+  const podeExcluir = removivel && insumo.tipo === "arquivo" && !enviando
 
   async function salvarLink() {
     setEnviando(true)
@@ -82,6 +133,7 @@ export function CardInsumo({ slug, etapa, insumo, obrigatorio, estadoInsumo, tem
           <Alert>
             <CircleCheckIcon />
             <AlertTitle>{estadoInsumo?.resumo ?? "Arquivo recebido"}</AlertTitle>
+            {podeExcluir && <ExcluirEnvio nome={insumo.nome} aoExcluir={() => void excluir()} />}
             {estadoInsumo && estadoInsumo.avisos.length > 0 && (
               <AlertDescription>
                 <ul className="list-disc pl-4">
@@ -98,6 +150,7 @@ export function CardInsumo({ slug, etapa, insumo, obrigatorio, estadoInsumo, tem
             <AlertTitle>
               {estadoInsumo.problemas.length} problema{estadoInsumo.problemas.length === 1 ? "" : "s"} na planilha
             </AlertTitle>
+            {podeExcluir && <ExcluirEnvio nome={insumo.nome} aoExcluir={() => void excluir()} />}
             <AlertDescription>
               <ul className="list-disc pl-4">
                 {estadoInsumo.problemas.map((p) => (

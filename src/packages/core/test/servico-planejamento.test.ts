@@ -389,6 +389,66 @@ describe("insumos", () => {
       )
     ).toBe(false)
   })
+
+  describe("excluir arquivo enviado", () => {
+    let lixeira: string[]
+
+    beforeEach(() => {
+      lixeira = []
+      servico = new ServicoPlanejamento({
+        armazenamento: new FsArmazenamento(raiz, async (p) => {
+          lixeira.push(p)
+        }),
+        catalogo: catalogoReal(),
+        barramento,
+        validar: async () => proximaValidacao,
+        agora: () => "2026-09-28T10:00:00.000Z",
+        gerarId: () => `id${++contador}`,
+      })
+      servico.conectarTurnos({ aoEnfileirar: (s) => enfileirados.push(s), estaOcupado: () => ocupado })
+    })
+
+    async function comHistorico() {
+      const slug = await prospectNaEtapa03()
+      const temp = path.join(raiz, "upload.xlsx")
+      await writeFile(temp, "x")
+      await servico.receberInsumoArquivo(slug, "03", "historico-mensal", temp, "hist.xlsx")
+      return slug
+    }
+
+    it("manda o arquivo para a lixeira e tira o registro do estado", async () => {
+      const slug = await comHistorico()
+      await servico.removerInsumo(slug, "03", "historico-mensal")
+      expect(lixeira).toEqual([path.join(raiz, "clientes", slug, "dados/historico-mensal.xlsx")])
+      const e = await servico.estado(slug)
+      expect(e.insumos.find((i) => i.insumoId === "historico-mensal")).toBeUndefined()
+    })
+
+    it("registro inválido (sem arquivo na pasta) sai do estado sem mexer na lixeira", async () => {
+      const slug = await prospectNaEtapa03()
+      proximaValidacao = { ok: false, problemas: ["x"], avisos: [], resumo: null }
+      const temp = path.join(raiz, "upload.xlsx")
+      await writeFile(temp, "x")
+      await servico.receberInsumoArquivo(slug, "03", "historico-mensal", temp, "hist.xlsx")
+      await servico.removerInsumo(slug, "03", "historico-mensal")
+      expect(lixeira).toEqual([])
+      expect((await servico.estado(slug)).insumos.find((i) => i.insumoId === "historico-mensal")).toBeUndefined()
+    })
+
+    it("recusa com a etapa concluída, com o agente rodando, sem envio ou para link", async () => {
+      const slug = await comHistorico()
+      await expect(servico.removerInsumo(slug, "03", "produtos-curva-abc")).rejects.toBeInstanceOf(ErroNaoEncontrado)
+      await expect(servico.removerInsumo(slug, "01", "site")).rejects.toBeInstanceOf(ErroEntrada)
+      ocupado = true
+      await expect(servico.removerInsumo(slug, "03", "historico-mensal")).rejects.toBeInstanceOf(ErroTurnoAtivo)
+      ocupado = false
+      const e = await servico.estado(slug)
+      e.etapas["03"].status = "concluida"
+      await writeFile(path.join(raiz, "clientes", slug, ".app/estado.json"), JSON.stringify(e))
+      await expect(servico.removerInsumo(slug, "03", "historico-mensal")).rejects.toThrow(/Reabra a etapa/)
+      expect(lixeira).toEqual([])
+    })
+  })
 })
 
 describe("robustez", () => {

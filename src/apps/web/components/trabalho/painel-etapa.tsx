@@ -140,6 +140,7 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
                   obrigatorio={ref.obrigatorio}
                   estadoInsumo={dados.estado.insumos.find((i) => i.etapa === etapa && i.insumoId === ref.id) ?? null}
                   temModelo={dados.modelosDisponiveis.includes(ref.id)}
+                  removivel={estadoEtapa.status !== "concluida" && estadoEtapa.status !== "desatualizada"}
                 />
               ))}
             </div>
