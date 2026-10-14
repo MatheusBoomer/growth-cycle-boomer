@@ -62,10 +62,10 @@ spec de origem (o app não tem dashboard).
 | `--secondary` | `rgb(255 255 255 / 0.06)` | `rgb(15 27 61 / 0.05)` |
 | `--secondary-foreground` | `#f1f5f9` | `#1e293b` |
 | `--muted` | `rgb(255 255 255 / 0.04)` | `rgb(15 27 61 / 0.04)` |
-| `--muted-foreground` | `#94a3b8` | `#64748b` |
+| `--muted-foreground` | `#94a3b8` | `#5a6578` (o `#64748b` do spec dá 4,4:1 sobre `#f5f6fa`) |
 | `--accent` | `rgb(255 255 255 / 0.07)` | `rgb(15 27 61 / 0.06)` |
 | `--accent-foreground` | `#ffffff` | `#0f1b3d` |
-| `--destructive` | `#fb7185` | `#e11d48` |
+| `--destructive` | `#fb7185` | `#be123c` (o `#e11d48` dá 4,0:1 sobre o fundo do chip) |
 | `--border` | `rgb(255 255 255 / 0.07)` | `rgb(15 27 61 / 0.08)` |
 | `--input` | `rgb(255 255 255 / 0.10)` | `rgb(15 27 61 / 0.12)` |
 | `--ring` | `rgb(235 97 10 / 0.5)` | `rgb(235 97 10 / 0.45)` |
@@ -89,9 +89,10 @@ Definidos nos dois blocos e expostos no `@theme inline` como cores Tailwind
 | Token | Escuro | Claro | Uso |
 |---|---|---|---|
 | `--texto-forte` | `#ffffff` | `#0f1b3d` | Títulos de destaque, nome do prospect |
+| `--primario-claro` | `#f47a2a` | `#f47a2a` | Topo do gradiente do botão primário |
 | `--sucesso` / `--sucesso-fundo` | `#34d399` / `rgb(16 185 129 / 0.10)` | `#047857` / `rgb(16 185 129 / 0.12)` | Aprovado, positivo |
 | `--aviso` / `--aviso-fundo` | `#fbbf24` / `rgb(251 191 36 / 0.10)` | `#b45309` / `rgb(245 158 11 / 0.12)` | Pendente, desatualizado, alerta de uso |
-| `--perigo-fundo` | `rgb(244 63 94 / 0.10)` | `rgb(225 29 72 / 0.10)` | Fundo de chip de erro (texto usa `--destructive`) |
+| `--perigo-fundo` | `rgb(244 63 94 / 0.10)` | `rgb(225 29 72 / 0.08)` | Fundo de chip de erro (texto usa `--destructive`) |
 | `--volume` | `#3987e5` | `#2563eb` | Barra de uso da assinatura |
 | `--link-acao` | `#f0894a` | `#c2410c` | "Abrir na biblioteca →" e afins |
 | `--papel` | `#ffffff` | `#ffffff` | Fundo do material do cliente |
