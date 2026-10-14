@@ -52,13 +52,7 @@ LTV histórico da marca (histórico completo); relação LTV/CAC (LTV histórico
    e-commerce. Se houver divergência, **interromper** até corrigir — ver
    `regras-de-validacao.md`.
 5. **LTV/CAC** — calcular a relação usando LTV histórico e CAC do último mês
-   do diagnóstico. Classificar:
-
-| Relação LTV/CAC | Classificação |
-|---|---|
-| < 3 | Ruim — necessidade de melhoria na captação |
-| 3 a 5 | Normal — dentro da média de mercado |
-| > 5 | Oportunidade de escala |
+   do diagnóstico. Classificar pela faixa de LTV/CAC em `benchmarks-kpi.md`.
 
 ## Estrutura da análise
 
@@ -67,13 +61,13 @@ LTV histórico da marca (histórico completo); relação LTV/CAC (LTV histórico
    de retenção.
 3. LTV Histórico — coerência com ticket médio, nível real de recorrência,
    robustez da base.
-4. LTV/CAC — classificação segundo a tabela acima, capacidade real de
-   escala, risco estrutural.
+4. LTV/CAC: classificação segundo a faixa de `benchmarks-kpi.md`, capacidade
+   real de escala, risco estrutural.
 
 ## Restrições
 
-- Não propor metas, plano de mídia, melhorias ou otimizações. Estamos
-  apenas diagnosticando.
+- Não propor metas, plano de mídia nem soluções: registre cada achado com
+  clareza. As soluções são da Skill 05.
 
 ## Critério de conclusão
 

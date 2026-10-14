@@ -19,6 +19,9 @@ skill orquestra e interpreta; não faz conta diretamente.
       sessões e conversão já quebrados por Google e Meta
 - [ ] `dados/produtos-curva-abc.xlsx` anexado — relatório de produtos
       vendidos no ano (necessário só para a Curva ABC, etapa 4)
+- [ ] `dados/quebra-pagamento.xlsx` (opcional): receita captada e aprovada por
+      mês e meio de pagamento (PIX, cartão, boleto); sem ele, a etapa 3b da
+      Fase 1 não é feita
 - [ ] Conferir manualmente cada gráfico e benchmark gerado antes de deixar a
       skill avançar — ver `regras-de-validacao.md`
 
@@ -30,8 +33,15 @@ Analisar, nesta ordem obrigatória:
    escala ou retração, sazonalidade percebida.
 2. **Receita Total (captada) vs Receita Aprovada** — diferença entre curvas,
    impacto financeiro da quebra, meses críticos, tendência estrutural.
-3. **Taxa de quebra** — percentual médio, meses fora da média, se ultrapassa
-   o limite saudável (~5%), possíveis causas estruturais.
+3. **Taxa de quebra**: percentual médio, meses fora da média, taxa
+   comparada à faixa de `benchmarks-kpi.md`, e a suspeita de causa quando o
+   dado indicar.
+
+   **3b. Quebra por meio de pagamento** (se `dados/quebra-pagamento.xlsx`
+   veio): taxa de quebra mês a mês por meio de pagamento, em um gráfico de
+   linha com uma série por meio (até 3, ver `padrao-visual.md`) e a linha de
+   referência do benchmark de quebra de `benchmarks-kpi.md`. Se o arquivo não
+   veio, registre que esse recorte não foi analisado; não estime.
 4. **ROAS** — Global e por plataforma (Google, Meta): tendência, estabilidade,
    compressão em escala, diferença entre plataformas.
 
@@ -46,21 +56,15 @@ ordem:
 
 1. **Sessões** — globais e por plataforma, tendência, sazonalidade,
    concentração por canal, crescimento orgânico vs pago. Gerar um gráfico de linha com a conclusão incluindo sessões totais e por plataforma (Google e Meta).
-2. **Dependência de mídia paga** — % de sessões pagas vs totais. Comparar
-   obrigatoriamente com benchmark de mercado (ver tabela abaixo). Gerar um gráfico de mês a mês
-3. **Taxa de conversão** — Global (benchmark 1–2%), Google (2–4%), Meta
-   (1–2%). Plataformas acima ou abaixo do intervalo, indícios estruturais. Gerar um gráfico para cada levantamento de benchmark.
+2. **Dependência de mídia paga**: % de sessões pagas vs totais. Comparar
+   obrigatoriamente com a faixa do estágio do prospect em `benchmarks-kpi.md`.
+   Gerar um gráfico de mês a mês
+3. **Taxa de conversão**: Global, Google e Meta, cada uma comparada à sua
+   faixa de `benchmarks-kpi.md`. Plataformas acima ou abaixo da faixa, indícios
+   estruturais. Gerar um gráfico para cada levantamento de benchmark.
 4. **Curva ABC** — usar `dados/produtos-curva-abc.xlsx`. Gerar: gráfico de
    barras com faturamento acumulado por Curva A/B/C; gráfico de barras com
    Top 10 produtos por faturamento; Tabela com os produtos por curva A/B/C.
-
-### Benchmark de dependência de mídia paga por estágio
-
-| Tipo de e-commerce / estágio | Dependência média saudável |
-|---|---|
-| E-commerce iniciante (0–6 meses) | 70–85% |
-| Marcas DTC consolidadas (12–24 meses) | 45–60% |
-| Marcas maduras / com CRM ativo | 30–45% |
 
 ### Conectar os KPIs
 
@@ -71,7 +75,9 @@ conexão causal, a etapa não está concluída.
 ## Restrições
 
 - Não falar de CAC ou LTV nesta skill — isso é a Skill 04.
-- Não propor metas, plano de mídia ou ações corretivas.
+- Não propor metas, plano de mídia nem soluções: registre cada achado com
+  clareza (dado, benchmark e suspeita de causa quando houver). As soluções são
+  da Skill 05.
 
 ## Critério de conclusão
 
@@ -79,7 +85,7 @@ conexão causal, a etapa não está concluída.
 - Cada gráfico/seção de análise aprovado salvo em `entrega/ativos-aprovados/`
   (ver `regras-de-validacao.md`).
 - KPIs conectados causalmente entre si.
-- Nenhuma solução foi antecipada.
+- Cada achado registrado com dado e benchmark, pronto para a Skill 05.
 
 ## Encerramento e handoff
 

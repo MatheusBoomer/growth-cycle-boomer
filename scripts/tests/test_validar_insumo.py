@@ -37,6 +37,7 @@ def ambiente(tmp_path: Path):
         [None, "DATA ", "INVESTIMENTO TOTAL", "INVESTIMENTO META", "SESSOES META"],
     ])
     salvar(modelos / "clientes-historico.xlsx", [["ID", "Nome", "Nº de pedidos", "Valor total produtos comprados (R$)"]])
+    salvar(modelos / "quebra-pagamento.xlsx", [["DATA", "MEIO DE PAGAMENTO", "RECEITA CAPTADA", "RECEITA APROVADA"]])
     return tmp_path, schemas, modelos
 
 
@@ -172,3 +173,16 @@ def test_valores_monetarios_nao_viram_pii(ambiente):
         [2, "Bia", 1, 99.0],
     ])
     assert validar("clientes-historico", arquivo, schemas, modelos)["ok"] is True
+
+
+def test_quebra_pagamento_exige_as_colunas(ambiente):
+    tmp_path, schemas, modelos = ambiente
+    ok = salvar(tmp_path / "ok.xlsx", [
+        ["DATA", "MEIO DE PAGAMENTO", "RECEITA CAPTADA", "RECEITA APROVADA"],
+        ["JANEIRO", "PIX", 1000.0, 700.0],
+    ])
+    assert validar("quebra-pagamento", ok, schemas, modelos)["ok"] is True
+    ruim = salvar(tmp_path / "ruim.xlsx", [["DATA", "RECEITA CAPTADA"], ["JANEIRO", 1000.0]])
+    r = validar("quebra-pagamento", ruim, schemas, modelos)
+    assert r["ok"] is False
+    assert any("MEIO DE PAGAMENTO" in p for p in r["problemas"]), r["problemas"]

@@ -22,5 +22,12 @@
     "colunas_obrigatorias": ["ID", "Nome", "Nº de pedidos", "Valor total produtos comprados (R$)"],
     "min_linhas": 1,
     "sensivel": true
+  },
+  "quebra-pagamento": {
+    "modelo": "quebra-pagamento.xlsx",
+    "linha_cabecalho": 1,
+    "colunas_obrigatorias": ["DATA", "MEIO DE PAGAMENTO", "RECEITA CAPTADA", "RECEITA APROVADA"],
+    "min_linhas": 1,
+    "sensivel": false
   }
 }

@@ -31,7 +31,8 @@
       "skill": "03-diagnostico-performance",
       "insumos": [
         { "id": "historico-mensal", "obrigatorio": true },
-        { "id": "produtos-curva-abc", "obrigatorio": false }
+        { "id": "produtos-curva-abc", "obrigatorio": false },
+        { "id": "quebra-pagamento", "obrigatorio": false }
       ]
     },
     {
@@ -157,6 +158,18 @@
       "modelo": "produtos-curva-abc.xlsx",
       "destino": "dados/produtos-curva-abc",
       "validador": "produtos-curva-abc",
+      "sensivel": false
+    },
+    {
+      "id": "quebra-pagamento",
+      "nome": "Quebra por meio de pagamento",
+      "descricao": "Receita captada e aprovada de cada mês, separada por meio de pagamento (PIX, cartão, boleto).",
+      "instrucao": "Opcional. Uma linha por mês e meio de pagamento, exportada da plataforma do e-commerce.",
+      "tipo": "arquivo",
+      "formatos": [".xlsx"],
+      "modelo": "quebra-pagamento.xlsx",
+      "destino": "dados/quebra-pagamento",
+      "validador": "quebra-pagamento",
       "sensivel": false
     },
     {

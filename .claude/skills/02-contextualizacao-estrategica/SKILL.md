@@ -108,7 +108,9 @@ natural, sem citar caminho de arquivo:
 planilhas (Excel): uma com o histórico dos últimos 12 meses de mídia paga e
 vendas — investimento, receita, ROAS, sessões e conversão, separados por
 Google e Meta — e outra com o relatório de produtos vendidos no ano, para eu
-montar a Curva ABC.
+montar a Curva ABC. Se conseguir, mande também uma terceira, opcional: a
+receita captada e aprovada de cada mês separada por meio de pagamento (PIX,
+cartão, boleto).
 
 Quando estiver tudo pronto, rode `/03-diagnostico-performance`."
 

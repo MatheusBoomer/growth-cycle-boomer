@@ -7,6 +7,7 @@ exatamente estes nomes:
   "Fórmula" / "Preench. Manual"; linha 2 com o cabeçalho; coluna `DATA` com o mês.
 - `produtos-curva-abc.xlsx`: Skill 03 (Curva ABC). Cabeçalho na linha 1.
 - `clientes-historico.xlsx`: Skill 04. Cabeçalho na linha 1. Sem nenhuma coluna de dado pessoal.
+- `quebra-pagamento.xlsx`: Skill 03 (opcional). Cabeçalho na linha 1: DATA, MEIO DE PAGAMENTO, RECEITA CAPTADA, RECEITA APROVADA.
 
 Quando o modelo existe, o validador (`scripts/validar_insumo.py`) exige as
 mesmas colunas do modelo (no histórico mensal, as marcadas "Preench. Manual").
