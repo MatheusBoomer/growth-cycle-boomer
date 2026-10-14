@@ -26,6 +26,8 @@ desta skill.
       outro), e em quanto tempo.
 - [ ] Receita do ano anterior e eventual sazonalidade relevante já em mente.
 - [ ] Diagnóstico das Skills 03 e 04 concluído e aprovado.
+- [ ] Skill 05 (Soluções) concluída e aprovada: os cenários usam as soluções do
+      registro como alavancas.
 
 **Regra crítica do analista:** se o resultado dividir a meta igualmente por
 todos os meses, interrompa imediatamente e peça redistribuição — isso não
@@ -85,12 +87,21 @@ receita        = vendas * ticket_médio
    meta quebrada na Parte 1.
 2. Não é permitido crescimento flat em nenhum KPI Influenciador.
 3. Deve respeitar sazonalidade histórica, sazonalidade de mercado e
-   benchmarks aceitáveis (ver `padrao-visual.md` para os benchmarks de
+   benchmarks aceitáveis (ver `benchmarks-kpi.md` para os benchmarks de
    conversão e dependência já usados no diagnóstico).
 4. Nenhum KPI Influenciador pode melhorar sem justificativa apoiada no
    diagnóstico.
 5. O raciocínio deve fechar matematicamente — `scripts/projecao.py` valida
    isso e recusa um cenário que não feche.
+
+### Alavancas nomeadas (soluções do registro)
+
+As soluções do `contexto/solucoes.json` com impacto quantificado são
+**alavancas nomeadas**: para cada cenário, registre quais ids de solução ele
+assume e em que intensidade (ex.: "Otimista assume P1.S1: quebra cai para
+10%"). Pessimista não assume nenhuma; Realista assume as de execução mais
+simples; Otimista, as demais. A tabela de cenários ganha a linha "Soluções
+consideradas".
 
 ### Entrega ao analista
 

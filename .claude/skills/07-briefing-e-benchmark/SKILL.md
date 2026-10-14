@@ -66,13 +66,16 @@ Sessões, dependência de mídia paga, conversão por plataforma, Curva ABC.
 ## 4. Unidade Econômica (Skill 04)
 CAC, novos vs recorrentes, LTV, LTV/CAC.
 
-## 5. Metas do Projeto (Skill 06, parte 1)
+## 5. Problemas e soluções (Skill 05)
+Para cada problema do registro: título, impacto e soluções (ids).
+
+## 6. Metas do Projeto (Skill 06, parte 1)
 Meta oficial, distribuição mensal, lógica de distribuição.
 
-## 6. Cenários e Impactos Esperados (Skill 06, parte 2)
+## 7. Cenários e Impactos Esperados (Skill 06, parte 2)
 Resumo dos 3 cenários, alavancas, riscos, alavanca principal.
 
-## 7. Concorrentes para Pesquisa de Benchmark
+## 8. Concorrentes para Pesquisa de Benchmark
 Até 4 concorrentes. Para cada um: nome, site, @ do Instagram, **link da página
 na Biblioteca de Anúncios (obrigatório, com `view_all_page_id=`)** e por que
 analisar (foco de atenção). Registrar também o link da página do próprio
@@ -80,7 +83,7 @@ prospect na Biblioteca. Depois: contexto estratégico para orientar a análise, 
 atenção (opcional) e perguntas estratégicas customizadas (opcional —
 substituem as 7 padrão do relatório).
 
-## 8. Observações e Pendências
+## 9. Observações e Pendências
 ```
 
 ## Fase 2 — Benchmark de anúncios (Meta)
@@ -101,8 +104,8 @@ que você vai trabalhar sem pausas depois de ter os links de todas as páginas.
 
 ### 2a. Anunciantes
 
-Os concorrentes da seção 7 do briefing + o próprio prospect, sempre por
-último. Cada rodada analisa **no máximo 4 concorrentes**. Se a seção 7 tiver
+Os concorrentes da seção 8 do briefing + o próprio prospect, sempre por
+último. Cada rodada analisa **no máximo 4 concorrentes**. Se a seção 8 tiver
 mais de 4, **pare e pergunte ao analista quais 4 priorizar antes de qualquer
 coleta**, mesmo que o briefing já esteja aprovado; nunca escolha sozinho (sem
 preferência dele, sugira os que provavelmente têm mais anúncios ativos).
@@ -117,7 +120,7 @@ A coleta parte do link da página de cada anunciante na Biblioteca de
 Anúncios, informado pelo analista. **Nunca busque a página pela API, pelo
 navegador ou pela web**: a busca é gasto de API que o link evita.
 
-Confira na seção 7 do briefing (e na conversa) se todos os anunciantes,
+Confira na seção 8 do briefing (e na conversa) se todos os anunciantes,
 inclusive o prospect, têm link com `view_all_page_id=`. Se faltar algum, pare
 e peça todos os que faltam numa mensagem só, antes de qualquer coleta,
 explicando como copiar: abra facebook.com/ads/library (país Brasil, todos os
@@ -156,8 +159,15 @@ sair com `ERRO:`.
    - **Evidência:** total de anúncios ativos (do `resumo.md`, com a data da
      coleta) + 1 a 3 criativos que sustentam a lição, cada um com o link da
      Biblioteca.
+   - **O que testar:** 1 a 3 testes concretos para o prospect, derivados da
+     lição, ligados a um problema do registro quando houver (ex.: "Copy por
+     persona: corredor, caminhante → P3"). Nunca a copy do concorrente.
    Feche com 3 a 5 destaques estratégicos para o prospect. É essa camada que
    alimenta a narrativa e a apresentação final.
+
+No checkpoint da camada estratégica, conferir também o item 5 da Regra 8 de
+`regras-de-validacao.md`: o benchmarking termina em teste, não só no que o
+concorrente faz.
 
 ## Restrições
 
@@ -174,7 +184,7 @@ sair com `ERRO:`.
 - Relatório HTML montado com o template da skill `benchmark-meta-ads`: um card
   por concorrente com os criativos (links clicáveis), a análise do prospect,
   as 7 perguntas (ou as customizadas) e o ranking de intensidade.
-- Camada Lição + Evidência escrita para cada concorrente.
+- Camada Lição + Evidência + O que testar escrita para cada concorrente.
 - Tudo aprovado pelo analista e salvo: briefing e camada estratégica em
   `entrega/ativos-aprovados/secoes/`, relatório em
   `entrega/ativos-aprovados/benchmark/benchmark.html`.

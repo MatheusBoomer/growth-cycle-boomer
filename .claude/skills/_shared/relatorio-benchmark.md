@@ -47,7 +47,7 @@ Fonte do conteúdo: `dados/benchmark-meta/analise-benchmark.md` e os
 
 ## Perguntas estratégicas
 
-Se o briefing (seção 7) trouxe perguntas customizadas, use-as. Caso contrário,
+Se o briefing (seção 8) trouxe perguntas customizadas, use-as. Caso contrário,
 use estas 7:
 
 1. Como os concorrentes comunicam autenticidade e confiança?

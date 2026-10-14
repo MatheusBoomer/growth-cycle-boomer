@@ -89,8 +89,11 @@ Com base na dependência diagnosticada na Skill 03: definir meta de % de
 sessões pagas para o próximo ano, alinhada ao cenário Realista. Identificar
 canais complementares (CRM/base de clientes, orgânico/SEO,
 influenciadores, marketplace). Propor trajetória mensal de redução e o risco
-se não acontecer. Não descer a nível operacional de CRM/SEO — só o papel
-estratégico de cada canal.
+se não acontecer. Para cada canal complementar, uma ação concreta: o quê,
+qual mecanismo e quem executa (ex.: "régua de reativação no e-mail aos 150
+dias para clientes de 1 compra, Agência + Cliente"). Proibido o genérico
+"fortalecer CRM, SEO". Reaproveite as soluções do registro com frente
+`Redução de Dependências`.
 
 ## Etapa 6 — Benchmarking de mercado nacional e internacional
 
@@ -114,8 +117,8 @@ avançar se houver inconsistência.
 ## Restrições
 
 - Não propor estrutura de anúncio no nível de criativo/copy/público.
-- Não propor estratégia de conteúdo orgânico detalhada, plano de CRM
-  operacional, ou estratégia de influenciadores específicos.
+- Não descer a calendário editorial, roteiro de conteúdo ou escolha de
+  influenciadores específicos.
 - Não montar o plano de ação ainda — isso é a Skill 09.
 
 ## Critério de conclusão
