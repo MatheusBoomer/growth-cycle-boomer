@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes"
+import { CONFIG_TEMA, proximoTema } from "@/lib/tema"
 
 function ThemeProvider({
   children,
@@ -10,8 +11,10 @@ function ThemeProvider({
   return (
     <NextThemesProvider
       attribute="class"
-      defaultTheme="system"
-      enableSystem
+      defaultTheme={CONFIG_TEMA.defaultTheme}
+      enableSystem={CONFIG_TEMA.enableSystem}
+      themes={[...CONFIG_TEMA.themes]}
+      storageKey={CONFIG_TEMA.storageKey}
       disableTransitionOnChange
       {...props}
     >
@@ -55,7 +58,7 @@ function ThemeHotkey() {
         return
       }
 
-      setTheme(resolvedTheme === "dark" ? "light" : "dark")
+      setTheme(proximoTema(resolvedTheme))
     }
 
     window.addEventListener("keydown", onKeyDown)
