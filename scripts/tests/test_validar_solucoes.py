@@ -213,3 +213,26 @@ def test_cli_modo_plano(tmp_path, capsys):
     assert "plano de ação inválido" in capsys.readouterr().err
     assert vs.main(["--modo", "plano", "--registro", str(reg)]) == 1
     assert "--modo plano precisa de --plano" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    "alterar",
+    [
+        lambda p: p["horizontes"].__setitem__(0, "x"),
+        lambda p: p["horizontes"][0]["acoes"].__setitem__(0, "texto"),
+        lambda p: p["horizontes"][0]["acoes"][0].update(solucoes=[["P1.S1"]]),
+        lambda p: p["horizontes"][0]["acoes"][0].update(acao=["Recuperar PIX"]),
+        lambda p: p["horizontes"][0]["acoes"][0].update(acao=""),
+        lambda p: p["tabela"][0].update(acao=["Recuperar PIX"]),
+    ],
+)
+def test_plano_malformado_vira_erro_legivel(tmp_path, capsys, alterar):
+    reg = tmp_path / "solucoes.json"
+    reg.write_text(json.dumps(registro_valido(), ensure_ascii=False), encoding="utf-8")
+    plano = plano_valido()
+    alterar(plano)
+    pl = tmp_path / "plano.json"
+    pl.write_text(json.dumps(plano, ensure_ascii=False), encoding="utf-8")
+    assert vs.main(["--modo", "plano", "--registro", str(reg), "--plano", str(pl)]) == 1
+    err = capsys.readouterr().err
+    assert err.startswith("ERRO:") and "Traceback" not in err

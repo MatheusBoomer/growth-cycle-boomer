@@ -188,24 +188,43 @@ def validar_plano(registro: dict, plano) -> Tuple[List[str], List[str]]:
     ids = [s["id"] for p in registro["problemas"] for s in p["solucoes"]]
     conhecidos = set(ids)
     cobertos = set()
-    tabela = {linha.get("acao"): linha for linha in plano.get("tabela") or [] if isinstance(linha, dict)}
-    for horizonte in plano["horizontes"]:
-        for acao in horizonte.get("acoes") or []:
-            nome = acao.get("acao") or "(sem nome)"
+    linhas_tabela = plano.get("tabela") or []
+    if not isinstance(linhas_tabela, list):
+        return ["\"tabela\" precisa ser uma lista."], []
+    tabela = {linha["acao"]: linha for linha in linhas_tabela if isinstance(linha, dict) and _texto(linha.get("acao"))}
+    for i, horizonte in enumerate(plano["horizontes"], start=1):
+        if not isinstance(horizonte, dict):
+            erros.append(f"Horizonte #{i}: formato inválido.")
+            continue
+        acoes = horizonte.get("acoes") or []
+        if not isinstance(acoes, list):
+            erros.append(f"Horizonte #{i}: \"acoes\" precisa ser uma lista.")
+            continue
+        for j, acao in enumerate(acoes, start=1):
+            if not isinstance(acao, dict):
+                erros.append(f"Horizonte #{i}, ação #{j}: formato inválido.")
+                continue
+            if _texto(acao.get("acao")):
+                nome = acao["acao"]
+                linha = tabela.get(nome)
+                if linha is None:
+                    erros.append(f"Ação \"{nome}\": não aparece na tabela-resumo (mesmo nome em \"acao\").")
+                elif not _texto(linha.get("frente")):
+                    erros.append(f"Ação \"{nome}\": frente vazia na tabela-resumo.")
+            else:
+                nome = "(sem nome)"
+                erros.append(f"Horizonte #{i}, ação #{j}: campo acao obrigatório (texto não vazio).")
             for campo in ("quando", "por_quem"):
                 if not _texto(acao.get(campo)):
                     erros.append(f"Ação \"{nome}\": campo {campo} obrigatório.")
-            linha = tabela.get(acao.get("acao"))
-            if linha is None:
-                erros.append(f"Ação \"{nome}\": não aparece na tabela-resumo (mesmo nome em \"acao\").")
-            elif not _texto(linha.get("frente")):
-                erros.append(f"Ação \"{nome}\": frente vazia na tabela-resumo.")
             solucoes = acao.get("solucoes", [])
             if not isinstance(solucoes, list):
                 erros.append(f"Ação \"{nome}\": \"solucoes\" precisa ser uma lista de ids (ex.: [\"P1.S1\"]).")
                 continue
             for sid in solucoes:
-                if sid in conhecidos:
+                if not isinstance(sid, str):
+                    erros.append(f"Ação \"{nome}\": cada solução precisa ser um id em texto (ex.: \"P1.S1\").")
+                elif sid in conhecidos:
                     cobertos.add(sid)
                 else:
                     erros.append(f"Ação \"{nome}\": cita a solução {sid}, que não existe no registro.")
