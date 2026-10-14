@@ -29,7 +29,7 @@ import {
 } from "@workspace/ui/components/message-scroller"
 import { Markdown } from "@/components/markdown"
 import { api, mensagemDeErro } from "@/lib/api"
-import { agruparProcesso, iconeDoPasso, separarProcessoAoVivo, statusDosPassos, type EventoProcesso, type IconePasso } from "@/lib/passos"
+import { agruparProcesso, cardsDepoisDaResposta, iconeDoPasso, separarProcessoAoVivo, statusDosPassos, type EventoProcesso, type IconePasso } from "@/lib/passos"
 import { Compositor } from "./compositor"
 import { FimDaEtapa } from "./fim-da-etapa"
 import { ItemConversa } from "./item-conversa"
@@ -61,12 +61,13 @@ const ICONES: Record<IconePasso, LucideIcon> = {
 }
 
 /**
- * Processo de um trecho do turno (passos + falas intermediárias). Ao vivo, abre expandido com o
- * último passo ativo. Recolhido, mostra o resumo e logo abaixo só a última linha (o que está sendo
- * feito agora, ou o último passo); expandir mostra todos.
+ * Processo de um trecho do turno (passos + falas intermediárias). Fechado, mostra o resumo e logo
+ * abaixo só a última linha (o que está sendo feito agora, ou o último passo); o analista expande
+ * para ver todos.
  */
 function ListaDeProcesso({ itens, slug, resumo, aoVivo = false }: { itens: EventoProcesso[]; slug: string; resumo: string; aoVivo?: boolean }) {
-  const [aberto, setAberto] = useState(aoVivo)
+  // Fechado por padrão, até ao vivo: o resumo e a última linha já mostram o que está acontecendo.
+  const [aberto, setAberto] = useState(false)
   const status = statusDosPassos(itens.length, aoVivo)
   // Compacto: a linha recolhida mostra até uma fala como uma linha só.
   const passo = (e: EventoProcesso, i: number, compacto = false) => (
@@ -125,7 +126,9 @@ export function ChatEtapa({ slug, etapa, dados, eventos, delta }: PropsChatEtapa
       ? "O agente está respondendo em outra etapa deste prospect."
       : null
 
-  const { itens, aoVivo } = separarProcessoAoVivo(agruparProcesso(eventos, ativoAqui), ativoAqui)
+  const separado = separarProcessoAoVivo(agruparProcesso(eventos, ativoAqui), ativoAqui)
+  const itens = cardsDepoisDaResposta(separado.itens)
+  const aoVivo = separado.aoVivo
 
   const indiceUltimaResposta = itens.reduce(
     (ultimo, i, posicao) => (i.tipo === "evento" && i.evento.tipo === "texto_agente" ? posicao : ultimo),

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { EventoConversa } from "@workspace/core/tipos"
-import { agruparProcesso, iconeDoPasso, separarProcessoAoVivo, statusDosPassos, type ItemChat } from "./passos"
+import { agruparProcesso, cardsDepoisDaResposta, iconeDoPasso, separarProcessoAoVivo, statusDosPassos, type ItemChat } from "./passos"
 
 const em = "2026-10-01T00:00:00.000Z"
 const msg = (texto: string): EventoConversa => ({ tipo: "mensagem_analista", texto, automatica: false, em })
@@ -143,5 +143,38 @@ describe("passos no ChainOfThought", () => {
     expect(statusDosPassos(3, true)).toEqual(["complete", "complete", "active"])
     expect(statusDosPassos(3, false)).toEqual(["complete", "complete", "complete"])
     expect(statusDosPassos(0, true)).toEqual([])
+  })
+})
+
+describe("card de aprovação depois da resposta do turno", () => {
+  it("o card proposto no meio do turno aparece depois da resposta final, na ordem de leitura", () => {
+    const eventos = [msg("oi"), inicio, passo("a.md"), card, passo("b.md"), fala("Montei a versão limpa."), fim()]
+    expect(resumo(cardsDepoisDaResposta(agruparProcesso(eventos, false)))).toEqual([
+      "mensagem_analista",
+      "turno_inicio",
+      "[a.md b.md]",
+      "resposta:Montei a versão limpa.",
+      "card_entregavel",
+      "turno_fim",
+    ])
+  })
+
+  it("sem resposta no turno (ou turno em andamento), o card fica onde está", () => {
+    const eventos = [inicio, passo("a.md"), card, passo("b.md")]
+    const itens = agruparProcesso(eventos, true)
+    expect(resumo(cardsDepoisDaResposta(itens))).toEqual(resumo(itens))
+  })
+
+  it("não atravessa turnos: card de um turno não vai para a resposta do seguinte", () => {
+    const eventos = [inicio, card, fim(), msg("ok"), inicio, fala("Seguindo."), fim()]
+    expect(resumo(cardsDepoisDaResposta(agruparProcesso(eventos, false)))).toEqual([
+      "turno_inicio",
+      "card_entregavel",
+      "turno_fim",
+      "mensagem_analista",
+      "turno_inicio",
+      "resposta:Seguindo.",
+      "turno_fim",
+    ])
   })
 })

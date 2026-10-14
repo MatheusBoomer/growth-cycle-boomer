@@ -50,6 +50,49 @@ export function agruparProcesso(eventos: EventoConversa[], turnoAtivo: boolean):
 }
 
 /**
+ * Cards (aprovação, arquivo, perguntas) são gravados quando o agente chama a ferramenta, quase
+ * sempre antes de ele escrever a resposta do turno. Para a leitura seguir a ordem do raciocínio,
+ * os cards de um turno vão para logo depois da resposta dele. Sem resposta (turno em andamento ou
+ * sem fala final), ficam onde estão.
+ */
+export function cardsDepoisDaResposta(itens: ItemChat[]): ItemChat[] {
+  const saida: ItemChat[] = []
+  let trecho: ItemChat[] = []
+  const fecharTrecho = () => {
+    let resposta = -1
+    trecho.forEach((item, i) => {
+      if (item.tipo === "evento" && item.evento.tipo === "texto_agente") resposta = i
+    })
+    if (resposta < 0) {
+      saida.push(...trecho)
+    } else {
+      const ehCard = (item: ItemChat, i: number) => i < resposta && item.tipo === "evento" && item.evento.tipo.startsWith("card_")
+      const cards = trecho.filter(ehCard)
+      trecho.forEach((item, i) => {
+        if (!ehCard(item, i)) {
+          // Sem o card no meio, dois blocos de processo vizinhos viram um só.
+          const anterior = saida.at(-1)
+          if (item.tipo === "processo" && anterior?.tipo === "processo") saida[saida.length - 1] = { ...anterior, itens: [...anterior.itens, ...item.itens] }
+          else saida.push(item)
+        }
+        if (i === resposta) saida.push(...cards)
+      })
+    }
+    trecho = []
+  }
+  for (const item of itens) {
+    if (item.tipo === "evento" && divisoria(item.evento)) {
+      fecharTrecho()
+      saida.push(item)
+    } else {
+      trecho.push(item)
+    }
+  }
+  fecharTrecho()
+  return saida
+}
+
+/**
  * Com o turno em andamento, o bloco de processo mais recente é o que o agente está fazendo
  * agora: sai da lista e aparece como um ChainOfThought expandido. O balão "Pensando…" só
  * aparece quando não há nada ao vivo.
