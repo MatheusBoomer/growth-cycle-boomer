@@ -94,3 +94,9 @@ O benchmark de anúncios coleta a Biblioteca de Anúncios do Meta pela Apify:
 precisa de `APIFY_TOKEN` no `.env` da raiz (modelo em `.env.example`) e do
 `ffmpeg` instalado (`brew install ffmpeg`). O token nunca aparece em arquivo
 gerado nem na conversa.
+
+## Ferramenta de desenvolvimento da interface
+
+A skill `dev-comentarios` executa os ajustes de interface marcados com o modo dev
+do app web (`.dev-comentarios/`, `npm run dev:comentarios` em `src/`). Ela não
+faz parte da sequência 01→09 e não segue os rituais de checagem do planejamento.
