@@ -88,12 +88,12 @@ Ao concluir, marque "04 · Unidade econômica" como ✅ em
 `contexto/status-planejamento.md` e converse com o analista em linguagem
 natural, sem citar caminho de arquivo:
 
-"Etapa concluída! Não preciso de arquivo novo agora — só pensa numa meta
-clara (qual número, em quanto tempo) e tenha em mente a receita do ano
-passado e alguma sazonalidade importante do negócio, porque vou te
-perguntar isso logo no início da próxima etapa.
+"Etapa concluída! Não preciso de arquivo novo agora. Na próxima etapa vou
+abrir cada problema que encontramos no diagnóstico em hipóteses, soluções e
+impacto em reais; vale lembrar o que o prospect já tentou para resolver cada
+um.
 
-Quando estiver pronto, rode `/05-metas-e-cenarios`."
+Quando estiver pronto, rode `/05-solucoes`."
 
 Reescreva também o bloco "Próximo passo" de `contexto/status-planejamento.md`
 com esse mesmo aviso.
