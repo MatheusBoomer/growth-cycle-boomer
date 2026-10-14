@@ -179,6 +179,8 @@ def _ler_json(caminho: Path, nome: str):
         raise ErroEntrada(f"{nome} não encontrado: {caminho}")
     except json.JSONDecodeError as e:
         raise ErroEntrada(f"o {nome} não é um JSON válido (linha {e.lineno}): {e.msg}")
+    except (OSError, UnicodeDecodeError) as e:
+        raise ErroEntrada(f"não foi possível ler o {nome} ({caminho}): {e}")
 
 
 def validar_plano(registro: dict, plano) -> Tuple[List[str], List[str]]:
@@ -260,8 +262,12 @@ def main(argv: Optional[List[str]] = None) -> int:
         print(f"ERRO: {alvo} inválido:\n" + "\n".join(f"- {e}" for e in erros), file=sys.stderr)
         return 1
     if a.markdown:
-        a.markdown.parent.mkdir(parents=True, exist_ok=True)
-        a.markdown.write_text(gerar_markdown(registro), encoding="utf-8")
+        try:
+            a.markdown.parent.mkdir(parents=True, exist_ok=True)
+            a.markdown.write_text(gerar_markdown(registro), encoding="utf-8")
+        except OSError as e:
+            print(f"ERRO: não foi possível gravar a seção em {a.markdown}: {e}", file=sys.stderr)
+            return 1
         print(f"Seção gerada: {a.markdown}")
     total = sum(len(x["solucoes"]) for x in registro["problemas"])
     print(f"OK: {len(registro['problemas'])} problemas, {total} soluções.")

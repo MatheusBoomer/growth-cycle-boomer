@@ -148,6 +148,30 @@ def test_cli_arquivo_ausente_ou_malformado(tmp_path, capsys, conteudo, trecho):
     assert err.startswith("ERRO:") and trecho in err and "Traceback" not in err
 
 
+def test_cli_registro_nao_utf8_vira_erro_legivel(tmp_path, capsys):
+    reg = tmp_path / "solucoes.json"
+    reg.write_bytes(b"\xff\xfe")
+    assert vs.main(["--modo", "registro", "--registro", str(reg)]) == 1
+    err = capsys.readouterr().err
+    assert err.startswith("ERRO:") and "Traceback" not in err
+
+
+def test_cli_registro_que_e_diretorio_vira_erro_legivel(tmp_path, capsys):
+    assert vs.main(["--modo", "registro", "--registro", str(tmp_path)]) == 1
+    err = capsys.readouterr().err
+    assert err.startswith("ERRO:") and "Traceback" not in err
+
+
+def test_cli_markdown_sob_um_arquivo_vira_erro_legivel(tmp_path, capsys):
+    reg = tmp_path / "solucoes.json"
+    reg.write_text(json.dumps(registro_valido(), ensure_ascii=False), encoding="utf-8")
+    arquivo = tmp_path / "arquivo.txt"
+    arquivo.write_text("x", encoding="utf-8")
+    assert vs.main(["--modo", "registro", "--registro", str(reg), "--markdown", str(arquivo / "x.md")]) == 1
+    err = capsys.readouterr().err
+    assert "ERRO: não foi possível gravar a seção em" in err and "Traceback" not in err
+
+
 def plano_valido() -> dict:
     def acao(nome, solucoes):
         return {"acao": nome, "o_que": "x", "quando": "Semana 1", "por_quem": "Agência", "como": "y", "solucoes": solucoes}
