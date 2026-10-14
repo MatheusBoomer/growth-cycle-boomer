@@ -200,10 +200,10 @@ export function ModoDev() {
     setTexto("")
   }, [])
 
-  // Atalhos: Ctrl/⌘+Shift+D liga e desliga; ↑/↓ mudam o nível destacado; Esc fecha a caixa e, sem caixa, sai do modo.
+  // Atalhos: Ctrl+D liga e desliga (em qualquer lugar, inclusive campos de texto); ↑/↓ mudam o nível destacado; Esc fecha a caixa e, sem caixa, sai do modo.
   useEffect(() => {
     const aoTeclar = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "d") {
+      if (e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "d") {
         e.preventDefault()
         definirAtivo(!ativoRef.current)
         return
@@ -467,7 +467,7 @@ export function ModoDev() {
         <button
           type="button"
           onClick={() => definirAtivo(!ativo)}
-          title="Modo dev (Ctrl/⌘ + Shift + D)"
+          title="Modo dev (Ctrl + D)"
           className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 font-semibold shadow-lg ${ativo ? "bg-orange-500 text-white" : "bg-zinc-900 text-white"}`}
         >
           Dev

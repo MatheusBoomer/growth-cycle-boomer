@@ -5,7 +5,7 @@ description: Executa os ajustes de interface que o desenvolvedor marcou na tela 
 
 # Comentários do modo dev
 
-O desenvolvedor roda o app (`npm run dev` em `src/`), liga o modo dev (botão "Dev" no canto inferior esquerdo ou Ctrl/⌘ + Shift + D), aponta blocos da tela (↑/↓ sobem e descem de nível) e escreve ajustes. Cada comentário fica em `.dev-comentarios/` na raiz do repositório, com página, cadeia de componentes, seletor CSS, texto visível e um recorte PNG.
+O desenvolvedor roda o app (`npm run dev` em `src/`), liga o modo dev (botão "Dev" no canto inferior esquerdo ou Ctrl + D), aponta blocos da tela (↑/↓ sobem e descem de nível) e escreve ajustes. Cada comentário fica em `.dev-comentarios/` na raiz do repositório, com página, cadeia de componentes, seletor CSS, texto visível e um recorte PNG.
 
 Seu trabalho: executar os ajustes e deixar a lista só com o que ficou pendente.
 
