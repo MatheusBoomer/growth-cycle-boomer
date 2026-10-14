@@ -199,7 +199,7 @@ def test_desafio_preenche_problema_hipoteses_solucoes_e_impacto(prospect, tmp_pa
     ga.gerar(roteiro, prospect, saida)
     prs = Presentation(saida)
     texto = " ".join(sh.text_frame.text for s in prs.slides for sh in s.shapes if sh.has_text_frame)
-    for trecho in ("36,1% da receita", "Hipótese: Ruptura de estoque", "Recuperar PIX e boleto", "+R$ 16,4M/ano"):
+    for trecho in ("36,1% da receita", "Hipótese: Ruptura de estoque", "Solução: Recuperar PIX e boleto", "+R$ 16,4M/ano"):
         assert trecho in texto, trecho
     assert "1. Recuperar" not in texto
 
@@ -247,8 +247,73 @@ def test_registro_malformado_vira_aviso(prospect, tmp_path):
     assert any("contexto/solucoes.json não pôde ser lido" in a for a in r["avisos"]), r["avisos"]
 
 
-def test_desafio_com_texto_longo_avisa_estouro(prospect, tmp_path):
+def _erros(roteiro, prospect):
+    modelos = {ap.tipo_do_slide(s) for s in Presentation(ga.CAMINHO_MOLDE).slides}
+    return ga.validar_roteiro(roteiro, prospect, modelos)[0]
+
+
+def test_desafio_com_texto_longo_e_recusado(prospect, tmp_path):
     roteiro = roteiro_basico()
     roteiro["slides"].insert(-1, slide_desafio(problema="dado muito longo " * 80))
-    r = ga.gerar(roteiro, prospect, tmp_path / "deck.pptx")
-    assert any("não cabe na caixa" in a for a in r["avisos"]), r["avisos"]
+    erros = _erros(roteiro, prospect)
+    assert any("Slide 6 (desafio), campo problema: item com 1360 caracteres; o limite é 140. Condense o texto." in e for e in erros), erros
+    with pytest.raises(ga.ErroRoteiro):
+        ga.gerar(roteiro, prospect, tmp_path / "deck.pptx")
+    assert not (tmp_path / "deck.pptx").exists()
+
+
+def test_desafio_pior_caso_do_ensaio_e_recusado(prospect):
+    roteiro = roteiro_basico()
+    longa = "Recuperar a receita perdida em PIX e boleto com cobrança ativa, régua de lembrete e checkout simplificado " * 2
+    roteiro["slides"].insert(-1, slide_desafio(solucoes=[longa] * 3))
+    erros = [e for e in _erros(roteiro, prospect) if "campo solucoes" in e]
+    assert len(erros) == 3 and all("o limite é 100" in e for e in erros), erros
+
+
+def test_desafio_no_limite_exato_passa(prospect, tmp_path):
+    roteiro = roteiro_basico()
+    roteiro["slides"].insert(-1, slide_desafio(
+        titulo="t" * 60, problema="p" * 140, hipoteses=["h" * 90] * 5, solucoes=["s" * 100] * 3, impacto="i" * 100,
+    ))
+    assert _erros(roteiro, prospect) == []
+
+
+@pytest.mark.parametrize(
+    "extra, campo, limite",
+    [
+        ({"titulo": "t" * 61}, "titulo", 60),
+        ({"hipoteses": ["ok", "h" * 91]}, "hipoteses", 90),
+        ({"solucoes": ["s" * 101]}, "solucoes", 100),
+        ({"impacto": "i" * 101}, "impacto", 100),
+    ],
+)
+def test_desafio_um_caractere_acima_do_limite(prospect, extra, campo, limite):
+    roteiro = roteiro_basico()
+    roteiro["slides"].insert(-1, slide_desafio(**extra))
+    erros = _erros(roteiro, prospect)
+    assert any(f"campo {campo}: item com {limite + 1} caracteres; o limite é {limite}." in e for e in erros), erros
+
+
+def test_desafio_com_pendencia_nao_confere_limites(prospect):
+    roteiro = roteiro_basico()
+    roteiro["slides"].insert(-1, {"tipo": "desafio", "pendencia": "faltam dados", "problema": "x" * 500})
+    assert _erros(roteiro, prospect) == []
+
+
+def test_problema_id_que_nao_e_texto_vira_erro_e_nao_quebra(prospect, tmp_path):
+    _registro(prospect, ["P1"])
+    roteiro = roteiro_basico()
+    roteiro["slides"].insert(-1, slide_desafio(problema_id=["P1"]))
+    erros = _erros(roteiro, prospect)
+    assert any("Slide 6 (desafio), campo problema_id: precisa ser um texto (ex.: P1)." in e for e in erros), erros
+    with pytest.raises(ga.ErroRoteiro):
+        ga.gerar(roteiro, prospect, tmp_path / "deck.pptx")
+
+
+def test_problema_id_nao_texto_nao_derruba_a_checagem_de_cobertura(prospect):
+    _registro(prospect, ["P1"])
+    roteiro = roteiro_basico()
+    roteiro["slides"].insert(-1, slide_desafio(problema_id=["P1"]))
+    avisos = []
+    ga._problemas_fora_do_roteiro(roteiro, prospect, avisos)
+    assert any("P1" in a for a in avisos), avisos

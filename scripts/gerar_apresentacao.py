@@ -30,6 +30,9 @@ LIMITE_OCUPACAO = 1.1
 # Títulos grandes de capa e divisória quebram em duas linhas por desenho (ver p.42 do deck de referência).
 TIPOS_SEM_AVISO_DE_ESTOURO = {"capa", "divisoria"}
 
+# Caracteres por item do roteiro (sem os prefixos "Hipótese: " e "Solução: " que o gerador acrescenta).
+LIMITES_DESAFIO = {"titulo": 60, "problema": 140, "hipoteses": 90, "solucoes": 100, "impacto": 100}
+
 # campo -> ("texto" | "lista" | "imagem" | "imagens" | "bloco" | "link", mínimo, máximo)
 ESQUEMA: Dict[str, Dict[str, tuple]] = {
     "capa": {"prospect": ("texto", 1, 1)},
@@ -74,6 +77,20 @@ def _validar_imagem(rel, pasta: Path, onde: str, erros: List[str]) -> None:
         erros.append(f"{onde}: imagem não encontrada ({rel}).")
 
 
+def _validar_desafio(s: dict, i: int, erros: List[str]) -> None:
+    if "problema_id" in s and (not isinstance(s["problema_id"], str) or not s["problema_id"].strip()):
+        erros.append(f"Slide {i} (desafio), campo problema_id: precisa ser um texto (ex.: P1).")
+    for campo, limite in LIMITES_DESAFIO.items():
+        valor = s.get(campo)
+        itens = valor if isinstance(valor, list) else [valor]
+        for item in itens:
+            if isinstance(item, str) and len(item) > limite:
+                erros.append(
+                    f"Slide {i} (desafio), campo {campo}: item com {len(item)} caracteres; "
+                    f"o limite é {limite}. Condense o texto."
+                )
+
+
 def validar_roteiro(roteiro: dict, pasta_prospect: Path, tipos_do_molde: set) -> Tuple[List[str], List[str]]:
     erros: List[str] = []
     avisos: List[str] = []
@@ -113,6 +130,8 @@ def validar_roteiro(roteiro: dict, pasta_prospect: Path, tipos_do_molde: set) ->
                 if not isinstance(valor, dict) or not isinstance(valor.get("titulo"), str) or not _textos(valor.get("itens")) \
                         or not minimo <= len(valor["itens"]) <= maximo:
                     erros.append(f"{onde}: precisa de \"titulo\" e de {minimo} a {maximo} \"itens\".")
+        if tipo == "desafio":
+            _validar_desafio(s, i, erros)
     return erros, avisos
 
 
@@ -121,7 +140,7 @@ def _preencher(prs, slide, tipo: str, dados: dict, pasta: Path, numero: int, avi
     if tipo == "desafio":
         ap.preencher_texto(c["titulo"], dados["titulo"])
         ap.preencher_bloco(c["esquerda"], f"**Problema:** {dados['problema']}", [f"Hipótese: {h}" for h in dados["hipoteses"]])
-        ap.preencher_bloco(c["direita"], f"**Impacto:** {dados['impacto']}", list(dados["solucoes"]))
+        ap.preencher_bloco(c["direita"], f"**Impacto:** {dados['impacto']}", [f"Solução: {x}" for x in dados["solucoes"]])
     else:
         _preencher_campos(slide, c, tipo, dados, pasta)
     if tipo in TIPOS_SEM_AVISO_DE_ESTOURO:
@@ -184,7 +203,7 @@ def _problemas_fora_do_roteiro(roteiro: dict, pasta: Path, avisos: List[str]) ->
         avisos.append("contexto/solucoes.json não pôde ser lido; confira o registro de soluções.")
         return
     ids = [p["id"] for p in problemas if isinstance(p, dict) and isinstance(p.get("id"), str)]
-    usados = {s.get("problema_id") for s in roteiro["slides"] if s.get("tipo") == "desafio"}
+    usados = {s["problema_id"] for s in roteiro["slides"] if s.get("tipo") == "desafio" and isinstance(s.get("problema_id"), str)}
     fora = [i for i in ids if i not in usados]
     if fora:
         avisos.append(f"{len(fora)} problemas do registro de soluções não entraram no deck: {', '.join(fora)}.")
