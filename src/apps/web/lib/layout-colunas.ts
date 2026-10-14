@@ -26,6 +26,26 @@ export function layoutParaVisualizador(atual: Layout, salvo: Layout | null, aber
   return novo
 }
 
+/** Largura mínima (%) que a área de trabalho mantém quando o painel lateral volta. */
+const CHAT_MINIMO = 25
+
+/**
+ * Layout ao recolher ou mostrar o painel lateral pelo botão. Recolher pela API do grupo entregaria a
+ * largura ao vizinho do painel (o visualizador, quase sempre fechado); aqui ela vai para a área de
+ * trabalho. Ao mostrar, o painel volta com `largura` (%), tirada da área de trabalho ou, se ela
+ * ficaria estreita demais, proporcionalmente das outras colunas.
+ */
+export function layoutParaPainel(atual: Layout, aberto: boolean, largura: number): Layout {
+  const painel = atual.painel ?? 0
+  if (!aberto) return { ...atual, chat: (atual.chat ?? 0) + painel, painel: 0 }
+  const falta = largura - painel
+  if ((atual.chat ?? 0) - falta >= CHAT_MINIMO) return { ...atual, chat: (atual.chat ?? 0) - falta, painel: largura }
+  const escala = (100 - largura) / (100 - painel)
+  const novo: Layout = {}
+  for (const [id, tamanho] of Object.entries(atual)) novo[id] = id === "painel" ? largura : tamanho * escala
+  return novo
+}
+
 interface ElementoFoco {
   tagName: string
   isContentEditable: boolean

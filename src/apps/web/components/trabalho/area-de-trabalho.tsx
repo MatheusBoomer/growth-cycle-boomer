@@ -24,7 +24,7 @@ import { ChatEtapa } from "@/components/chat/chat-etapa"
 import { useAreaDeTrabalho } from "@/hooks/use-area-de-trabalho"
 import { useBiblioteca } from "@/hooks/use-biblioteca"
 import { totalVisivel } from "@/lib/biblioteca"
-import { CHAVE_COLUNA_DIREITA, chaveColunas, layoutParaVisualizador, lerLayout, salvarLayout, type Layout } from "@/lib/layout-colunas"
+import { CHAVE_COLUNA_DIREITA, chaveColunas, layoutParaPainel, layoutParaVisualizador, lerLayout, salvarLayout, type Layout } from "@/lib/layout-colunas"
 import { ContextoVisualizador } from "./contexto-visualizador"
 import { EtapaLiberada } from "./etapa-liberada"
 import { ROTULO_STATUS } from "./icone-status"
@@ -58,6 +58,8 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   const grupoRef = useGroupRef()
   const trilhaRef = usePanelRef()
   const painelRef = usePanelRef()
+  // Última largura (%) do painel aberto: é com ela que ele volta quando o analista o mostra de novo.
+  const larguraPainel = useRef(22)
   const etapa = selecionada ?? (dados ? escolherEtapaInicial(dados.estado) : null)
   const visualizadorAberto = visualizador !== null && visualizador.etapa === etapa
   const [arquivoAberto, setArquivoAberto] = useState<string | null>(null)
@@ -90,12 +92,26 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
     setVisualizador(null)
   }, [])
   const alternarTelaCheia = useCallback(() => setTelaCheia((v) => !v), [])
+  // Recolher pela API do painel daria a largura ao visualizador fechado (vizinho dele): o layout do
+  // grupo é refeito para a área de trabalho ocupar o espaço e se ajustar quando o painel volta.
+  const mostrarPainel = useCallback(
+    (aberto: boolean) => {
+      const grupo = grupoRef.current
+      if (!grupo) return
+      try {
+        grupo.setLayout(layoutParaPainel(grupo.getLayout(), aberto, larguraPainel.current))
+      } catch {
+        // grupo ainda montando: vale o layout que ele tiver
+      }
+    },
+    [grupoRef],
+  )
   const abrirArquivo = useCallback(
     (caminho: string) => {
-      if (painelRef.current?.isCollapsed()) painelRef.current.expand()
+      if (painelRef.current?.isCollapsed()) mostrarPainel(true)
       setArquivoAberto(caminho)
     },
-    [painelRef],
+    [painelRef, mostrarPainel],
   )
   const fecharArquivo = useCallback(() => setArquivoAberto(null), [])
   const mencionar = useCallback((caminho: string) => inserirNoCompositor.current?.(`@${caminho} `), [])
@@ -127,8 +143,8 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
     return () => observador.disconnect()
   }, [carregado])
   const controle = useMemo(
-    () => ({ abrir, abrirArquivo, mencionar, inserirNoCompositor: inserirTexto, registrarCompositor }),
-    [abrir, abrirArquivo, mencionar, inserirTexto, registrarCompositor],
+    () => ({ abrir, abrirArquivo, mencionar, inserirNoCompositor: inserirTexto, registrarCompositor, irParaEtapa: selecionarEtapa }),
+    [abrir, abrirArquivo, mencionar, inserirTexto, registrarCompositor, selecionarEtapa],
   )
 
   // Arquivo aberto (janela embaixo do painel da etapa): mesmo princípio do visualizador de
@@ -272,7 +288,7 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
                     size="icon-sm"
                     className="ml-auto"
                     aria-label={painelRecolhido ? "Mostrar painel" : "Recolher painel"}
-                    onClick={() => (painelRecolhido ? painelRef.current?.expand() : painelRef.current?.collapse())}
+                    onClick={() => mostrarPainel(painelRecolhido)}
                   >
                     {painelRecolhido ? <PanelRightOpenIcon /> : <PanelRightCloseIcon />}
                   </Button>
@@ -308,7 +324,10 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
               maxSize="40%"
               collapsible
               collapsedSize="0%"
-              onResize={(tamanho) => setPainelRecolhido(tamanho.asPercentage === 0)}
+              onResize={(tamanho) => {
+                setPainelRecolhido(tamanho.asPercentage === 0)
+                if (tamanho.asPercentage > 0) larguraPainel.current = tamanho.asPercentage
+              }}
             >
               <ResizablePanelGroup
                 groupRef={colunaDireitaRef}

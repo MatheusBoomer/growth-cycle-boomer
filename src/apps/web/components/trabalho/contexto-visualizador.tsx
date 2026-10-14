@@ -14,6 +14,8 @@ export interface ControleVisualizador {
   inserirNoCompositor: (texto: string) => void
   /** O campo de mensagem se registra aqui para receber as menções. */
   registrarCompositor: (inserir: ((texto: string) => void) | null) => void
+  /** Abre outra etapa na área de trabalho (como clicar nela na trilha). */
+  irParaEtapa: (etapa: EtapaId) => void
 }
 
 export const ContextoVisualizador = createContext<ControleVisualizador>({
@@ -22,6 +24,7 @@ export const ContextoVisualizador = createContext<ControleVisualizador>({
   mencionar: () => {},
   inserirNoCompositor: () => {},
   registrarCompositor: () => {},
+  irParaEtapa: () => {},
 })
 
 export function useVisualizador(): ControleVisualizador {

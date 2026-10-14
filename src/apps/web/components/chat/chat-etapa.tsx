@@ -12,6 +12,7 @@ import {
   WrenchIcon,
   type LucideIcon,
 } from "lucide-react"
+import { useState } from "react"
 import { toast } from "sonner"
 import type { EtapaId, EventoConversa, RespostaEstado } from "@workspace/core/tipos"
 import { Bubble, BubbleContent } from "@workspace/ui/components/bubble"
@@ -30,6 +31,7 @@ import { Markdown } from "@/components/markdown"
 import { api, mensagemDeErro } from "@/lib/api"
 import { agruparProcesso, iconeDoPasso, separarProcessoAoVivo, statusDosPassos, type EventoProcesso, type IconePasso } from "@/lib/passos"
 import { Compositor } from "./compositor"
+import { FimDaEtapa } from "./fim-da-etapa"
 import { ItemConversa } from "./item-conversa"
 
 export interface PropsChatEtapa {
@@ -58,32 +60,48 @@ const ICONES: Record<IconePasso, LucideIcon> = {
   outro: WrenchIcon,
 }
 
-/** Processo de um trecho do turno (passos + falas intermediárias). Ao vivo, abre expandido com o último passo ativo. */
+/**
+ * Processo de um trecho do turno (passos + falas intermediárias). Ao vivo, abre expandido com o
+ * último passo ativo. Recolhido, mostra o resumo e logo abaixo só a última linha (o que está sendo
+ * feito agora, ou o último passo); expandir mostra todos.
+ */
 function ListaDeProcesso({ itens, slug, resumo, aoVivo = false }: { itens: EventoProcesso[]; slug: string; resumo: string; aoVivo?: boolean }) {
+  const [aberto, setAberto] = useState(aoVivo)
   const status = statusDosPassos(itens.length, aoVivo)
+  // Compacto: a linha recolhida mostra até uma fala como uma linha só.
+  const passo = (e: EventoProcesso, i: number, compacto = false) => (
+    <ChainOfThoughtStep
+      key={`${e.em}-${i}`}
+      icon={ICONES[iconeDoPasso(e)]}
+      status={status[i]}
+      label={
+        e.tipo === "atividade" || compacto ? (
+          <span className="block truncate" title={e.tipo === "atividade" ? e.detalhe : undefined}>
+            {linhaDoProcesso(e, slug)}
+          </span>
+        ) : (
+          <div className="text-foreground/80 text-sm">
+            <Markdown>{e.texto}</Markdown>
+          </div>
+        )
+      }
+    />
+  )
+  const ultimo = itens.length - 1
   return (
-    <ChainOfThought defaultOpen={aoVivo}>
+    <ChainOfThought open={aberto} onOpenChange={setAberto}>
       <ChainOfThoughtHeader icon={WrenchIcon}>{resumo}</ChainOfThoughtHeader>
-      <ChainOfThoughtContent className="pl-0.5">
-        {itens.map((e, i) => (
-          <ChainOfThoughtStep
-            key={`${e.em}-${i}`}
-            icon={ICONES[iconeDoPasso(e)]}
-            status={status[i]}
-            label={
-              e.tipo === "atividade" ? (
-                <span className="block truncate" title={e.detalhe}>
-                  {linhaDoProcesso(e, slug)}
-                </span>
-              ) : (
-                <div className="text-foreground/80 text-sm">
-                  <Markdown>{e.texto}</Markdown>
-                </div>
-              )
-            }
-          />
-        ))}
-      </ChainOfThoughtContent>
+      {!aberto && ultimo >= 0 && (
+        <button
+          type="button"
+          className="mt-2 block w-full cursor-pointer pl-0.5 text-left [&_[data-slot=chain-of-thought-step]>div:last-child]:pb-0"
+          aria-label="Mostrar todos os passos"
+          onClick={() => setAberto(true)}
+        >
+          {passo(itens[ultimo]!, ultimo, true)}
+        </button>
+      )}
+      <ChainOfThoughtContent className="pl-0.5">{itens.map((e, i) => passo(e, i))}</ChainOfThoughtContent>
     </ChainOfThought>
   )
 }
@@ -151,6 +169,11 @@ export function ChatEtapa({ slug, etapa, dados, eventos, delta }: PropsChatEtapa
                     />
                   </MessageScrollerItem>
                 ),
+              )}
+              {!ativoAqui && (
+                <MessageScrollerItem messageId="fim-da-etapa">
+                  <FimDaEtapa slug={slug} etapa={etapa} dados={dados} />
+                </MessageScrollerItem>
               )}
               {ativoAqui && (
                 <MessageScrollerItem messageId="ao-vivo">
