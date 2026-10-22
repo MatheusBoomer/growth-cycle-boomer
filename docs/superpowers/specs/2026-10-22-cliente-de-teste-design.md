@@ -73,7 +73,9 @@ clientes/_fixtures/verdeluz/
 
 - `clientes/*` é ignorado no git, com exceção de `_template/`, porque dado de prospect real nunca vai para o repositório. O `.gitignore` ganha a exceção `!clientes/_fixtures/`. A Verdeluz é toda fictícia, então não há risco. O `.app/` continua ignorado; por isso as propostas do fixture ficam em `base/propostas/` e são copiadas para `.app/propostas/` no reposicionamento.
 - A listagem de prospects já ignora pastas que começam com `_`, então `_fixtures` não aparece como cliente.
-- O manifesto é gerado pelo script de construção do conteúdo e conferido por teste: todo arquivo de `base/` precisa estar nele, e todo caminho citado precisa existir.
+- O manifesto lista cada arquivo pelo caminho que ele tem na pasta do cliente (ex.: `.app/propostas/x.md`) e a etapa a que pertence. A etapa `00` marca o que existe desde o início (ex.: `contexto/site-referencia.md`, `contexto/brutos/site-simulado.md`). No disco do fixture, o prefixo `.app/` vira `app/` (por causa do `.gitignore`): `.app/propostas/x.md` fica em `base/app/propostas/x.md`.
+- O manifesto traz também `prospect` (nome e site do cliente de teste), `overrides` (texto que o app grava na seção "Overrides específicos deste prospect" do `CLAUDE.md` do cliente, usado para avisar o agente de que o site é simulado) e `kit` (por etapa, quais arquivos de `base/` são oferecidos ao analista).
+- O manifesto é conferido por teste: todo arquivo de `base/` precisa estar nele, e todo caminho citado precisa existir.
 - Estimativa de tamanho: 15 a 20 MB, quase tudo no `.pptx` e nos gráficos.
 
 ## 6. Reposicionar na etapa N
@@ -82,14 +84,14 @@ clientes/_fixtures/verdeluz/
 
 1. **Trava de segurança.** Só age se o `estado.json` do cliente tiver `teste: { fixture }` e o fixture existir. Em qualquer outro prospect, recusa com erro explícito. Recusa também se o agente estiver rodando um turno naquele prospect.
 2. **Limpa** o que o app e as etapas geram: `contexto/`, `dados/`, `entrega/`, `.app/` (conversas, propostas, rascunhos, comentários) e `kit-de-teste/`. Mantém o `CLAUDE.md` do cliente.
-3. **Copia** de `base/` apenas os arquivos cuja etapa no manifesto é menor que N.
+3. **Restaura o modelo** (`clientes/_template/`: `contexto/`, `dados/`, `entrega/`) e **copia** de `base/` os arquivos cuja etapa no manifesto é `00` ou menor que N.
 4. **Monta o estado** a partir de `estado-completo.json`:
    - etapas anteriores a N: `concluida`, com `resumoDecisoes` e `handoff`, `origem: "app"` e `sessionId: null`;
    - etapa N: `liberada`;
    - etapas posteriores: `bloqueada`;
-   - entregáveis e insumos: só os das etapas anteriores a N;
-   - `perguntas` e `filaAutomatica` vazios, `teste` preservado.
-5. **Prepara o kit.** Copia para `kit-de-teste/` os arquivos de insumo da etapa N e o `roteiro.md` dela.
+   - entregáveis: só os das etapas anteriores a N; insumos: só os cujo arquivo é `00` ou de etapa anterior a N;
+   - `perguntas` e `filaAutomatica` vazios; `teste` fica como `{ fixture, etapaInicial: N }`.
+5. **Prepara o kit.** Para cada etapa K de N em diante, copia para `kit-de-teste/KK/` os arquivos que o manifesto lista no `kit` de K e o `roteiros/KK.md` como `roteiro.md`. Assim o analista que avança para a etapa seguinte já encontra o kit dela.
 6. **Regera** `contexto/status-planejamento.md` pelo mecanismo que já existe (`status-md.ts`).
 
 Escolher a mesma etapa de novo desfaz as tentativas e volta ao ponto de partida. Escolher 01 equivale a um prospect novo, só com o kit.
@@ -101,12 +103,12 @@ Escolher a mesma etapa de novo desfaz as tentativas e volta ao ponto de partida.
 Tudo é aditivo e só aparece quando o cliente é de teste.
 
 **`packages/core`**
-- `Estado` ganha `teste?: { fixture: string }` (a versão do estado continua 1).
-- Novo `servico-teste.ts` com `reposicionarTeste` e `lerKit(slug)` (arquivos do kit e roteiro da etapa).
+- `Estado` ganha `teste?: { fixture: string; etapaInicial: EtapaId }` (a versão do estado continua 1) e `ResumoProspect` ganha `teste: boolean`.
+- Novo `servico-teste.ts` com o algoritmo de reposicionamento e a leitura do kit; `ServicoPlanejamento` ganha `criarClienteTeste`, `reposicionarTeste` e `kitDaEtapa`.
 - Novo `fixture.ts` que lê e valida `manifesto.json` e `estado-completo.json`.
 
 **API**
-- `GET /api/prospects/[slug]/teste`: etapa atual, arquivos do kit e roteiro; para prospect comum, responde que não é teste.
+- `GET /api/prospects/[slug]/teste?etapa=NN`: arquivos do kit e roteiro da etapa pedida (padrão: a etapa de partida); para prospect comum, responde que não é teste.
 - `POST /api/prospects/[slug]/teste/reposicionar` com `{ etapa }`: reposiciona e emite o evento que já atualiza a tela.
 - "Mostrar no Finder" reaproveita `POST /api/prospects/[slug]/abrir-pasta` com `{ caminho }`.
 
@@ -116,7 +118,7 @@ Tudo é aditivo e só aparece quando o cliente é de teste.
 - **Selo "Teste"** no `card-prospect` da home.
 - Componentes novos em arquivos novos; edições em `area-de-trabalho.tsx`, `card-prospect.tsx` e `tipos.ts` mínimas.
 
-**Criação do cliente.** `npm run cliente-teste -- --etapa 01` cria `clientes/verdeluz-teste/` a partir do fixture e o deixa na etapa pedida (padrão 01). Serve também para recriar o cliente em outra máquina.
+**Criação do cliente.** `npm run cliente-teste -- --etapa 01` (executado com `tsx`, que entra como dependência de desenvolvimento) cria `clientes/verdeluz-teste/` a partir do fixture e o deixa na etapa pedida (padrão 01). Serve também para recriar o cliente em outra máquina. Se o cliente já existe, o script manda usar o botão Reposicionar.
 
 **Cuidado com trabalho em andamento.** O repositório tem alterações não commitadas de outra frente (chat, cards, `servico-planejamento.ts`, `tipos.ts`). A implementação do subprojeto A deve rodar em um worktree separado, para não misturar.
 
