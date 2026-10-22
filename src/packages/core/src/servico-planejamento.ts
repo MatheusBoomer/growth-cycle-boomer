@@ -407,7 +407,15 @@ export class ServicoPlanejamento {
       const estado = await this.carregar(slug)
       if (!estado.teste) throw new ErroNaoEhTeste()
       const fixture = await carregarFixture(this.arm.raiz, estado.teste.fixture)
-      await this.salvar(slug, await reposicionarNoFixture(this.arm, fixture, estado, etapa, this.agora()))
+      let novo: Estado
+      try {
+        novo = await reposicionarNoFixture(this.arm, fixture, estado, etapa, this.agora())
+      } catch (e) {
+        // A pasta pode ter sido limpa antes da falha: regrava o estado anterior para o cliente seguir marcado como de teste.
+        await this.salvar(slug, estado)
+        throw e
+      }
+      await this.salvar(slug, novo)
     })
   }
 

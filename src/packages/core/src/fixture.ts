@@ -55,6 +55,18 @@ async function lerJson<T>(arquivo: string, rotulo: string): Promise<T> {
   }
 }
 
+/** Confere a forma dos dois JSON antes de qualquer uso, para um fixture torto falhar aqui e não no meio de um reposicionamento. */
+function validarForma(id: string, manifesto: Manifesto, estado: Estado): void {
+  const invalido = (o: string) => new ErroFixture(`Fixture inválido: ${o} em clientes/_fixtures/${id}.`)
+  if (typeof manifesto?.prospect?.nome !== "string") throw invalido("manifesto sem prospect.nome")
+  if (!Array.isArray(manifesto.arquivos)) throw invalido("manifesto sem a lista de arquivos")
+  if (typeof manifesto.kit !== "object" || manifesto.kit === null || Array.isArray(manifesto.kit)) throw invalido("manifesto sem kit")
+  if (!Array.isArray(estado?.entregaveis) || !Array.isArray(estado?.insumos)) throw invalido("estado-completo sem entregáveis ou insumos")
+  for (const etapa of ORDEM_ETAPAS) {
+    if (typeof estado.etapas?.[etapa]?.status !== "string") throw invalido(`estado-completo sem a etapa ${etapa}`)
+  }
+}
+
 function caminhoSeguro(caminho: string): boolean {
   if (!caminho || path.isAbsolute(caminho)) return false
   return !caminho.split(/[\\/]/).includes("..")
@@ -80,6 +92,7 @@ export async function carregarFixture(raiz: string, id: string): Promise<Fixture
   const pasta = pastaDoFixture(raiz, id)
   const manifesto = await lerJson<Manifesto>(path.join(pasta, "manifesto.json"), `clientes/_fixtures/${id}/manifesto.json`)
   const estadoCompleto = await lerJson<Estado>(path.join(pasta, "estado-completo.json"), `clientes/_fixtures/${id}/estado-completo.json`)
+  validarForma(id, manifesto, estadoCompleto)
   const fixture: Fixture = { id, pasta, manifesto, estadoCompleto }
 
   const listados = new Set<string>()

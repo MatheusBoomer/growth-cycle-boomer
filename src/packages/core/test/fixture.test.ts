@@ -64,6 +64,19 @@ describe("carregarFixture", () => {
     await expect(carregarFixture(raiz, "../mini")).rejects.toBeInstanceOf(ErroFixture)
   })
 
+  it("estado-completo sem a forma esperada vira ErroFixture", async () => {
+    await writeFile(path.join(pasta, "estado-completo.json"), "{}")
+    await expect(carregarFixture(raiz, "mini")).rejects.toBeInstanceOf(ErroFixture)
+  })
+
+  it("manifesto sem kit ou sem arquivos vira ErroFixture", async () => {
+    await alterarManifesto((m) => delete (m as Partial<Manifesto>).kit)
+    await expect(carregarFixture(raiz, "mini")).rejects.toBeInstanceOf(ErroFixture)
+    await criarFixtureMinimo(pasta)
+    await alterarManifesto((m) => delete (m as Partial<Manifesto>).arquivos)
+    await expect(carregarFixture(raiz, "mini")).rejects.toBeInstanceOf(ErroFixture)
+  })
+
   it("estado-completo ilegível vira ErroFixture", async () => {
     await rm(path.join(pasta, "estado-completo.json"))
     await expect(carregarFixture(raiz, "mini")).rejects.toBeInstanceOf(ErroFixture)

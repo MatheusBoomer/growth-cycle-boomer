@@ -1,4 +1,5 @@
-import { rm } from "node:fs/promises"
+import { chmod, rm } from "node:fs/promises"
+import path from "node:path"
 import { beforeEach, describe, expect, it } from "vitest"
 import { FsArmazenamento } from "../src/armazenamento"
 import { Barramento } from "../src/barramento"
@@ -96,6 +97,24 @@ describe("reposicionarTeste", () => {
     await rm(pastaDoFixture(raiz, "mini"), { recursive: true })
     await expect(servico.reposicionarTeste(slug, "01")).rejects.toBeInstanceOf(ErroFixture)
     expect(await arm.lerTexto(slug, "dados/marca.txt")).toBe("meu trabalho")
+  })
+})
+
+describe("falha no meio do reposicionamento", () => {
+  it("mantém a marca de teste e permite reposicionar de novo depois de corrigir a causa", async () => {
+    const slug = await servico.criarClienteTeste("mini", "01")
+    const ilegivel = path.join(pastaDoFixture(raiz, "mini"), "base/contexto/kickoff-transcricao.md")
+    await chmod(ilegivel, 0o000)
+    try {
+      await expect(servico.reposicionarTeste(slug, "03")).rejects.toThrow()
+      const estado = await servico.estado(slug)
+      expect(estado.teste).toEqual({ fixture: "mini", etapaInicial: "01" })
+    } finally {
+      await chmod(ilegivel, 0o644)
+    }
+    await servico.reposicionarTeste(slug, "03")
+    expect((await servico.estado(slug)).etapas["03"].status).toBe("liberada")
+    expect(await arm.existeArquivo(slug, "contexto/kickoff-transcricao.md")).toBe(true)
   })
 })
 
