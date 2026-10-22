@@ -24,6 +24,8 @@ __pycache__/
 # Dados de prospects reais NUNCA vão para o git — só o _template
 clientes/*
 !clientes/_template/
+# Fixtures dos clientes de teste: dados 100% fictícios
+!clientes/_fixtures/
 # Estado local do app (chats, rascunhos) — por prospect
 clientes/**/.app/
 
