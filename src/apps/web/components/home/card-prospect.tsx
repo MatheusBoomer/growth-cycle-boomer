@@ -58,6 +58,7 @@ export function CardProspect({ prospect: p }: { prospect: ResumoProspect }) {
           <Badge variant={concluido ? "sucesso" : "secondary"}>
             {p.concluidas} de {p.totalEtapas}
           </Badge>
+          {p.teste && <Badge variant="outline">Teste</Badge>}
           {p.pendencias > 0 && (
             <Badge variant="aviso">
               {p.pendencias} aprovaç{p.pendencias === 1 ? "ão pendente" : "ões pendentes"}

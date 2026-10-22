@@ -11,6 +11,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@w
 import { Spinner } from "@workspace/ui/components/spinner"
 import { CardInsumo } from "@/components/cards/card-insumo"
 import { Markdown } from "@/components/markdown"
+import { PainelKit } from "@/components/teste/painel-kit"
 import { api, mensagemDeErro } from "@/lib/api"
 
 export function EtapaLiberada({
@@ -88,6 +89,7 @@ export function EtapaLiberada({
             ))}
           </div>
         )}
+        <PainelKit slug={slug} etapa={etapa} />
         <p className="text-muted-foreground text-sm">O agente começa já com o dossiê das etapas anteriores (decisões e entregáveis aprovados).</p>
         <div className="flex items-center gap-3">
           <Button size="lg" onClick={iniciar} disabled={iniciando || dados.turnoAtivo !== null}>

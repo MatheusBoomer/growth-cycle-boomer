@@ -20,6 +20,7 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
 import { Biblioteca } from "@/components/biblioteca/biblioteca"
 import { BarraTopo } from "@/components/marca/barra-topo"
+import { FaixaTeste } from "@/components/teste/faixa-teste"
 import { ChatEtapa } from "@/components/chat/chat-etapa"
 import { ProvedorReferencias } from "@/components/chat/contexto-referencias"
 import { useAreaDeTrabalho } from "@/hooks/use-area-de-trabalho"
@@ -257,6 +258,7 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
       <ProvedorReferencias>
       <div className="flex h-svh flex-col">
         <BarraTopo titulo="Planejamento estratégico" subtitulo={dados.estado.prospect.nome} />
+        <FaixaTeste slug={slug} dados={dados} etapa={etapa} />
         <div className={cn("relative min-h-0 flex-1 p-3", arrastando && "[&_iframe]:pointer-events-none")} onPointerDownCapture={aoApertar}>
           <ResizablePanelGroup groupRef={grupoRef} orientation="horizontal" defaultLayout={layoutInicial} onLayoutChanged={aoMudarLayout}>
             <ResizablePanel
