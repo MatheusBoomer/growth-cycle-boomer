@@ -5,6 +5,14 @@ import { armazenamentoDev, foraDoDesenvolvimento } from "@/lib/modo-dev/rota"
 
 export const dynamic = "force-dynamic"
 
+function lerPng(corpo: Record<string, unknown>, campo: "png" | "pngTela"): Buffer | null {
+  const valor = corpo[campo]
+  if (valor !== undefined && valor !== null && typeof valor !== "string") {
+    throw new ErroValidacaoDev(`Campo ${campo} deve ser texto em base64 ou null.`)
+  }
+  return valor ? decodificarPng(valor) : null
+}
+
 export async function GET(req: Request) {
   const bloqueio = foraDoDesenvolvimento()
   if (bloqueio) return bloqueio
@@ -22,12 +30,9 @@ export async function POST(req: Request) {
   try {
     const corpo = await lerJson<Record<string, unknown>>(req)
     const novo = validarNovo(corpo)
-    const { png } = corpo
-    if (png !== undefined && png !== null && typeof png !== "string") {
-      throw new ErroValidacaoDev("Campo png deve ser texto em base64 ou null.")
-    }
-    const bytes = png ? decodificarPng(png) : null
-    return json({ comentario: await armazenamentoDev().criar(novo, bytes) }, 201)
+    const bytes = lerPng(corpo, "png")
+    const bytesTela = lerPng(corpo, "pngTela")
+    return json({ comentario: await armazenamentoDev().criar(novo, bytes, bytesTela) }, 201)
   } catch (e) {
     return respostaDeErro(e)
   }

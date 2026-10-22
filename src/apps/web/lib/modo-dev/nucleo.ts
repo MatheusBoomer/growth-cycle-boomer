@@ -33,8 +33,13 @@ export interface ComentarioDev extends NovoComentario {
   numero: number
   criadoEm: string
   editadoEm: string | null
+  /** Recorte do bloco comentado, tirado no clique. */
   captura: string | null
+  /** Tela inteira no clique, com o bloco contornado: não depende do bloco ainda existir depois. */
+  tela?: string | null
 }
+
+export type TipoImagem = "recorte" | "tela"
 
 export interface ArquivoComentarios {
   versao: 1
@@ -297,6 +302,7 @@ export function resumoEmTexto(comentarios: ComentarioDev[], pasta: string): stri
       linhas.push(`   seletor: ${c.seletor}`)
       if (c.texto) linhas.push(`   texto: "${c.texto}"`)
       linhas.push(`   recorte: ${c.captura ? `${pasta}/${c.captura}` : "(sem recorte)"}`)
+      if (c.tela) linhas.push(`   tela: ${pasta}/${c.tela}`)
       linhas.push(`   pedido: ${c.comentario.split("\n").join(`\n${RECUO_PEDIDO}`)}`)
     }
   }

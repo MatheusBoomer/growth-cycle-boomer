@@ -51,6 +51,29 @@ describe("armazenamento do modo dev", () => {
     expect(arquivo).toMatchObject({ versao: 1, proximoNumero: 3 })
   })
 
+  it("grava o print da tela ao lado do recorte e apaga os dois juntos", async () => {
+    const a = await armazenamento.criar(novo(), PNG, PNG)
+    expect(a.tela).toBe(`capturas/${a.id}-tela.png`)
+    expect(await readFile(path.join(pasta, a.tela!))).toEqual(PNG)
+    expect((await armazenamento.criar(novo(), PNG)).tela).toBeNull()
+    await armazenamento.apagar(a.id)
+    expect(existsSync(path.join(pasta, a.captura!))).toBe(false)
+    expect(existsSync(path.join(pasta, a.tela!))).toBe(false)
+  })
+
+  it("limpar por números também apaga o print da tela", async () => {
+    const a = await armazenamento.criar(novo(), PNG, PNG)
+    await armazenamento.limpar([1])
+    expect(existsSync(path.join(pasta, a.tela!))).toBe(false)
+  })
+
+  it("abre a imagem do comentário pelo tipo e devolve null quando não existe", async () => {
+    const a = await armazenamento.criar(novo(), PNG, null)
+    expect(await armazenamento.imagem(a.id, "recorte")).toEqual(PNG)
+    expect(await armazenamento.imagem(a.id, "tela")).toBeNull()
+    await expect(armazenamento.imagem("nada", "recorte")).rejects.toMatchObject({ status: 404 })
+  })
+
   it("não reaproveita número depois de apagar", async () => {
     await armazenamento.criar(novo(), null)
     const b = await armazenamento.criar(novo(), null)

@@ -2,6 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { GET as GET_IMAGEM } from "./[id]/imagem/route"
 import { DELETE, PATCH } from "./[id]/route"
 import { GET, POST } from "./route"
 
@@ -66,6 +67,28 @@ describe("em desenvolvimento", () => {
 
     expect((await apagar(comentario.id)).status).toBe(200)
     expect((await (await GET(new Request(URL_BASE))).json()).comentarios).toHaveLength(0)
+  })
+
+  it("guarda o print da tela e serve cada imagem pelo tipo", async () => {
+    const criado = await post({ ...valido, png: PNG_BASE64, pngTela: PNG_BASE64 })
+    const { comentario } = (await criado.json()) as { comentario: { id: string; tela: string } }
+    expect(comentario.tela).toBe(`capturas/${comentario.id}-tela.png`)
+    const imagem = (tipo: string) =>
+      GET_IMAGEM(new Request(`${URL_BASE}/${comentario.id}/imagem?tipo=${tipo}`), contexto(comentario.id))
+    const tela = await imagem("tela")
+    expect(tela.status).toBe(200)
+    expect(tela.headers.get("content-type")).toBe("image/png")
+    expect(Buffer.from(await tela.arrayBuffer())).toEqual(Buffer.from(PNG_BASE64, "base64"))
+    expect((await imagem("outro")).status).toBe(400)
+    const semTela = await post({ ...valido, png: PNG_BASE64 })
+    const outro = ((await semTela.json()) as { comentario: { id: string } }).comentario.id
+    const r = await GET_IMAGEM(new Request(`${URL_BASE}/${outro}/imagem?tipo=tela`), contexto(outro))
+    expect(r.status).toBe(404)
+  })
+
+  it("pngTela que não é PNG responde 400", async () => {
+    expect((await post({ ...valido, pngTela: Buffer.from("nao e png").toString("base64") })).status).toBe(400)
+    expect((await post({ ...valido, pngTela: 1 })).status).toBe(400)
   })
 
   it("comentário vazio responde 400 com a mensagem", async () => {

@@ -19,7 +19,7 @@ Em `src/`, rode:
 npm run dev:comentarios
 ```
 
-Abra cada PNG da linha `recorte:` com a ferramenta Read, para ver o que o desenvolvedor viu. Comentário sem recorte: use o texto visível e o seletor.
+Abra cada PNG da linha `recorte:` com a ferramenta Read, para ver o que o desenvolvedor viu. Quando houver a linha `tela:`, abra também: é a tela inteira no momento do clique, com o bloco contornado em laranja — mostra onde ele fica no layout e em que estado (modal aberto, aba, rolagem), mesmo que o bloco não exista mais na tela atual. Comentário sem recorte: use o texto visível e o seletor.
 
 ## 2. Localizar
 

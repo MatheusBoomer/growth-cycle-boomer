@@ -10,6 +10,7 @@ import {
   ErroValidacaoDev,
   LIMITE_PNG_BYTES,
   type NovoComentario,
+  type TipoImagem,
 } from "./nucleo.ts"
 
 const ASSINATURA_PNG = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
@@ -32,7 +33,9 @@ export interface ResultadoLimpeza {
 export interface ArmazenamentoDev {
   pasta: string
   listar(pagina?: string): Promise<ComentarioDev[]>
-  criar(novo: NovoComentario, png: Buffer | null): Promise<ComentarioDev>
+  criar(novo: NovoComentario, png: Buffer | null, pngTela?: Buffer | null): Promise<ComentarioDev>
+  /** Bytes do PNG do comentário; null quando ele não tem esse tipo de imagem. */
+  imagem(id: string, tipo: TipoImagem): Promise<Buffer | null>
   editar(id: string, comentario: string): Promise<ComentarioDev>
   apagar(id: string): Promise<void>
   /** Sem números: apaga tudo e o próximo comentário volta a ser o #1. Com números: só esses. */
@@ -72,7 +75,9 @@ export function criarArmazenamentoDev(pasta: string): ArmazenamentoDev {
   }
 
   async function apagarCaptura(comentario: ComentarioDev): Promise<void> {
-    if (comentario.captura) await rm(path.join(pasta, comentario.captura), { force: true })
+    for (const arquivoImagem of [comentario.captura, comentario.tela]) {
+      if (arquivoImagem) await rm(path.join(pasta, arquivoImagem), { force: true })
+    }
   }
 
   function buscar(dados: ArquivoComentarios, id: string): ComentarioDev {
@@ -89,15 +94,20 @@ export function criarArmazenamentoDev(pasta: string): ArmazenamentoDev {
       return comentarios.filter((c) => pagina === undefined || c.pagina === pagina).sort((a, b) => a.numero - b.numero)
     },
 
-    criar: (novo, png) =>
+    criar: (novo, png, pngTela = null) =>
       emSerie(async () => {
         const dados = await ler()
         const id = randomUUID()
         let captura: string | null = null
+        let tela: string | null = null
+        if (png || pngTela) await mkdir(pastaCapturas, { recursive: true })
         if (png) {
-          await mkdir(pastaCapturas, { recursive: true })
           await writeFile(path.join(pastaCapturas, `${id}.png`), png)
           captura = `capturas/${id}.png`
+        }
+        if (pngTela) {
+          await writeFile(path.join(pastaCapturas, `${id}-tela.png`), pngTela)
+          tela = `capturas/${id}-tela.png`
         }
         const comentario: ComentarioDev = {
           id,
@@ -106,10 +116,22 @@ export function criarArmazenamentoDev(pasta: string): ArmazenamentoDev {
           editadoEm: null,
           ...novo,
           captura,
+          tela,
         }
         await gravar({ ...dados, proximoNumero: dados.proximoNumero + 1, comentarios: [...dados.comentarios, comentario] })
         return comentario
       }),
+
+    async imagem(id, tipo) {
+      const comentario = buscar(await ler(), id)
+      const arquivoImagem = tipo === "tela" ? comentario.tela : comentario.captura
+      if (!arquivoImagem) return null
+      try {
+        return await readFile(path.join(pasta, arquivoImagem))
+      } catch {
+        return null
+      }
+    },
 
     editar: (id, texto) =>
       emSerie(async () => {

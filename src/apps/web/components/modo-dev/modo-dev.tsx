@@ -27,6 +27,8 @@ interface Foto {
   texto: string
   caixa: { x: number; y: number; largura: number; altura: number; larguraTela: number; alturaTela: number }
   png: Promise<string | null>
+  /** Tela inteira com o bloco contornado, tirada no mesmo clique. */
+  tela: Promise<string | null>
 }
 
 interface Destaque {
@@ -75,6 +77,75 @@ async function capturar(el: Element): Promise<string | null> {
   }
 }
 
+function carregarImagem(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = () => reject(new Error("imagem inválida"))
+    img.src = url
+  })
+}
+
+/** O que o desenvolvedor via na hora do clique (modais abertos, abas, rolagens), com o bloco comentado contornado. */
+async function capturarTela(caixa: { x: number; y: number; largura: number; altura: number }): Promise<string | null> {
+  try {
+    const escala = Math.min(1, 1600 / window.innerWidth)
+    const { domToPng } = await import("modern-screenshot")
+    const dataUrl = await domToPng(document.documentElement, {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      scale: escala,
+      backgroundColor: getComputedStyle(document.body).backgroundColor,
+      // Página rolada no documento: sem isto a foto sairia do topo, não do que estava na tela.
+      style: window.scrollX || window.scrollY ? { transform: `translate(${-window.scrollX}px, ${-window.scrollY}px)` } : undefined,
+      filter: (no) => !(no instanceof Element && no.hasAttribute("data-modo-dev")),
+    })
+    const img = await carregarImagem(dataUrl)
+    const canvas = document.createElement("canvas")
+    canvas.width = img.naturalWidth
+    canvas.height = img.naturalHeight
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return null
+    ctx.drawImage(img, 0, 0)
+    const fator = canvas.width / window.innerWidth
+    ctx.fillStyle = "rgba(249, 115, 22, 0.12)"
+    ctx.fillRect(caixa.x * fator, caixa.y * fator, caixa.largura * fator, caixa.altura * fator)
+    ctx.strokeStyle = "#f97316"
+    ctx.lineWidth = Math.max(3, 3 * fator)
+    ctx.strokeRect(caixa.x * fator, caixa.y * fator, caixa.largura * fator, caixa.altura * fator)
+    return canvas.toDataURL("image/png").replace(/^data:image\/png;base64,/, "")
+  } catch {
+    return null
+  }
+}
+
+const urlImagem = (c: ComentarioDev, tipo: "recorte" | "tela") => `/api/dev/comentarios/${c.id}/imagem?tipo=${tipo}`
+
+/** Salva o que está na caixa (novo ou edição); null com o erro já avisado, para o texto ficar e tentar de novo. */
+async function persistir(alvo: Alvo, texto: string): Promise<ComentarioDev | null> {
+  const comentario = texto.trim()
+  if (!comentario) {
+    toast.error("Escreva o ajuste antes de salvar.")
+    return null
+  }
+  try {
+    if (alvo.editando) {
+      return (await chamar<{ comentario: ComentarioDev }>(`/api/dev/comentarios/${alvo.editando.id}`, { method: "PATCH", body: JSON.stringify({ comentario }) })).comentario
+    }
+    if (!alvo.foto) return null
+    const { png, tela, ...foto } = alvo.foto
+    const [recorte, telaInteira] = await Promise.all([png, tela])
+    const resposta = await chamar<{ comentario: ComentarioDev }>("/api/dev/comentarios", {
+      method: "POST",
+      body: JSON.stringify({ ...foto, componente: alvo.cadeia[0] ?? null, cadeia: alvo.cadeia, comentario, png: recorte, pngTela: telaInteira }),
+    })
+    return resposta.comentario
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : "Não foi possível salvar o comentário.")
+    return null
+  }
+}
+
 /** Elemento do comentário na tela atual; escondido (aba fechada, display:none) conta como não encontrado. */
 function elementoVisivel(seletor: string): Element | null {
   try {
@@ -107,6 +178,7 @@ function fotoDe(el: Element): Foto {
       alturaTela: window.innerHeight,
     },
     png: capturar(el),
+    tela: capturarTela({ x: rect.x, y: rect.y, largura: rect.width, altura: rect.height }),
   }
 }
 
@@ -150,6 +222,7 @@ export function ModoDev() {
   const alvoRef = useRef(alvo)
   const textoRef = useRef(texto)
   const destaqueRef = useRef(destaque)
+  const salvandoRef = useRef(false)
   useEffect(() => {
     ativoRef.current = ativo
     alvoRef.current = alvo
@@ -190,15 +263,40 @@ export function ModoDev() {
     }
   }, [])
 
-  const fixar = useCallback((el: Element) => {
-    // Com texto digitado, um clique fora não troca o alvo nem perde o rascunho.
-    if (alvoRef.current && textoRef.current.trim()) return
-    baseRef.current = null
-    filhosRef.current = []
-    setDestaque(null)
-    setAlvo({ el, cadeia: cadeiaDeComponentes(el), editando: null, rect: el.getBoundingClientRect(), foto: fotoDe(el) })
-    setTexto("")
-  }, [])
+  const fixar = useCallback(
+    (el: Element) => {
+      if (salvandoRef.current) return
+      const novo: Alvo = { el, cadeia: cadeiaDeComponentes(el), editando: null, rect: el.getBoundingClientRect(), foto: fotoDe(el) }
+      const abrirNovo = () => {
+        baseRef.current = null
+        filhosRef.current = []
+        setDestaque(null)
+        setAlvo(novo)
+        setTexto("")
+      }
+      const atual = alvoRef.current
+      const rascunho = textoRef.current
+      // Com texto digitado, clicar em outro bloco salva este comentário e já abre o próximo: dá para marcar vários seguidos.
+      if (atual && rascunho.trim()) {
+        salvandoRef.current = true
+        setSalvando(true)
+        void persistir(atual, rascunho)
+          .then(async (salvo) => {
+            if (!salvo) return
+            toast.success(`Comentário #${salvo.numero} salvo.`)
+            await recarregar()
+            abrirNovo()
+          })
+          .finally(() => {
+            salvandoRef.current = false
+            setSalvando(false)
+          })
+        return
+      }
+      abrirNovo()
+    },
+    [recarregar],
+  )
 
   // Atalhos: Ctrl+D liga e desliga (em qualquer lugar, inclusive campos de texto); ↑/↓ mudam o nível destacado; Esc fecha a caixa e, sem caixa, sai do modo.
   useEffect(() => {
@@ -318,35 +416,24 @@ export function ModoDev() {
   }
 
   async function salvar() {
-    if (!alvo || salvando) return
-    const comentario = texto.trim()
-    if (!comentario) {
-      toast.error("Escreva o ajuste antes de salvar.")
-      return
-    }
+    if (!alvo || salvando || salvandoRef.current) return
+    salvandoRef.current = true
     setSalvando(true)
     try {
-      if (alvo.editando) {
-        await chamar(`/api/dev/comentarios/${alvo.editando.id}`, { method: "PATCH", body: JSON.stringify({ comentario }) })
-      } else if (alvo.foto) {
-        const { png, ...foto } = alvo.foto
-        await chamar("/api/dev/comentarios", {
-          method: "POST",
-          body: JSON.stringify({ ...foto, componente: alvo.cadeia[0] ?? null, cadeia: alvo.cadeia, comentario, png: await png }),
-        })
-      }
+      if (!(await persistir(alvo, texto))) return
       fecharCaixa()
       await recarregar()
-    } catch (e) {
-      // O texto fica na caixa para tentar de novo.
-      toast.error(e instanceof Error ? e.message : "Não foi possível salvar o comentário.")
     } finally {
+      salvandoRef.current = false
       setSalvando(false)
     }
   }
 
   const daPagina = comentarios.filter((c) => c.pagina === pagina)
   const naLista = todasPaginas ? comentarios : daPagina
+  // Referências cujo bloco não está nesta tela (outro estado, aba fechada): ficam à mão aqui, com o recorte.
+  const foraDaTela = daPagina.filter((c) => !elementoVisivel(c.seletor))
+  const emOutrasTelas = comentarios.length - daPagina.length
   const rectAlvo = alvo?.el?.isConnected ? alvo.el.getBoundingClientRect() : null
   const rectDestaque = destaque?.el.isConnected ? destaque.el.getBoundingClientRect() : null
 
@@ -383,6 +470,25 @@ export function ModoDev() {
           )
         })}
 
+      {ativo && foraDaTela.length > 0 && (
+        <div className="pointer-events-auto absolute right-4 bottom-4 flex max-h-[45vh] w-52 flex-col gap-1 overflow-y-auto rounded-lg border bg-background p-2 text-foreground shadow-xl">
+          <span className="font-medium">Fora da tela ({foraDaTela.length})</span>
+          {foraDaTela.map((c) => (
+            <button key={c.id} type="button" onClick={() => editar(c)} className="rounded border p-1.5 text-left hover:bg-muted">
+              <div className="flex items-center gap-1.5">
+                <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-orange-500 text-[10px] font-semibold text-white">{c.numero}</span>
+                <span className="truncate text-muted-foreground">{c.componente ?? `<${c.tag}>`}</span>
+              </div>
+              {c.captura && (
+                // eslint-disable-next-line @next/next/no-img-element -- imagem local do modo dev
+                <img src={urlImagem(c, "recorte")} alt={`Recorte do comentário ${c.numero}`} loading="lazy" className="mt-1 max-h-16 w-full rounded border object-contain" />
+              )}
+              <p className="mt-1 line-clamp-2">{c.comentario}</p>
+            </button>
+          ))}
+        </div>
+      )}
+
       {alvo && (
         <div
           className="pointer-events-auto absolute flex flex-col gap-2 rounded-lg border bg-background p-3 text-foreground shadow-xl"
@@ -392,6 +498,17 @@ export function ModoDev() {
             {alvo.editando ? `Editando #${alvo.editando.numero} · ` : ""}
             {resumoDaCadeia(alvo.cadeia, alvo.el?.tagName.toLowerCase() ?? alvo.editando?.tag ?? "?")}
           </div>
+          {alvo.editando?.captura && (
+            <div className="flex items-start gap-2">
+              {/* eslint-disable-next-line @next/next/no-img-element -- imagem local do modo dev */}
+              <img src={urlImagem(alvo.editando, "recorte")} alt="Recorte guardado no clique" className="max-h-20 max-w-[60%] rounded border object-contain" />
+              {alvo.editando.tela && (
+                <a href={urlImagem(alvo.editando, "tela")} target="_blank" rel="noreferrer" className="underline">
+                  Ver a tela inteira
+                </a>
+              )}
+            </div>
+          )}
           <textarea
             autoFocus
             value={texto}
@@ -408,7 +525,7 @@ export function ModoDev() {
             className="w-full resize-none rounded border bg-transparent p-2 text-sm outline-none focus:ring-2 focus:ring-orange-500"
           />
           <div className="flex items-center justify-between gap-2">
-            <span className="text-muted-foreground">⌘/Ctrl+Enter salva · Esc cancela</span>
+            <span className="text-muted-foreground">⌘/Ctrl+Enter salva · outro bloco salva e abre o próximo · Esc cancela</span>
             <div className="flex gap-1">
               <button type="button" onClick={fecharCaixa} className="rounded px-2 py-1 hover:bg-muted">
                 Cancelar
@@ -448,10 +565,19 @@ export function ModoDev() {
                   </div>
                   {todasPaginas && <div className="truncate text-muted-foreground">{c.pagina}</div>}
                   <p className="mt-1 line-clamp-3 whitespace-pre-wrap">{c.comentario}</p>
+                  {c.captura && (
+                    // eslint-disable-next-line @next/next/no-img-element -- imagem local do modo dev
+                    <img src={urlImagem(c, "recorte")} alt={`Recorte do comentário ${c.numero}`} loading="lazy" className="mt-1 max-h-24 max-w-full rounded border object-contain" />
+                  )}
                   <div className="mt-1 flex gap-3">
                     <button type="button" onClick={() => editar(c)} className="underline">
                       Editar
                     </button>
+                    {c.tela && (
+                      <a href={urlImagem(c, "tela")} target="_blank" rel="noreferrer" className="underline">
+                        Tela inteira
+                      </a>
+                    )}
                     <button type="button" onClick={() => void apagar(c)} className="text-red-600 underline">
                       Apagar
                     </button>
@@ -471,7 +597,12 @@ export function ModoDev() {
           className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 font-semibold shadow-lg ${ativo ? "bg-orange-500 text-white" : "bg-zinc-900 text-white"}`}
         >
           Dev
-          {daPagina.length > 0 && <span className="rounded-full bg-white px-1.5 text-zinc-900">{daPagina.length}</span>}
+          {comentarios.length > 0 && (
+            <span className="rounded-full bg-white px-1.5 text-zinc-900" title="Comentários nesta tela / em todas as telas">
+              {daPagina.length}
+              {emOutrasTelas > 0 && `/${comentarios.length}`}
+            </span>
+          )}
         </button>
         <button
           type="button"

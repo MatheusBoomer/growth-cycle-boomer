@@ -57,6 +57,11 @@ describe("resumoEmTexto", () => {
     )
   })
 
+  it("mostra o print da tela quando o comentário tem um", () => {
+    const texto = resumoEmTexto([{ ...base, tela: "capturas/a-tela.png" }], "/repo/.dev-comentarios")
+    expect(texto).toContain("   recorte: /repo/.dev-comentarios/capturas/a.png\n   tela: /repo/.dev-comentarios/capturas/a-tela.png\n   pedido:")
+  })
+
   it("usa o singular com um comentário", () => {
     expect(resumoEmTexto([base], "/p").split("\n")[0]).toBe("1 comentário aberto em /p")
   })
