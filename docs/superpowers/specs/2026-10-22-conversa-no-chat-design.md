@@ -83,6 +83,35 @@ acontecer no chat principal, em texto.
    `mensagemRespostas`, a ação `ajuste` da rota de entregáveis e o editor com caixas
    de texto por marca (a parte de marcar é reaproveitada).
 
+## Escolhas fechadas depois da leitura do revisor (chamadas minhas)
+
+9. **Histórico do chat.** O evento da mensagem do analista guarda só o que ele
+   escreveu, mais uma lista estruturada de referências (entregável, título e
+   marcações). O balão mostra o texto dele e as etiquetas das referências, também
+   depois de recarregar. A mensagem longa para o agente (instruções, lista das
+   marcações, caminho da imagem) é montada no servidor e não aparece no balão.
+   `ajustePedido` guarda o texto do analista; com duas referências na mesma
+   mensagem, as duas cards mostram o mesmo texto.
+10. **Várias referências na mesma mensagem.** As marcações são numeradas de forma
+    contínua entre as referências (gráfico A com 1 e 2, gráfico B com 3), tanto
+    na imagem quanto na mensagem. Assim "3: trocar a cor" nunca é ambíguo. A
+    etiqueta mostra a faixa, por exemplo "Gráfico B · marcações 3 a 4".
+11. **Sobrevivência das referências.** Ficam em memória, por etapa, e sobrevivem à
+    troca de card e de etapa durante a sessão. Ao recarregar a página elas se
+    perdem, e por isso o navegador avisa antes de sair enquanto houver referência
+    não enviada. Se o agente propõe nova versão do entregável, a referência é
+    descartada com um aviso na tela ("A versão mudou; as marcações antigas foram
+    descartadas"); o texto já digitado fica como está.
+12. **Quando o agente está rodando.** "Pedir ajuste" continua clicável e a
+    referência fica na caixa, mas o envio segue as regras do compositor (só envia
+    com o agente livre). Em etapa concluída ou desatualizada, o botão não aparece,
+    como hoje.
+13. **Imagem anotada.** Vai junto da requisição de envio e o servidor grava em
+    `.app/ajustes/<id>/ajuste-N.png`, fora da Biblioteca. Como só é gravada depois
+    da validação, uma falha no envio não deixa imagem órfã.
+14. **Primeira entrega.** O modo de marcar existe só no card. Marcar no visualizador
+    da coluna larga fica para depois (a decisão 2 passa a valer como "só no card").
+
 ## Restrições
 
 - Cor só por token (teste de paleta); sem travessão fora de intervalo numérico
