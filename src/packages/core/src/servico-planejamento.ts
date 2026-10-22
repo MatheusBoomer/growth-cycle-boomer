@@ -28,8 +28,7 @@ import {
 import { ehErroDominio, ErroEntrada, ErroNaoEncontrado, ErroTurnoAtivo } from "./erros"
 import { destinoInsumo, extensao, extensaoAceita, nomeSeguro, registrarInsumo } from "./insumos"
 import * as me from "./maquina-estados"
-import { criarConjunto, encontrarConjunto, lerPerguntas, responderConjunto } from "./perguntas"
-import { mensagemAjuste, mensagemAprovacao, mensagemEtapaAnteriorAlterada, mensagemInsumoRecebido, mensagemRespostas } from "./prompts"
+import { mensagemAjuste, mensagemAprovacao, mensagemEtapaAnteriorAlterada, mensagemInsumoRecebido } from "./prompts"
 import { normalizarSlug } from "./slug"
 import { importarStatusMd, renderStatusMd } from "./status-md"
 import {
@@ -481,16 +480,6 @@ export class ServicoPlanejamento {
     await this.enfileirar(slug, alvo.etapa, mensagemAjuste(alvo.titulo, alvo.nomeFinal, texto.trim(), caminhoImagem))
   }
 
-  async responderPerguntas(slug: string, id: string, respostas: unknown): Promise<void> {
-    const conjunto = await this.mutar(slug, (e) => {
-      let novo = responderConjunto(e, id, respostas, this.agora())
-      const alvo = encontrarConjunto(novo, id)
-      novo = me.registrarMensagemAnalista(novo, alvo.etapa, this.agora())
-      return { estado: novo, resultado: alvo }
-    })
-    await this.enfileirar(slug, conjunto.etapa, mensagemRespostas(conjunto))
-  }
-
   // ---------- insumos e anexos ----------
 
   private insumoDaEtapa(etapa: EtapaId, insumoId: string): InsumoCatalogo {
@@ -656,7 +645,6 @@ export class ServicoPlanejamento {
       const dados = (entrada && typeof entrada === "object" ? entrada : {}) as Record<string, unknown>
       if (nome === "propor_entregavel") return await this.ferramentaPropor(ctx.slug, ctx.etapa, dados)
       if (nome === "solicitar_insumo") return await this.ferramentaSolicitar(ctx.slug, ctx.etapa, dados)
-      if (nome === "fazer_perguntas") return await this.ferramentaPerguntar(ctx.slug, ctx.etapa, dados)
       if (nome === "sinalizar_etapa_pronta") return await this.ferramentaSinalizar(ctx.slug, ctx.etapa, dados)
       return { ok: false, mensagem: `Ferramenta desconhecida: ${nome}` }
     } catch (e) {
@@ -704,17 +692,6 @@ export class ServicoPlanejamento {
     return {
       ok: true,
       mensagem: `Pedido de "${insumo.nome}" mostrado ao analista, com o modelo para baixar quando houver. Aguarde: quando o arquivo passar na validação você recebe uma mensagem com o caminho.`,
-    }
-  }
-
-  private async ferramentaPerguntar(slug: string, etapa: EtapaId, d: Record<string, unknown>): Promise<RespostaFerramenta> {
-    const perguntas = lerPerguntas(d.perguntas)
-    const id = this.gerarId()
-    await this.mutar(slug, (e) => ({ estado: criarConjunto(e, etapa, perguntas, id, this.agora()), resultado: undefined }))
-    await this.registrarConversa(slug, etapa, { tipo: "card_perguntas", conjuntoId: id, em: this.agora() })
-    return {
-      ok: true,
-      mensagem: `Perguntas mostradas ao analista (id ${id}). Encerre sua resposta agora e aguarde: as respostas chegam como nova mensagem.`,
     }
   }
 

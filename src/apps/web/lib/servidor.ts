@@ -33,7 +33,7 @@ function turnoEmAndamento(s: Servidor): boolean {
 export function servidor(): Servidor {
   const atual = registro.__planejamento
   // No next dev, a instância sobrevive às recargas e manteria o código antigo do serviço (ex.: regras
-  // de fazer_perguntas). Com o código mudado e nenhum agente rodando, os serviços são recriados.
+  // de pedirAjuste). Com o código mudado e nenhum agente rodando, os serviços são recriados.
   const desatualizado = atual !== undefined && !(atual.servico instanceof ServicoPlanejamento) && !turnoEmAndamento(atual)
   if (atual && !desatualizado) {
     // Processo do next dev que já rodava antes do serviço de comentários existir (ou antes de um método novo dele,

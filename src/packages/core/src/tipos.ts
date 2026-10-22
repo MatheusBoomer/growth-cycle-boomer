@@ -115,7 +115,7 @@ export interface RespostaPergunta {
 
 export type StatusPerguntas = "pendente" | "respondida" | "sem_resposta"
 
-/** Card de perguntas do agente (ferramenta fazer_perguntas). `respostas` segue a ordem de `perguntas`. */
+/** Card de perguntas do agente, que não existe mais: fica só para ler o histórico de conversas antigas. `respostas` segue a ordem de `perguntas`. */
 export interface ConjuntoPerguntas {
   id: string
   etapa: EtapaId

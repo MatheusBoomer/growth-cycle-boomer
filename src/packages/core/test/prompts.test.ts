@@ -13,6 +13,13 @@ describe("prompts", () => {
     for (const f of ["propor_entregavel", "solicitar_insumo", "sinalizar_etapa_pronta"]) expect(s).toContain(f)
   })
 
+  it("manda perguntar no chat, em texto, uma pergunta por vez", () => {
+    const s = systemPromptModoInterface({ slug: "iszi", etapa: etapaDoCatalogo(cat, "03") })
+    expect(s).not.toContain("fazer_perguntas")
+    expect(s).toContain("uma pergunta por vez")
+    expect(s).toContain("sua recomendação")
+  })
+
   it("pede resposta em português (a validação real abriu o chat em inglês)", () => {
     expect(systemPromptModoInterface({ slug: "iszi", etapa: etapaDoCatalogo(cat, "01") })).toContain("português do Brasil")
   })

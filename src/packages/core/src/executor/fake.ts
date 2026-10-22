@@ -29,7 +29,6 @@ export function roteiroSimples(texto: string, sessionId = "sessao-demo"): Roteir
 /**
  * Liga com PLANEJAMENTO_EXECUTOR=demo: permite mexer na UI sem gastar a assinatura.
  * "demo:propor <tipo> <caminho>" faz o demo chamar propor_entregavel com um card de exemplo.
- * "demo:perguntar" faz o demo chamar fazer_perguntas com duas perguntas de exemplo.
  */
 export function criarExecutorDemo(): Executor {
   return new FakeExecutor(async function* (pedido, sinal) {
@@ -53,25 +52,6 @@ export function criarExecutorDemo(): Executor {
         titulo: `Demonstração (${tipo})`,
         arquivo_rascunho: caminho,
         nome_final: `demonstracao-${tipo}`,
-      })
-      yield* roteiroSimples(`Modo demonstração: ${mensagem}`)(pedido, sinal)
-      return
-    }
-    if (pedido.mensagem.includes("demo:perguntar")) {
-      const mensagem = await chamarFerramenta("fazer_perguntas", {
-        perguntas: [
-          {
-            enunciado: "Qual cenário usar como meta do projeto?",
-            descricao: "Os três cenários estão na projeção aprovada.",
-            multipla: false,
-            opcoes: [{ rotulo: "Pessimista" }, { rotulo: "Realista" }, { rotulo: "Otimista" }],
-          },
-          {
-            enunciado: "Quais canais priorizar no primeiro trimestre?",
-            multipla: true,
-            opcoes: [{ rotulo: "Meta Ads" }, { rotulo: "Google Ads" }, { rotulo: "E-mail" }],
-          },
-        ],
       })
       yield* roteiroSimples(`Modo demonstração: ${mensagem}`)(pedido, sinal)
       return

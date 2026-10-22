@@ -90,7 +90,7 @@ grava esse arquivo; no modo interface (Regra 7), quem grava é o app, com o
 ## 7. Modo interface
 
 Quando as ferramentas do MCP `planejamento` estiverem disponíveis
-(`propor_entregavel`, `solicitar_insumo`, `fazer_perguntas`, `sinalizar_etapa_pronta`), a skill
+(`propor_entregavel`, `solicitar_insumo`, `sinalizar_etapa_pronta`), a skill
 está rodando dentro da interface web, e estas regras substituem o jeito
 "terminal" de fazer as Regras 1, 2 e 6:
 
@@ -102,17 +102,12 @@ está rodando dentro da interface web, e estas regras substituem o jeito
   mensagem ("APROVOU" ou "AJUSTE").
 - **Insumos:** peça arquivos com `solicitar_insumo` (ids em
   `.claude/skills/_shared/etapas.json`), não descrevendo caminhos de pasta.
-- **Decisões entre alternativas:** quando precisar que o analista escolha
-  entre opções definidas (cenário, prioridade, premissa), chame
-  `fazer_perguntas` em vez de listar as opções no texto. O card aceita até
-  10 perguntas, mostra uma por vez e uma revisão editável antes do envio.
-  Pergunta com opções (2 a 6) já aceita resposta livre; pergunta sem opções é
-  aberta, de resposta escrita (é assim que a Skill 02 manda as perguntas
-  estratégicas). Depois de chamar, encerre a resposta; as respostas chegam
-  como nova mensagem ("RESPONDEU"). Uma dúvida pontual de esclarecimento
-  pode continuar no chat normal.
-- **Texto em card legível:** tudo que o analista lê nos cards (descrição de
-  pergunta, resumo, proposta de texto) é pensado para uma coluna estreita: um
+- **Perguntas e decisões entre alternativas:** pergunte no chat, em texto,
+  uma pergunta por vez, com a sua recomendação quando houver (cenário,
+  prioridade, premissa), e espere a resposta antes de seguir. Não há card de
+  perguntas: a conversa acontece na caixa de mensagem do chat.
+- **Texto em card legível:** tudo que o analista lê nos cards (resumo, proposta de
+  texto) é pensado para uma coluna estreita: um
   item por linha ou lista markdown, frases curtas, parágrafos de poucas
   linhas e nunca vários itens emendados num bloco só (ex.: "P1 … P2 … P3 …"
   deve virar uma linha por problema).

@@ -1,6 +1,6 @@
 import type { AjusteBiblioteca, ItemBiblioteca } from "@workspace/core/biblioteca"
 import type { Comentario, MapaPrevia, Regiao } from "@workspace/core/comentarios"
-import type { EtapaId, RespostaPergunta, ResultadoValidacao } from "@workspace/core/tipos"
+import type { EtapaId, ResultadoValidacao } from "@workspace/core/tipos"
 
 export class ErroApi extends Error {
   readonly status: number
@@ -57,8 +57,6 @@ export const api = {
   /** `imagem`: PNG em base64 do gráfico com as marcações numeradas. */
   pedirAjuste: (slug: string, id: string, texto: string, imagem?: string) =>
     chamar(`${base(slug)}/entregaveis/${id}`, comJson("POST", { acao: "ajuste", texto, imagem })),
-  responderPerguntas: (slug: string, id: string, respostas: RespostaPergunta[]) =>
-    chamar(`${base(slug)}/perguntas/${encodeURIComponent(id)}`, comJson("POST", { respostas })),
   previa: (slug: string, id: string) =>
     chamar<{ disponivel: boolean; slides: string[]; mapa: MapaPrevia | null; erro: string | null }>(`${base(slug)}/entregaveis/${id}/previa`),
   previaPlanilha: (slug: string, id: string) =>
