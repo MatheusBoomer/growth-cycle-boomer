@@ -174,7 +174,7 @@
     },
     {
       "id": "clientes-historico",
-      "nome": "Histórico de vendas por cliente",
+      "nome": "Cliente histórico",
       "descricao": "Uma linha por cliente, com o maior histórico possível: ID ou nome, número de pedidos e valor total gasto.",
       "instrucao": "Antes de enviar, apague CPF, e-mail, telefone, endereço e dados de cartão.",
       "tipo": "arquivo",
