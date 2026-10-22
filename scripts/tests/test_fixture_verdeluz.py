@@ -176,6 +176,79 @@ def test_sem_dado_pessoal(gerado):
                     assert not vi.tipos_pii(valor), (arquivo.name, valor)
 
 
+@pytest.fixture(scope="module")
+def brutos(tmp_path_factory):
+    from fixture_verdeluz import gerar_brutos
+
+    pasta = tmp_path_factory.mktemp("brutos")
+    gerar_brutos.gerar(pasta)
+    return pasta
+
+
+def texto_docx(arquivo: Path) -> str:
+    import docx
+
+    d = docx.Document(arquivo)
+    partes = [p.text for p in d.paragraphs]
+    for t in d.tables:
+        for linha in t.rows:
+            partes.extend(c.text for c in linha.cells)
+    return "\n".join(partes)
+
+
+def todos_os_textos(pasta: Path) -> dict[str, str]:
+    textos = {}
+    for f in pasta.rglob("*"):
+        if f.suffix == ".docx":
+            textos[f.name] = texto_docx(f)
+        elif f.suffix == ".md":
+            textos[f.name] = f.read_text(encoding="utf-8")
+    return textos
+
+
+def test_kickoff_tem_falantes_e_ruido(brutos):
+    texto = texto_docx(brutos / "kickoff-transcricao-bruta.docx")
+    for falante in ("Camila", "Rafael", "Marina", "Luiza"):
+        assert f"{falante} (" in texto
+    ruido = ["(inaudível)", "pode repetir", "café", "trânsito", "tá picotando", "[risos]"]
+    assert sum(1 for r in ruido if r in texto) >= 4
+    assert len(texto.split()) > 3000
+    assert "1,5 milhão" in texto  # divergência proposital contra o dado real, para a etapa 03 encontrar
+    assert "FICTÍCIO" in texto
+
+
+def test_formulario_abre_e_marca_ficticio(brutos):
+    texto = texto_docx(brutos / "formulario-cliente.docx")
+    assert "Nuvemshop" in texto and "FICTÍCIO" in texto
+
+
+def test_site_simulado_cita_frete_e_trocas(brutos):
+    texto = (brutos / "site-simulado.md").read_text(encoding="utf-8")
+    assert "verdeluz.example" in texto and "FICTÍCIO" in texto
+    assert "frete grátis" in texto.lower() and "trocas" in texto.lower()
+    assert "Sérum de Vitamina C" in texto and "Protetor Solar" in texto
+
+
+def test_brutos_sem_dado_pessoal(brutos):
+    for nome, texto in todos_os_textos(brutos).items():
+        for tipo, padrao in vi.PADROES_PII.items():
+            assert not padrao.search(texto), (nome, tipo)
+
+
+def test_textos_sem_travessao_no_meio_de_frase(brutos):
+    import re
+
+    proibido = re.compile(r"(?<!\d)\s*—|—\s*(?!\d)")
+    for nome, texto in todos_os_textos(brutos).items():
+        assert not proibido.search(texto), nome
+
+
+def test_prints_existem(brutos):
+    prints = sorted((brutos / "prints-campanhas").glob("print-*.png"))
+    assert [p.name for p in prints] == ["print-01.png", "print-02.png", "print-03.png", "print-04.png"]
+    assert all(p.stat().st_size > 10_000 for p in prints)
+
+
 def test_determinismo(tmp_path):
     a = gerar_dados.gerar(tmp_path / "a")
     b = gerar_dados.gerar(tmp_path / "b")
