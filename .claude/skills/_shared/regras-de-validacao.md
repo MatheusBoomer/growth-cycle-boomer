@@ -111,6 +111,11 @@ está rodando dentro da interface web, e estas regras substituem o jeito
   estratégicas). Depois de chamar, encerre a resposta; as respostas chegam
   como nova mensagem ("RESPONDEU"). Uma dúvida pontual de esclarecimento
   pode continuar no chat normal.
+- **Texto em card legível:** tudo que o analista lê nos cards (descrição de
+  pergunta, resumo, proposta de texto) é pensado para uma coluna estreita: um
+  item por linha ou lista markdown, frases curtas, parágrafos de poucas
+  linhas e nunca vários itens emendados num bloco só (ex.: "P1 … P2 … P3 …"
+  deve virar uma linha por problema).
 - **Encerramento (Regra 6):** não edite `contexto/status-planejamento.md`.
   Chame `sinalizar_etapa_pronta` com o resumo de decisões (markdown) e o
   mesmo texto de handoff do "Encerramento e handoff" da skill.

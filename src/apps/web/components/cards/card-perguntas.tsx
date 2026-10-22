@@ -8,7 +8,6 @@ import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import {
   Question,
-  QuestionDescription,
   QuestionInput,
   QuestionOption,
   QuestionOptions,
@@ -16,7 +15,9 @@ import {
 } from "@workspace/ui/components/question"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
+import { Markdown } from "@/components/markdown"
 import { api, mensagemDeErro } from "@/lib/api"
+import { formatarDescricao } from "@/lib/descricao-pergunta"
 
 const vazia = (): RespostaPergunta => ({ selecionadas: [], outra: null })
 const aberta = (p: Pergunta) => p.opcoes.length === 0
@@ -102,7 +103,10 @@ export function CardPerguntas({
           {numerada && <span className="text-muted-foreground mr-1">{i + 1}.</span>}
           {p.enunciado}
         </QuestionPrompt>
-        {p.descricao && <QuestionDescription>{p.descricao}</QuestionDescription>}
+        {p.descricao && (
+          // Markdown com quebra de linha preservada: contexto longo vira lista legível, não um bloco de texto.
+          <Markdown className="text-muted-foreground [&_li]:my-0.5 [&_p]:whitespace-pre-line">{formatarDescricao(p.descricao)}</Markdown>
+        )}
         {!aberta(p) && (
           <QuestionOptions multipla={p.multipla} aria-label={p.enunciado}>
             {p.opcoes.map((o) => {

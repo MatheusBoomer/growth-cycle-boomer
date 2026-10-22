@@ -89,7 +89,12 @@ servidor.registerTool(
         .array(
           z.object({
             enunciado: z.string().describe("A pergunta, curta e direta"),
-            descricao: z.string().optional().describe("Contexto opcional mostrado abaixo da pergunta"),
+            descricao: z
+              .string()
+              .optional()
+              .describe(
+                "Contexto opcional mostrado abaixo da pergunta, em markdown. Pensado para ser lido num card estreito: um item por linha (lista com '- ' ou 'P1 …' / 'P2 …' em linhas separadas), frases curtas, nunca um parágrafo único com tudo emendado.",
+              ),
             multipla: z.boolean().optional().describe("true = o analista pode marcar várias opções (só vale com opções)"),
             opcoes: z
               .array(z.object({ rotulo: z.string(), descricao: z.string().optional() }))

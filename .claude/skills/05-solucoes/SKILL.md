@@ -44,7 +44,9 @@ lá. Problemas correlatos podem ser agrupados num só, se o analista concordar.
 
 Mostre a lista (problemas e pontos fortes, com o dado de cada um) e peça ao
 analista para confirmar e ordenar por prioridade. Na interface, use
-`fazer_perguntas` para a ordem quando houver mais de 5 problemas.
+`fazer_perguntas` para a ordem quando houver mais de 5 problemas; na
+`descricao` da pergunta, liste um problema por linha (`P1 …`, `P2 …`), com o
+dado de cada um em poucas palavras — nunca tudo emendado num parágrafo.
 
 ## Passo 2 · Abrir cada problema
 
