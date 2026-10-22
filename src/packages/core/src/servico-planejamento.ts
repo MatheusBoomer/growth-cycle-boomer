@@ -462,14 +462,22 @@ export class ServicoPlanejamento {
     })
   }
 
-  async pedirAjuste(slug: string, id: string, texto: string): Promise<void> {
+  /** `imagem`: PNG do gráfico com as marcações numeradas do analista; a IA abre o caminho com Read. */
+  async pedirAjuste(slug: string, id: string, texto: string, imagem?: Uint8Array): Promise<void> {
     const alvo = await this.mutar(slug, (e) => {
       const entregavel = encontrarEntregavel(e, id)
       let novo = pedirAjuste(e, id, texto, this.agora())
       novo = me.registrarMensagemAnalista(novo, entregavel.etapa, this.agora())
       return { estado: novo, resultado: entregavel }
     })
-    await this.enfileirar(slug, alvo.etapa, mensagemAjuste(alvo.titulo, alvo.nomeFinal, texto.trim()))
+    let caminhoImagem: string | undefined
+    if (imagem) {
+      const pasta = `.app/ajustes/${id}`
+      const rel = `${pasta}/ajuste-${(await this.arm.listarArquivos(slug, pasta)).length + 1}.png`
+      await this.arm.gravarBinario(slug, rel, imagem)
+      caminhoImagem = `clientes/${slug}/${rel}`
+    }
+    await this.enfileirar(slug, alvo.etapa, mensagemAjuste(alvo.titulo, alvo.nomeFinal, texto.trim(), caminhoImagem))
   }
 
   async responderPerguntas(slug: string, id: string, respostas: unknown): Promise<void> {

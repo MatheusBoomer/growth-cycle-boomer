@@ -296,6 +296,40 @@ describe("ferramentas do agente", () => {
     await expect(servico.editarEntregavel(slug, secao, "# B")).rejects.toBeInstanceOf(TransicaoInvalida)
   })
 
+  it("pedir ajuste com imagem anotada grava o PNG e passa o caminho para a IA", async () => {
+    const slug = await prospectNaEtapa03()
+    await rascunho(slug, "g.png")
+    await servico.ferramenta(ctx03, "propor_entregavel", {
+      tipo: "grafico",
+      titulo: "Investimento",
+      arquivo_rascunho: `clientes/${slug}/.app/rascunhos/g.png`,
+      nome_final: "investimento-total-mensal",
+    })
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 1, 2, 3])
+    await servico.pedirAjuste(slug, "id1", "1. Eixo X: trocar para meses por extenso", png)
+    const alvo = (await servico.estado(slug)).entregaveis.find((x) => x.id === "id1")!
+    expect(alvo.ajustePedido).toBe("1. Eixo X: trocar para meses por extenso")
+    const relativo = ".app/ajustes/id1/ajuste-1.png"
+    expect(await readFile(path.join(raiz, "clientes", slug, relativo))).toEqual(Buffer.from(png))
+    const mensagem = (await servico.retirarFila(slug))?.texto ?? ""
+    expect(mensagem).toContain("1. Eixo X: trocar para meses por extenso")
+    expect(mensagem).toContain(`clientes/${slug}/${relativo}`)
+  })
+
+  it("pedir ajuste sem imagem segue como antes, sem caminho de imagem", async () => {
+    const slug = await prospectNaEtapa03()
+    await rascunho(slug, "g.png")
+    await servico.ferramenta(ctx03, "propor_entregavel", {
+      tipo: "grafico",
+      titulo: "Investimento",
+      arquivo_rascunho: `clientes/${slug}/.app/rascunhos/g.png`,
+      nome_final: "investimento-total-mensal",
+    })
+    await servico.pedirAjuste(slug, "id1", "trocar para barras")
+    expect(existsSync(path.join(raiz, "clientes", slug, ".app/ajustes"))).toBe(false)
+    expect((await servico.retirarFila(slug))?.texto).not.toContain(".app/ajustes")
+  })
+
   it("solicitar_insumo só aceita insumo da etapa", async () => {
     const slug = await prospectNaEtapa03()
     expect(

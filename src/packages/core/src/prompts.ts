@@ -49,8 +49,11 @@ export function mensagemAprovacao(titulo: string, nomeFinal: string, destino: st
   return `O analista APROVOU o entregável “${titulo}” (${nomeFinal}). O app já salvou em \`${destino}\`.${edicao} Siga para o próximo passo da skill.`
 }
 
-export function mensagemAjuste(titulo: string, nomeFinal: string, texto: string): string {
-  return `O analista pediu AJUSTE no entregável “${titulo}” (${nomeFinal}): “${texto}”. Refaça, salve em .app/rascunhos/ e proponha de novo com o mesmo nome_final.`
+export function mensagemAjuste(titulo: string, nomeFinal: string, texto: string, imagem?: string): string {
+  const marcacoes = imagem
+    ? ` O analista marcou áreas e números sobre o gráfico: abra \`${imagem}\` com Read e atenda cada número da lista.`
+    : ""
+  return `O analista pediu AJUSTE no entregável “${titulo}” (${nomeFinal}): “${texto}”.${marcacoes} Refaça, salve em .app/rascunhos/ e proponha de novo com o mesmo nome_final.`
 }
 
 export function mensagemInsumoRecebido(nome: string, arquivo: string, resumo: string | null): string {

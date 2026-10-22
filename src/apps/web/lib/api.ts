@@ -54,8 +54,9 @@ export const api = {
   aprovar: (slug: string, id: string) => chamar(`${base(slug)}/entregaveis/${id}`, comJson("POST", { acao: "aprovar" })),
   editarEntregavel: (slug: string, id: string, conteudo: string) =>
     chamar(`${base(slug)}/entregaveis/${id}`, comJson("POST", { acao: "editar", conteudo })),
-  pedirAjuste: (slug: string, id: string, texto: string) =>
-    chamar(`${base(slug)}/entregaveis/${id}`, comJson("POST", { acao: "ajuste", texto })),
+  /** `imagem`: PNG em base64 do gráfico com as marcações numeradas. */
+  pedirAjuste: (slug: string, id: string, texto: string, imagem?: string) =>
+    chamar(`${base(slug)}/entregaveis/${id}`, comJson("POST", { acao: "ajuste", texto, imagem })),
   responderPerguntas: (slug: string, id: string, respostas: RespostaPergunta[]) =>
     chamar(`${base(slug)}/perguntas/${encodeURIComponent(id)}`, comJson("POST", { respostas })),
   previa: (slug: string, id: string) =>

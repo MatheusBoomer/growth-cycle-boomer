@@ -12,7 +12,8 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { cn } from "@workspace/ui/lib/utils"
 import { useVisualizador } from "@/components/trabalho/contexto-visualizador"
-import { api, mensagemDeErro } from "@/lib/api"
+import { api, mensagemDeErro, urlArquivo } from "@/lib/api"
+import { EditorAjuste } from "./editor-ajuste"
 import { PreviaArquivo } from "./previa-arquivo"
 
 const ROTULO_TIPO: Record<TipoEntregavel, string> = {
@@ -33,6 +34,8 @@ export function CardEntregavel({ slug, entregavel: e }: { slug: string; entregav
   const [texto, setTexto] = useState("")
   const [ocupado, setOcupado] = useState(false)
   const nomeNaApresentacao = destinoAprovado(e).split("/").pop()
+  // Gráfico e tabela são imagens: o ajuste é feito marcando áreas e números direto nelas.
+  const ajusteNaImagem = ajusteAberto && (e.tipo === "grafico" || e.tipo === "tabela")
 
   async function aprovar() {
     setOcupado(true)
@@ -81,30 +84,42 @@ export function CardEntregavel({ slug, entregavel: e }: { slug: string; entregav
         </CardAction>
       </CardHeader>
       <CardContent className="space-y-3">
-        <PreviaArquivo
-          // Edição do analista no visualizador: a prévia recarrega o texto salvo.
-          key={e.editadoEm ?? "original"}
-          slug={slug}
-          tipo={e.tipo}
-          caminho={e.arquivoRascunho}
-          entregavelId={e.id}
-          podeComentar={e.status === "pendente"}
-          titulo={e.titulo}
-          aoAbrir={
-            e.tipo === "html" || e.tipo === "apresentacao"
-              ? () => abrir(e.etapa, e.nomeFinal)
-              : e.tipo === "secao"
-                ? () => abrirSecao(e.etapa, e.nomeFinal)
-                : () => abrirArquivo(e.arquivoRascunho)
-          }
-        />
-        {(e.tipo === "grafico" || e.tipo === "tabela") && e.status === "pendente" && (
+        {!ajusteNaImagem && (
+          <PreviaArquivo
+            // Edição do analista no visualizador: a prévia recarrega o texto salvo.
+            key={e.editadoEm ?? "original"}
+            slug={slug}
+            tipo={e.tipo}
+            caminho={e.arquivoRascunho}
+            entregavelId={e.id}
+            podeComentar={e.status === "pendente"}
+            titulo={e.titulo}
+            aoAbrir={
+              e.tipo === "html" || e.tipo === "apresentacao"
+                ? () => abrir(e.etapa, e.nomeFinal)
+                : e.tipo === "secao"
+                  ? () => abrirSecao(e.etapa, e.nomeFinal)
+                  : () => abrirArquivo(e.arquivoRascunho)
+            }
+          />
+        )}
+        {!ajusteNaImagem && (e.tipo === "grafico" || e.tipo === "tabela") && e.status === "pendente" && (
           <p className="text-sm">Confirme se os valores representados no gráfico correspondem exatamente aos dados enviados.</p>
         )}
         {e.ajustePedido && e.status === "pendente" && (
-          <p className="text-muted-foreground text-sm">Ajuste pedido: “{e.ajustePedido}”. Aguardando a nova versão do agente.</p>
+          <p className="text-muted-foreground text-sm whitespace-pre-line">Ajuste pedido: “{e.ajustePedido}”. Aguardando a nova versão do agente.</p>
         )}
-        {ajusteAberto && (
+        {ajusteNaImagem && (
+          <EditorAjuste
+            slug={slug}
+            entregavelId={e.id}
+            titulo={e.titulo}
+            urlImagem={urlArquivo(slug, e.arquivoRascunho)}
+            aoEnviar={() => setAjusteAberto(false)}
+            aoCancelar={() => setAjusteAberto(false)}
+          />
+        )}
+        {ajusteAberto && !ajusteNaImagem && (
           <div className="space-y-2">
             <Textarea
               autoFocus
