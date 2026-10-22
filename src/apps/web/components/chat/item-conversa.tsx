@@ -1,7 +1,7 @@
 "use client"
 
 import { InfoIcon, WrenchIcon } from "lucide-react"
-import type { EtapaId, EventoConversa, RespostaEstado } from "@workspace/core/tipos"
+import type { EtapaId, EventoConversa, ReferenciaAjuste, RespostaEstado } from "@workspace/core/tipos"
 import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert"
 import { AttachmentGroup } from "@workspace/ui/components/attachment"
 import { Bubble, BubbleContent } from "@workspace/ui/components/bubble"
@@ -12,8 +12,9 @@ import { CardEntregavel } from "@/components/cards/card-entregavel"
 import { CardInsumo } from "@/components/cards/card-insumo"
 import { HistoricoPerguntas } from "@/components/cards/historico-perguntas"
 import { useVisualizador } from "@/components/trabalho/contexto-visualizador"
+import { faixaDeMarcacoes } from "@/lib/anotacoes"
 import { caminhoNoProspect, extrairAnexos, nomeDoAnexo, partesComMencoes, semRodape } from "@/lib/mencoes"
-import { EtiquetaAnexo } from "./etiqueta-anexo"
+import { EtiquetaAnexo, iconeDoTipo } from "./etiqueta-anexo"
 import { RespostaAgente } from "./resposta-agente"
 
 /** Mensagem do analista com as menções "@arquivo" como etiquetas que abrem o arquivo. */
@@ -50,6 +51,25 @@ function AnexosDaMensagem({ texto, slug }: { texto: string; slug: string }) {
       {anexos.map((c) => (
         <EtiquetaAnexo key={c} nome={nomeDoAnexo(c)} aoAbrir={() => abrirArquivo(caminhoNoProspect(c, slug))} />
       ))}
+    </AttachmentGroup>
+  )
+}
+
+/** Entregáveis citados na mensagem (pedido de ajuste), com a faixa de marcações de cada um. */
+function ReferenciasDaMensagem({ referencias, dados }: { referencias: ReferenciaAjuste[]; dados: RespostaEstado }) {
+  return (
+    <AttachmentGroup className="justify-end">
+      {referencias.map((r) => {
+        const tipo = dados.estado.entregaveis.find((e) => e.id === r.entregavelId)?.tipo
+        return (
+          <EtiquetaAnexo
+            key={r.entregavelId}
+            nome={r.titulo}
+            icone={tipo ? iconeDoTipo(tipo) : undefined}
+            detalhe={faixaDeMarcacoes(r.primeiraMarcacao, r.marcacoes) || "ajuste pedido"}
+          />
+        )
+      })}
     </AttachmentGroup>
   )
 }
@@ -92,6 +112,7 @@ export function ItemConversa({
                 </BubbleContent>
               </Bubble>
             )}
+            {evento.referencias && evento.referencias.length > 0 && <ReferenciasDaMensagem referencias={evento.referencias} dados={dados} />}
             <AnexosDaMensagem texto={evento.texto} slug={slug} />
           </MessageContent>
         </Message>

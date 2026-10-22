@@ -137,9 +137,17 @@ export interface Estado {
   atualizadoEm: string
 }
 
+/** Entregável citado numa mensagem do analista (pedido de ajuste); `primeiraMarcacao` segue contínua entre referências. */
+export interface ReferenciaAjuste {
+  entregavelId: string
+  titulo: string
+  marcacoes: number
+  primeiraMarcacao: number
+}
+
 export type EventoConversa =
   | { tipo: "turno_inicio"; em: string }
-  | { tipo: "mensagem_analista"; texto: string; automatica: boolean; em: string }
+  | { tipo: "mensagem_analista"; texto: string; automatica: boolean; referencias?: ReferenciaAjuste[]; em: string }
   | { tipo: "texto_agente"; texto: string; em: string }
   | { tipo: "atividade"; nome: string; detalhe: string; em: string }
   | { tipo: "card_entregavel"; entregavelId: string; em: string }

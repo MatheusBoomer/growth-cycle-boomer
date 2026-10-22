@@ -13,7 +13,8 @@ function carregar(url: string): Promise<HTMLImageElement> {
   })
 }
 
-export async function renderizarAnotada(url: string, marcas: Marca[]): Promise<string> {
+/** `primeiroNumero`: número da primeira marca (a numeração é contínua entre os gráficos de uma mesma mensagem). */
+export async function renderizarAnotada(url: string, marcas: Marca[], primeiroNumero = 1): Promise<string> {
   const img = await carregar(url)
   const canvas = document.createElement("canvas")
   canvas.width = img.naturalWidth
@@ -63,7 +64,7 @@ export async function renderizarAnotada(url: string, marcas: Marca[]): Promise<s
     ctx.font = `bold ${13 * escala}px sans-serif`
     ctx.textAlign = "center"
     ctx.textBaseline = "middle"
-    ctx.fillText(String(i + 1), cx, cy + escala * 0.5)
+    ctx.fillText(String(primeiroNumero + i), cx, cy + escala * 0.5)
     ctx.fillStyle = COR_MARCA
   })
 

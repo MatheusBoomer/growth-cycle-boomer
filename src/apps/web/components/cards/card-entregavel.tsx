@@ -9,11 +9,12 @@ import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import { Spinner } from "@workspace/ui/components/spinner"
-import { Textarea } from "@workspace/ui/components/textarea"
 import { cn } from "@workspace/ui/lib/utils"
 import { useVisualizador } from "@/components/trabalho/contexto-visualizador"
 import { api, mensagemDeErro, urlArquivo } from "@/lib/api"
-import { EditorAjuste } from "./editor-ajuste"
+import { useReferencias } from "@/components/chat/contexto-referencias"
+import { numerar } from "@/lib/referencias"
+import { MarcadorImagem } from "./marcador-imagem"
 import { PreviaArquivo } from "./previa-arquivo"
 
 const ROTULO_TIPO: Record<TipoEntregavel, string> = {
@@ -30,14 +31,15 @@ export const ROTULO_STATUS_ENTREGAVEL: Record<StatusEntregavel, string> = { pend
 
 export function CardEntregavel({ slug, entregavel: e }: { slug: string; entregavel: Entregavel }) {
   const { abrir, abrirSecao, abrirPlanilha, abrirArquivo, mencionar } = useVisualizador()
-  const [ajusteAberto, setAjusteAberto] = useState(false)
-  const [texto, setTexto] = useState("")
   const [ocupado, setOcupado] = useState(false)
+  const refs = useReferencias(e.etapa)
   const nomeNaApresentacao = destinoAprovado(e).split("/").pop()
   // Com ajuste pedido, a versão atual está superada: só a nova versão do agente libera a aprovação.
   const aguardandoNovaVersao = e.status === "pendente" && !!e.ajustePedido
   // Gráfico e tabela são imagens: o ajuste é feito marcando áreas e números direto nelas.
-  const ajusteNaImagem = ajusteAberto && (e.tipo === "grafico" || e.tipo === "tabela")
+  const ehImagem = e.tipo === "grafico" || e.tipo === "tabela"
+  const referencia = refs.referencias.find((r) => r.entregavelId === e.id)
+  const ajusteNaImagem = ehImagem && referencia !== undefined && refs.marcando === e.id
 
   async function aprovar() {
     setOcupado(true)
@@ -50,17 +52,10 @@ export function CardEntregavel({ slug, entregavel: e }: { slug: string; entregav
     }
   }
 
-  async function enviarAjuste() {
-    setOcupado(true)
-    try {
-      await api.pedirAjuste(slug, e.id, texto)
-      setAjusteAberto(false)
-      setTexto("")
-    } catch (erro) {
-      toast.error(mensagemDeErro(erro))
-    } finally {
-      setOcupado(false)
-    }
+  /** "Pedir ajuste…" coloca o entregável no chat como referência; o pedido é escrito na caixa de mensagem. */
+  function pedirAjuste() {
+    refs.adicionar({ entregavelId: e.id, titulo: e.titulo, tipo: e.tipo, urlImagem: ehImagem ? urlArquivo(slug, e.arquivoRascunho) : null, marcas: [] })
+    if (ehImagem) refs.iniciarMarcacao(e.id)
   }
 
   return (
@@ -113,37 +108,18 @@ export function CardEntregavel({ slug, entregavel: e }: { slug: string; entregav
         {e.ajustePedido && e.status === "pendente" && (
           <p className="text-muted-foreground text-sm whitespace-pre-line">Ajuste pedido: “{e.ajustePedido}”. Aguardando a nova versão do agente.</p>
         )}
-        {ajusteNaImagem && (
-          <EditorAjuste
-            slug={slug}
-            entregavelId={e.id}
+        {ajusteNaImagem && referencia?.urlImagem && (
+          <MarcadorImagem
             titulo={e.titulo}
-            urlImagem={urlArquivo(slug, e.arquivoRascunho)}
-            aoEnviar={() => setAjusteAberto(false)}
-            aoCancelar={() => setAjusteAberto(false)}
+            urlImagem={referencia.urlImagem}
+            marcas={referencia.marcas}
+            primeiroNumero={numerar(refs.referencias).find((n) => n.entregavelId === e.id)!.primeira}
+            aoMudar={(marcas) => refs.mudarMarcas(e.id, marcas)}
+            aoFechar={refs.terminarMarcacao}
           />
         )}
-        {ajusteAberto && !ajusteNaImagem && (
-          <div className="space-y-2">
-            <Textarea
-              autoFocus
-              value={texto}
-              onChange={(ev) => setTexto(ev.target.value)}
-              placeholder="Ex.: trocar para barras, incluir a linha de média"
-              aria-label="Descreva o ajuste"
-            />
-            <div className="flex gap-2">
-              <Button size="sm" onClick={enviarAjuste} disabled={!texto.trim() || ocupado}>
-                {ocupado && <Spinner />} Enviar ajuste
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => setAjusteAberto(false)}>
-                Cancelar
-              </Button>
-            </div>
-          </div>
-        )}
       </CardContent>
-      {e.status === "pendente" && !ajusteAberto && (
+      {e.status === "pendente" && !ajusteNaImagem && (
         <CardFooter className="gap-2">
           <Button
             onClick={aprovar}
@@ -152,7 +128,7 @@ export function CardEntregavel({ slug, entregavel: e }: { slug: string; entregav
           >
             {ocupado ? <Spinner /> : <CheckIcon />} Aprovar
           </Button>
-          <Button variant="outline" onClick={() => setAjusteAberto(true)} disabled={ocupado}>
+          <Button variant="outline" onClick={pedirAjuste} disabled={ocupado}>
             Pedir ajuste…
           </Button>
         </CardFooter>

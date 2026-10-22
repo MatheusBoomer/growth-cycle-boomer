@@ -6,7 +6,7 @@ import { etapaDoCatalogo } from "./catalogo"
 import { ErroTurnoAtivo } from "./erros"
 import type { Executor, PedidoTurno } from "./executor/tipos"
 import { promptInicialEtapa, systemPromptModoInterface } from "./prompts"
-import type { ServicoPlanejamento } from "./servico-planejamento"
+import type { AjusteEnvio, ServicoPlanejamento } from "./servico-planejamento"
 import type { Catalogo, EtapaId, EventoConversa } from "./tipos"
 import { RegistroUso, type UsoAssinatura } from "./uso-assinatura"
 
@@ -178,6 +178,25 @@ export class ServicoTurnos {
       await this.registrar(slug, etapa, { tipo: "mensagem_analista", texto, automatica: false, em: this.agora() })
     })
     this.emSegundoPlano(slug, etapa, texto, controle)
+  }
+
+  /** Mensagem do chat que cita entregáveis pendentes: o balão mostra o texto do analista e as referências; o agente recebe a mensagem composta. */
+  async enviarMensagemComAjustes(slug: string, etapa: EtapaId, texto: string, ajustes: AjusteEnvio[]): Promise<void> {
+    const controle = this.reservar(slug, etapa)
+    let textoAgente = ""
+    await this.comReserva(slug, controle, async () => {
+      const envio = await this.servico.pedirAjustes(slug, etapa, texto, ajustes)
+      textoAgente = envio.textoAgente
+      await this.servico.registrarMensagemAnalista(slug, etapa)
+      await this.registrar(slug, etapa, {
+        tipo: "mensagem_analista",
+        texto: texto.trim(),
+        automatica: false,
+        referencias: envio.referencias,
+        em: this.agora(),
+      })
+    })
+    this.emSegundoPlano(slug, etapa, textoAgente, controle)
   }
 
   parar(slug: string): void {

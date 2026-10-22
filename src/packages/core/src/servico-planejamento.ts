@@ -28,7 +28,8 @@ import {
 import { ehErroDominio, ErroEntrada, ErroNaoEncontrado, ErroTurnoAtivo } from "./erros"
 import { destinoInsumo, extensao, extensaoAceita, nomeSeguro, registrarInsumo } from "./insumos"
 import * as me from "./maquina-estados"
-import { mensagemAjuste, mensagemAprovacao, mensagemEtapaAnteriorAlterada, mensagemInsumoRecebido } from "./prompts"
+import { descreverMarcacoes, type MarcaAjuste } from "./marcacoes"
+import { mensagemAjuste, mensagemAjustes, mensagemAprovacao, mensagemEtapaAnteriorAlterada, mensagemInsumoRecebido } from "./prompts"
 import { normalizarSlug } from "./slug"
 import { importarStatusMd, renderStatusMd } from "./status-md"
 import {
@@ -42,10 +43,18 @@ import {
   type ItemFila,
   type RespostaEstado,
   type ResultadoValidacao,
+  type ReferenciaAjuste,
   type ResumoProspect,
   type TipoEntregavel,
 } from "./tipos"
 import type { Validar } from "./validador"
+
+/** Um entregável citado numa mensagem do chat; `imagem` é o PNG do gráfico com as marcações desenhadas. */
+export interface AjusteEnvio {
+  entregavelId: string
+  marcas: MarcaAjuste[]
+  imagem?: Uint8Array
+}
 
 export const PASTA_MODELOS = ".claude/skills/_shared/modelos-insumo"
 const CONTEXTO_PERSISTIDO = [
@@ -478,6 +487,47 @@ export class ServicoPlanejamento {
       caminhoImagem = `clientes/${slug}/${rel}`
     }
     await this.enfileirar(slug, alvo.etapa, mensagemAjuste(alvo.titulo, alvo.nomeFinal, texto.trim(), caminhoImagem))
+  }
+
+  /**
+   * O analista escreveu no chat sobre um ou mais entregáveis pendentes da etapa. Valida tudo antes de gravar
+   * (um entregável que deixou de estar pendente derruba o envio inteiro), guarda o texto como `ajustePedido`,
+   * grava as imagens anotadas e devolve a mensagem para o agente e as referências para o balão do chat.
+   */
+  async pedirAjustes(
+    slug: string,
+    etapa: EtapaId,
+    texto: string,
+    ajustes: AjusteEnvio[],
+  ): Promise<{ textoAgente: string; referencias: ReferenciaAjuste[] }> {
+    if (ajustes.length === 0) throw new ErroEntrada("Escolha ao menos um entregável para ajustar.")
+    if (!texto.trim()) throw new ErroEntrada("Escreva o que mudar.")
+    if (new Set(ajustes.map((a) => a.entregavelId)).size !== ajustes.length) throw new ErroEntrada("O mesmo entregável aparece duas vezes no pedido.")
+    return this.mutar(slug, async (e) => {
+      let novo = e
+      for (const a of ajustes) {
+        const alvo = encontrarEntregavel(e, a.entregavelId)
+        if (alvo.etapa !== etapa) throw new ErroEntrada(`O entregável "${alvo.titulo}" não é desta etapa.`)
+        novo = pedirAjuste(novo, a.entregavelId, texto, this.agora())
+      }
+      const itens: Parameters<typeof mensagemAjustes>[1] = []
+      const referencias: ReferenciaAjuste[] = []
+      let proxima = 1
+      for (const a of ajustes) {
+        const alvo = encontrarEntregavel(e, a.entregavelId)
+        let imagem: string | undefined
+        if (a.imagem && a.marcas.length > 0) {
+          const pasta = `.app/ajustes/${alvo.id}`
+          const rel = `${pasta}/ajuste-${(await this.arm.listarArquivos(slug, pasta)).length + 1}.png`
+          await this.arm.gravarBinario(slug, rel, a.imagem)
+          imagem = `clientes/${slug}/${rel}`
+        }
+        itens.push({ titulo: alvo.titulo, nomeFinal: alvo.nomeFinal, marcacoes: descreverMarcacoes(a.marcas, proxima), imagem })
+        referencias.push({ entregavelId: alvo.id, titulo: alvo.titulo, marcacoes: a.marcas.length, primeiraMarcacao: proxima })
+        proxima += a.marcas.length
+      }
+      return { estado: novo, resultado: { textoAgente: mensagemAjustes(texto, itens), referencias } }
+    })
   }
 
   // ---------- insumos e anexos ----------

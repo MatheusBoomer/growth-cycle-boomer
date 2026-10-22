@@ -1,3 +1,4 @@
+import { mkdir, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { beforeEach, describe, expect, it } from "vitest"
 import { FsArmazenamento } from "../src/armazenamento"
@@ -87,6 +88,41 @@ describe("turnos", () => {
     await t.enviarMensagem(slug, "01", "segue a transcrição")
     await t.aguardarOcioso(slug)
     expect(executor.pedidos[1]).toMatchObject({ sessionId: "sessao-1", mensagem: "segue a transcrição" })
+  })
+
+  it("mensagem com ajustes mostra o texto curto no chat e manda a mensagem composta ao agente", async () => {
+    const { t, executor } = turnos(roteiroSimples("ok", "sessao-1"))
+    const slug = await servico.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    await servico.ferramenta({ slug, etapa: "01" }, "solicitar_insumo", { insumo_id: "kickoff-transcricao" })
+    await mkdir(path.join(raiz, "clientes", slug, ".app/rascunhos"), { recursive: true })
+    await writeFile(path.join(raiz, "clientes", slug, ".app/rascunhos/s.md"), "# S")
+    await servico.ferramenta({ slug, etapa: "01" }, "propor_entregavel", {
+      tipo: "secao",
+      titulo: "Resumo",
+      arquivo_rascunho: `clientes/${slug}/.app/rascunhos/s.md`,
+      nome_final: "resumo",
+    })
+    const id = (await servico.estado(slug)).entregaveis[0]!.id
+    await t.enviarMensagemComAjustes(slug, "01", "tirar o último parágrafo", [{ entregavelId: id, marcas: [] }])
+    await t.aguardarOcioso(slug)
+    expect(executor.pedidos.at(-1)!.mensagem).toContain("AJUSTE no entregável “Resumo” (resumo)")
+    expect(executor.pedidos.at(-1)!.mensagem).toContain("tirar o último parágrafo")
+    const balao = (await servico.conversa(slug, "01")).find((e) => e.tipo === "mensagem_analista")!
+    expect(balao).toMatchObject({
+      texto: "tirar o último parágrafo",
+      referencias: [{ entregavelId: id, titulo: "Resumo", marcacoes: 0, primeiraMarcacao: 1 }],
+    })
+  })
+
+  it("mensagem com ajuste inválido não envia nada e libera o prospect", async () => {
+    const { t, executor } = turnos(roteiroSimples("ok", "sessao-1"))
+    const slug = await servico.criarProspect("Iszi", null)
+    const antes = executor.pedidos.length
+    await expect(t.enviarMensagemComAjustes(slug, "01", "ajustar", [{ entregavelId: "nao-existe", marcas: [] }])).rejects.toThrow()
+    expect(executor.pedidos.length).toBe(antes)
+    expect(t.ativo(slug)).toBeNull()
   })
 
   it("ferramenta chamada no meio do turno usa o token do turno", async () => {

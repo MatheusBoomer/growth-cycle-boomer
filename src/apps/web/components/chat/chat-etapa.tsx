@@ -135,6 +135,8 @@ export function ChatEtapa({ slug, etapa, dados, eventos, delta }: PropsChatEtapa
     -1,
   )
 
+  const pendentes = dados.estado.entregaveis.filter((e) => e.etapa === etapa && e.status === "pendente").map((e) => e.id)
+
   const tentarDeNovo = () =>
     api.enviarMensagem(slug, etapa, "Continue de onde parou.").catch((e) => toast.error(mensagemDeErro(e)))
 
@@ -199,7 +201,7 @@ export function ChatEtapa({ slug, etapa, dados, eventos, delta }: PropsChatEtapa
           <MessageScrollerButton />
         </MessageScroller>
       </MessageScrollerProvider>
-      <Compositor slug={slug} etapa={etapa} desabilitado={somenteLeitura || ativoOutra || ativoAqui} motivo={motivo} ativoAqui={ativoAqui} />
+      <Compositor slug={slug} etapa={etapa} pendentes={pendentes} desabilitado={somenteLeitura || ativoOutra || ativoAqui} motivo={motivo} ativoAqui={ativoAqui} />
     </div>
   )
 }

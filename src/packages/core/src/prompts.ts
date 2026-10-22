@@ -56,6 +56,26 @@ export function mensagemAjuste(titulo: string, nomeFinal: string, texto: string,
   return `O analista pediu AJUSTE no entregável “${titulo}” (${nomeFinal}): “${texto}”.${marcacoes} Refaça, salve em .app/rascunhos/ e proponha de novo com o mesmo nome_final.`
 }
 
+export interface ItemAjusteMensagem {
+  titulo: string
+  nomeFinal: string
+  /** Linhas já numeradas das marcações deste entregável. */
+  marcacoes: string[]
+  /** Caminho da imagem anotada, relativo à raiz do projeto. */
+  imagem?: string
+}
+
+/** Mensagem ao agente quando o analista escreve no chat sobre um ou mais entregáveis (pedido de ajuste). */
+export function mensagemAjustes(texto: string, itens: ItemAjusteMensagem[]): string {
+  const blocos = itens.map((i) => {
+    const cabecalho = `AJUSTE no entregável “${i.titulo}” (${i.nomeFinal}): refaça, salve em .app/rascunhos/ e proponha de novo com o mesmo nome_final.`
+    if (i.marcacoes.length === 0) return cabecalho
+    const imagem = i.imagem ? ` (abra \`${i.imagem}\` com Read)` : ""
+    return `${cabecalho}\nMarcações numeradas na imagem anotada${imagem}:\n${i.marcacoes.join("\n")}`
+  })
+  return `${texto.trim()}\n\n${blocos.join("\n\n")}`
+}
+
 export function mensagemInsumoRecebido(nome: string, arquivo: string, resumo: string | null): string {
   return `O analista enviou “${nome}” e o arquivo passou na validação: \`${arquivo}\`${resumo ? ` (${resumo})` : ""}. Pode seguir.`
 }

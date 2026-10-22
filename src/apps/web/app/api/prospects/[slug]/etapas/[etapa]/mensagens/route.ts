@@ -1,13 +1,18 @@
 import { ErroEntrada } from "@workspace/core/erros"
+import { lerAjustes } from "@/lib/ajustes-envio"
 import { json, lerJson, respostaDeErro, validarEtapa } from "@/lib/http"
 import { servidor } from "@/lib/servidor"
 
+/** `ajustes`: entregáveis pendentes citados na mensagem (pedido de ajuste), com as marcações e a imagem anotada. */
 export async function POST(req: Request, ctx: RouteContext<"/api/prospects/[slug]/etapas/[etapa]/mensagens">) {
   try {
     const { slug, etapa } = await ctx.params
-    const { texto } = await lerJson<{ texto?: string }>(req)
+    const { texto, ajustes } = await lerJson<{ texto?: string; ajustes?: unknown }>(req)
     if (!texto?.trim()) throw new ErroEntrada("Escreva uma mensagem.")
-    await servidor().turnos.enviarMensagem(slug, validarEtapa(etapa), texto.trim())
+    const lista = lerAjustes(ajustes)
+    const { turnos } = servidor()
+    if (lista.length > 0) await turnos.enviarMensagemComAjustes(slug, validarEtapa(etapa), texto.trim(), lista)
+    else await turnos.enviarMensagem(slug, validarEtapa(etapa), texto.trim())
     return json({ ok: true }, 202)
   } catch (e) {
     return respostaDeErro(e)

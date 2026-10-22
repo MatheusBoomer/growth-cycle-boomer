@@ -2,6 +2,12 @@ import type { AjusteBiblioteca, ItemBiblioteca } from "@workspace/core/bibliotec
 import type { Comentario, MapaPrevia, Regiao } from "@workspace/core/comentarios"
 import type { EtapaId, ResultadoValidacao } from "@workspace/core/tipos"
 
+export interface AjusteMensagem {
+  entregavelId: string
+  marcas: { forma: string; x: number; y: number; w: number; h: number }[]
+  imagem?: string
+}
+
 export class ErroApi extends Error {
   readonly status: number
   readonly codigo: string | null
@@ -49,14 +55,12 @@ export const api = {
   abrirPasta: (slug: string) => chamar(`${base(slug)}/abrir-pasta`, { method: "POST" }),
   mostrarNoFinder: (slug: string, caminho: string) => chamar(`${base(slug)}/abrir-pasta`, comJson("POST", { caminho })),
   acaoEtapa: (slug: string, etapa: EtapaId, acao: AcaoEtapa) => chamar(`${base(slug)}/etapas/${etapa}/acoes`, comJson("POST", { acao })),
-  enviarMensagem: (slug: string, etapa: EtapaId, texto: string) =>
-    chamar(`${base(slug)}/etapas/${etapa}/mensagens`, comJson("POST", { texto })),
+  /** `ajustes`: entregáveis pendentes citados na mensagem; `imagem` é o PNG em base64 do gráfico com as marcações numeradas. */
+  enviarMensagem: (slug: string, etapa: EtapaId, texto: string, ajustes?: AjusteMensagem[]) =>
+    chamar(`${base(slug)}/etapas/${etapa}/mensagens`, comJson("POST", { texto, ajustes })),
   aprovar: (slug: string, id: string) => chamar(`${base(slug)}/entregaveis/${id}`, comJson("POST", { acao: "aprovar" })),
   editarEntregavel: (slug: string, id: string, conteudo: string) =>
     chamar(`${base(slug)}/entregaveis/${id}`, comJson("POST", { acao: "editar", conteudo })),
-  /** `imagem`: PNG em base64 do gráfico com as marcações numeradas. */
-  pedirAjuste: (slug: string, id: string, texto: string, imagem?: string) =>
-    chamar(`${base(slug)}/entregaveis/${id}`, comJson("POST", { acao: "ajuste", texto, imagem })),
   previa: (slug: string, id: string) =>
     chamar<{ disponivel: boolean; slides: string[]; mapa: MapaPrevia | null; erro: string | null }>(`${base(slug)}/entregaveis/${id}/previa`),
   previaPlanilha: (slug: string, id: string) =>

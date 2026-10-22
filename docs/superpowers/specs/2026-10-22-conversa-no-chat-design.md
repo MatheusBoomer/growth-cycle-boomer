@@ -130,3 +130,10 @@ acontecer no chat principal, em texto.
 - Testes: o serviço (envio com ajustes, entregável não pendente), a função pura que
   monta o texto das marcações (já existe `textoDoPedido`, ajustar) e a leitura do
   histórico de perguntas.
+
+## Estado da implementação
+
+Entregue: card de perguntas removido (histórico antigo só leitura) e "Pedir ajuste" como referência
+no chat, com marcação sobre a imagem no card (decisão 14). Plano em
+`docs/superpowers/plans/2026-10-22-conversa-no-chat.md`. O envio de ponta a ponta com o agente
+real ainda não foi exercitado (só testes com executor falso e a interface no navegador).

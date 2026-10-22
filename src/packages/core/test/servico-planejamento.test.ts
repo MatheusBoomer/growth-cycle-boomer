@@ -330,6 +330,78 @@ describe("ferramentas do agente", () => {
     expect((await servico.retirarFila(slug))?.texto).not.toContain(".app/ajustes")
   })
 
+  describe("pedirAjustes (mensagem do chat com referências)", () => {
+    async function doisGraficos() {
+      const slug = await prospectNaEtapa03()
+      for (const [arq, titulo, nome] of [
+        ["a.png", "Investimento", "investimento-total-mensal"],
+        ["b.png", "Receita", "receita-mensal"],
+      ] as const) {
+        await rascunho(slug, arq)
+        await servico.ferramenta(ctx03, "propor_entregavel", {
+          tipo: "grafico",
+          titulo,
+          arquivo_rascunho: `clientes/${slug}/.app/rascunhos/${arq}`,
+          nome_final: nome,
+        })
+      }
+      return slug
+    }
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 1, 2, 3])
+    const retangulo = { forma: "retangulo" as const, x: 10, y: 20, w: 30, h: 40 }
+    const numero = { forma: "numero" as const, x: 50, y: 60, w: 0, h: 0 }
+
+    it("numera as marcações de forma contínua entre os gráficos e monta a mensagem do agente", async () => {
+      const slug = await doisGraficos()
+      const r = await servico.pedirAjustes(slug, "03", "1: eixo X em meses; 3: trocar a cor", [
+        { entregavelId: "id1", marcas: [retangulo, numero], imagem: png },
+        { entregavelId: "id2", marcas: [numero], imagem: png },
+      ])
+      expect(r.referencias).toEqual([
+        { entregavelId: "id1", titulo: "Investimento", marcacoes: 2, primeiraMarcacao: 1 },
+        { entregavelId: "id2", titulo: "Receita", marcacoes: 1, primeiraMarcacao: 3 },
+      ])
+      expect(r.textoAgente).toContain("1: eixo X em meses; 3: trocar a cor")
+      expect(r.textoAgente).toContain("AJUSTE no entregável “Investimento” (investimento-total-mensal)")
+      expect(r.textoAgente).toContain("proponha de novo com o mesmo nome_final")
+      expect(r.textoAgente).toContain("2. Número em ponto")
+      expect(r.textoAgente).toContain("3. Número em ponto")
+      expect(r.textoAgente).toContain(`clientes/${slug}/.app/ajustes/id2/ajuste-1.png`)
+      expect(await readFile(path.join(raiz, "clientes", slug, ".app/ajustes/id1/ajuste-1.png"))).toEqual(Buffer.from(png))
+      const e = (await servico.estado(slug)).entregaveis
+      expect(e.map((x) => x.ajustePedido)).toEqual(["1: eixo X em meses; 3: trocar a cor", "1: eixo X em meses; 3: trocar a cor"])
+    })
+
+    it("entregável que deixou de estar pendente derruba o envio inteiro, sem gravar nada", async () => {
+      const slug = await doisGraficos()
+      await servico.aprovarEntregavel(slug, "id2")
+      await expect(
+        servico.pedirAjustes(slug, "03", "ajustar", [
+          { entregavelId: "id1", marcas: [numero], imagem: png },
+          { entregavelId: "id2", marcas: [numero], imagem: png },
+        ]),
+      ).rejects.toBeInstanceOf(TransicaoInvalida)
+      expect((await servico.estado(slug)).entregaveis.find((x) => x.id === "id1")!.ajustePedido).toBeNull()
+      expect(existsSync(path.join(raiz, "clientes", slug, ".app/ajustes"))).toBe(false)
+    })
+
+    it("recusa texto em branco, entregável repetido e entregável de outra etapa", async () => {
+      const slug = await doisGraficos()
+      const um = [{ entregavelId: "id1", marcas: [] }]
+      await expect(servico.pedirAjustes(slug, "03", "   ", um)).rejects.toThrow("Escreva o que mudar")
+      await expect(servico.pedirAjustes(slug, "03", "x", [...um, ...um])).rejects.toBeInstanceOf(ErroEntrada)
+      await expect(servico.pedirAjustes(slug, "04", "x", um)).rejects.toBeInstanceOf(ErroEntrada)
+      expect((await servico.estado(slug)).entregaveis[0]!.ajustePedido).toBeNull()
+    })
+
+    it("sem marcações não grava imagem nem cita Read", async () => {
+      const slug = await doisGraficos()
+      const r = await servico.pedirAjustes(slug, "03", "trocar para barras", [{ entregavelId: "id1", marcas: [] }])
+      expect(r.textoAgente).not.toContain("Read")
+      expect(existsSync(path.join(raiz, "clientes", slug, ".app/ajustes"))).toBe(false)
+    })
+  })
+
   it("solicitar_insumo só aceita insumo da etapa", async () => {
     const slug = await prospectNaEtapa03()
     expect(

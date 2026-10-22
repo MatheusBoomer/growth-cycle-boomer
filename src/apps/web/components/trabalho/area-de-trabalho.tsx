@@ -21,6 +21,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import { Biblioteca } from "@/components/biblioteca/biblioteca"
 import { BarraTopo } from "@/components/marca/barra-topo"
 import { ChatEtapa } from "@/components/chat/chat-etapa"
+import { ProvedorReferencias } from "@/components/chat/contexto-referencias"
 import { useAreaDeTrabalho } from "@/hooks/use-area-de-trabalho"
 import { useBiblioteca } from "@/hooks/use-biblioteca"
 import { totalVisivel } from "@/lib/biblioteca"
@@ -253,6 +254,7 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
 
   return (
     <ContextoVisualizador.Provider value={controle}>
+      <ProvedorReferencias>
       <div className="flex h-svh flex-col">
         <BarraTopo titulo="Planejamento estratégico" subtitulo={dados.estado.prospect.nome} />
         <div className={cn("relative min-h-0 flex-1 p-3", arrastando && "[&_iframe]:pointer-events-none")} onPointerDownCapture={aoApertar}>
@@ -402,6 +404,7 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
           {visualizadorAberto && telaCheia && <div className="bg-background fixed inset-0 z-40">{painelVisualizador}</div>}
         </div>
       </div>
+      </ProvedorReferencias>
     </ContextoVisualizador.Provider>
   )
 }

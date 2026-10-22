@@ -10,10 +10,14 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { cn } from "@workspace/ui/lib/utils"
 import { useVisualizador } from "@/components/trabalho/contexto-visualizador"
-import { api, mensagemDeErro } from "@/lib/api"
+import { api, mensagemDeErro, type AjusteMensagem } from "@/lib/api"
+import { renderizarAnotada } from "@/lib/anotacoes-canvas"
 import { separadorAntes } from "@/lib/citacao"
 import { consultaDeMencao, textoParaAgente } from "@/lib/mencoes"
-import { EtiquetaAnexo } from "./etiqueta-anexo"
+import { descartarSuperadas, numerar } from "@/lib/referencias"
+import { faixaDeMarcacoes } from "@/lib/anotacoes"
+import { useReferencias } from "./contexto-referencias"
+import { EtiquetaAnexo, iconeDoTipo } from "./etiqueta-anexo"
 
 const MAX_SUGESTOES = 8
 
@@ -28,12 +32,15 @@ interface AnexoCompositor {
 export function Compositor({
   slug,
   etapa,
+  pendentes,
   desabilitado,
   motivo,
   ativoAqui,
 }: {
   slug: string
   etapa: EtapaId
+  /** Entregáveis da etapa que aguardam aprovação: referência a um que saiu daqui é de uma versão superada. */
+  pendentes: string[]
   desabilitado: boolean
   motivo: string | null
   ativoAqui: boolean
@@ -53,6 +60,35 @@ export function Compositor({
   const [arquivos, setArquivos] = useState<string[] | null>(null)
   const [consulta, setConsulta] = useState<{ inicio: number; termo: string } | null>(null)
   const [destaque, setDestaque] = useState(0)
+  const ref = useReferencias(etapa)
+  const numeracao = numerar(ref.referencias)
+  const comReferencia = ref.referencias.length > 0
+  const chavePendentes = pendentes.join("|")
+  const totalReferencias = ref.referencias.length
+
+  // Nova versão do agente: as marcações antigas eram da imagem anterior. O texto digitado fica como está.
+  useEffect(() => {
+    const r = descartarSuperadas(ref.referencias, chavePendentes ? chavePendentes.split("|") : [])
+    if (r.descartadas === 0) return
+    ref.substituir(r.lista)
+    toast.info("A versão mudou; as marcações antigas foram descartadas")
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reage só à lista de pendentes e às referências
+  }, [chavePendentes, ref.referencias])
+
+  // Uma referência nova leva o foco para a caixa de mensagem.
+  const anterior = useRef(0)
+  useEffect(() => {
+    if (totalReferencias > anterior.current) campo.current?.focus()
+    anterior.current = totalReferencias
+  }, [totalReferencias])
+
+  // Referência não enviada se perde ao recarregar: o navegador avisa antes de sair.
+  useEffect(() => {
+    if (!comReferencia) return
+    const avisar = (ev: BeforeUnloadEvent) => ev.preventDefault()
+    window.addEventListener("beforeunload", avisar)
+    return () => window.removeEventListener("beforeunload", avisar)
+  }, [comReferencia])
 
   // O botão "Mencionar no chat" (cards e visualizador) insere a menção na posição do cursor.
   useEffect(() => {
@@ -123,12 +159,20 @@ export function Compositor({
 
   async function enviar() {
     const limpo = texto.trim()
-    if (!limpo && prontos.length === 0) return
+    if (!limpo && (comReferencia || prontos.length === 0)) return
     setEnviando(true)
     try {
-      await api.enviarMensagem(slug, etapa, textoParaAgente(limpo, slug, prontos))
+      const ajustes: AjusteMensagem[] = await Promise.all(
+        ref.referencias.map(async (r, i) => ({
+          entregavelId: r.entregavelId,
+          marcas: r.marcas.map(({ forma, x, y, w, h }) => ({ forma, x, y, w, h })),
+          imagem: r.urlImagem && r.marcas.length > 0 ? await renderizarAnotada(r.urlImagem, r.marcas, numeracao[i]!.primeira) : undefined,
+        })),
+      )
+      await api.enviarMensagem(slug, etapa, textoParaAgente(limpo, slug, prontos), ajustes.length > 0 ? ajustes : undefined)
       setTexto("")
       setAnexos([])
+      ref.limpar()
     } catch (e) {
       toast.error(mensagemDeErro(e))
     } finally {
@@ -153,7 +197,8 @@ export function Compositor({
     )
   }
 
-  const podeEnviar = !desabilitado && !enviando && !subindo && (texto.trim() !== "" || prontos.length > 0)
+  // Com referência de ajuste, a mensagem em branco fica bloqueada: a conversa é o ponto.
+  const podeEnviar = !desabilitado && !enviando && !subindo && (texto.trim() !== "" || (!comReferencia && prontos.length > 0))
 
   return (
     <div className="border-t p-3">
@@ -178,6 +223,23 @@ export function Compositor({
         }}
       >
         {motivo && <p className="text-muted-foreground text-xs">{motivo}</p>}
+        {comReferencia && (
+          <AttachmentGroup>
+            {ref.referencias.map((r, i) => (
+              <EtiquetaAnexo
+                key={r.entregavelId}
+                nome={r.titulo}
+                icone={iconeDoTipo(r.tipo)}
+                detalhe={faixaDeMarcacoes(numeracao[i]!.primeira, numeracao[i]!.quantidade) || "ajuste pedido"}
+                aoRemover={() => ref.remover(r.entregavelId)}
+                aoAbrir={r.urlImagem ? () => ref.iniciarMarcacao(r.entregavelId) : undefined}
+              />
+            ))}
+          </AttachmentGroup>
+        )}
+        {comReferencia && texto.trim() === "" && (
+          <p className="text-muted-foreground text-xs">Escreva o que mudar para enviar. Para marcações, cite o número: “1: eixo X em meses por extenso”.</p>
+        )}
         {anexos.length > 0 && (
           <AttachmentGroup>
             {anexos.map((a) => (
