@@ -29,6 +29,18 @@ export class ErroTurnoAtivo extends ErroDominio {
   }
 }
 
+export class ErroFixture extends ErroDominio {
+  constructor(message: string) {
+    super(message, "fixture_invalido", 409)
+  }
+}
+
+export class ErroNaoEhTeste extends ErroDominio {
+  constructor() {
+    super("Este prospect não é um cliente de teste.", "nao_eh_teste", 409)
+  }
+}
+
 export class ErroEntrada extends ErroDominio {
   constructor(message: string) {
     super(message, "entrada_invalida", 400)

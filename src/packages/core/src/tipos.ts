@@ -134,6 +134,8 @@ export interface Estado {
   insumos: EstadoInsumo[]
   perguntas: ConjuntoPerguntas[]
   filaAutomatica: ItemFila[]
+  /** Só em cliente de teste: de qual fixture ele veio e em qual etapa começou o último reposicionamento. */
+  teste?: { fixture: string; etapaInicial: EtapaId }
   atualizadoEm: string
 }
 
@@ -177,8 +179,14 @@ export interface ResumoProspect {
   concluidas: number
   totalEtapas: number
   pendencias: number
+  teste: boolean
   atualizadoEm: string
 }
+
+/** Kit do analista numa etapa do cliente de teste; `arquivos` são caminhos relativos à pasta do cliente, em kit-de-teste/NN/. */
+export type RespostaTeste =
+  | { teste: false }
+  | { teste: true; fixture: string; etapaInicial: EtapaId; etapa: EtapaId; arquivos: string[]; roteiro: string | null }
 
 export interface RespostaEstado {
   estado: Estado

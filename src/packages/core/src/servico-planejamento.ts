@@ -315,6 +315,7 @@ export class ServicoPlanejamento {
       concluidas: ORDEM_ETAPAS.filter((id) => id !== "final" && e.etapas[id].status === "concluida").length,
       totalEtapas: ORDEM_ETAPAS.length - 1,
       pendencias: e.entregaveis.filter((x) => x.status === "pendente").length,
+      teste: e.teste !== undefined,
       atualizadoEm: e.atualizadoEm,
     }
   }
