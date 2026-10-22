@@ -25,11 +25,13 @@ import {
   pedirAjuste,
   proporEntregavel,
 } from "./entregaveis"
-import { ehErroDominio, ErroEntrada, ErroNaoEncontrado, ErroTurnoAtivo } from "./erros"
+import { ehErroDominio, ErroEntrada, ErroNaoEhTeste, ErroNaoEncontrado, ErroTurnoAtivo } from "./erros"
+import { carregarFixture } from "./fixture"
 import { destinoInsumo, extensao, extensaoAceita, nomeSeguro, registrarInsumo } from "./insumos"
 import * as me from "./maquina-estados"
 import { descreverMarcacoes, type MarcaAjuste } from "./marcacoes"
 import { mensagemAjuste, mensagemAjustes, mensagemAprovacao, mensagemEtapaAnteriorAlterada, mensagemInsumoRecebido } from "./prompts"
+import { aplicarOverrides, lerKit, reposicionarNoFixture } from "./servico-teste"
 import { normalizarSlug } from "./slug"
 import { importarStatusMd, renderStatusMd } from "./status-md"
 import {
@@ -44,6 +46,7 @@ import {
   type RespostaEstado,
   type ResultadoValidacao,
   type ReferenciaAjuste,
+  type RespostaTeste,
   type ResumoProspect,
   type TipoEntregavel,
 } from "./tipos"
@@ -382,6 +385,44 @@ export class ServicoPlanejamento {
     if (this.turnos.estaOcupado(slug)) throw new ErroTurnoAtivo()
     await this.exclusivo(slug, () => this.arm.excluir(slug))
     this.exclusoes.delete(slug)
+  }
+
+  // ---------- cliente de teste ----------
+
+  /** Cria o cliente de teste a partir de clientes/_fixtures/<id>/ já posicionado em `etapaInicial`. */
+  async criarClienteTeste(fixtureId: string, etapaInicial: EtapaId = "01"): Promise<string> {
+    const fixture = await carregarFixture(this.arm.raiz, fixtureId)
+    const slug = await this.criarProspect(fixture.manifesto.prospect.nome, fixture.manifesto.prospect.site)
+    const claudeMd = await this.arm.lerTexto(slug, "CLAUDE.md")
+    if (claudeMd) await this.arm.gravarTexto(slug, "CLAUDE.md", aplicarOverrides(claudeMd, fixture.manifesto.overrides))
+    await this.mutar(slug, (e) => ({ estado: { ...e, teste: { fixture: fixtureId, etapaInicial } }, resultado: undefined }))
+    await this.reposicionarTeste(slug, etapaInicial)
+    return slug
+  }
+
+  /** Apaga o trabalho feito no cliente de teste e o devolve ao início de `etapa`. Nada é apagado se a checagem falhar. */
+  async reposicionarTeste(slug: string, etapa: EtapaId): Promise<void> {
+    if (this.turnos.estaOcupado(slug)) throw new ErroTurnoAtivo()
+    await this.exclusivo(slug, async () => {
+      const estado = await this.carregar(slug)
+      if (!estado.teste) throw new ErroNaoEhTeste()
+      const fixture = await carregarFixture(this.arm.raiz, estado.teste.fixture)
+      await this.salvar(slug, await reposicionarNoFixture(this.arm, fixture, estado, etapa, this.agora()))
+    })
+  }
+
+  /** Kit do analista na etapa pedida (padrão: a etapa de partida); `{ teste: false }` para prospect comum. */
+  async kitDaEtapa(slug: string, etapa?: EtapaId): Promise<RespostaTeste> {
+    const estado = await this.estado(slug)
+    if (!estado.teste) return { teste: false }
+    const alvo = etapa ?? estado.teste.etapaInicial
+    return {
+      teste: true,
+      fixture: estado.teste.fixture,
+      etapaInicial: estado.teste.etapaInicial,
+      etapa: alvo,
+      ...(await lerKit(this.arm, slug, alvo)),
+    }
   }
 
   // ---------- etapas ----------
