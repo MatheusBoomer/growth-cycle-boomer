@@ -29,7 +29,7 @@ const ROTULO_TIPO: Record<TipoEntregavel, string> = {
 export const ROTULO_STATUS_ENTREGAVEL: Record<StatusEntregavel, string> = { pendente: "Aguardando aprovação", aprovado: "Aprovado", substituido: "Substituído" }
 
 export function CardEntregavel({ slug, entregavel: e }: { slug: string; entregavel: Entregavel }) {
-  const { abrir, abrirSecao, abrirArquivo, mencionar } = useVisualizador()
+  const { abrir, abrirSecao, abrirPlanilha, abrirArquivo, mencionar } = useVisualizador()
   const [ajusteAberto, setAjusteAberto] = useState(false)
   const [texto, setTexto] = useState("")
   const [ocupado, setOcupado] = useState(false)
@@ -99,7 +99,9 @@ export function CardEntregavel({ slug, entregavel: e }: { slug: string; entregav
                 ? () => abrir(e.etapa, e.nomeFinal)
                 : e.tipo === "secao"
                   ? () => abrirSecao(e.etapa, e.nomeFinal)
-                  : () => abrirArquivo(e.arquivoRascunho)
+                  : e.tipo === "planilha"
+                    ? () => abrirPlanilha(e.etapa, e.nomeFinal)
+                    : () => abrirArquivo(e.arquivoRascunho)
             }
           />
         )}

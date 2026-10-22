@@ -121,9 +121,14 @@ export function PreviaArquivo({
       <AttachmentMedia variant="icon">{tipo === "planilha" ? <FileSpreadsheetIcon /> : <FileTextIcon />}</AttachmentMedia>
       <AttachmentContent>
         <AttachmentTitle>{titulo}</AttachmentTitle>
-        <AttachmentDescription>{tipo === "planilha" ? "Planilha Excel" : "Documento Word"} · abra para conferir</AttachmentDescription>
+        <AttachmentDescription>{tipo === "planilha" ? "Planilha Excel · veja a prévia sem baixar" : "Documento Word · abra para conferir"}</AttachmentDescription>
       </AttachmentContent>
       <AttachmentActions>
+        {tipo === "planilha" && aoAbrir && (
+          <Button size="sm" variant="outline" onClick={aoAbrir}>
+            <PanelRightOpenIcon /> Ver prévia
+          </Button>
+        )}
         <AttachmentAction render={<a href={urlArquivo(slug, caminho, true)} download aria-label="Baixar" />} nativeButton={false}>
           <DownloadIcon />
         </AttachmentAction>

@@ -12,6 +12,7 @@ let raiz: string
 let arm: FsArmazenamento
 let ajustes: { id: string; texto: string }[]
 let geradas: number
+let geradasPlanilha: string[]
 let entregaveis: Entregavel[]
 let previaFalha: string | null
 
@@ -42,6 +43,13 @@ const previaFalsa: Previa = {
     )
     return { slides: 2 }
   },
+  async gerarPlanilha(xlsx, pasta) {
+    if (previaFalha) return { erro: previaFalha }
+    geradasPlanilha.push(xlsx)
+    await mkdir(pasta, { recursive: true })
+    await writeFile(path.join(pasta, "planilha.html"), "<html>2 abas</html>")
+    return { abas: 2 }
+  },
   async recortar(_slide, _r, saida) {
     await mkdir(path.dirname(saida), { recursive: true })
     await writeFile(saida, "recorte")
@@ -71,6 +79,7 @@ beforeEach(async () => {
   await writeFile(path.join(raiz, "clientes", SLUG, ".app/propostas/e1.pptx"), "pptx")
   ajustes = []
   geradas = 0
+  geradasPlanilha = []
   previaFalha = null
   entregaveis = [entregavel()]
 })
@@ -103,6 +112,45 @@ describe("prévia da apresentação", () => {
   it("só para entregáveis do tipo apresentação", async () => {
     entregaveis = [entregavel({ tipo: "html", arquivoRascunho: ".app/propostas/e1.html" })]
     await expect(servico().previa(SLUG, "e1")).rejects.toThrow("apresentação")
+  })
+})
+
+describe("prévia da planilha", () => {
+  const planilha = () => entregavel({ tipo: "planilha", titulo: "Projeção de cenários", arquivoRascunho: ".app/propostas/e1.xlsx" })
+
+  it("gera uma vez por versão, a partir do .xlsx, e devolve o caminho da página", async () => {
+    entregaveis = [planilha()]
+    const s = servico()
+    const p1 = await s.previaPlanilha(SLUG, "e1")
+    const p2 = await s.previaPlanilha(SLUG, "e1")
+    expect(p1).toEqual({ disponivel: true, caminho: ".app/previas/e1/planilha.html", erro: null })
+    expect(p2).toEqual(p1)
+    expect(geradasPlanilha).toEqual([path.join(raiz, "clientes", SLUG, ".app/propostas/e1.xlsx")])
+  })
+
+  it("aberturas simultâneas geram a prévia uma vez só", async () => {
+    entregaveis = [planilha()]
+    const s = servico()
+    await Promise.all([s.previaPlanilha(SLUG, "e1"), s.previaPlanilha(SLUG, "e1")])
+    expect(geradasPlanilha).toHaveLength(1)
+  })
+
+  it("vale também depois de aprovada", async () => {
+    entregaveis = [{ ...planilha(), status: "aprovado" }]
+    expect((await servico().previaPlanilha(SLUG, "e1")).disponivel).toBe(true)
+  })
+
+  it("sem LibreOffice responde indisponível com a mensagem e tenta de novo na próxima abertura", async () => {
+    entregaveis = [planilha()]
+    previaFalha = "LibreOffice não encontrado."
+    const s = servico()
+    expect(await s.previaPlanilha(SLUG, "e1")).toEqual({ disponivel: false, caminho: null, erro: "LibreOffice não encontrado." })
+    previaFalha = null
+    expect((await s.previaPlanilha(SLUG, "e1")).disponivel).toBe(true)
+  })
+
+  it("só para entregáveis do tipo planilha", async () => {
+    await expect(servico().previaPlanilha(SLUG, "e1")).rejects.toThrow("planilha")
   })
 })
 

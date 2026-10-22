@@ -8,6 +8,8 @@ export interface ControleVisualizador {
   abrir: (etapa: EtapaId, nomeFinal: string) => void
   /** Abre uma seção de texto (markdown) na coluna larga, para ler, citar trechos e editar. */
   abrirSecao: (etapa: EtapaId, nomeFinal: string) => void
+  /** Abre a prévia de uma planilha (.xlsx), com todas as abas, na coluna larga. */
+  abrirPlanilha: (etapa: EtapaId, nomeFinal: string) => void
   /** Abre um arquivo do prospect (caminho relativo à pasta dele) no visualizador embaixo do painel. */
   abrirArquivo: (caminho: string) => void
   /** Insere "@caminho" no campo de mensagem, na posição do cursor. */
@@ -23,6 +25,7 @@ export interface ControleVisualizador {
 export const ContextoVisualizador = createContext<ControleVisualizador>({
   abrir: () => {},
   abrirSecao: () => {},
+  abrirPlanilha: () => {},
   abrirArquivo: () => {},
   mencionar: () => {},
   inserirNoCompositor: () => {},

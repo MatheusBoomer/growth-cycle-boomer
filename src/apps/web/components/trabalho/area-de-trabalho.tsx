@@ -33,6 +33,7 @@ import { TrilhaEtapas } from "./trilha-etapas"
 import { VisualizadorArquivo } from "./visualizador-arquivo"
 import { VisualizadorApresentacao } from "./visualizador-apresentacao"
 import { VisualizadorHtml } from "./visualizador-html"
+import { VisualizadorPlanilha } from "./visualizador-planilha"
 import { VisualizadorSecao } from "./visualizador-secao"
 
 export function escolherEtapaInicial(estado: Estado): EtapaId {
@@ -53,7 +54,7 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   const [painelRecolhido, setPainelRecolhido] = useState(false)
   const [arrastando, setArrastando] = useState(false)
   // `secao`: a coluna mostra a seção de texto do nome final (o benchmark tem HTML e seção com o mesmo nome).
-  const [visualizador, setVisualizador] = useState<{ etapa: EtapaId; nomeFinal: string; secao?: boolean } | null>(null)
+  const [visualizador, setVisualizador] = useState<{ etapa: EtapaId; nomeFinal: string; secao?: boolean; planilha?: boolean } | null>(null)
   const [telaCheia, setTelaCheia] = useState(false)
   const [entregaveisVistos, setEntregaveisVistos] = useState<Entregavel[] | null>(null)
   const [abertosSozinhos, setAbertosSozinhos] = useState<ReadonlySet<string>>(new Set())
@@ -91,6 +92,9 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   }, [])
   const abrirSecao = useCallback((etapaAlvo: EtapaId, nomeFinal: string) => {
     setVisualizador({ etapa: etapaAlvo, nomeFinal, secao: true })
+  }, [])
+  const abrirPlanilha = useCallback((etapaAlvo: EtapaId, nomeFinal: string) => {
+    setVisualizador({ etapa: etapaAlvo, nomeFinal, planilha: true })
   }, [])
   const fechar = useCallback(() => {
     setTelaCheia(false)
@@ -148,8 +152,8 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
     return () => observador.disconnect()
   }, [carregado])
   const controle = useMemo(
-    () => ({ abrir, abrirSecao, abrirArquivo, mencionar, inserirNoCompositor: inserirTexto, registrarCompositor, irParaEtapa: selecionarEtapa }),
-    [abrir, abrirSecao, abrirArquivo, mencionar, inserirTexto, registrarCompositor, selecionarEtapa],
+    () => ({ abrir, abrirSecao, abrirPlanilha, abrirArquivo, mencionar, inserirNoCompositor: inserirTexto, registrarCompositor, irParaEtapa: selecionarEtapa }),
+    [abrir, abrirSecao, abrirPlanilha, abrirArquivo, mencionar, inserirTexto, registrarCompositor, selecionarEtapa],
   )
 
   // Arquivo aberto (janela embaixo do painel da etapa): mesmo princípio do visualizador de
@@ -230,9 +234,13 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
     if ((layout.visualizador ?? 0) > 0 === visualizadorAberto) salvarLayout(chaveColunas(visualizadorAberto), layout)
   }
   const aberto = visualizadorAberto
-    ? entregavelVisivel(dados.estado.entregaveis, etapa, visualizador.nomeFinal, visualizador.secao ? ["secao"] : undefined)
+    ? entregavelVisivel(dados.estado.entregaveis, etapa, visualizador.nomeFinal, visualizador.secao ? ["secao"] : visualizador.planilha ? ["planilha"] : undefined)
     : null
-  const Visualizador = visualizador?.secao ? VisualizadorSecao : aberto?.tipo === "apresentacao" ? VisualizadorApresentacao : VisualizadorHtml
+  const Visualizador = visualizador?.secao
+    ? VisualizadorSecao
+    : visualizador?.planilha
+      ? VisualizadorPlanilha
+      : aberto?.tipo === "apresentacao" ? VisualizadorApresentacao : VisualizadorHtml
   const painelVisualizador = visualizadorAberto ? (
     // key: versão nova remonta o visualizador, sem levar rascunho de comentário da anterior.
     <Visualizador key={aberto?.id ?? "nenhum"} slug={slug} entregavel={aberto} telaCheia={telaCheia} aoAlternarTelaCheia={alternarTelaCheia} aoFechar={fechar} />

@@ -36,8 +36,9 @@ export function servidor(): Servidor {
   // de fazer_perguntas). Com o código mudado e nenhum agente rodando, os serviços são recriados.
   const desatualizado = atual !== undefined && !(atual.servico instanceof ServicoPlanejamento) && !turnoEmAndamento(atual)
   if (atual && !desatualizado) {
-    // Processo do next dev que já rodava antes do serviço de comentários existir: completa sem recriar os demais.
-    atual.comentarios ??= new ServicoComentarios({ armazenamento: atual.armazenamento, planejamento: atual.servico, previa: criarPreviaPython(atual.raiz) })
+    // Processo do next dev que já rodava antes do serviço de comentários existir (ou antes de um método novo dele,
+    // como a prévia de planilha): completa sem recriar os demais.
+    if (typeof atual.comentarios?.previaPlanilha !== "function") atual.comentarios = new ServicoComentarios({ armazenamento: atual.armazenamento, planejamento: atual.servico, previa: criarPreviaPython(atual.raiz) })
     return atual
   }
   // `next dev` roda em src/apps/web → a raiz do projeto de planejamento fica três níveis acima.

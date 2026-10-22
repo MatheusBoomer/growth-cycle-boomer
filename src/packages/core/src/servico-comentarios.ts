@@ -25,6 +25,7 @@ export class ServicoComentarios {
   private readonly gerarId: () => string
   /** Conversões em andamento por pasta: duas aberturas simultâneas esperam a mesma. */
   private readonly gerando = new Map<string, Promise<{ slides: number } | { erro: string }>>()
+  private readonly gerandoPlanilha = new Map<string, Promise<{ abas: number } | { erro: string }>>()
   /** Fila por versão: criar, editar, apagar e enviar leem e regravam o mesmo arquivo, um de cada vez. */
   private readonly filas = new Map<string, Promise<unknown>>()
 
@@ -75,6 +76,27 @@ export class ServicoComentarios {
     const total = mapa?.slides.length ?? 0
     const slides = Array.from({ length: total }, (_, i) => `.app/previas/${id}/slide-${String(i + 1).padStart(2, "0")}.png`)
     return { disponivel: true, slides, mapa, erro: null }
+  }
+
+  /** Página HTML da planilha (todas as abas, valores calculados), gerada uma vez por versão. */
+  async previaPlanilha(slug: string, id: string): Promise<{ disponivel: boolean; caminho: string | null; erro: string | null }> {
+    const e = await this.entregavel(slug, id)
+    if (e.tipo !== "planilha") throw new ErroEntrada("A prévia em tabela é só para planilhas.")
+    const pasta = `.app/previas/${id}`
+    const caminho = `${pasta}/planilha.html`
+    if (!(await this.arm.existeArquivo(slug, caminho))) {
+      const pastaAbs = this.arm.caminhoAbsoluto(slug, pasta)
+      let pendente = this.gerandoPlanilha.get(pastaAbs)
+      if (!pendente) {
+        pendente = this.gerador
+          .gerarPlanilha(this.arm.caminhoAbsoluto(slug, e.arquivoRascunho), pastaAbs, e.titulo)
+          .finally(() => this.gerandoPlanilha.delete(pastaAbs))
+        this.gerandoPlanilha.set(pastaAbs, pendente)
+      }
+      const r = await pendente
+      if ("erro" in r) return { disponivel: false, caminho: null, erro: r.erro }
+    }
+    return { disponivel: true, caminho, erro: null }
   }
 
   async listar(slug: string, id: string): Promise<Comentario[]> {
