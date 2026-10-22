@@ -114,9 +114,26 @@ async function capturarTela(caixa: { x: number; y: number; largura: number; altu
     ctx.lineWidth = Math.max(3, 3 * fator)
     ctx.strokeRect(caixa.x * fator, caixa.y * fator, caixa.largura * fator, caixa.altura * fator)
     return canvas.toDataURL("image/png").replace(/^data:image\/png;base64,/, "")
-  } catch {
+  } catch (e) {
+    console.warn("Modo dev: não foi possível tirar o print da tela inteira.", e)
     return null
   }
+}
+
+/** Recorte guardado do comentário; se o servidor não entregar, avisa em texto em vez de mostrar imagem quebrada. */
+function ImagemDev({ comentario, tipo, className }: { comentario: ComentarioDev; tipo: "recorte" | "tela"; className: string }) {
+  const [falhou, setFalhou] = useState(false)
+  if (falhou) return <span className="text-muted-foreground">(imagem indisponível)</span>
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- imagem local do modo dev
+    <img
+      src={urlImagem(comentario, tipo)}
+      alt={`Recorte do comentário ${comentario.numero}`}
+      loading="lazy"
+      onError={() => setFalhou(true)}
+      className={className}
+    />
+  )
 }
 
 const urlImagem = (c: ComentarioDev, tipo: "recorte" | "tela") => `/api/dev/comentarios/${c.id}/imagem?tipo=${tipo}`
@@ -298,10 +315,11 @@ export function ModoDev() {
     [recarregar],
   )
 
-  // Atalhos: Ctrl+D liga e desliga (em qualquer lugar, inclusive campos de texto); ↑/↓ mudam o nível destacado; Esc fecha a caixa e, sem caixa, sai do modo.
+  // Atalhos: Ctrl+D ou Alt+D liga e desliga (em qualquer lugar, inclusive campos de texto); ↑/↓ mudam o nível destacado; Esc fecha a caixa e, sem caixa, sai do modo.
   useEffect(() => {
     const aoTeclar = (e: KeyboardEvent) => {
-      if (e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "d") {
+      // Ctrl+D ou Alt+D (pela tecla física: no Mac o Option+D digitaria "∂").
+      if (e.code === "KeyD" && (e.ctrlKey || e.altKey) && !e.metaKey && !e.shiftKey && !(e.ctrlKey && e.altKey)) {
         e.preventDefault()
         definirAtivo(!ativoRef.current)
         return
@@ -479,10 +497,7 @@ export function ModoDev() {
                 <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-orange-500 text-[10px] font-semibold text-white">{c.numero}</span>
                 <span className="truncate text-muted-foreground">{c.componente ?? `<${c.tag}>`}</span>
               </div>
-              {c.captura && (
-                // eslint-disable-next-line @next/next/no-img-element -- imagem local do modo dev
-                <img src={urlImagem(c, "recorte")} alt={`Recorte do comentário ${c.numero}`} loading="lazy" className="mt-1 max-h-16 w-full rounded border object-contain" />
-              )}
+              {c.captura && <ImagemDev comentario={c} tipo="recorte" className="mt-1 max-h-16 w-full rounded border object-contain" />}
               <p className="mt-1 line-clamp-2">{c.comentario}</p>
             </button>
           ))}
@@ -500,8 +515,7 @@ export function ModoDev() {
           </div>
           {alvo.editando?.captura && (
             <div className="flex items-start gap-2">
-              {/* eslint-disable-next-line @next/next/no-img-element -- imagem local do modo dev */}
-              <img src={urlImagem(alvo.editando, "recorte")} alt="Recorte guardado no clique" className="max-h-20 max-w-[60%] rounded border object-contain" />
+              <ImagemDev comentario={alvo.editando} tipo="recorte" className="max-h-20 max-w-[60%] rounded border object-contain" />
               {alvo.editando.tela && (
                 <a href={urlImagem(alvo.editando, "tela")} target="_blank" rel="noreferrer" className="underline">
                   Ver a tela inteira
@@ -565,10 +579,7 @@ export function ModoDev() {
                   </div>
                   {todasPaginas && <div className="truncate text-muted-foreground">{c.pagina}</div>}
                   <p className="mt-1 line-clamp-3 whitespace-pre-wrap">{c.comentario}</p>
-                  {c.captura && (
-                    // eslint-disable-next-line @next/next/no-img-element -- imagem local do modo dev
-                    <img src={urlImagem(c, "recorte")} alt={`Recorte do comentário ${c.numero}`} loading="lazy" className="mt-1 max-h-24 max-w-full rounded border object-contain" />
-                  )}
+                  {c.captura && <ImagemDev comentario={c} tipo="recorte" className="mt-1 max-h-24 max-w-full rounded border object-contain" />}
                   <div className="mt-1 flex gap-3">
                     <button type="button" onClick={() => editar(c)} className="underline">
                       Editar
@@ -593,7 +604,7 @@ export function ModoDev() {
         <button
           type="button"
           onClick={() => definirAtivo(!ativo)}
-          title="Modo dev (Ctrl + D)"
+          title="Modo dev (Ctrl + D ou Alt + D)"
           className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 font-semibold shadow-lg ${ativo ? "bg-orange-500 text-white" : "bg-zinc-900 text-white"}`}
         >
           Dev
