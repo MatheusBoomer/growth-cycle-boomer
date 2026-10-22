@@ -139,7 +139,8 @@ Ao concluir, marque "08 · Mídia paga" como ✅ em
 `contexto/status-planejamento.md` e converse com o analista em linguagem
 natural, sem citar caminho de arquivo:
 
-"Etapa concluída! Não preciso de nada novo — só confirma comigo a data de
+"Nesta sessão, o planejamento de mídia paga ficou fechado. Não preciso de
+nada novo — só confirma comigo a data de
 hoje, se seguimos com o cenário Realista, e quais são as 2–3 frentes mais
 urgentes que você quer priorizar no plano de ação.
 

@@ -93,7 +93,8 @@ Ao concluir, marque "03 · Diagnóstico de performance" como ✅ em
 `contexto/status-planejamento.md` e converse com o analista em linguagem
 natural, sem citar caminho de arquivo:
 
-"Etapa concluída! Para começarmos a Skill 04, preciso de uma planilha
+"Nesta sessão, o diagnóstico de performance ficou fechado. Para começarmos a
+Skill 04, preciso de uma planilha
 (Excel) com o histórico de vendas por cliente, o maior período que você
 tiver. Só uma coisa importante antes de me mandar: tira qualquer CPF,
 e-mail, telefone, endereço ou dado de cartão — deixa só o ID ou nome do

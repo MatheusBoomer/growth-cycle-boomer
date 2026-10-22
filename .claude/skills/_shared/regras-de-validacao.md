@@ -58,6 +58,11 @@ para a Skill NN": o que foi produzido nesta etapa, e o que precisa estar
 pronto — arquivo, decisão ou resposta — para iniciar a próxima, terminando
 com o comando exato para chamá-la.
 
+A mensagem de encerramento começa situando a sessão que acabou de fechar
+("Nesta sessão, …"), nunca com "Etapa concluída": a etapa só é concluída
+quando o analista clica em Concluir, e é a interface que comemora isso (aviso
+e confete). Dizer "concluída" antes disso adianta uma decisão que é dele.
+
 O pedido é sempre em linguagem natural, como um colega pediria, nunca citando
 caminho de arquivo interno (ex.: nunca `contexto/brutos/kickoff-transcricao-
 bruta.docx` na mensagem ao analista). Quando o pedido envolver arquivo, o

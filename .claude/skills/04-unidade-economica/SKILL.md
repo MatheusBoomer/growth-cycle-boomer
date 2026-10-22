@@ -82,7 +82,8 @@ Ao concluir, marque "04 · Unidade econômica" como ✅ em
 `contexto/status-planejamento.md` e converse com o analista em linguagem
 natural, sem citar caminho de arquivo:
 
-"Etapa concluída! Não preciso de arquivo novo agora. Na próxima etapa vou
+"Nesta sessão, a unidade econômica ficou fechada e não preciso de arquivo
+novo agora. Na próxima etapa vou
 abrir cada problema que encontramos no diagnóstico em hipóteses, soluções e
 impacto em reais; vale lembrar o que o prospect já tentou para resolver cada
 um.

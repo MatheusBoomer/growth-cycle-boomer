@@ -158,8 +158,8 @@ Ao concluir, marque "09 · Plano de ação" como ✅ em
 `contexto/status-planejamento.md` e converse com o analista em linguagem
 natural, sem citar caminho de arquivo:
 
-"Etapa concluída — esta era a última etapa de conteúdo! Não preciso de nada
-novo. O próximo passo é montar a apresentação final, um arquivo .pptx editável
+"Nesta sessão, o plano de ação ficou fechado — esta era a última etapa de
+conteúdo! Não preciso de nada novo. O próximo passo é montar a apresentação final, um arquivo .pptx editável
 no molde da agência, com o roteiro slide a slide para você aprovar antes.
 
 Quando estiver pronto, rode `/apresentacao-final`."

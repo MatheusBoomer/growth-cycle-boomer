@@ -113,7 +113,8 @@ Ao concluir, marque "02 · Contextualização estratégica" como ✅ em
 `contexto/status-planejamento.md` e converse com o analista em linguagem
 natural, sem citar caminho de arquivo:
 
-"Etapa concluída! Para começarmos a Skill 03, preciso que você me mande duas
+"Nesta sessão, o entendimento do negócio ficou fechado. Para começarmos a
+Skill 03, preciso que você me mande duas
 planilhas (Excel): uma com o histórico dos últimos 12 meses de mídia paga e
 vendas — investimento, receita, ROAS, sessões e conversão, separados por
 Google e Meta — e outra com o relatório de produtos vendidos no ano, para eu

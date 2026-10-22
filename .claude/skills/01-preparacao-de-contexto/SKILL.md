@@ -90,7 +90,8 @@ Ao concluir, marque "01 · Preparação de contexto" como ✅ em
 `contexto/status-planejamento.md` e converse com o analista em linguagem
 natural, sem citar caminho de arquivo:
 
-"Etapa concluída! Não preciso de nada novo agora — só fique pronto para
+"Nesta sessão, já tenho tudo o que precisava do kickoff. Não preciso de nada
+novo agora — só fique pronto para
 responder com profundidade a algumas perguntas estratégicas que vou te fazer
 no fim da próxima etapa. Quanto melhor a resposta, melhor o diagnóstico.
 

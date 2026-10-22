@@ -195,7 +195,8 @@ Ao concluir, marque "07 · Briefing e benchmark" como ✅ em
 `contexto/status-planejamento.md` e converse com o analista em linguagem
 natural, sem citar caminho de arquivo:
 
-"Etapa concluída! Não preciso de nada novo — só confirma se seguimos com o
+"Nesta sessão, o briefing e o benchmark ficaram consolidados. Não preciso de
+nada novo — só confirma se seguimos com o
 cenário Realista como base para a próxima etapa. Se quiser, pode me mandar
 prints de tela (imagens) das campanhas atuais das plataformas, mas isso é
 opcional.

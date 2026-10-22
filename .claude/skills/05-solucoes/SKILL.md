@@ -128,7 +128,7 @@ Ao concluir, marque "05 · Soluções" como ✅ em
 `contexto/status-planejamento.md` e converse com o analista em linguagem
 natural, sem citar caminho de arquivo:
 
-"Etapa concluída! Cada problema do diagnóstico agora tem hipóteses, soluções e
+"Nesta sessão, cada problema do diagnóstico ganhou hipóteses, soluções e
 impacto. Não preciso de arquivo novo: só pensa numa meta clara (qual número,
 em quanto tempo) e tenha em mente a receita do ano passado e alguma
 sazonalidade importante do negócio, porque vou te perguntar isso logo no

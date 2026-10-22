@@ -8,6 +8,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { useVisualizador } from "@/components/trabalho/contexto-visualizador"
 import { api, mensagemDeErro } from "@/lib/api"
+import { celebrarEtapaConcluida } from "@/lib/confete"
 
 /**
  * Atalho no fim da conversa quando o agente encerra a etapa: concluir (a mesma ação e as mesmas
@@ -40,7 +41,7 @@ export function FimDaEtapa({ slug, etapa, dados }: { slug: string; etapa: EtapaI
     setConcluindo(true)
     try {
       await api.acaoEtapa(slug, etapa, "concluir")
-      toast.success(proxima ? "Etapa concluída. A próxima foi liberada." : "Etapa concluída.")
+      celebrarEtapaConcluida(proxima !== null)
       if (proxima) irParaEtapa(proxima)
     } catch (e) {
       toast.error(mensagemDeErro(e))

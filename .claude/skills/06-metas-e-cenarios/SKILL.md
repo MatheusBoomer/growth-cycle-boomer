@@ -225,7 +225,8 @@ Ao concluir, marque "06 · Metas e cenários" como ✅ em
 `contexto/status-planejamento.md` e converse com o analista em linguagem
 natural, sem citar caminho de arquivo:
 
-"Etapa concluída! Não preciso de nada novo — só pensa numa lista de
+"Nesta sessão, a meta e os cenários ficaram fechados. Não preciso de nada
+novo — só pensa numa lista de
 concorrentes que você quer que eu pesquise na próxima etapa.
 
 Quando estiver pronto, rode `/07-briefing-e-benchmark`."

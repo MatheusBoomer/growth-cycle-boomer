@@ -21,6 +21,7 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
 import { CardInsumo } from "@/components/cards/card-insumo"
 import { api, mensagemDeErro, urlArquivo, type AcaoEtapa } from "@/lib/api"
+import { celebrarEtapaConcluida } from "@/lib/confete"
 import { useVisualizador } from "./contexto-visualizador"
 
 const COR: Record<StatusEntregavel, string> = { pendente: "bg-aviso", aprovado: "bg-sucesso", substituido: "bg-muted-foreground/40" }
@@ -38,7 +39,8 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
     setOcupado(acao)
     try {
       await api.acaoEtapa(slug, etapa, acao)
-      toast.success(sucesso)
+      if (acao === "concluir") celebrarEtapaConcluida(dados.catalogo.etapas.at(-1)?.id !== etapa)
+      else toast.success(sucesso)
     } catch (e) {
       toast.error(mensagemDeErro(e))
     } finally {
@@ -154,7 +156,7 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
             <Button
               className="w-full"
               disabled={condicoes.length > 0 || dados.turnoAtivo === etapa || ocupado !== null}
-              onClick={() => executar("concluir", "Etapa concluída. A próxima foi liberada.")}
+              onClick={() => executar("concluir", "")}
             >
               {ocupado === "concluir" && <Spinner />}
               {condicoes.length > 0 ? `Concluir etapa (falta ${condicoes.length})` : "Concluir etapa"}
