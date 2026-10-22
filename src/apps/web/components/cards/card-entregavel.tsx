@@ -34,6 +34,8 @@ export function CardEntregavel({ slug, entregavel: e }: { slug: string; entregav
   const [texto, setTexto] = useState("")
   const [ocupado, setOcupado] = useState(false)
   const nomeNaApresentacao = destinoAprovado(e).split("/").pop()
+  // Com ajuste pedido, a versão atual está superada: só a nova versão do agente libera a aprovação.
+  const aguardandoNovaVersao = e.status === "pendente" && !!e.ajustePedido
   // Gráfico e tabela são imagens: o ajuste é feito marcando áreas e números direto nelas.
   const ajusteNaImagem = ajusteAberto && (e.tipo === "grafico" || e.tipo === "tabela")
 
@@ -143,7 +145,11 @@ export function CardEntregavel({ slug, entregavel: e }: { slug: string; entregav
       </CardContent>
       {e.status === "pendente" && !ajusteAberto && (
         <CardFooter className="gap-2">
-          <Button onClick={aprovar} disabled={ocupado}>
+          <Button
+            onClick={aprovar}
+            disabled={ocupado || aguardandoNovaVersao}
+            title={aguardandoNovaVersao ? "Disponível quando o agente gerar a nova versão com o ajuste" : undefined}
+          >
             {ocupado ? <Spinner /> : <CheckIcon />} Aprovar
           </Button>
           <Button variant="outline" onClick={() => setAjusteAberto(true)} disabled={ocupado}>

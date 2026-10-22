@@ -98,6 +98,9 @@ export function aprovarEntregavel(estado: Estado, id: string, em: string): Estad
   if (alvo.status !== "pendente") {
     throw new TransicaoInvalida(`O entregável "${alvo.titulo}" não está aguardando aprovação.`)
   }
+  if (alvo.ajustePedido) {
+    throw new TransicaoInvalida(`O entregável "${alvo.titulo}" tem um ajuste pedido: aguarde a nova versão do agente para aprovar.`)
+  }
   const destino = destinoAprovado(alvo)
   const entregaveis: Entregavel[] = estado.entregaveis.map((e) => {
     if (e.id === id) return { ...e, status: "aprovado", decididoEm: em }

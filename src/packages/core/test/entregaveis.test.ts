@@ -89,6 +89,14 @@ describe("ciclo do entregável", () => {
     expect(e.entregaveis[0]).toMatchObject({ status: "pendente", ajustePedido: "trocar para barras" })
     expect(() => pedirAjuste(e, "p1", "   ", EM)).toThrow(ErroEntrada)
   })
+
+  it("com ajuste pedido não aprova; a nova versão nasce aprovável", () => {
+    let e = proporEntregavel(base(), proposta(), "p1", EM)
+    e = pedirAjuste(e, "p1", "trocar para barras", EM)
+    expect(() => aprovarEntregavel(e, "p1", EM)).toThrow(TransicaoInvalida)
+    e = proporEntregavel(e, { ...proposta(), arquivoRascunho: ".app/propostas/p2.png" }, "p2", EM)
+    expect(aprovarEntregavel(e, "p2", EM).entregaveis.find((x) => x.id === "p2")!.status).toBe("aprovado")
+  })
 })
 
 const html = (id: string, over: Partial<Entregavel> = {}): Entregavel => ({
