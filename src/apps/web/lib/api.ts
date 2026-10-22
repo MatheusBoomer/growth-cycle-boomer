@@ -1,6 +1,6 @@
 import type { AjusteBiblioteca, ItemBiblioteca } from "@workspace/core/biblioteca"
 import type { Comentario, MapaPrevia, Regiao } from "@workspace/core/comentarios"
-import type { EtapaId, ResultadoValidacao } from "@workspace/core/tipos"
+import type { EtapaId, ResultadoValidacao, RespostaTeste } from "@workspace/core/tipos"
 
 export interface AjusteMensagem {
   entregavelId: string
@@ -54,6 +54,9 @@ export const api = {
   excluirProspect: (slug: string, confirmacao: string) => chamar(base(slug), comJson("DELETE", { confirmacao })),
   abrirPasta: (slug: string) => chamar(`${base(slug)}/abrir-pasta`, { method: "POST" }),
   mostrarNoFinder: (slug: string, caminho: string) => chamar(`${base(slug)}/abrir-pasta`, comJson("POST", { caminho })),
+  /** Kit do analista no cliente de teste; sem `etapa`, o da etapa de partida. */
+  kitTeste: (slug: string, etapa?: EtapaId) => chamar<RespostaTeste>(`${base(slug)}/teste${etapa ? `?etapa=${etapa}` : ""}`),
+  reposicionarTeste: (slug: string, etapa: EtapaId) => chamar<{ ok: true }>(`${base(slug)}/teste/reposicionar`, comJson("POST", { etapa })),
   acaoEtapa: (slug: string, etapa: EtapaId, acao: AcaoEtapa) => chamar(`${base(slug)}/etapas/${etapa}/acoes`, comJson("POST", { acao })),
   /** `ajustes`: entregáveis pendentes citados na mensagem; `imagem` é o PNG em base64 do gráfico com as marcações numeradas. */
   enviarMensagem: (slug: string, etapa: EtapaId, texto: string, ajustes?: AjusteMensagem[]) =>
