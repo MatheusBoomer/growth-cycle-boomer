@@ -3,6 +3,7 @@ import { existsSync } from "node:fs"
 import { rm } from "node:fs/promises"
 import path from "node:path"
 import type { FsArmazenamento } from "./armazenamento"
+import { semAberturaDeConclusao } from "./handoff"
 import type { Barramento } from "./barramento"
 import {
   aplicarAjuste,
@@ -719,7 +720,7 @@ export class ServicoPlanejamento {
 
   private async ferramentaSinalizar(slug: string, etapa: EtapaId, d: Record<string, unknown>): Promise<RespostaFerramenta> {
     const resumoDecisoes = campoTexto(d.resumo_decisoes, "resumo_decisoes")
-    const handoff = campoTexto(d.handoff_proxima, "handoff_proxima")
+    const handoff = semAberturaDeConclusao(campoTexto(d.handoff_proxima, "handoff_proxima"))
     const faltando = await this.mutar(slug, (e) => {
       const r = me.sinalizarPronta(e, etapa, { resumoDecisoes, handoff }, this.catalogo, this.agora())
       return { estado: r.estado, resultado: r.faltando }

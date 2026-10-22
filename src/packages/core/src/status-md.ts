@@ -1,3 +1,4 @@
+import { semAberturaDeConclusao } from "./handoff"
 import { comEtapa, estadoInicial, recalcularLiberacoes } from "./maquina-estados"
 import { ORDEM_ETAPAS, type Catalogo, type Estado, type StatusEtapa } from "./tipos"
 
@@ -32,7 +33,7 @@ export function renderStatusMd(estado: Estado, catalogo: Catalogo): string {
   const ultima = [...catalogo.etapas]
     .reverse()
     .find((c) => estado.etapas[c.id].status === "concluida" && estado.etapas[c.id].handoff)
-  linhas.push("", "## Próximo passo", "", ultima ? estado.etapas[ultima.id].handoff!.trim() : PROXIMO_PADRAO, "")
+  linhas.push("", "## Próximo passo", "", ultima ? semAberturaDeConclusao(estado.etapas[ultima.id].handoff!.trim()) : PROXIMO_PADRAO, "")
   return linhas.join("\n")
 }
 

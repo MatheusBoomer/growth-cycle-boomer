@@ -4,6 +4,7 @@ import { LockIcon } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import type { EtapaId, RespostaEstado } from "@workspace/core/tipos"
+import { semAberturaDeConclusao } from "@workspace/core/handoff"
 import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@workspace/ui/components/empty"
@@ -66,7 +67,7 @@ export function EtapaLiberada({
               <CardDescription>Pedido deixado pela etapa anterior</CardDescription>
             </CardHeader>
             <CardContent>
-              <Markdown>{handoffAnterior}</Markdown>
+              <Markdown>{semAberturaDeConclusao(handoffAnterior)}</Markdown>
             </CardContent>
           </Card>
         )}
