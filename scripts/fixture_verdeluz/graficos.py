@@ -66,20 +66,24 @@ def formatador(tipo: str) -> FuncFormatter:
 
 def linha(
     destino: Path, titulo: str, rotulo_y: str, tipo_y: str,
-    series: Sequence[tuple[str, Sequence[float], str]],
+    series: Sequence[tuple],
     referencias: Sequence[tuple[str, str, float, str]] = (),
     altura: float = 3.8,
+    rotulos_x: Sequence[str] | None = None,
 ) -> None:
-    """`referencias`: (estilo 'media'|'meta'|'benchmark', legenda, valor, cor). No máximo 3."""
+    """`series`: (legenda, valores, cor) ou (legenda, valores, cor, estilo da linha, ex.: '--').
+    `referencias`: (estilo 'media'|'meta'|'benchmark', legenda, valor, cor). No máximo 3."""
     configurar()
     assert len(referencias) <= 3, "padrão visual: no máximo 3 linhas de referência"
     fig, ax = plt.subplots(figsize=(LARGURA, altura))
-    x = list(range(len(MESES_CURTOS)))
-    for rotulo, valores, cor in series:
-        ax.plot(x, valores, color=cor, marker="o", markersize=3.5, linewidth=1.2, label=rotulo)
+    meses = list(rotulos_x) if rotulos_x is not None else MESES_CURTOS
+    x = list(range(len(meses)))
+    for item in series:
+        rotulo, valores, cor, *resto = item
+        ax.plot(x, valores, color=cor, marker="o", markersize=3.5, linewidth=1.2, linestyle=resto[0] if resto else "-", label=rotulo)
     for estilo, legenda, valor, cor in referencias:
         ax.axhline(valor, color=cor, linewidth=0.9, linestyle="--" if estilo in ("media", "meta") else ":", alpha=1 if estilo != "benchmark" else 0.9, label=legenda)
-    ax.set_xticks(x, MESES_CURTOS, rotation=45, ha="right")
+    ax.set_xticks(x, meses, rotation=45, ha="right")
     ax.set_ylabel(rotulo_y)
     ax.yaxis.set_major_formatter(formatador(tipo_y))
     ax.grid(axis="y", alpha=0.3, linewidth=0.6)
@@ -142,6 +146,35 @@ def tabela(destino: Path, titulo: str, colunas: Sequence[str], linhas: Sequence[
         if destaque_ultima and r == len(linhas):
             c.set_text_props(fontweight="bold")
             c.set_facecolor("#f6f8fa")
+    fig.tight_layout()
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(destino, dpi=300)
+    plt.close(fig)
+
+
+def tabela_cenarios(destino: Path, titulo: str, colunas: Sequence[str], linhas: Sequence[Sequence[str]], larguras: Sequence[float]) -> None:
+    """Tabela dos cenários: cabeçalho azul escuro com texto branco, linhas alternadas e a última (TOTAL ANO) destacada.
+    Cada célula pode ter duas linhas (valor em R$ e variação sobre o ano atual)."""
+    configurar()
+    altura = 0.30 + 0.34 * (len(linhas) + 1)
+    fig, ax = plt.subplots(figsize=(LARGURA, altura))
+    ax.axis("off")
+    ax.set_title(titulo, loc="left", fontweight="bold")
+    t = ax.table(cellText=[list(l) for l in linhas], colLabels=list(colunas), colWidths=list(larguras), loc="upper left", cellLoc="center")
+    t.auto_set_font_size(False)
+    t.set_fontsize(FONTE)
+    ultima = len(linhas)
+    for (r, c), cel in t.get_celld().items():
+        cel.set_edgecolor("#d0d4da")
+        cel.set_height(0.34 / altura)
+        if r == 0:
+            cel.set_facecolor("#1f3a6e")
+            cel.set_text_props(color="white", fontweight="bold")
+        elif r == ultima:
+            cel.set_facecolor("#dfe6f2")
+            cel.set_text_props(fontweight="bold")
+        else:
+            cel.set_facecolor("#ffffff" if r % 2 else "#f2f4f7")
     fig.tight_layout()
     destino.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(destino, dpi=300)

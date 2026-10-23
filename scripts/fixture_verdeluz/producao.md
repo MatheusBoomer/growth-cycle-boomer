@@ -116,3 +116,29 @@ O agente lista os problemas e os pontos fortes do diagnóstico e pede para você
 Nesta sessão, cada problema do diagnóstico ganhou hipóteses, soluções e impacto. Não preciso de arquivo novo: só pensa numa meta clara (qual número, em quanto tempo) e tenha em mente a receita do ano passado e alguma sazonalidade importante do negócio, porque vou te perguntar isso logo no início da próxima etapa. As soluções com impacto vão virar alavancas dos cenários.
 
 Quando estiver pronto, rode `/06-metas-e-cenarios`.
+
+## Etapa 06
+
+### O que enviar
+
+Nada a enviar nesta etapa.
+
+### O que responder ao agente
+
+Logo no início o agente pergunta a meta, o horizonte e a sazonalidade. Respostas usadas na produção deste cliente:
+
+- **Meta:** crescer em receita captada do site. A meta das sócias é +40% em 12 meses, mas a Luiza aceita cerca de 30% se a ruptura do sérum não for resolvida.
+- **Cenário Realista:** **+30% de receita captada em 12 meses (R$ 1.586.601)**. O agente deve classificar como agressiva. O +40% (R$ 1.708.647) é o cenário Otimista, tratado como teto, e o Pessimista (-10%) é o cenário em que nada é feito.
+- **Horizonte:** 12 meses, na mesma ordem do histórico (OUT/26 a SET/27), comparando posição a posição com OUT/25 a SET/26. As melhorias entram de forma gradual: os primeiros meses ficam perto do patamar atual.
+- **Sazonalidade:** picos em NOV (Black Friday), DEZ e MAI (Dia das Mães); vales em JAN e FEV. Em MAR e ABR o histórico está deprimido pela ruptura do sérum: para o Realista e o Otimista, normalize esses dois meses pela queda de 22% declarada; no Pessimista a ruptura se repete.
+- **Receita do ano anterior:** a do histórico (R$ 1,22 milhão captados), e não os "R$ 1,5 milhão" falados no kickoff.
+- **Disposição para mudanças estruturais:** não trocar a plataforma. Frete e kits podem mudar. Preço só com conta feita.
+- **Apresentação:** mostrar ao prospect os três cenários, com o Realista em destaque.
+- **Soluções por cenário:** Realista com as de execução mais simples (P1.S1, P1.S3, P2.S1, P2.S3, P3.S1, P3.S2, P4.S1, P4.S2, P5.S1, P5.S2), Otimista com as demais, Pessimista com nenhuma. P6 e P7 ficam fora dos cenários por falta de impacto quantificado.
+- Confira se a soma de cada cenário bate com a meta e se a distribuição mensal respeita a sazonalidade, e depois aprove os gráficos, a tabela e a planilha.
+
+### Handoff
+
+Nesta sessão, a meta e os cenários ficaram fechados. Não preciso de nada novo, só pensa numa lista de concorrentes que você quer que eu pesquise na próxima etapa.
+
+Quando estiver pronto, rode `/07-briefing-e-benchmark`.
