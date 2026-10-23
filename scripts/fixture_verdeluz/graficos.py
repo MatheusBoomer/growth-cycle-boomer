@@ -152,30 +152,36 @@ def tabela(destino: Path, titulo: str, colunas: Sequence[str], linhas: Sequence[
     plt.close(fig)
 
 
-def tabela_cenarios(destino: Path, titulo: str, colunas: Sequence[str], linhas: Sequence[Sequence[str]], larguras: Sequence[float]) -> None:
+def tabela_cenarios(destino: Path, titulo: str, colunas: Sequence[str], linhas: Sequence[Sequence[str]], larguras: Sequence[float],
+                     nota: str | None = None, cores: dict[tuple[int, int], str] | None = None, altura_linha: float = 0.34, destacar_ultima: bool = True,
+                     alinhamento: str = "center") -> None:
     """Tabela dos cenários: cabeçalho azul escuro com texto branco, linhas alternadas e a última (TOTAL ANO) destacada.
     Cada célula pode ter duas linhas (valor em R$ e variação sobre o ano atual)."""
     configurar()
-    altura = 0.30 + 0.34 * (len(linhas) + 1)
+    altura = 0.30 + altura_linha * (len(linhas) + 1) + (0.35 if nota else 0.0)
     fig, ax = plt.subplots(figsize=(LARGURA, altura))
     ax.axis("off")
     ax.set_title(titulo, loc="left", fontweight="bold")
-    t = ax.table(cellText=[list(l) for l in linhas], colLabels=list(colunas), colWidths=list(larguras), loc="upper left", cellLoc="center")
+    t = ax.table(cellText=[list(l) for l in linhas], colLabels=list(colunas), colWidths=list(larguras), loc="upper left", cellLoc=alinhamento)
     t.auto_set_font_size(False)
     t.set_fontsize(FONTE)
     ultima = len(linhas)
     for (r, c), cel in t.get_celld().items():
         cel.set_edgecolor("#d0d4da")
-        cel.set_height(0.34 / altura)
+        cel.set_height(altura_linha / altura)
         if r == 0:
             cel.set_facecolor("#1f3a6e")
             cel.set_text_props(color="white", fontweight="bold")
-        elif r == ultima:
+        elif r == ultima and destacar_ultima:
             cel.set_facecolor("#dfe6f2")
             cel.set_text_props(fontweight="bold")
         else:
             cel.set_facecolor("#ffffff" if r % 2 else "#f2f4f7")
-    fig.tight_layout()
+        if cores and (r, c) in cores:
+            cel.set_facecolor(cores[(r, c)])
+    if nota:
+        fig.text(0.02, 0.02, nota.replace("$", r"\$"), fontsize=FONTE, ha="left", va="bottom", wrap=True)  # "$" par vira fórmula no matplotlib
+    fig.tight_layout(rect=(0, 0.06 if nota else 0, 1, 1))
     destino.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(destino, dpi=300)
     plt.close(fig)

@@ -142,3 +142,46 @@ Logo no início o agente pergunta a meta, o horizonte e a sazonalidade. Resposta
 Nesta sessão, a meta e os cenários ficaram fechados. Não preciso de nada novo, só pensa numa lista de concorrentes que você quer que eu pesquise na próxima etapa.
 
 Quando estiver pronto, rode `/07-briefing-e-benchmark`.
+
+## Etapa 07
+
+### O que enviar
+
+Nada a enviar obrigatoriamente. Se quiser testar a coleta real de anúncios, tenha o `APIFY_TOKEN` configurado e copie, da Biblioteca de Anúncios do Meta, o link da página (com `view_all_page_id=`) de cada concorrente.
+
+### O que responder ao agente
+
+- **Concorrentes:** Sallve, Simple Organic e Care Natural Beauty. O quarto é opcional e fica a seu critério; prefira uma marca com muitos anúncios ativos.
+- **Links da Biblioteca:** com o token da Apify, informe os links das páginas dos concorrentes. Sem o token, avise o agente: a coleta não roda e o benchmark fica ilustrativo, com as informações públicas dos sites e perfis das marcas.
+- **A Verdeluz é fictícia e não tem página na Biblioteca de Anúncios.** O agente já é avisado disso. Se ele pedir o link do prospect, diga que a marca fica registrada sem anúncios.
+- **Perguntas estratégicas:** as 7 padrão do relatório.
+- **Cenário-base:** confirme que o cenário Realista segue como base.
+- Revise o briefing (as 9 seções, com os números aprovados nas etapas anteriores), o relatório HTML e a camada Lição, Evidência e O que testar. Aprove cada um.
+
+### Handoff
+
+Nesta sessão, o briefing e o benchmark ficaram consolidados. Não preciso de nada novo, só confirma se seguimos com o cenário Realista como base para a próxima etapa. Se quiser, pode me mandar prints de tela (imagens) das campanhas atuais das plataformas, mas isso é opcional.
+
+Quando estiver pronto, rode `/08-midia-paga`.
+
+## Etapa 08
+
+### O que enviar
+
+- **Prints das campanhas (imagens, opcional):** os quatro arquivos `print-01.png` a `print-04.png` da pasta do kit, que simulam o Meta Ads (campanhas e públicos) e o Google Ads (campanhas e produtos no Merchant Center).
+
+### O que responder ao agente
+
+- **Cenário-base:** Realista.
+- **Alocação de verba:** aceite que o Google suba de 38% para cerca de 44% da verba, com o Meta a 62% em NOV e 60% em MAI, e confirme que os valores batem com o cenário Realista e com o histórico.
+- **Curva ABC:** A com 70% da verba, B com 25% e a Curva C sem campanha própria (só brinde, order bump e kits). Confirme a conta do custo de uma venda paga (cerca de R$ 110) contra o preço médio de um SKU da Curva C (cerca de R$ 64).
+- **Calendário:** pico em NOV e MAI, escala em DEZ, ABR e SET, contenção em JAN e FEV.
+- **Meta de dependência de mídia paga:** 45% das sessões em SET/27. Marketplace fora do horizonte.
+- **Prints:** peça a análise e aceite os pontos de atenção (ROAS do Meta na plataforma contra o GA4, o sérum com estoque baixo recebendo verba).
+- **Referências de mercado:** o agente pesquisa referências nacionais e internacionais. Confira as fontes antes de aprovar.
+
+### Handoff
+
+Nesta sessão, o planejamento de mídia paga ficou fechado. Não preciso de nada novo, só confirma comigo a data de hoje, se seguimos com o cenário Realista, e quais são as 2 ou 3 frentes mais urgentes que você quer priorizar no plano de ação.
+
+Quando estiver pronto, rode `/09-plano-de-acao`.
