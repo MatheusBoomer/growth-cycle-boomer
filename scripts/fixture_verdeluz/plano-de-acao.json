@@ -1,0 +1,250 @@
+{
+  "prospect": "Verdeluz Cosméticos Veganos",
+  "horizontes": [
+    {
+      "titulo": "HORIZONTE 1 · IMEDIATO (Semana 1: 26/10 a 30/10/2026)",
+      "intro": null,
+      "acoes": [
+        {
+          "acao": "Definir o teto de CAC e a regra de escala da verba",
+          "o_que": "Fixar o teto de CAC de R$ 80 e a regra de escala em degraus, para a verba só crescer quando o custo por cliente novo estiver sob controle.",
+          "quando": "Semana 1 (até 28/10/2026)",
+          "por_quem": "Agência",
+          "como": "A Agência registra a regra por escrito: aumentar a verba em até 15% por quinzena apenas se o CAC do período ficar abaixo de R$ 80 e o ROAS global acima de 3,5x, e reverter o degrau se o CAC passar do teto por 2 semanas seguidas. O Rafael aplica a regra nas campanhas e a Luiza aprova o teto.",
+          "solucoes": ["P1.S1"]
+        },
+        {
+          "acao": "Fechar o estoque de segurança dos três líderes",
+          "o_que": "Definir o estoque de segurança de 60 dias para o sérum, o hidratante e o protetor, e o ponto de pedido de cada um.",
+          "quando": "Semana 1 (até 30/10/2026)",
+          "por_quem": "Agência + Cliente",
+          "como": "A Luiza passa à Agência as vendas mensais e o saldo atual dos três produtos. A Agência calcula o ponto de pedido (prazo de 45 dias do laboratório mais 15 dias de folga) e a Luiza faz o pedido de reposição do sérum nesta semana, porque hoje há cerca de 7 dias de cobertura.",
+          "solucoes": ["P2.S1"]
+        },
+        {
+          "acao": "Ligar o estoque à mídia com um alerta de cobertura",
+          "o_que": "Criar um alerta que pausa campanhas e retira o produto do feed do Google quando a cobertura cair abaixo de 7 dias.",
+          "quando": "Semana 1 (até 30/10/2026)",
+          "por_quem": "Agência + Cliente",
+          "como": "A Bruna envia o saldo de estoque toda segunda-feira e sempre que um líder passar de 10 para menos de 7 dias de cobertura. O Rafael pausa as campanhas do produto e o item no feed do Merchant no mesmo dia. A Agência mantém a planilha de cobertura.",
+          "solucoes": ["P2.S3"]
+        },
+        {
+          "acao": "Montar o painel único de KPIs e conciliar GA4 e Nuvemshop",
+          "o_que": "Criar o painel mensal com investimento, sessões, pedidos aprovados, quebra e CAC, conciliando GA4 e Nuvemshop por status do pedido.",
+          "quando": "Semana 1 (primeira versão até 30/10/2026)",
+          "por_quem": "Agência",
+          "como": "A Agência cruza o relatório de pedidos da Nuvemshop (com o status de cada pedido) com as vendas do GA4, explica a diferença de cerca de 4% e publica o painel. A Bruna exporta o relatório de pedidos toda semana.",
+          "solucoes": ["P7.S1"]
+        },
+        {
+          "acao": "Enviar a margem por SKU da Curva A",
+          "o_que": "Entregar à Agência a margem bruta de cada SKU da Curva A e dos kits, pendência que destrava o impacto de P3, P6 e P8.",
+          "quando": "Semana 1 (até 30/10/2026)",
+          "por_quem": "Cliente",
+          "como": "A Luiza pede à contabilidade a margem por SKU dos 9 produtos da Curva A (inclusive os kits) e envia em planilha à Agência. Sem esse dado, a Agência não valida os descontos da Black Friday nem os novos kits.",
+          "solucoes": []
+        },
+        {
+          "acao": "Dar cupom e UTM próprios a cada influenciadora",
+          "o_que": "Criar um cupom e uma UTM individuais para cada influenciadora e registrar o retorno de cada uma por mês.",
+          "quando": "Semana 1 (cupons criados até 30/10/2026)",
+          "por_quem": "Agência + Cliente",
+          "como": "A Bruna cria na Nuvemshop um cupom por influenciadora e a Marina avisa as parceiras. A Agência monta o relatório mensal de vendas por cupom e compara com a permuta atual. O Caio padroniza a bio das parceiras com o link com UTM.",
+          "solucoes": ["P7.S2"]
+        }
+      ]
+    },
+    {
+      "titulo": "HORIZONTE 2 · CURTO PRAZO (Semanas 2 a 5: 02/11 a 27/11/2026)",
+      "intro": "Até o primeiro grande marco do calendário estratégico: a Black Friday (27/11/2026), o pico de NOV. Ajustes estruturais, testes e ações que dependem de execução do cliente.",
+      "acoes": [
+        {
+          "acao": "Separar campanhas de aquisição e de recompra",
+          "o_que": "Separar as campanhas de aquisição das de recompra, cada uma com ROAS-alvo próprio.",
+          "quando": "Semana 2 (02/11 a 06/11/2026)",
+          "por_quem": "Agência",
+          "como": "O Rafael cria campanhas distintas para público novo (meta de CAC de até R$ 80) e para clientes existentes (meta de ROAS próprio, maior), para a recompra não mascarar o custo de trazer cliente novo. A Agência confere o resultado separado no painel.",
+          "solucoes": ["P1.S3"]
+        },
+        {
+          "acao": "Realocar 15% do Meta de prospecção ampla para Google e remarketing",
+          "o_que": "Realocar 15% da verba de prospecção ampla do Meta para Shopping, Performance Max e remarketing de alta intenção.",
+          "quando": "Semanas 2 e 3 (02/11 a 13/11/2026)",
+          "por_quem": "Agência",
+          "como": "O Rafael move a verba seguindo a tabela de alocação do planejamento (Google a 38% em NOV e 42% a 48% nos demais meses) e acompanha o CAC por plataforma por 2 semanas antes de qualquer novo ajuste.",
+          "solucoes": ["P1.S2"]
+        },
+        {
+          "acao": "Rodar a Black Friday com brinde e lista de espera",
+          "o_que": "Rodar a Black Friday com desconto de até 20% e brinde, mantendo o sérum fora de desconto acima de 10%, e vender primeiro à base própria por uma lista de espera.",
+          "quando": "Lista aberta em 02/11; campanha de 23/11 a 30/11/2026",
+          "por_quem": "Agência + Cliente",
+          "como": "A Marina e a Luiza definem o brinde (por exemplo, a nécessaire Verdeluz acima de um valor mínimo) com a margem da Curva A em mãos. A Bruna abre a lista de espera no site e a Agência envia e-mail e WhatsApp (com consentimento) à base antes de ligar a mídia fria. Verificar o estoque do sérum antes de abrir a campanha.",
+          "solucoes": ["P6.S1", "P6.S2"]
+        },
+        {
+          "acao": "Ativar a recuperação de carrinho em 3 toques",
+          "o_que": "Substituir o e-mail único de carrinho abandonado por 3 toques (1 hora, 24 horas e 72 horas), por e-mail e, com consentimento, por WhatsApp.",
+          "quando": "Semanas 2 e 3 (02/11 a 13/11/2026)",
+          "por_quem": "Agência + Cliente",
+          "como": "A Agência escreve a sequência com o produto abandonado e a avaliação mais relevante. A Bruna configura o fluxo na ferramenta de e-mail e confirma o consentimento do WhatsApp. Medir a taxa de recuperação por toque desde o primeiro dia.",
+          "solucoes": ["P5.S1"]
+        },
+        {
+          "acao": "Mostrar frete e prazo por CEP na página de produto",
+          "o_que": "Exibir o frete estimado por CEP, o prazo e a regra de frete grátis na página de produto e no carrinho, e dar destaque à página de frete e trocas.",
+          "quando": "Semanas 2 e 3 (até 13/11/2026)",
+          "por_quem": "Cliente",
+          "como": "A Bruna ativa o cálculo de frete por CEP na Nuvemshop, inclui o aviso de frete grátis (R$ 249 no Sul e Sudeste e R$ 349 nas demais regiões) nas páginas de produto e coloca a página de frete e trocas no menu principal. A Agência confere o resultado nas páginas dos três líderes.",
+          "solucoes": ["P5.S2"]
+        },
+        {
+          "acao": "Auditar o antifraude e reprocessar cartões recusados",
+          "o_que": "Auditar as regras de antifraude e a taxa de recusa por emissor, e ativar nova tentativa de captura e oferta de outro meio nos pedidos recusados.",
+          "quando": "Semanas 2 a 4 (02/11 a 20/11/2026)",
+          "por_quem": "Cliente",
+          "como": "A Bruna pede ao gateway o relatório de recusas por emissor dos últimos 90 dias, revisa as regras de antifraude com o suporte e ativa a nova tentativa. A Agência acompanha a quebra do cartão no painel (hoje 7,5%).",
+          "solucoes": ["P4.S1"]
+        },
+        {
+          "acao": "Enviar lembrete antes de o PIX expirar",
+          "o_que": "Enviar lembrete por e-mail e WhatsApp 30 minutos antes de o PIX expirar, com opção de gerar um novo código com um clique.",
+          "quando": "Semanas 2 a 4 (até 20/11/2026)",
+          "por_quem": "Agência + Cliente",
+          "como": "A Agência escreve a mensagem e a Bruna configura o gatilho na plataforma de pagamento. Medir a taxa de pagamento dos PIX lembrados contra os não lembrados.",
+          "solucoes": ["P4.S2"]
+        },
+        {
+          "acao": "Qualificar o segundo fornecedor de embalagem do sérum",
+          "o_que": "Qualificar um segundo fornecedor de embalagem do sérum e pedir ao laboratório prioridade de produção para os três líderes.",
+          "quando": "Semanas 2 a 5 (até 27/11/2026)",
+          "por_quem": "Cliente",
+          "como": "A Marina leva ao laboratório a conversa de prazo já marcada, pede prioridade para o sérum, o hidratante e o protetor, e cota ao menos um segundo fornecedor de embalagem. A Agência recebe o prazo combinado para atualizar a regra de ponto de pedido.",
+          "solucoes": ["P2.S2"]
+        },
+        {
+          "acao": "Lançar a régua de reposição por produto",
+          "o_que": "Criar a régua de reposição: sérum aos 45 dias, protetor e hidratante aos 55 dias, por e-mail e, com consentimento, por WhatsApp.",
+          "quando": "Semanas 3 a 5 (09/11 a 27/11/2026)",
+          "por_quem": "Agência + Cliente",
+          "como": "A Agência desenha os fluxos por produto e a mensagem de cada toque. A Bruna configura na ferramenta de e-mail e usa a data do último pedido como gatilho. Medir a segunda compra de quem recebe a régua contra quem não recebe.",
+          "solucoes": ["P3.S1"]
+        },
+        {
+          "acao": "Configurar os eventos de funil no GA4",
+          "o_que": "Configurar os eventos de funil no GA4 (visualização de produto, carrinho, início do checkout, pagamento e compra) para medir cada etapa.",
+          "quando": "Semanas 2 a 4 (até 20/11/2026)",
+          "por_quem": "Agência",
+          "como": "O Rafael cria os eventos e confere um pedido de teste em cada etapa. O painel passa a mostrar adição ao carrinho, carrinho para checkout e checkout para compra, que hoje não são medidos.",
+          "solucoes": ["P7.S3"]
+        },
+        {
+          "acao": "Instituir a cadência mensal de resultados e os gatilhos de escala e contenção",
+          "o_que": "Marcar a reunião mensal de resultados e os gatilhos que mandam escalar ou conter a verba.",
+          "quando": "Primeira reunião em 03/12/2026 e todo primeiro dia útil de cada mês",
+          "por_quem": "Agência + Cliente",
+          "como": "Usar a reunião de resultados que a Verdeluz já tem no primeiro dia útil. Pauta fixa: painel de KPIs, CAC contra o teto de R$ 80, ROAS global, quebra, estoque dos líderes e andamento das ações. Gatilho de contenção: CAC acima do teto por 2 semanas ou cobertura do sérum abaixo de 7 dias.",
+          "solucoes": []
+        }
+      ]
+    },
+    {
+      "titulo": "HORIZONTE 3 · MÉDIO PRAZO (DEZ/2026 a MAI/2027)",
+      "intro": "Constrói a base para os meses de maior eficiência: a retenção nos vales de JAN e FEV e a preparação do Dia das Mães (MAI/2027), o segundo pico do calendário.",
+      "acoes": [
+        {
+          "acao": "Reativar os clientes de compra única",
+          "o_que": "Rodar uma campanha de reativação para os 7.176 clientes de compra única, oferecendo o kit que complementa o primeiro produto, sem desconto profundo.",
+          "quando": "JAN e FEV/2027 (meses de vale)",
+          "por_quem": "Agência + Cliente",
+          "como": "A Agência segmenta a base por produto comprado e escreve a oferta de kit. A Bruna dispara por e-mail e, com consentimento, por WhatsApp. Medir a segunda compra por segmento (meta: 5% a 10% de segunda compra em 12 meses).",
+          "solucoes": ["P3.S2"]
+        },
+        {
+          "acao": "Convidar o comprador de avulso para o kit",
+          "o_que": "Convidar o comprador de produto avulso a migrar para o Kit Rotina Essencial na segunda compra, com frete grátis como benefício.",
+          "quando": "DEZ/2026 a FEV/2027",
+          "por_quem": "Agência + Cliente",
+          "como": "A Bruna inclui o convite no fluxo de pós-compra e no e-mail de reposição. A Marina valida o benefício de frete com a margem do kit. A Agência mede a participação de kits nos pedidos de recorrentes.",
+          "solucoes": ["P3.S3"]
+        },
+        {
+          "acao": "Incluir prova social e atualizar as fotos dos kits",
+          "o_que": "Incluir blocos de avaliações e depoimentos nas páginas dos três líderes e dos kits principais, e atualizar as fotos dos kits.",
+          "quando": "DEZ/2026 a JAN/2027",
+          "por_quem": "Cliente",
+          "como": "O Caio e a Bruna escolhem as avaliações mais relevantes do sérum (mais de 900) e do hidratante e do protetor, e organizam o selo vegano em destaque. A Marina aprova as fotos novas dos kits.",
+          "solucoes": ["P5.S3"]
+        },
+        {
+          "acao": "Reduzir o vencimento do boleto e priorizar o PIX",
+          "o_que": "Reduzir o vencimento do boleto para 2 dias, enviar lembrete no dia do vencimento e priorizar o PIX na tela de pagamento.",
+          "quando": "DEZ/2026",
+          "por_quem": "Cliente",
+          "como": "A Bruna altera o prazo do boleto na plataforma de pagamento, ativa o lembrete e reordena os meios na tela de pagamento. A Agência acompanha a quebra do boleto (hoje 17,0%).",
+          "solucoes": ["P4.S3"]
+        },
+        {
+          "acao": "Criar duas ou três datas menores no calendário",
+          "o_que": "Planejar duas ou três datas menores (por exemplo, o aniversário da marca e o Dia do Cliente) com campanhas de kit, para distribuir a demanda ao longo do ano.",
+          "quando": "Definir em DEZ/2026; rodar a partir de AGO/2027",
+          "por_quem": "Agência + Cliente",
+          "como": "A Agência propõe o calendário e a mecânica de cada data sem desconto profundo. A Marina e a Luiza escolhem as datas com a margem validada. Cada data tem meta de receita própria no painel.",
+          "solucoes": ["P6.S3"]
+        },
+        {
+          "acao": "Lançar dois novos kits a partir da Curva A",
+          "o_que": "Criar dois novos kits a partir da Curva A (sérum com protetor, e hidratante com limpeza), com a margem do kit validada antes do lançamento.",
+          "quando": "Definição em JAN/2027; lançamento em MAR/2027, antes do pré-aquecimento do Dia das Mães",
+          "por_quem": "Cliente",
+          "como": "A Marina e a Luiza fecham a composição e o preço com a margem por SKU. A Agência define a verba de lançamento dentro da alocação de ABR. O estoque de segurança dos componentes precisa estar pronto antes do lançamento.",
+          "solucoes": ["P8.S1"]
+        },
+        {
+          "acao": "Revisar os 38 SKUs da Curva C",
+          "o_que": "Revisar os 38 SKUs da Curva C: descontinuar os que não somam R$ 5 mil por ano e usar os demais como brinde ou item adicional.",
+          "quando": "FEV e MAR/2027",
+          "por_quem": "Agência + Cliente",
+          "como": "A Agência lista os SKUs abaixo de R$ 5 mil por ano. A Marina decide o destino de cada um (descontinuar, brinde ou adicional) e a Luiza confirma o estoque parado. Os brindes alimentam a campanha da Black Friday seguinte.",
+          "solucoes": ["P8.S2"]
+        },
+        {
+          "acao": "Oferecer um item adicional no carrinho",
+          "o_que": "Oferecer um mini ou acessório de baixo valor como adicional no carrinho (order bump) dos três líderes.",
+          "quando": "MAR e ABR/2027",
+          "por_quem": "Cliente",
+          "como": "A Bruna escolhe o item entre os SKUs da Curva C com bom estoque, ativa a oferta no carrinho dos três líderes e mede a taxa de adesão. A Agência acompanha o efeito no ticket médio (meta de +5% a +10%).",
+          "solucoes": ["P8.S3"]
+        }
+      ]
+    }
+  ],
+  "tabela": [
+    {"num": 1, "acao": "Definir o teto de CAC e a regra de escala da verba", "frente": "Mídia Paga / Canal Principal", "horizonte": "Imediato", "quando": "Semana 1 (até 28/10/2026)", "por_quem": "Agência"},
+    {"num": 2, "acao": "Fechar o estoque de segurança dos três líderes", "frente": "Produto / Mix / Portfólio", "horizonte": "Imediato", "quando": "Semana 1 (até 30/10/2026)", "por_quem": "Agência + Cliente"},
+    {"num": 3, "acao": "Ligar o estoque à mídia com um alerta de cobertura", "frente": "Produto / Mix / Portfólio", "horizonte": "Imediato", "quando": "Semana 1 (até 30/10/2026)", "por_quem": "Agência + Cliente"},
+    {"num": 4, "acao": "Montar o painel único de KPIs e conciliar GA4 e Nuvemshop", "frente": "Monitoramento e Governança", "horizonte": "Imediato", "quando": "Semana 1 (até 30/10/2026)", "por_quem": "Agência"},
+    {"num": 5, "acao": "Enviar a margem por SKU da Curva A", "frente": "Monitoramento e Governança", "horizonte": "Imediato", "quando": "Semana 1 (até 30/10/2026)", "por_quem": "Cliente"},
+    {"num": 6, "acao": "Dar cupom e UTM próprios a cada influenciadora", "frente": "Monitoramento e Governança", "horizonte": "Imediato", "quando": "Semana 1 (até 30/10/2026)", "por_quem": "Agência + Cliente"},
+    {"num": 7, "acao": "Separar campanhas de aquisição e de recompra", "frente": "Mídia Paga / Canal Principal", "horizonte": "Curto Prazo", "quando": "02/11 a 06/11/2026", "por_quem": "Agência"},
+    {"num": 8, "acao": "Realocar 15% do Meta de prospecção ampla para Google e remarketing", "frente": "Mídia Paga / Canal Principal", "horizonte": "Curto Prazo", "quando": "02/11 a 13/11/2026", "por_quem": "Agência"},
+    {"num": 9, "acao": "Rodar a Black Friday com brinde e lista de espera", "frente": "Redução de Dependências", "horizonte": "Curto Prazo", "quando": "Lista em 02/11; campanha de 23/11 a 30/11/2026", "por_quem": "Agência + Cliente"},
+    {"num": 10, "acao": "Ativar a recuperação de carrinho em 3 toques", "frente": "Eficiência Operacional", "horizonte": "Curto Prazo", "quando": "02/11 a 13/11/2026", "por_quem": "Agência + Cliente"},
+    {"num": 11, "acao": "Mostrar frete e prazo por CEP na página de produto", "frente": "Eficiência Operacional", "horizonte": "Curto Prazo", "quando": "Até 13/11/2026", "por_quem": "Cliente"},
+    {"num": 12, "acao": "Auditar o antifraude e reprocessar cartões recusados", "frente": "Eficiência Operacional", "horizonte": "Curto Prazo", "quando": "02/11 a 20/11/2026", "por_quem": "Cliente"},
+    {"num": 13, "acao": "Enviar lembrete antes de o PIX expirar", "frente": "Eficiência Operacional", "horizonte": "Curto Prazo", "quando": "Até 20/11/2026", "por_quem": "Agência + Cliente"},
+    {"num": 14, "acao": "Qualificar o segundo fornecedor de embalagem do sérum", "frente": "Produto / Mix / Portfólio", "horizonte": "Curto Prazo", "quando": "Até 27/11/2026", "por_quem": "Cliente"},
+    {"num": 15, "acao": "Lançar a régua de reposição por produto", "frente": "Redução de Dependências", "horizonte": "Curto Prazo", "quando": "09/11 a 27/11/2026", "por_quem": "Agência + Cliente"},
+    {"num": 16, "acao": "Configurar os eventos de funil no GA4", "frente": "Monitoramento e Governança", "horizonte": "Curto Prazo", "quando": "Até 20/11/2026", "por_quem": "Agência"},
+    {"num": 17, "acao": "Instituir a cadência mensal de resultados e os gatilhos de escala e contenção", "frente": "Monitoramento e Governança", "horizonte": "Curto Prazo", "quando": "03/12/2026 e todo primeiro dia útil", "por_quem": "Agência + Cliente"},
+    {"num": 18, "acao": "Reativar os clientes de compra única", "frente": "Redução de Dependências", "horizonte": "Médio Prazo", "quando": "JAN e FEV/2027", "por_quem": "Agência + Cliente"},
+    {"num": 19, "acao": "Convidar o comprador de avulso para o kit", "frente": "Redução de Dependências", "horizonte": "Médio Prazo", "quando": "DEZ/2026 a FEV/2027", "por_quem": "Agência + Cliente"},
+    {"num": 20, "acao": "Incluir prova social e atualizar as fotos dos kits", "frente": "Eficiência Operacional", "horizonte": "Médio Prazo", "quando": "DEZ/2026 a JAN/2027", "por_quem": "Cliente"},
+    {"num": 21, "acao": "Reduzir o vencimento do boleto e priorizar o PIX", "frente": "Eficiência Operacional", "horizonte": "Médio Prazo", "quando": "DEZ/2026", "por_quem": "Cliente"},
+    {"num": 22, "acao": "Criar duas ou três datas menores no calendário", "frente": "Redução de Dependências", "horizonte": "Médio Prazo", "quando": "Definir em DEZ/2026; rodar a partir de AGO/2027", "por_quem": "Agência + Cliente"},
+    {"num": 23, "acao": "Lançar dois novos kits a partir da Curva A", "frente": "Produto / Mix / Portfólio", "horizonte": "Médio Prazo", "quando": "Lançamento em MAR/2027", "por_quem": "Cliente"},
+    {"num": 24, "acao": "Revisar os 38 SKUs da Curva C", "frente": "Produto / Mix / Portfólio", "horizonte": "Médio Prazo", "quando": "FEV e MAR/2027", "por_quem": "Agência + Cliente"},
+    {"num": 25, "acao": "Oferecer um item adicional no carrinho", "frente": "Produto / Mix / Portfólio", "horizonte": "Médio Prazo", "quando": "MAR e ABR/2027", "por_quem": "Cliente"}
+  ]
+}

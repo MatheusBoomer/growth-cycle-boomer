@@ -185,3 +185,48 @@ Quando estiver pronto, rode `/08-midia-paga`.
 Nesta sessão, o planejamento de mídia paga ficou fechado. Não preciso de nada novo, só confirma comigo a data de hoje, se seguimos com o cenário Realista, e quais são as 2 ou 3 frentes mais urgentes que você quer priorizar no plano de ação.
 
 Quando estiver pronto, rode `/09-plano-de-acao`.
+
+## Etapa 09
+
+### O que enviar
+
+Nada a enviar nesta etapa.
+
+### O que responder ao agente
+
+O agente começa pedindo três confirmações. Respostas usadas na produção deste cliente:
+
+- **Data de hoje:** 22/10/2026. O plano começa na segunda-feira seguinte, 26/10/2026. Se você fizer o teste em outra data, diga a data real e peça que nenhuma ação caia em período passado.
+- **Cenário-base:** Realista.
+- **Frentes mais urgentes:** a ruptura do sérum e o estoque (P2), a eficiência da mídia paga (P1) e a recompra e o CRM (P3). A mensuração (P7) e o envio da margem por SKU entram na primeira semana, porque destravam o resto.
+- **Responsáveis:** o plano deve nomear a Marina e a Luiza pelo cliente, a Bruna na operação do site, o Caio no conteúdo e o Rafael nas campanhas. A Agência cuida do desenho e da medição.
+- **Horizontes:** Imediato (primeira semana), Curto Prazo (até a Black Friday de 27/11/2026) e Médio Prazo (até o Dia das Mães de 2027).
+- **Cobertura:** o validador exige que as 24 soluções do registro virem ação. Se o agente deixar alguma de fora, peça para incluir; nunca remova uma solução do registro.
+- Confira o `.docx` gerado (25 ações, 3 horizontes e a tabela-resumo) e aprove.
+
+### Handoff
+
+Nesta sessão, o plano de ação ficou fechado, e esta era a última etapa de conteúdo! Não preciso de nada novo. O próximo passo é montar a apresentação final, um arquivo .pptx editável no molde da agência, com o roteiro slide a slide para você aprovar antes.
+
+Quando estiver pronto, rode `/apresentacao-final`.
+
+## Etapa final
+
+### O que enviar
+
+Nada a enviar nesta etapa.
+
+### O que responder ao agente
+
+O agente confere se há material das seis seções do deck, escreve o roteiro slide a slide e só depois gera o `.pptx`. Respostas usadas na produção deste cliente:
+
+- **Escala:** deck de cerca de 60 slides, com os três cenários e o Realista em destaque. Todo gráfico e toda tabela aprovados entram, um por slide, e todo problema do registro vira um slide de desafio.
+- **Pilares do plano (o agente pede o seu aval):** aquisição eficiente (P1, P4 e P5), produto e estoque (P2 e P8) e retenção (P3, P6 e P7). As iniciativas podem ficar num único slide de seis itens.
+- **Benchmarking:** como não houve coleta de anúncios, aceite slides de texto (um por concorrente) no lugar do slide com três criativos, e peça que cada um diga que o benchmark é ilustrativo. Se você rodou a coleta real, o agente usa os criativos coletados.
+- **Plano de ação:** três slides de texto, um por horizonte, e o `.docx` completo anexo à entrega.
+- **Checklist de qualidade (Regra 8):** confirme que os cinco itens estão atendidos: problema com 1 a 3 soluções, hipótese antes da ação, impacto em R$ ou %, cada solução virando ação do plano e benchmarking terminando em teste.
+- Aprove o roteiro e, depois, a apresentação. Se o agente avisar que um texto não cabe numa caixa, peça para encurtar a frase.
+
+### Handoff
+
+Esta é a última etapa do processo. A apresentação está pronta em entrega/apresentacao-final.pptx e abre no Google Slides (Arquivo, Importar slides) ou no PowerPoint. Antes de enviar ao prospect, vale abrir o arquivo e conferir os slides de tabela ao lado de texto, onde o título pode ficar sob a imagem. Para o plano de ação, suba o `.docx` no Drive se quiser o link no slide. Também é bom fechar com o cliente as pendências da Semana 1: a margem por SKU da Curva A, o brinde da Black Friday, o estoque de segurança e o segundo fornecedor de embalagem.
