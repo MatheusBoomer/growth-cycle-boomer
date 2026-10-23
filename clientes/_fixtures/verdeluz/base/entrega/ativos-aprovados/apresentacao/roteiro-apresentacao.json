@@ -1,0 +1,728 @@
+{
+  "versao": 1,
+  "prospect": "Verdeluz Cosméticos Veganos",
+  "slides": [
+    {
+      "tipo": "capa",
+      "prospect": "Verdeluz Cosméticos Veganos"
+    },
+    {
+      "tipo": "jornada"
+    },
+    {
+      "tipo": "divisoria",
+      "numero": "01.",
+      "titulo": "CENÁRIO **ATUAL**"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · Investimento",
+      "subtitulo": "Investimento em mídia de **R$ 262 mil** em 12 meses",
+      "imagem": "entrega/ativos-aprovados/graficos/investimento-midia-mensal.png",
+      "conclusoes": [
+        "R$ 262 mil no ano, média de R$ 21,8 mil por mês",
+        "SET/26 é o maior mês (R$ 32,9 mil), sem data comercial",
+        "Último trimestre 31% acima do primeiro"
+      ],
+      "fonte": "secoes/03-macro-financeiro.md"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · Receita",
+      "subtitulo": "Receita **captada** contra **aprovada**",
+      "imagem": "entrega/ativos-aprovados/graficos/receita-captada-vs-aprovada.png",
+      "conclusoes": [
+        "Captada de R$ 1,22 mi e aprovada de R$ 1,14 mi",
+        "R$ 79,3 mil não foram aprovados no período",
+        "Captada 9,1% menor no segundo semestre"
+      ],
+      "fonte": "secoes/03-macro-financeiro.md"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · Taxa de quebra",
+      "subtitulo": "Quebra média de **6,5%**, acima do benchmark",
+      "imagem": "entrega/ativos-aprovados/graficos/taxa-quebra-mensal.png",
+      "conclusoes": [
+        "Média de 6,5% contra o benchmark de até 5%",
+        "Sobe de 5,5% (JAN) para 7,1% (SET)",
+        "No limite de 5%, seriam R$ 18,3 mil a mais aprovados"
+      ],
+      "fonte": "secoes/03-macro-financeiro.md"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · Quebra por meio de pagamento",
+      "subtitulo": "Cartão e boleto concentram a **perda**",
+      "imagem": "entrega/ativos-aprovados/graficos/quebra-por-meio-pagamento.png",
+      "conclusoes": [
+        "Cartão: quebra de 7,5% e 66% da perda (R$ 52,4 mil)",
+        "Boleto: quebra de 17,0%, com 5% da receita",
+        "PIX: 3,6%, abaixo do benchmark de 5%"
+      ],
+      "fonte": "secoes/03-macro-financeiro.md"
+    },
+    {
+      "tipo": "analises_2_colunas",
+      "esquerda": {
+        "titulo": "Investimento",
+        "itens": [
+          "R$ 262 mil em 12 meses, 62% no Meta e 38% no Google",
+          "A verba cresce desde JUN, além da sazonalidade",
+          "Último trimestre com 31% mais verba que o primeiro"
+        ]
+      },
+      "direita": {
+        "titulo": "Receita",
+        "itens": [
+          "Captada de R$ 1,22 mi, abaixo dos R$ 1,5 mi falados no kickoff",
+          "NOV concentra 15,6% do ano",
+          "MAR e ABR ficam no patamar dos vales, com a ruptura do sérum"
+        ]
+      },
+      "fonte": "secoes/03-macro-financeiro.md"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · ROAS global",
+      "subtitulo": "ROAS global médio de **4,66x**, em queda",
+      "imagem": "entrega/ativos-aprovados/graficos/roas-global.png",
+      "conclusoes": [
+        "De 6,48x (OUT) para 3,06x (SET), -53%",
+        "Só NOV e DEZ interrompem a queda",
+        "Verba do último trimestre 31% maior que a do primeiro"
+      ],
+      "fonte": "secoes/03-macro-financeiro.md"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · ROAS por plataforma",
+      "subtitulo": "ROAS por **plataforma** (GA4, último clique)",
+      "imagem": "entrega/ativos-aprovados/graficos/roas-plataformas.png",
+      "conclusoes": [
+        "Google: média de 2,52x, de 3,68x para 1,96x",
+        "Meta: média de 1,22x, abaixo de 1x de JUL a SET",
+        "O último clique subestima o Meta: ler a tendência"
+      ],
+      "fonte": "secoes/03-macro-financeiro.md"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · Sessões",
+      "subtitulo": "**442 mil** sessões no ano, estáveis entre semestres",
+      "imagem": "entrega/ativos-aprovados/graficos/sessoes-por-plataforma.png",
+      "conclusoes": [
+        "Sessões -1,0% entre semestres, com mais verba",
+        "Meta 30,3%, Google 14,4% e demais origens 55,2%",
+        "Tráfego não pago parado em 16 mil a 19 mil por mês"
+      ],
+      "fonte": "secoes/03-aquisicao-dependencia-conversao.md"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · Dependência de mídia paga",
+      "subtitulo": "Dependência de mídia paga **sobe** para 55%",
+      "imagem": "entrega/ativos-aprovados/graficos/dependencia-midia-paga.png",
+      "conclusoes": [
+        "Média de 44,8% (benchmark de 45% a 60%)",
+        "Sobe de 48,0% (OUT) para 54,8% (SET)",
+        "Alta em AGO e SET sem data comercial"
+      ],
+      "fonte": "secoes/03-aquisicao-dependencia-conversao.md"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · Conversão global",
+      "subtitulo": "Conversão global de **1,41%**, dentro da faixa",
+      "imagem": "entrega/ativos-aprovados/graficos/conversao-global.png",
+      "conclusoes": [
+        "1,41%, dentro da faixa de 1% a 2%",
+        "1,00% em ABR e 1,05% em MAR, com a ruptura do sérum",
+        "NOV chega a 2,05% na Black Friday"
+      ],
+      "fonte": "secoes/03-aquisicao-dependencia-conversao.md"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · Conversão Google",
+      "subtitulo": "Conversão do Google no **limite inferior**",
+      "imagem": "entrega/ativos-aprovados/graficos/conversao-google.png",
+      "conclusoes": [
+        "2,05%, no limite da faixa de 2% a 4%",
+        "Abaixo de 2% de JUN a SET",
+        "Cai de 2,20% para 1,90% ao longo do ano"
+      ],
+      "fonte": "secoes/03-aquisicao-dependencia-conversao.md"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · Conversão Meta",
+      "subtitulo": "Conversão do Meta **abaixo da faixa**",
+      "imagem": "entrega/ativos-aprovados/graficos/conversao-meta.png",
+      "conclusoes": [
+        "0,80%, contra a faixa de 1% a 2%",
+        "Abaixo de 1% nos 12 meses",
+        "Cai de 0,90% (OUT) para 0,70% (SET)"
+      ],
+      "fonte": "secoes/03-aquisicao-dependencia-conversao.md"
+    },
+    {
+      "tipo": "analises_2_colunas",
+      "esquerda": {
+        "titulo": "Conversão por canal",
+        "itens": [
+          "Global de 1,41%, dentro da faixa",
+          "Google de 2,05%, no limite inferior",
+          "Meta de 0,80%, abaixo da faixa nos 12 meses"
+        ]
+      },
+      "direita": {
+        "titulo": "Leitura",
+        "itens": [
+          "O tráfego próprio converte bem; o comprado perde qualidade",
+          "A ruptura do sérum derruba a conversão em MAR e ABR",
+          "Sem dado de funil: o abandono de 78% é declarado"
+        ]
+      },
+      "fonte": "secoes/03-aquisicao-dependencia-conversao.md"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · Curva ABC",
+      "subtitulo": "Curva ABC com **58 SKUs**",
+      "imagem": "entrega/ativos-aprovados/graficos/curva-abc-faturamento.png",
+      "conclusoes": [
+        "A: 9 SKUs e 78,9% do faturamento",
+        "B: 11 SKUs e 15,7%; C: 38 SKUs e 5,4%",
+        "Três líderes somam 51,0% e os kits 24,0%"
+      ],
+      "fonte": "secoes/03-aquisicao-dependencia-conversao.md"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · Top 10 produtos",
+      "subtitulo": "Os 10 maiores produtos somam **81,3%**",
+      "imagem": "entrega/ativos-aprovados/graficos/top10-produtos.png",
+      "conclusoes": [
+        "Sérum de vitamina C: 22,0% (R$ 257,8 mil)",
+        "Hidratante gel-creme 16,0% e protetor FPS 50 13,0%",
+        "O sérum tem 38 unidades, cerca de 7 dias de venda"
+      ],
+      "fonte": "secoes/03-aquisicao-dependencia-conversao.md"
+    },
+    {
+      "tipo": "tabela_lateral",
+      "titulo": "Cenário Atual · Curva A",
+      "subtitulo": "Curva A: **9 SKUs** e 78,9% do faturamento",
+      "imagem": "entrega/ativos-aprovados/graficos/tabela-curva-abc-a.png",
+      "conclusoes": [
+        "Os 9 SKUs somam 78,9% do faturamento",
+        "Quatro kits entre os 9, com os três líderes",
+        "O sérum é o ponto de maior risco de ruptura"
+      ],
+      "fonte": "secoes/03-aquisicao-dependencia-conversao.md"
+    },
+    {
+      "tipo": "tabela_lateral",
+      "titulo": "Cenário Atual · Curva B",
+      "subtitulo": "Curva B: **11 SKUs** e 15,7% do faturamento",
+      "imagem": "entrega/ativos-aprovados/graficos/tabela-curva-abc-b.png",
+      "conclusoes": [
+        "Vai da água micelar (2,4%) ao protetor toque seco (0,7%)",
+        "Papel: expandir a cesta e alimentar o remarketing",
+        "Quatro séruns e dois hidratantes entre os 11"
+      ],
+      "fonte": "secoes/03-aquisicao-dependencia-conversao.md"
+    },
+    {
+      "tipo": "tabela_lateral",
+      "titulo": "Cenário Atual · Curva C",
+      "subtitulo": "Curva C: **38 SKUs** e 5,4% do faturamento",
+      "imagem": "entrega/ativos-aprovados/graficos/tabela-curva-abc-c.png",
+      "conclusoes": [
+        "38 SKUs somam 5,4% (cerca de R$ 63 mil)",
+        "Preço médio de R$ 63,98 e R$ 1.664 por SKU ao ano",
+        "Candidatos a brinde, kit ou descontinuação"
+      ],
+      "fonte": "secoes/03-aquisicao-dependencia-conversao.md"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · CAC",
+      "subtitulo": "O CAC **dobra** em 12 meses",
+      "imagem": "entrega/ativos-aprovados/graficos/cac-mensal.png",
+      "conclusoes": [
+        "De R$ 49,53 para R$ 112,68 (+127%)",
+        "Média ponderada de R$ 68,53",
+        "Verba +43% e clientes novos -17% no 2º semestre"
+      ],
+      "fonte": "secoes/04-unidade-economica.md"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · Novos e recorrentes",
+      "subtitulo": "Pedidos de clientes **novos** e **recorrentes**",
+      "imagem": "entrega/ativos-aprovados/graficos/novos-vs-recorrentes.png",
+      "conclusoes": [
+        "61,2% dos pedidos vêm de clientes novos",
+        "A participação de recorrentes sobe porque os novos caem",
+        "Pedidos de recorrentes caem 4,3% entre semestres"
+      ],
+      "fonte": "secoes/04-unidade-economica.md"
+    },
+    {
+      "tipo": "bullets",
+      "titulo": "Cenário Atual · Unidade econômica",
+      "subtitulo": "LTV/CAC no último mês de **2,77x**",
+      "itens": [
+        "LTV histórico de R$ 311,67 (ticket R$ 191,80 e 1,62 pedido por cliente)",
+        "31,0% da base é recorrente; os recorrentes valem R$ 578,17, três vezes a compra única",
+        "LTV/CAC de 2,77x em SET/26 (ruim) e de 4,55x na média do ano",
+        "Compra única: 1,70x. Recorrente: 5,13x",
+        "Em AGO/26 a relação já estava em 3,11x"
+      ],
+      "fonte": "secoes/04-unidade-economica.md"
+    },
+    {
+      "tipo": "divisoria",
+      "numero": "02.",
+      "titulo": "DESAFIOS"
+    },
+    {
+      "tipo": "bullets",
+      "titulo": "Desafios · Prioridades",
+      "subtitulo": "Os **oito** desafios do diagnóstico (1 de 2)",
+      "itens": [
+        "P1 Mídia paga: CAC +127% e ROAS -53% (R$ 31,6 mil a R$ 66,2 mil)",
+        "P2 Estoque: ruptura do sérum (R$ 43,7 mil por ruptura evitada)",
+        "P3 Retenção: 69% da base compra uma vez (R$ 68,8 mil a R$ 137,6 mil)",
+        "P4 Pagamento: quebra de 6,5% (R$ 6,1 mil a R$ 18,3 mil)"
+      ],
+      "fonte": "secoes/05-solucoes.md"
+    },
+    {
+      "tipo": "bullets",
+      "titulo": "Desafios · Prioridades",
+      "subtitulo": "Os **oito** desafios do diagnóstico (2 de 2)",
+      "itens": [
+        "P5 Funil: carrinho e página (R$ 86,5 mil a R$ 173,0 mil)",
+        "P6 Black Friday e desconto (impacto a quantificar com a margem)",
+        "P7 Mensuração: atribuição, influenciadoras e funil (habilitador)",
+        "P8 Mix: poucos kits e cauda C (R$ 61,0 mil a R$ 122,0 mil)",
+        "Os impactos se sobrepõem e não se somam"
+      ],
+      "fonte": "secoes/05-solucoes.md"
+    },
+    {
+      "tipo": "desafio",
+      "problema_id": "P1",
+      "titulo": "Mídia paga: **o CAC dobra e o ROAS cai 53%**",
+      "problema": "CAC de R$ 49,53 para R$ 112,68 e ROAS de 6,48x para 3,06x, com 43% mais verba e 17% menos clientes novos.",
+      "hipoteses": [
+        "Verba ampliada atinge públicos mais frios no Meta (conversão de 0,90% para 0,70%)",
+        "Conversão do Google cai por páginas instáveis e pela ruptura do sérum",
+        "Não há regra de escala nem teto de CAC"
+      ],
+      "solucoes": [
+        "Escala em degraus de 15% por quinzena, com teto de CAC de R$ 80",
+        "Realocar 15% da prospecção do Meta para Shopping, PMax e remarketing",
+        "Separar campanhas de aquisição e de recompra, com ROAS-alvo próprio"
+      ],
+      "impacto": "R$ 31,6 mil a R$ 66,2 mil de mídia por ano",
+      "fonte": "secoes/05-solucoes.md"
+    },
+    {
+      "tipo": "desafio",
+      "problema_id": "P2",
+      "titulo": "Estoque: **ruptura do sérum e 3 produtos com 51%**",
+      "problema": "O sérum, com 22% do faturamento, ficou fora do ar em MAR e ABR e hoje tem cerca de 7 dias de estoque.",
+      "hipoteses": [
+        "Prazo do laboratório de 45 dias e reposição pedida com estoque baixo",
+        "A embalagem do sérum depende de um único fornecedor",
+        "Mídia e feed do Google não se ligam ao estoque"
+      ],
+      "solucoes": [
+        "Estoque de segurança de 60 dias para os três líderes, com ponto de pedido mensal",
+        "Segundo fornecedor de embalagem e prioridade de produção no laboratório",
+        "Alerta que pausa campanha e feed com cobertura abaixo de 7 dias"
+      ],
+      "impacto": "R$ 43,7 mil por ruptura evitada",
+      "fonte": "secoes/05-solucoes.md"
+    },
+    {
+      "tipo": "desafio",
+      "problema_id": "P3",
+      "titulo": "Retenção: **69% da base compra uma vez só**",
+      "problema": "7.176 clientes compraram uma vez. Os recorrentes valem R$ 578 contra R$ 192, mas não há régua de recompra.",
+      "hipoteses": [
+        "Sem lembrete de reposição, mesmo com ciclo de uso previsível (sérum, 60 dias)",
+        "CRM com um fluxo de carrinho e uma newsletter mensal",
+        "Quem compra avulso não é levado ao kit"
+      ],
+      "solucoes": [
+        "Régua de reposição por produto: sérum aos 45 dias, demais aos 55",
+        "Reativar os 7.176 clientes de compra única com a oferta do kit",
+        "Convidar o comprador de avulso a migrar para o kit, com frete grátis"
+      ],
+      "impacto": "R$ 68,8 mil a R$ 137,6 mil por ano",
+      "fonte": "secoes/05-solucoes.md"
+    },
+    {
+      "tipo": "desafio",
+      "problema_id": "P4",
+      "titulo": "Pagamento: **quebra de 6,5%, em alta**",
+      "problema": "Quebra de 6,5% (benchmark de 5%), de 5,5% para 7,1%. O cartão pesa 66% da perda e o boleto quebra 17%.",
+      "hipoteses": [
+        "Antifraude e recusa do emissor derrubam pedidos de cartão sem nova tentativa",
+        "O PIX expira sem lembrete nem novo código",
+        "Boleto com vencimento longo e sem lembrete"
+      ],
+      "solucoes": [
+        "Auditar antifraude e recusas por emissor e reprocessar cartões recusados",
+        "Lembrete 30 minutos antes de o PIX expirar, com novo código em um clique",
+        "Boleto com vencimento de 2 dias, lembrete e PIX priorizado"
+      ],
+      "impacto": "R$ 6,1 mil a R$ 18,3 mil por ano",
+      "fonte": "secoes/05-solucoes.md"
+    },
+    {
+      "tipo": "desafio",
+      "problema_id": "P5",
+      "titulo": "Funil: **vazamento no carrinho e na página**",
+      "problema": "Conversão do Meta de 0,80% e do Google abaixo de 2% desde JUN; abandono de 78% com um único e-mail.",
+      "hipoteses": [
+        "Um único toque de recuperação deixa a maioria dos carrinhos sem segunda chance",
+        "Dúvidas de frete e prazo travam a compra antes do checkout",
+        "Prova social e fotos atuais não aparecem onde o cliente decide"
+      ],
+      "solucoes": [
+        "Recuperação de carrinho em 3 toques (1 h, 24 h e 72 h)",
+        "Frete por CEP, prazo e frete grátis na página de produto",
+        "Avaliações e depoimentos nas páginas dos líderes e dos kits"
+      ],
+      "impacto": "R$ 86,5 mil a R$ 173,0 mil por ano (+0,1 a +0,2 p.p.)",
+      "fonte": "secoes/05-solucoes.md"
+    },
+    {
+      "tipo": "desafio",
+      "problema_id": "P6",
+      "titulo": "Sazonalidade: **Black Friday e desconto**",
+      "problema": "NOV concentra 15,6% do ano, com 35% de desconto e frete sem mínimo; o cupom de 1ª compra desconta quem compraria.",
+      "hipoteses": [
+        "Desconto profundo ensina o cliente a esperar a Black Friday",
+        "O cupom de primeira compra é aplicado a quem já compraria",
+        "As datas menores do calendário não são usadas"
+      ],
+      "solucoes": [
+        "Black Friday com até 20% e brinde, sérum com no máximo 10%",
+        "Lista de espera para vender à base própria antes da mídia fria",
+        "Duas ou três datas menores com campanhas de kit"
+      ],
+      "impacto": "Não quantificado até validar a margem por SKU",
+      "fonte": "secoes/05-solucoes.md"
+    },
+    {
+      "tipo": "desafio",
+      "problema_id": "P7",
+      "titulo": "Mensuração: **atribuição, influenciadoras e funil**",
+      "problema": "O GA4 registra 4% mais vendas que a Nuvemshop, o Meta no GA4 fica abaixo de 1x e não há dado de funil.",
+      "hipoteses": [
+        "O GA4 conta pedidos que depois mudam de status",
+        "O último clique subestima o Meta",
+        "Sem cupom ou UTM por influenciadora, não há retorno medido"
+      ],
+      "solucoes": [
+        "Painel mensal único conciliando GA4 e Nuvemshop por status do pedido",
+        "Cupom e UTM próprios para cada influenciadora",
+        "Eventos de funil no GA4: produto, carrinho, checkout, pagamento e compra"
+      ],
+      "impacto": "Não quantificado: ação habilitadora das demais",
+      "fonte": "secoes/05-solucoes.md"
+    },
+    {
+      "tipo": "desafio",
+      "problema_id": "P8",
+      "titulo": "Mix: **poucos kits e cauda C sem retorno**",
+      "problema": "Os kits somam 24% (7 kits) e a Curva C tem 38 SKUs com 5,4% do faturamento (cerca de R$ 63 mil).",
+      "hipoteses": [
+        "Faltam kits que unam os líderes (sérum com protetor)",
+        "Boa parte da cauda C não tem função clara",
+        "Produtos de baixo valor não são ofertados no carrinho"
+      ],
+      "solucoes": [
+        "Dois novos kits a partir da Curva A, com margem validada",
+        "Revisar os 38 SKUs da Curva C: descontinuar, brinde ou adicional",
+        "Item adicional de baixo valor no carrinho dos três líderes"
+      ],
+      "impacto": "R$ 61,0 mil a R$ 122,0 mil por ano (ticket +5% a +10%)",
+      "fonte": "secoes/05-solucoes.md"
+    },
+    {
+      "tipo": "cartoes",
+      "titulo": "Desafios · Pilares",
+      "subtitulo": "Três **pilares** organizam o plano",
+      "cartoes": [
+        "**Aquisição eficiente:** mídia, funil e pagamento (P1, P4 e P5)",
+        "**Produto e estoque:** ruptura e mix (P2 e P8)",
+        "**Retenção:** CRM, calendário e medição (P3, P6 e P7)"
+      ],
+      "fonte": "secoes/05-solucoes.md"
+    },
+    {
+      "tipo": "bullets",
+      "titulo": "Desafios · Iniciativas dos pilares",
+      "subtitulo": "Seis **iniciativas** para começar",
+      "itens": [
+        "Aquisição: teto de CAC e regra de escala em degraus",
+        "Aquisição: recuperação de carrinho em 3 toques e frete por CEP",
+        "Produto: estoque de segurança de 60 dias para os três líderes",
+        "Produto: dois novos kits e revisão da Curva C",
+        "Retenção: régua de reposição e reativação da compra única",
+        "Retenção: painel único de KPIs e cupom por influenciadora"
+      ],
+      "fonte": "plano-de-acao/plano-de-acao-estrategico.docx"
+    },
+    {
+      "tipo": "divisoria",
+      "numero": "03.",
+      "titulo": "ANÁLISE DE **BENCHMARKING**"
+    },
+    {
+      "tipo": "bullets",
+      "titulo": "Benchmarking · Sallve",
+      "subtitulo": "Kit com desconto **limitado** e rotina guiada",
+      "itens": [
+        "Lição: oferta de kit montado (até 15% OFF) e ordem de uso no blog",
+        "Evidência: site e blog da marca, observados em 22/10/2026 (sem coleta de anúncios)",
+        "Testar: Black Friday com kit montado de até 15% no lugar de 35% (P6 e P8)",
+        "Testar: página de ordem de uso no pós-compra (P3)"
+      ],
+      "fonte": "secoes/07-benchmark.md"
+    },
+    {
+      "tipo": "bullets",
+      "titulo": "Benchmarking · Simple Organic",
+      "subtitulo": "Comunidade e **revenda**",
+      "itens": [
+        "Lição: programa aberto de comunidade e presença em varejista online",
+        "Evidência: perfil e site da marca, observados em 22/10/2026 (sem coleta de anúncios)",
+        "Testar: piloto de 10 embaixadoras com cupom e UTM por 60 dias (P7)",
+        "Testar: vitrine de best-sellers com os líderes e os kits (P8)"
+      ],
+      "fonte": "secoes/07-benchmark.md"
+    },
+    {
+      "tipo": "bullets",
+      "titulo": "Benchmarking · Care Natural Beauty",
+      "subtitulo": "Selo de confiança e **brinde**",
+      "itens": [
+        "Lição: selo de terceiros como prova e promoção com brinde",
+        "Evidência: perfil e site da marca, observados em 22/10/2026 (sem coleta de anúncios)",
+        "Testar: nécessaire Verdeluz como brinde acima de um valor mínimo (P6)",
+        "Testar: selo vegano e avaliações nas páginas dos líderes (P5)"
+      ],
+      "fonte": "secoes/07-benchmark.md"
+    },
+    {
+      "tipo": "bullets",
+      "titulo": "Benchmarking · Análises",
+      "subtitulo": "Quatro **destaques** para a Verdeluz",
+      "itens": [
+        "Concorrentes usam kit e brinde antes de desconto profundo",
+        "Prova de confiança visível faz parte do argumento de venda",
+        "Programa estruturado de embaixadoras transforma influência em número",
+        "Sem coleta de anúncios: formato, funil e intensidade ficam para a coleta real"
+      ],
+      "fonte": "secoes/07-benchmark.md"
+    },
+    {
+      "tipo": "divisoria",
+      "numero": "04.",
+      "titulo": "**METAS**"
+    },
+    {
+      "tipo": "tabela_lateral",
+      "titulo": "Metas · Cenários",
+      "subtitulo": "Meta Realista de **R$ 1,59 mi** (+30,0%)",
+      "imagem": "entrega/ativos-aprovados/graficos/tabela-cenarios-projecao.png",
+      "conclusoes": [
+        "Pessimista R$ 1,10 mi (-10,0%), Realista R$ 1,59 mi (+30,0%)",
+        "Otimista R$ 1,71 mi (+40,0%): a meta das sócias é o teto",
+        "Meta agressiva: depende de não repetir a ruptura"
+      ],
+      "fonte": "secoes/06-metas-e-cenarios.md"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Metas · Realista contra o ano atual",
+      "subtitulo": "Meta **mês a mês**, com a sazonalidade do histórico",
+      "imagem": "entrega/ativos-aprovados/graficos/meta-realista-vs-ano-atual.png",
+      "conclusoes": [
+        "Entrada gradual: OUT em +8,9% e SET em +44,3%",
+        "MAR e ABR sobem +60% sobre uma base deprimida pela ruptura",
+        "NOV e MAI seguem os picos do ano"
+      ],
+      "fonte": "secoes/06-metas-e-cenarios.md"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Metas · Os três cenários",
+      "subtitulo": "Os três **cenários** de receita captada",
+      "imagem": "entrega/ativos-aprovados/graficos/cenarios-pessimista-realista-otimista.png",
+      "conclusoes": [
+        "Pessimista: nada muda e a receita cai 10%",
+        "Realista: eficiência e retenção sustentam +30%",
+        "Otimista: todas as alavancas, +40%"
+      ],
+      "fonte": "secoes/06-metas-e-cenarios.md"
+    },
+    {
+      "tipo": "divisoria",
+      "numero": "05.",
+      "titulo": "**CENÁRIOS** E IMPACTOS **ESPERADOS**"
+    },
+    {
+      "tipo": "bullets",
+      "titulo": "Cenários · Metodologia",
+      "subtitulo": "Sessões, vendas e receita **calculadas** pelos KPIs influenciadores",
+      "itens": [
+        "KPIs influenciadores: investimento, ticket, conversão, custo por sessão e dependência",
+        "KPIs de resultado: sessões, vendas e receita, calculados pela cadeia",
+        "A conversão fecha a meta de cada mês; o investimento sai das sessões",
+        "Distribuição sazonal, nunca flat, com MAR e ABR normalizados",
+        "Soluções do registro entram como alavancas de cada cenário"
+      ],
+      "fonte": "secoes/06-metas-e-cenarios.md"
+    },
+    {
+      "tipo": "bullets",
+      "titulo": "Cenários · Considerações",
+      "subtitulo": "O que precisa **acontecer** para o Realista",
+      "itens": [
+        "Investimento de R$ 341,7 mil (+30,4%) e ROAS médio de 4,64x",
+        "Conversão média de 1,75% e dependência de 54% para 45%",
+        "Quebra de 6,5% para 5,5% e ticket de R$ 199,47",
+        "Risco: ruptura do sérum, CAC fora do teto e conversão abaixo de 1,8%",
+        "Alavanca principal: recuperação de carrinho, recompra e estoque"
+      ],
+      "fonte": "secoes/06-metas-e-cenarios.md"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Mídia paga · Alocação de verba",
+      "subtitulo": "Verba de **R$ 341,7 mil** por plataforma",
+      "imagem": "entrega/ativos-aprovados/graficos/alocacao-verba-plataforma.png",
+      "conclusoes": [
+        "Meta R$ 191 mil (55,9%) e Google R$ 150,7 mil (44,1%)",
+        "Google sobe 51% e Meta 18% sobre o ano atual",
+        "Pico de NOV: R$ 49,3 mil (14,4% do ano)"
+      ],
+      "fonte": "secoes/08-midia-paga.md"
+    },
+    {
+      "tipo": "tabela_lateral",
+      "titulo": "Mídia paga · Alocação mensal",
+      "subtitulo": "Cada mês com a sua **justificativa**",
+      "imagem": "entrega/ativos-aprovados/graficos/tabela-alocacao-verba-plataforma.png",
+      "conclusoes": [
+        "Meta a 62% em NOV e 60% em MAI, para ganhar alcance",
+        "Google a 48% nos vales, onde a intenção pesa mais",
+        "Total de R$ 341.683 em 12 meses"
+      ],
+      "fonte": "secoes/08-midia-paga.md"
+    },
+    {
+      "tipo": "imagem_larga",
+      "titulo": "Mídia paga · Estratégia por Curva ABC",
+      "imagem": "entrega/ativos-aprovados/graficos/tabela-curva-abc-estrategia.png",
+      "texto": "A Curva C não recebe verba direta: uma venda paga custa R$ 109,90 e o preço médio é R$ 63,98.",
+      "fonte": "secoes/08-midia-paga.md"
+    },
+    {
+      "tipo": "tabela_lateral",
+      "titulo": "Mídia paga · Calendário estratégico",
+      "subtitulo": "Dois **picos**, três escalas e dois vales",
+      "imagem": "entrega/ativos-aprovados/graficos/tabela-calendario-estrategico.png",
+      "conclusoes": [
+        "Picos em NOV (Black Friday) e MAI (Dia das Mães)",
+        "Escala em DEZ, ABR e SET; contenção em JAN e FEV",
+        "Estoque de segurança vigiado antes de cada pico"
+      ],
+      "fonte": "secoes/08-midia-paga.md"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Mídia paga · ROAS esperado",
+      "subtitulo": "ROAS global médio de **4,64x** no Realista",
+      "imagem": "entrega/ativos-aprovados/graficos/roas-esperado-plataforma.png",
+      "conclusoes": [
+        "De 3,70x (OUT) para 5,96x (SET), com entrada gradual",
+        "Google médio de 2,82x e Meta de 1,23x (GA4)",
+        "Risco de compressão em JAN, FEV, ABR e JUN"
+      ],
+      "fonte": "secoes/08-midia-paga.md"
+    },
+    {
+      "tipo": "bullets",
+      "titulo": "Mídia paga · Dependência",
+      "subtitulo": "Sessões pagas de **54,8%** para **45%**",
+      "itens": [
+        "Meta de 45% das sessões pagas em SET/27, de 54% em OUT/26",
+        "CRM: régua de reposição e reativação de 7.176 clientes",
+        "Conteúdo de rotina ligado aos kits e programa de embaixadoras",
+        "Marketplace fora do horizonte, pela premissa do cliente",
+        "Sem a redução, a dependência vai a 58% e o ROAS a 2,56x"
+      ],
+      "fonte": "secoes/08-midia-paga.md"
+    },
+    {
+      "tipo": "divisoria",
+      "numero": "06.",
+      "titulo": "PLANO **DE AÇÃO**"
+    },
+    {
+      "tipo": "bullets",
+      "titulo": "Plano de ação · Horizonte 1",
+      "subtitulo": "Imediato: **26/10 a 30/10/2026**",
+      "itens": [
+        "Teto de CAC de R$ 80 e regra de escala da verba (Agência)",
+        "Estoque de segurança de 60 dias e alerta de cobertura (Agência e Cliente)",
+        "Painel único de KPIs conciliando GA4 e Nuvemshop (Agência)",
+        "Margem por SKU da Curva A enviada pela Luiza (Cliente)",
+        "Cupom e UTM próprios para cada influenciadora (Agência e Cliente)"
+      ],
+      "fonte": "plano-de-acao/plano-de-acao-estrategico.docx"
+    },
+    {
+      "tipo": "bullets",
+      "titulo": "Plano de ação · Horizonte 2",
+      "subtitulo": "Curto prazo: **02/11 a 27/11/2026**, até a Black Friday",
+      "itens": [
+        "Campanhas de aquisição e recompra separadas; 15% do Meta realocado",
+        "Black Friday com brinde, até 20% de desconto e lista de espera",
+        "Recuperação de carrinho em 3 toques e frete por CEP",
+        "Antifraude, reprocesso de cartões e lembrete de PIX",
+        "Segundo fornecedor de embalagem e régua de reposição",
+        "Eventos de funil no GA4 e reunião mensal de resultados"
+      ],
+      "fonte": "plano-de-acao/plano-de-acao-estrategico.docx"
+    },
+    {
+      "tipo": "bullets",
+      "titulo": "Plano de ação · Horizonte 3",
+      "subtitulo": "Médio prazo: **DEZ/2026 a MAI/2027**, até o Dia das Mães",
+      "itens": [
+        "Reativação dos 7.176 clientes de compra única em JAN e FEV",
+        "Convite do avulso para o kit e prova social nas páginas",
+        "Boleto com vencimento menor e PIX priorizado",
+        "Duas ou três datas menores no calendário",
+        "Dois novos kits e revisão da Curva C antes do Dia das Mães",
+        "Item adicional no carrinho dos três líderes"
+      ],
+      "fonte": "plano-de-acao/plano-de-acao-estrategico.docx"
+    },
+    {
+      "tipo": "obrigado"
+    }
+  ]
+}

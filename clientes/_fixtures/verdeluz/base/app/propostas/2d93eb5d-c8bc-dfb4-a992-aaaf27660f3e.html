@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Benchmark Meta Ads · VERDELUZ (FICTÍCIO)</title>
+<style>
+  body { background: #000; color: #e0e0e0; font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 32px 24px; }
+  .bm-header { border-bottom: 2px solid #C86F00; padding-bottom: 16px; margin-bottom: 32px; }
+  .bm-title { color: #C86F00; font-size: 28px; font-weight: 700; letter-spacing: 1px; }
+  .bm-subtitle { color: #888; font-size: 13px; margin-top: 4px; }
+  .bm-section-label { color: #C86F00; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin: 32px 0 12px; }
+  .bm-concorrente { border: 1px solid #1a1a1a; border-radius: 8px; padding: 20px; margin-bottom: 24px; background: #0a0a0a; }
+  .bm-concorrente-name { color: #fff; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .bm-concorrente-meta { color: #555; font-size: 11px; margin-bottom: 16px; }
+  .bm-links { background: #111; border-radius: 4px; padding: 12px; margin-bottom: 16px; }
+  .bm-links-label { color: #555; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .bm-links a { color: #C86F00; font-size: 12px; display: block; margin-bottom: 2px; text-decoration: none; }
+  .bm-links a:hover { text-decoration: underline; }
+  .bm-ad-card { border: 1px solid #1e1e1e; border-radius: 6px; padding: 16px; margin-bottom: 12px; background: #0d0d0d; }
+  .bm-ad-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .bm-ad-id { color: #C86F00; font-size: 13px; font-weight: 600; text-decoration: none; }
+  .bm-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .bm-badge-video { background: #002350; color: #6fa3d8; }
+  .bm-badge-img { background: #1a1a00; color: #c8b400; }
+  .bm-badge-carousel { background: #001a1a; color: #00c8b4; }
+  .bm-badge-dpa { background: #1a001a; color: #c800c8; }
+  .bm-badge-buyer { background: #001a00; color: #00c850; }
+  .bm-badge-seller { background: #1a0000; color: #c85000; }
+  .bm-badge-mixed { background: #1a1a00; color: #c8c800; }
+  .bm-badge-topo { background: #001a1a; color: #00c8c8; }
+  .bm-badge-meio { background: #0d0d1a; color: #7070c8; }
+  .bm-badge-fundo { background: #1a0d00; color: #c87000; }
+  .bm-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .bm-table tr { border-bottom: 1px solid #1a1a1a; }
+  .bm-table td:first-child { color: #555; width: 130px; padding: 6px 8px 6px 0; vertical-align: top; }
+  .bm-table td:last-child { color: #ccc; padding: 6px 0; }
+  .bm-sintese { background: #0d1a0d; border-left: 3px solid #C86F00; padding: 12px 16px; margin-top: 16px; border-radius: 0 4px 4px 0; }
+  .bm-sintese-label { color: #C86F00; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .bm-sintese p { color: #aaa; font-size: 13px; line-height: 1.6; margin: 0; }
+  .bm-sem-anuncios { color: #444; font-style: italic; padding: 16px; border: 1px dashed #1a1a1a; border-radius: 6px; margin-bottom: 24px; }
+  .bm-sintese-geral { background: #080808; border: 1px solid #1a1a1a; border-radius: 8px; padding: 24px; }
+  .bm-sq { color: #C86F00; font-size: 13px; font-weight: 700; margin: 20px 0 8px; }
+  .bm-sa { color: #999; font-size: 13px; line-height: 1.7; margin: 0 0 8px; }
+  .bm-ranking { margin-top: 16px; }
+  .bm-rank-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .bm-rank-num { color: #C86F00; font-size: 12px; font-weight: 700; width: 20px; }
+  .bm-rank-name { color: #ccc; font-size: 13px; width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bm-rank-bar-wrap { flex: 1; background: #1a1a1a; border-radius: 3px; height: 6px; }
+  .bm-rank-bar { background: #C86F00; height: 6px; border-radius: 3px; }
+  .bm-rank-count { color: #555; font-size: 11px; width: 80px; text-align: right; }
+  .bm-divider { border: none; border-top: 1px solid #1a1a1a; margin: 24px 0; }
+  .bm-cliente { border: 1px solid #002350; border-radius: 8px; padding: 20px; margin-bottom: 24px; background: #050a10; }
+  .bm-footer { color: #333; font-size: 11px; text-align: center; margin-top: 48px; padding-top: 16px; border-top: 1px solid #1a1a1a; }
+  .bm-nota { color: #444; font-size: 11px; margin-top: 8px; font-style: italic; }
+</style>
+</head>
+<body>
+<div class="bm-header">
+  <div class="bm-title">Benchmark Meta Ads · VERDELUZ COSMÉTICOS VEGANOS (FICTÍCIO)</div>
+  <div class="bm-subtitle">Data da pesquisa: 22/10/2026 &nbsp;·&nbsp; Concorrentes analisados: 3 &nbsp;·&nbsp; Fonte: sites e perfis públicos das marcas (benchmark ilustrativo, sem coleta de anúncios na Biblioteca do Meta)</div>
+</div>
+<div class="bm-section-label">Concorrentes analisados</div>
+<div class="bm-concorrente">
+  <div class="bm-concorrente-name">Sallve</div>
+  <div class="bm-concorrente-meta">página na Biblioteca: a obter na coleta real &nbsp;·&nbsp; anúncios ativos: não coletados &nbsp;·&nbsp; observado em 22/10/2026</div>
+  <div class="bm-links">
+    <div class="bm-links-label">Fontes públicas observadas</div>
+    <a href="https://www.sallve.com.br/" target="_blank" rel="noopener noreferrer">Site: https://www.sallve.com.br/</a>
+    <a href="https://www.instagram.com/sallve/" target="_blank" rel="noopener noreferrer">Instagram: https://www.instagram.com/sallve/</a>
+    <a href="https://www.sallve.com.br/blogs/sallve/todos-os-produtos-da-sallve" target="_blank" rel="noopener noreferrer">Blog: ordem de uso dos produtos: https://www.sallve.com.br/blogs/sallve/todos-os-produtos-da-sallve</a>
+    <div class="bm-nota">Nota de coleta: não houve coleta de anúncios (sem token da Apify neste ambiente). Esta análise é ilustrativa e usa só o que é público nas páginas acima.</div>
+  </div>
+  <div class="bm-ad-card">
+    <div class="bm-ad-card-header"><span class="bm-ad-id">Observações públicas</span></div>
+    <table class="bm-table">
+      <tr><td>Mecânica de oferta</td><td>Banner da home: &quot;Monte seu Kit com até 15% OFF&quot; (página de montar kit). Desconto progressivo e limitado, ligado ao kit.</td></tr>
+      <tr><td>Navegação</td><td>Coleções por necessidade e por época: loja, proteção solar, seleção de verão, tratamento e prevenção.</td></tr>
+      <tr><td>Produtos em destaque</td><td>Creme retexturizador noturno e protetor solar em bastão FPS 60 (15 g, com vitamina E e carnosina).</td></tr>
+      <tr><td>Educação</td><td>Conteúdo de rotina no blog: &quot;Qual é a ordem de uso dos produtos da Sallve?&quot; (guia de passo a passo).</td></tr>
+      <tr><td>Perfil no Instagram</td><td>São Paulo, SP. Descrição de produto no perfil com ativos citados (niacinamida, zinco, spirulina).</td></tr>
+    </table>
+  </div>
+  <div class="bm-sintese">
+    <div class="bm-sintese-label">Síntese Sallve</div>
+    <p>Sallve vende a rotina como sistema: monta o kit pelo cliente, com desconto limitado, e ensina a ordem de uso. Comunica o ativo no nome e na descrição do produto. A oferta é de kit e não de desconto profundo em um item. Para a Verdeluz, a leitura útil é a de que kit com desconto controlado e conteúdo de rotina convivem com marca forte.</p>
+  </div>
+</div>
+<div class="bm-concorrente">
+  <div class="bm-concorrente-name">Simple Organic</div>
+  <div class="bm-concorrente-meta">página na Biblioteca: a obter na coleta real &nbsp;·&nbsp; anúncios ativos: não coletados &nbsp;·&nbsp; observado em 22/10/2026</div>
+  <div class="bm-links">
+    <div class="bm-links-label">Fontes públicas observadas</div>
+    <a href="https://simpleorganic.com.br/" target="_blank" rel="noopener noreferrer">Site: https://simpleorganic.com.br/</a>
+    <a href="https://www.instagram.com/simpleorganic/" target="_blank" rel="noopener noreferrer">Instagram: https://www.instagram.com/simpleorganic/</a>
+    <a href="https://www.belezanaweb.com.br/simple-organic/" target="_blank" rel="noopener noreferrer">Página da marca no varejista Beleza na Web: https://www.belezanaweb.com.br/simple-organic/</a>
+    <div class="bm-nota">Nota de coleta: não houve coleta de anúncios (sem token da Apify neste ambiente). Esta análise é ilustrativa e usa só o que é público nas páginas acima.</div>
+  </div>
+  <div class="bm-ad-card">
+    <div class="bm-ad-card-header"><span class="bm-ad-id">Observações públicas</span></div>
+    <table class="bm-table">
+      <tr><td>Posicionamento</td><td>Site: &quot;marca vegana e cruelty-free de produtos de beleza sustentável: skincare, maquiagem vegana e cosméticos naturais&quot;.</td></tr>
+      <tr><td>Navegação</td><td>Menu com Skincare, Makeup, Quem somos e Best-sellers (vitrine do que mais vende).</td></tr>
+      <tr><td>Programa de comunidade</td><td>Perfil no Instagram convida a se inscrever no programa &quot;Simple me escolhe&quot; (inscrições por link).</td></tr>
+      <tr><td>Canal de revenda</td><td>Marca presente em varejista online (Beleza na Web), que a descreve como &quot;primeira marca de clean beauty do Brasil&quot; (afirmação do varejista).</td></tr>
+      <tr><td>Tom</td><td>Perfil: &quot;Beleza limpa, acessível, vegana e sustentável!&quot;.</td></tr>
+    </table>
+  </div>
+  <div class="bm-sintese">
+    <div class="bm-sintese-label">Síntese Simple Organic</div>
+    <p>Simple Organic apoia o crescimento em comunidade (programa de inscrição) e em revenda, além do site próprio, e comunica valores (vegana, acessível, sustentável) antes do ativo. A vitrine de best-sellers reduz a escolha. Para a Verdeluz, o ponto relevante é o programa estruturado de embaixadoras com inscrição aberta, que dá o que a Verdeluz não tem: medição por pessoa.</p>
+  </div>
+</div>
+<div class="bm-concorrente">
+  <div class="bm-concorrente-name">Care Natural Beauty</div>
+  <div class="bm-concorrente-meta">página na Biblioteca: a obter na coleta real &nbsp;·&nbsp; anúncios ativos: não coletados &nbsp;·&nbsp; observado em 22/10/2026</div>
+  <div class="bm-links">
+    <div class="bm-links-label">Fontes públicas observadas</div>
+    <a href="https://carenb.com/" target="_blank" rel="noopener noreferrer">Site: https://carenb.com/</a>
+    <a href="https://www.instagram.com/carenaturalbeauty/" target="_blank" rel="noopener noreferrer">Instagram: https://www.instagram.com/carenaturalbeauty/</a>
+    <div class="bm-nota">Nota de coleta: não houve coleta de anúncios (sem token da Apify neste ambiente). Esta análise é ilustrativa e usa só o que é público nas páginas acima.</div>
+  </div>
+  <div class="bm-ad-card">
+    <div class="bm-ad-card-header"><span class="bm-ad-id">Observações públicas</span></div>
+    <table class="bm-table">
+      <tr><td>Posicionamento</td><td>Site: &quot;skincare e maquiagem livre sem toxinas&quot;, com cosméticos veganos e cruelty free.</td></tr>
+      <tr><td>Selo de confiança</td><td>Perfil: &quot;primeira marca de beleza brasileira com o selo EWG Verified Sustentável&quot; e o lema &quot;só é beleza se for limpa&quot;.</td></tr>
+      <tr><td>Mecânica de oferta</td><td>Publicação no Instagram associada à marca fala em cupom e em brinde (&quot;ganha uma nécessaire&quot;) em promoção. A origem exata da publicação deve ser confirmada na coleta real.</td></tr>
+      <tr><td>Tom</td><td>Beleza limpa como argumento central, com selo de terceiros como prova.</td></tr>
+    </table>
+  </div>
+  <div class="bm-sintese">
+    <div class="bm-sintese-label">Síntese Care Natural Beauty</div>
+    <p>Care Natural Beauty sustenta a confiança com um selo de terceiros e com a promessa de fórmula limpa, e promove com brinde e cupom. É a referência mais próxima do argumento de transparência da Verdeluz, mas com prova externa. Para a Verdeluz, a lição é transformar o selo vegano e as avaliações em prova visível e testar brinde no lugar de desconto profundo.</p>
+  </div>
+</div>
+<div class="bm-section-label">Análise do cliente</div>
+<div class="bm-cliente">
+  <div class="bm-concorrente-name">Verdeluz Cosméticos Veganos (Cliente)</div>
+  <div class="bm-sem-anuncios">Marca fictícia: não tem página na Biblioteca de Anúncios do Meta. Registrada sem anúncios, só para completar o relatório.</div>
+</div>
+<hr class="bm-divider">
+<div class="bm-section-label">Síntese Estratégica Geral</div>
+<div class="bm-sintese-geral">
+  <div class="bm-sq">1. Como os concorrentes comunicam autenticidade e confiança?</div>
+  <p class="bm-sa">Care apoia a confiança em selo de terceiros (EWG Verified) e no lema da fórmula limpa. Sallve nomeia os ativos nos produtos e ensina a rotina no blog. Simple Organic comunica valores (vegana, acessível, sustentável) e comunidade. A Verdeluz declara a concentração do ativo na embalagem e tem mais de 900 avaliações no sérum, mas não mostra isso como prova em destaque.</p>
+  <div class="bm-sq">2. Quais concorrentes têm campanhas separadas para buyers e sellers?</div>
+  <p class="bm-sa">Não se aplica: o setor vende ao consumidor final. A relevância é a revenda: Simple Organic aparece em varejista online, o que sugere um canal de revenda além do site próprio. Sallve e Care não mostram revenda nas páginas observadas. A Verdeluz vende só no site.</p>
+  <div class="bm-sq">3. Quem usa posicionamento de valor vs. promoção de preço?</div>
+  <p class="bm-sa">Sallve promove kit com desconto limitado (até 15% no kit montado) e posiciona por necessidade da pele. Care alterna posicionamento de fórmula limpa com cupom e brinde. Simple Organic posiciona por valores e acessibilidade. A Verdeluz usa desconto profundo na Black Friday (35%) e cupom de primeira compra.</p>
+  <div class="bm-sq">4. Quais formatos predominam no mercado?</div>
+  <p class="bm-sa">Sem coleta de anúncios, esta resposta não é possível. O que se observa nos sites e perfis é uso de kit (Sallve), vitrine de best-sellers (Simple Organic) e publicações com promoção (Care). A coleta real da Biblioteca deve responder esta pergunta.</p>
+  <div class="bm-sq">5. Há uso de figura pública, fundador ou influenciador?</div>
+  <p class="bm-sa">Simple Organic estrutura um programa de comunidade com inscrição aberta. Care tem publicação promocional no Instagram associada à marca. Sallve tem perfil ativo com descrição de produto. A Verdeluz usa microinfluenciadoras sem medição por pessoa.</p>
+  <div class="bm-sq">6. Como cada marca distribui seus anúncios pelo funil?</div>
+  <p class="bm-sa">Sem coleta de anúncios, esta resposta não é possível. Nos sites, Sallve cobre topo (blog de rotina), meio (coleções por necessidade) e fundo (kit com desconto). A coleta real deve classificar os anúncios por etapa.</p>
+  <div class="bm-sq">7. Quem está investindo mais intensamente?</div>
+  <p class="bm-sa">Sem coleta de anúncios, o ranking de intensidade fica para a coleta real. O ranking abaixo registra a ausência de dado e não ordena as marcas.</p>
+  <hr class="bm-divider">
+  <div class="bm-section-label">Ranking de intensidade de mídia</div>
+  <div class="bm-ranking">
+    <div class="bm-rank-row">
+      <span class="bm-rank-num">1</span>
+      <span class="bm-rank-name">Sallve</span>
+      <div class="bm-rank-bar-wrap"><div class="bm-rank-bar" style="width:0%"></div></div>
+      <span class="bm-rank-count">sem coleta</span>
+    </div>
+    <div class="bm-rank-row">
+      <span class="bm-rank-num">2</span>
+      <span class="bm-rank-name">Simple Organic</span>
+      <div class="bm-rank-bar-wrap"><div class="bm-rank-bar" style="width:0%"></div></div>
+      <span class="bm-rank-count">sem coleta</span>
+    </div>
+    <div class="bm-rank-row">
+      <span class="bm-rank-num">3</span>
+      <span class="bm-rank-name">Care Natural Beauty</span>
+      <div class="bm-rank-bar-wrap"><div class="bm-rank-bar" style="width:0%"></div></div>
+      <span class="bm-rank-count">sem coleta</span>
+    </div>
+    <div class="bm-rank-row">
+      <span class="bm-rank-num">4</span>
+      <span class="bm-rank-name">Verdeluz (cliente)</span>
+      <div class="bm-rank-bar-wrap"><div class="bm-rank-bar" style="width:0%"></div></div>
+      <span class="bm-rank-count">sem coleta</span>
+    </div>
+  </div>
+</div>
+<div class="bm-footer">boomer · benchmark ilustrativo gerado em 22/10/2026 · cliente de teste, sem dados de anúncios · FICTÍCIO</div>
+</body>
+</html>

@@ -10,7 +10,8 @@
     "typecheck": "turbo typecheck",
     "test": "turbo test",
     "dev:comentarios": "node apps/web/scripts/dev-comentarios.ts",
-    "cliente-teste": "tsx packages/core/scripts/cliente-teste.ts"
+    "cliente-teste": "tsx packages/core/scripts/cliente-teste.ts",
+    "montar-fixture": "tsx packages/core/scripts/montar-fixture.ts"
   },
   "devDependencies": {
     "@workspace/eslint-config": "*",

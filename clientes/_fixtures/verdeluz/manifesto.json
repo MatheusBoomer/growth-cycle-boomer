@@ -1,0 +1,462 @@
+{
+  "fixture": "verdeluz",
+  "prospect": {
+    "nome": "Verdeluz Teste",
+    "site": "https://www.verdeluz.example"
+  },
+  "overrides": "Este é um cliente de teste com dados 100% fictícios. O site https://www.verdeluz.example não existe: não tente acessá-lo nem raspá-lo. Leia o texto das páginas em `contexto/brutos/site-simulado.md` (home, duas páginas de produto e frete e trocas) no lugar da leitura do site. Os concorrentes citados (Sallve, Simple Organic, Care Natural Beauty) são marcas reais, e os dados do cliente sobre elas valem só como contexto. Como a Verdeluz é fictícia, ela não tem página na Biblioteca de Anúncios do Meta: na etapa 07, não peça o link dela, registre o prospect como sem anúncios e analise só os concorrentes.",
+  "arquivos": [
+    {
+      "caminho": "contexto/brutos/formulario-cliente.docx",
+      "etapa": "01"
+    },
+    {
+      "caminho": "contexto/brutos/kickoff-transcricao-bruta.docx",
+      "etapa": "01"
+    },
+    {
+      "caminho": "contexto/brutos/prints-campanhas/print-01.png",
+      "etapa": "08"
+    },
+    {
+      "caminho": "contexto/brutos/prints-campanhas/print-02.png",
+      "etapa": "08"
+    },
+    {
+      "caminho": "contexto/brutos/prints-campanhas/print-03.png",
+      "etapa": "08"
+    },
+    {
+      "caminho": "contexto/brutos/prints-campanhas/print-04.png",
+      "etapa": "08"
+    },
+    {
+      "caminho": "contexto/brutos/site-simulado.md",
+      "etapa": "00"
+    },
+    {
+      "caminho": "contexto/contextualizacao-estrategica.md",
+      "etapa": "02"
+    },
+    {
+      "caminho": "contexto/decisoes/01-preparacao-de-contexto.md",
+      "etapa": "01"
+    },
+    {
+      "caminho": "contexto/decisoes/02-contextualizacao-estrategica.md",
+      "etapa": "02"
+    },
+    {
+      "caminho": "contexto/decisoes/03-diagnostico-performance.md",
+      "etapa": "03"
+    },
+    {
+      "caminho": "contexto/decisoes/04-unidade-economica.md",
+      "etapa": "04"
+    },
+    {
+      "caminho": "contexto/decisoes/05-solucoes.md",
+      "etapa": "05"
+    },
+    {
+      "caminho": "contexto/decisoes/06-metas-e-cenarios.md",
+      "etapa": "06"
+    },
+    {
+      "caminho": "contexto/decisoes/07-briefing-e-benchmark.md",
+      "etapa": "07"
+    },
+    {
+      "caminho": "contexto/decisoes/08-midia-paga.md",
+      "etapa": "08"
+    },
+    {
+      "caminho": "contexto/decisoes/09-plano-de-acao.md",
+      "etapa": "09"
+    },
+    {
+      "caminho": "contexto/decisoes/10-apresentacao-final.md",
+      "etapa": "final"
+    },
+    {
+      "caminho": "contexto/kickoff-transcricao.md",
+      "etapa": "01"
+    },
+    {
+      "caminho": "contexto/site-referencia.md",
+      "etapa": "00"
+    },
+    {
+      "caminho": "contexto/solucoes.json",
+      "etapa": "05"
+    },
+    {
+      "caminho": "dados/benchmark-meta/analise-benchmark.md",
+      "etapa": "07"
+    },
+    {
+      "caminho": "dados/clientes-historico.xlsx",
+      "etapa": "04"
+    },
+    {
+      "caminho": "dados/historico-mensal.xlsx",
+      "etapa": "03"
+    },
+    {
+      "caminho": "dados/produtos-curva-abc.xlsx",
+      "etapa": "03"
+    },
+    {
+      "caminho": "dados/quebra-pagamento.xlsx",
+      "etapa": "03"
+    },
+    {
+      "caminho": "entrega/apresentacao-final.pptx",
+      "etapa": "final"
+    },
+    {
+      "caminho": ".app/propostas/af3eb9ea-451d-d6f5-3f3d-44d3a8131ce2.pptx",
+      "etapa": "final"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/apresentacao/roteiro-apresentacao.json",
+      "etapa": "final"
+    },
+    {
+      "caminho": ".app/propostas/47c54c9b-1e1d-01cc-a6a4-336317bd8805.json",
+      "etapa": "final"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/benchmark/benchmark.html",
+      "etapa": "07"
+    },
+    {
+      "caminho": ".app/propostas/2d93eb5d-c8bc-dfb4-a992-aaaf27660f3e.html",
+      "etapa": "07"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/alocacao-verba-plataforma.png",
+      "etapa": "08"
+    },
+    {
+      "caminho": ".app/propostas/ac546965-f3e1-eb97-2ff4-6e500dbe066c.png",
+      "etapa": "08"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/cac-mensal.png",
+      "etapa": "04"
+    },
+    {
+      "caminho": ".app/propostas/608c7d69-0494-c835-e026-737fe277d828.png",
+      "etapa": "04"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/cenarios-pessimista-realista-otimista.png",
+      "etapa": "06"
+    },
+    {
+      "caminho": ".app/propostas/682cef97-ff6d-9aad-504c-391392ce3e69.png",
+      "etapa": "06"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/conversao-global.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": ".app/propostas/c6bdd66b-410f-ca8d-cb1e-ebc0adafccce.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/conversao-google.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": ".app/propostas/6ccdf681-7d39-122d-ee3d-277e31c78148.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/conversao-meta.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": ".app/propostas/dacbb14b-ff16-4cb1-6ad8-be537f0a058c.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/curva-abc-faturamento.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": ".app/propostas/9bb12d6f-06eb-5840-7b0d-633fe9e3bc89.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/dependencia-midia-paga.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": ".app/propostas/7d6c1c64-5017-9d70-54a5-419aeaec9b9f.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/investimento-midia-mensal.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": ".app/propostas/484a1119-b3db-8c7c-5240-4f1e2c7aa406.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/meta-realista-vs-ano-atual.png",
+      "etapa": "06"
+    },
+    {
+      "caminho": ".app/propostas/cf65d77e-286b-e87c-1187-791c636ebc61.png",
+      "etapa": "06"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/novos-vs-recorrentes.png",
+      "etapa": "04"
+    },
+    {
+      "caminho": ".app/propostas/fa85cfb3-8083-7bee-d44c-e727fb2ee25c.png",
+      "etapa": "04"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/quebra-por-meio-pagamento.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": ".app/propostas/4e42bea6-70e1-dd98-5247-1c87b646772f.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/receita-captada-vs-aprovada.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": ".app/propostas/1fb49965-6cce-8086-0cef-5bc13975f9bb.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/roas-esperado-plataforma.png",
+      "etapa": "08"
+    },
+    {
+      "caminho": ".app/propostas/0d7de19d-0c37-836c-02c5-cdd6674d6dce.png",
+      "etapa": "08"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/roas-global.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": ".app/propostas/f50d337d-492e-2611-f477-6e3178a9c49c.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/roas-plataformas.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": ".app/propostas/be4b0be3-6443-f4c0-723c-62b8ba6476b4.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/sessoes-por-plataforma.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": ".app/propostas/c945da87-c06a-3d30-35b7-ef0218ff723e.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/tabela-alocacao-verba-plataforma.png",
+      "etapa": "08"
+    },
+    {
+      "caminho": ".app/propostas/f2b4aabb-97aa-a217-d2ad-1be2806e673e.png",
+      "etapa": "08"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/tabela-calendario-estrategico.png",
+      "etapa": "08"
+    },
+    {
+      "caminho": ".app/propostas/da2127bc-c96f-aa32-b521-7691da0a7515.png",
+      "etapa": "08"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/tabela-cenarios-projecao.png",
+      "etapa": "06"
+    },
+    {
+      "caminho": ".app/propostas/edfabfb0-9272-5a5d-c349-af090910972d.png",
+      "etapa": "06"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/tabela-curva-abc-a.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": ".app/propostas/695ce6e1-6987-d84b-cf76-2be19ddf10b0.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/tabela-curva-abc-b.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": ".app/propostas/599bd404-9dee-6f97-e1d0-2440ef3e1eab.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/tabela-curva-abc-c.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": ".app/propostas/3c9d167d-a465-9bb8-09b0-7063253145df.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/tabela-curva-abc-estrategia.png",
+      "etapa": "08"
+    },
+    {
+      "caminho": ".app/propostas/0d13f026-0a38-8d0e-6d49-ea1f3b6ea3ed.png",
+      "etapa": "08"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/taxa-quebra-mensal.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": ".app/propostas/0596e56b-5329-f403-7ca5-79e69e386963.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/graficos/top10-produtos.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": ".app/propostas/9cb5b7ff-407c-d275-6d43-3c1264688d42.png",
+      "etapa": "03"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.docx",
+      "etapa": "09"
+    },
+    {
+      "caminho": ".app/propostas/7e587276-9c22-4711-cdcc-1ce930aac9f3.docx",
+      "etapa": "09"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/projecao/projecao-de-cenarios.xlsx",
+      "etapa": "06"
+    },
+    {
+      "caminho": ".app/propostas/edf3210d-12dc-df3b-4d11-e4064f05eb2c.xlsx",
+      "etapa": "06"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/secoes/01-kickoff-transcricao.md",
+      "etapa": "01"
+    },
+    {
+      "caminho": ".app/propostas/93e5d9fb-5ce4-a745-2ade-0b439eddf047.md",
+      "etapa": "01"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/secoes/02-contextualizacao-estrategica.md",
+      "etapa": "02"
+    },
+    {
+      "caminho": ".app/propostas/8fa740be-285b-9ffe-ed45-52afa7ae9f51.md",
+      "etapa": "02"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/secoes/03-aquisicao-dependencia-conversao.md",
+      "etapa": "03"
+    },
+    {
+      "caminho": ".app/propostas/1f58a04a-1731-85f3-af56-a853ef739941.md",
+      "etapa": "03"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/secoes/03-macro-financeiro.md",
+      "etapa": "03"
+    },
+    {
+      "caminho": ".app/propostas/78bb7be7-3e78-8cc7-eb26-8f6231e0298a.md",
+      "etapa": "03"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/secoes/04-unidade-economica.md",
+      "etapa": "04"
+    },
+    {
+      "caminho": ".app/propostas/c06f7bf4-2586-3fa1-d509-9d4fd661cd02.md",
+      "etapa": "04"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/secoes/05-solucoes.md",
+      "etapa": "05"
+    },
+    {
+      "caminho": ".app/propostas/892aeb7d-cd69-c55c-27b2-3db6dac262dc.md",
+      "etapa": "05"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/secoes/06-metas-e-cenarios.md",
+      "etapa": "06"
+    },
+    {
+      "caminho": ".app/propostas/6228477c-dbe9-2b36-dc71-8f002a2d2837.md",
+      "etapa": "06"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/secoes/07-benchmark.md",
+      "etapa": "07"
+    },
+    {
+      "caminho": ".app/propostas/622f6f59-c37d-fb49-f40f-6922fd83b5fe.md",
+      "etapa": "07"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/secoes/07-briefing.md",
+      "etapa": "07"
+    },
+    {
+      "caminho": ".app/propostas/47ccb510-e1af-1b92-fc9f-a1262aaebd5b.md",
+      "etapa": "07"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/secoes/08-midia-paga.md",
+      "etapa": "08"
+    },
+    {
+      "caminho": ".app/propostas/d2544efa-51b4-4c3e-a7d5-2ef5dc1003fb.md",
+      "etapa": "08"
+    }
+  ],
+  "kit": {
+    "01": [
+      "contexto/brutos/kickoff-transcricao-bruta.docx",
+      "contexto/brutos/formulario-cliente.docx"
+    ],
+    "03": [
+      "dados/historico-mensal.xlsx",
+      "dados/produtos-curva-abc.xlsx",
+      "dados/quebra-pagamento.xlsx"
+    ],
+    "04": [
+      "dados/clientes-historico.xlsx"
+    ],
+    "08": [
+      "contexto/brutos/prints-campanhas/print-01.png",
+      "contexto/brutos/prints-campanhas/print-02.png",
+      "contexto/brutos/prints-campanhas/print-03.png",
+      "contexto/brutos/prints-campanhas/print-04.png"
+    ]
+  }
+}
