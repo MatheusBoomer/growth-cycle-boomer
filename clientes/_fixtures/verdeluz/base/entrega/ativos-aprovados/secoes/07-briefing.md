@@ -79,7 +79,7 @@ Os impactos se sobrepõem e não se somam.
 |---|---|---|---|---|
 | Sallve | https://www.sallve.com.br/ | @sallve | A obter com o analista (link com `view_all_page_id=`) | Citada pela Marina como a que mais preocupa: kits, rotina e comunidade |
 | Simple Organic | https://simpleorganic.com.br/ | @simpleorganic | A obter com o analista | Referência em vegano e natural, com revenda |
-| Care Natural Beauty | https://carenb.com/ | @carenaturalbeauty | A obter com o analista | Compete em preço e no vegano, com selo de confiança |
+| Care Natural Beauty | https://carenb.com/ | @carenaturalbeauty | A obter com o analista | Compete em preço e no vegano, segundo as sócias no kickoff; cita um selo de confiança (autodeclarado) |
 
 - **Quarto concorrente:** a definir pelo analista, preferindo marca com muitos anúncios ativos.
 - **Página do próprio prospect:** a Verdeluz é fictícia e não tem página na Biblioteca de Anúncios. Registrada sem anúncios.

@@ -22,7 +22,7 @@ Fontes: https://simpleorganic.com.br/ e https://www.instagram.com/simpleorganic/
 
 Anúncios ativos: não coletados.
 
-- **Posicionamento:** Site: "marca vegana e cruelty-free de produtos de beleza sustentável: skincare, maquiagem vegana e cosméticos naturais".
+- **Posicionamento:** Site: "marca vegana e cruelty-free de produtos de beleza sustentável: skincare, maquiagem vegana e cosméticos naturais" (autodeclarado).
 - **Navegação:** Menu com Skincare, Makeup, Quem somos e Best-sellers (vitrine do que mais vende).
 - **Programa de comunidade:** Perfil no Instagram convida a se inscrever no programa "Simple me escolhe" (inscrições por link).
 - **Canal de revenda:** Marca presente em varejista online (Beleza na Web), que a descreve como "primeira marca de clean beauty do Brasil" (afirmação do varejista).
@@ -37,11 +37,11 @@ Fontes: https://carenb.com/ e https://www.instagram.com/carenaturalbeauty/
 Anúncios ativos: não coletados.
 
 - **Posicionamento:** Site: "skincare e maquiagem livre sem toxinas", com cosméticos veganos e cruelty free.
-- **Selo de confiança:** Perfil: "primeira marca de beleza brasileira com o selo EWG Verified Sustentável" e o lema "só é beleza se for limpa".
+- **Selo de confiança:** Perfil: "primeira marca de beleza brasileira com o selo EWG Verified Sustentável" e o lema "só é beleza se for limpa" (afirmações autodeclaradas pela marca, não conferidas aqui).
 - **Mecânica de oferta:** Publicação no Instagram associada à marca fala em cupom e em brinde ("ganha uma nécessaire") em promoção. A origem exata da publicação deve ser confirmada na coleta real.
-- **Tom:** Beleza limpa como argumento central, com selo de terceiros como prova.
+- **Tom:** Beleza limpa como argumento central, com um selo de terceiros citado como prova (autodeclarado no perfil).
 
-**Síntese:** Care Natural Beauty sustenta a confiança com um selo de terceiros e com a promessa de fórmula limpa, e promove com brinde e cupom. É a referência mais próxima do argumento de transparência da Verdeluz, mas com prova externa. Para a Verdeluz, a lição é transformar o selo vegano e as avaliações em prova visível e testar brinde no lugar de desconto profundo.
+**Síntese:** Care Natural Beauty sustenta a confiança com um selo de terceiros e com a promessa de fórmula limpa (ambos autodeclarados pela marca), e uma publicação associada a ela fala em brinde e cupom. É a referência mais próxima do argumento de transparência da Verdeluz, mas com prova externa. Para a Verdeluz, a lição é transformar o selo vegano e as avaliações em prova visível e testar brinde no lugar de desconto profundo.
 
 ## Verdeluz (cliente)
 

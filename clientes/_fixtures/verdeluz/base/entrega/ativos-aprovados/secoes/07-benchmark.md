@@ -20,7 +20,7 @@ Benchmark ilustrativo. Não houve coleta de anúncios na Biblioteca do Meta nest
 
 ## Care Natural Beauty
 
-- **Lição:** a confiança vem de um selo de terceiros (EWG Verified) e de uma fórmula "limpa", e a promoção usa brinde. A Verdeluz já tem selo vegano e mais de 900 avaliações no sérum, mas não os mostra como prova, e promove com desconto profundo.
+- **Lição:** a marca declara um selo de terceiros (EWG Verified) e uma fórmula "limpa" como base da confiança (afirmações autodeclaradas, não conferidas aqui), e uma publicação associada a ela fala em brinde. A Verdeluz já tem selo vegano e mais de 900 avaliações no sérum, mas não os mostra como prova, e promove com desconto profundo.
 - **Evidência:** perfil https://www.instagram.com/carenaturalbeauty/ (selo e lema) e site https://carenb.com/ (observados em 22/10/2026). Uma publicação no Instagram associada à marca fala em cupom e em brinde (nécessaire); a origem exata deve ser confirmada na coleta real. Anúncios ativos: não coletados.
 - **O que testar:**
   1. Black Friday com a nécessaire Verdeluz como brinde acima de um valor mínimo, no lugar de parte do desconto (P6.S1).
@@ -28,7 +28,7 @@ Benchmark ilustrativo. Não houve coleta de anúncios na Biblioteca do Meta nest
 
 ## Destaques estratégicos para a Verdeluz
 
-1. Os três concorrentes observados oferecem kit com desconto limitado e brinde antes de desconto profundo. A Verdeluz concentra a promoção em 35% de desconto e frete grátis sem mínimo.
+1. Sallve oferece kit com desconto limitado (até 15%) e uma publicação associada à Care fala em brinde e cupom; nas páginas observadas, nenhuma das duas mostra desconto profundo em item isolado. A Verdeluz concentra a promoção em 35% de desconto e frete grátis sem mínimo.
 2. Prova de confiança visível (selo, rotina guiada, avaliações) é parte do argumento de venda. A Verdeluz tem a matéria-prima e não a usa.
 3. Programa estruturado de embaixadoras é o jeito de transformar influência em número. A Verdeluz precisa de cupom e UTM por pessoa antes de ampliar a verba.
 4. Limite desta análise: sem dados de anúncios, não é possível afirmar formatos, funil nem intensidade de mídia. A coleta real deve responder essas perguntas.

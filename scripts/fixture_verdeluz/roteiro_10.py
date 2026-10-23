@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 
 G = "entrega/ativos-aprovados/graficos/"
-NOME = "Verdeluz Cosméticos Veganos"
+NOME = "Verdeluz Cosméticos Veganos (FICTÍCIO)"
 
 
 def grafico(arq, titulo, subtitulo, conclusoes, fonte, tipo="grafico"):
@@ -149,10 +149,10 @@ def montar() -> dict:
                 ["Lição: programa aberto de comunidade e presença em varejista online", "Evidência: perfil e site da marca, observados em 22/10/2026 (sem coleta de anúncios)",
                  "Testar: piloto de 10 embaixadoras com cupom e UTM por 60 dias (P7)", "Testar: vitrine de best-sellers com os líderes e os kits (P8)"], "secoes/07-benchmark.md"),
         bullets("Benchmarking · Care Natural Beauty", "Selo de confiança e **brinde**",
-                ["Lição: selo de terceiros como prova e promoção com brinde", "Evidência: perfil e site da marca, observados em 22/10/2026 (sem coleta de anúncios)",
+                ["Lição: selo de terceiros autodeclarado como prova e publicação associada com brinde", "Evidência: perfil e site da marca, observados em 22/10/2026 (sem coleta de anúncios)",
                  "Testar: nécessaire Verdeluz como brinde acima de um valor mínimo (P6)", "Testar: selo vegano e avaliações nas páginas dos líderes (P5)"], "secoes/07-benchmark.md"),
         bullets("Benchmarking · Análises", "Quatro **destaques** para a Verdeluz",
-                ["Concorrentes usam kit e brinde antes de desconto profundo", "Prova de confiança visível faz parte do argumento de venda",
+                ["Sallve usa kit com desconto limitado; a Care aparece com brinde e cupom", "Prova de confiança visível faz parte do argumento de venda",
                  "Programa estruturado de embaixadoras transforma influência em número", "Sem coleta de anúncios: formato, funil e intensidade ficam para a coleta real"], "secoes/07-benchmark.md"),
     ]
 

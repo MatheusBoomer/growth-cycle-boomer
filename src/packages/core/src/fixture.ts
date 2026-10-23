@@ -28,6 +28,16 @@ export function pastaDoFixture(raiz: string, id: string): string {
   return path.join(raiz, "clientes", "_fixtures", id)
 }
 
+/** Devolve `saida` resolvida se for uma pasta direta de `clientes/_fixtures/`; qualquer outra coisa (a raiz, `clientes`, um prospect real) é recusada antes de o montador apagar a pasta. */
+export function caminhoSaidaSeguro(raiz: string, saida: string): string {
+  const resolvida = path.resolve(saida)
+  const permitida = path.resolve(raiz, "clientes", "_fixtures")
+  if (path.dirname(resolvida) !== permitida) {
+    throw new ErroFixture(`A saída precisa ser uma pasta direta de ${permitida}, recebi ${resolvida}`)
+  }
+  return resolvida
+}
+
 /** No disco do fixture, o prefixo ".app/" do caminho do cliente vira "app/" (o .gitignore ignora ".app/"). */
 function relativoNaBase(caminho: string): string {
   return path.join("base", caminho.startsWith(".app/") ? `app/${caminho.slice(".app/".length)}` : caminho)

@@ -39,7 +39,7 @@ CONCORRENTES = [
         "instagram": "https://www.instagram.com/simpleorganic/",
         "outros": [("Página da marca no varejista Beleza na Web", "https://www.belezanaweb.com.br/simple-organic/")],
         "observacoes": [
-            ("Posicionamento", "Site: \"marca vegana e cruelty-free de produtos de beleza sustentável: skincare, maquiagem vegana e cosméticos naturais\"."),
+            ("Posicionamento", "Site: \"marca vegana e cruelty-free de produtos de beleza sustentável: skincare, maquiagem vegana e cosméticos naturais\" (autodeclarado)."),
             ("Navegação", "Menu com Skincare, Makeup, Quem somos e Best-sellers (vitrine do que mais vende)."),
             ("Programa de comunidade", "Perfil no Instagram convida a se inscrever no programa \"Simple me escolhe\" (inscrições por link)."),
             ("Canal de revenda", "Marca presente em varejista online (Beleza na Web), que a descreve como \"primeira marca de clean beauty do Brasil\" (afirmação do varejista)."),
@@ -54,21 +54,21 @@ CONCORRENTES = [
         "outros": [],
         "observacoes": [
             ("Posicionamento", "Site: \"skincare e maquiagem livre sem toxinas\", com cosméticos veganos e cruelty free."),
-            ("Selo de confiança", "Perfil: \"primeira marca de beleza brasileira com o selo EWG Verified Sustentável\" e o lema \"só é beleza se for limpa\"."),
+            ("Selo de confiança", "Perfil: \"primeira marca de beleza brasileira com o selo EWG Verified Sustentável\" e o lema \"só é beleza se for limpa\" (afirmações autodeclaradas pela marca, não conferidas aqui)."),
             ("Mecânica de oferta", "Publicação no Instagram associada à marca fala em cupom e em brinde (\"ganha uma nécessaire\") em promoção. A origem exata da publicação deve ser confirmada na coleta real."),
-            ("Tom", "Beleza limpa como argumento central, com selo de terceiros como prova."),
+            ("Tom", "Beleza limpa como argumento central, com um selo de terceiros citado como prova (autodeclarado no perfil)."),
         ],
-        "sintese": "Care Natural Beauty sustenta a confiança com um selo de terceiros e com a promessa de fórmula limpa, e promove com brinde e cupom. É a referência mais próxima do argumento de transparência da Verdeluz, mas com prova externa. Para a Verdeluz, a lição é transformar o selo vegano e as avaliações em prova visível e testar brinde no lugar de desconto profundo.",
+        "sintese": "Care Natural Beauty sustenta a confiança com um selo de terceiros e com a promessa de fórmula limpa (ambos autodeclarados pela marca), e uma publicação associada a ela fala em brinde e cupom. É a referência mais próxima do argumento de transparência da Verdeluz, mas com prova externa. Para a Verdeluz, a lição é transformar o selo vegano e as avaliações em prova visível e testar brinde no lugar de desconto profundo.",
     },
 ]
 
 PERGUNTAS = [
     ("1. Como os concorrentes comunicam autenticidade e confiança?",
-     "Care apoia a confiança em selo de terceiros (EWG Verified) e no lema da fórmula limpa. Sallve nomeia os ativos nos produtos e ensina a rotina no blog. Simple Organic comunica valores (vegana, acessível, sustentável) e comunidade. A Verdeluz declara a concentração do ativo na embalagem e tem mais de 900 avaliações no sérum, mas não mostra isso como prova em destaque."),
+     "Care apoia a confiança em selo de terceiros (EWG Verified) e no lema da fórmula limpa, ambos autodeclarados. Sallve nomeia os ativos nos produtos e ensina a rotina no blog. Simple Organic comunica valores (vegana, acessível, sustentável) e comunidade. A Verdeluz declara a concentração do ativo na embalagem e tem mais de 900 avaliações no sérum, mas não mostra isso como prova em destaque."),
     ("2. Quais concorrentes têm campanhas separadas para buyers e sellers?",
      "Não se aplica: o setor vende ao consumidor final. A relevância é a revenda: Simple Organic aparece em varejista online, o que sugere um canal de revenda além do site próprio. Sallve e Care não mostram revenda nas páginas observadas. A Verdeluz vende só no site."),
     ("3. Quem usa posicionamento de valor vs. promoção de preço?",
-     "Sallve promove kit com desconto limitado (até 15% no kit montado) e posiciona por necessidade da pele. Care alterna posicionamento de fórmula limpa com cupom e brinde. Simple Organic posiciona por valores e acessibilidade. A Verdeluz usa desconto profundo na Black Friday (35%) e cupom de primeira compra."),
+     "Sallve promove kit com desconto limitado (até 15% no kit montado) e posiciona por necessidade da pele. Care posiciona por fórmula limpa e, em uma publicação associada à marca, aparece com cupom e brinde. Simple Organic posiciona por valores e acessibilidade. A Verdeluz usa desconto profundo na Black Friday (35%) e cupom de primeira compra."),
     ("4. Quais formatos predominam no mercado?",
      "Sem coleta de anúncios, esta resposta não é possível. O que se observa nos sites e perfis é uso de kit (Sallve), vitrine de best-sellers (Simple Organic) e publicações com promoção (Care). A coleta real da Biblioteca deve responder esta pergunta."),
     ("5. Há uso de figura pública, fundador ou influenciador?",

@@ -2,7 +2,7 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { beforeEach, describe, expect, it } from "vitest"
 import { ErroFixture } from "../src/erros"
-import { antesDe, carregarFixture, caminhoNaBase, pastaDoFixture, type Manifesto } from "../src/fixture"
+import { antesDe, caminhoSaidaSeguro, carregarFixture, caminhoNaBase, pastaDoFixture, type Manifesto } from "../src/fixture"
 import { raizTemporaria } from "./ajuda"
 import { criarFixtureMinimo } from "./fixture-minimo"
 
@@ -80,6 +80,25 @@ describe("carregarFixture", () => {
   it("estado-completo ilegível vira ErroFixture", async () => {
     await rm(path.join(pasta, "estado-completo.json"))
     await expect(carregarFixture(raiz, "mini")).rejects.toBeInstanceOf(ErroFixture)
+  })
+})
+
+describe("caminhoSaidaSeguro", () => {
+  it("aceita só uma pasta direta de clientes/_fixtures", () => {
+    const ok = path.join(raiz, "clientes/_fixtures/verdeluz")
+    expect(caminhoSaidaSeguro(raiz, ok)).toBe(ok)
+  })
+
+  it.each([
+    ["a raiz do projeto", () => raiz],
+    ["a pasta clientes", () => path.join(raiz, "clientes")],
+    ["a própria pasta _fixtures", () => path.join(raiz, "clientes/_fixtures")],
+    ["um prospect real", () => path.join(raiz, "clientes/sottile-jalecos")],
+    ["subir com ..", () => path.join(raiz, "clientes/_fixtures/../..")],
+    ["um nível abaixo do fixture", () => path.join(raiz, "clientes/_fixtures/verdeluz/base")],
+    ["fora do projeto", () => "/tmp/qualquer-coisa"],
+  ])("recusa %s", (_nome, caminho) => {
+    expect(() => caminhoSaidaSeguro(raiz, caminho())).toThrow(ErroFixture)
   })
 })
 

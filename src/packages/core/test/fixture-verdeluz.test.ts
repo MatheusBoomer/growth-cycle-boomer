@@ -153,6 +153,34 @@ describe("fixture real da Verdeluz", () => {
     expect(total / 1024 / 1024).toBeLessThan(25)
   })
 
+  it("o deck e o plano de ação levam a marca FICTÍCIO", () => {
+    const script = [
+      "import sys, zipfile",
+      "z = zipfile.ZipFile(sys.argv[1])",
+      "print(sum(z.read(n).decode('utf-8', 'ignore').count('FICTÍCIO') for n in z.namelist() if n.endswith('.xml')))",
+    ].join("\n")
+    for (const rel of ["entrega/apresentacao-final.pptx", "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.docx"]) {
+      const n = Number(execFileSync("python3", ["-c", script, caminhoNaBase(fixture, rel)], { encoding: "utf8" }).trim())
+      expect(n, rel).toBeGreaterThan(0)
+    }
+  })
+
+  it("o benchmark não generaliza além do que foi observado e qualifica as autodeclarações", async () => {
+    const textos = await arquivosDeTexto(fixture.pasta)
+    for (const { rel, texto } of textos) {
+      expect(texto, rel).not.toContain("Os três concorrentes observados oferecem")
+      expect(texto, rel).not.toContain("Concorrentes usam kit e brinde antes de desconto profundo")
+    }
+    const html = textos.find((t) => t.rel.endsWith("benchmark/benchmark.html"))!.texto
+    expect(html).toContain("autodeclarad")
+  })
+
+  it("o roteiro da etapa 06 diz o mesmo que o fixture sobre P7 nos cenários", async () => {
+    const roteiro = await readFile(path.join(fixture.pasta, "roteiros/06.md"), "utf8")
+    expect(roteiro).toContain("P7.S1")
+    expect(roteiro).not.toContain("P6 e P7 ficam fora dos cenários")
+  })
+
   it("a receita captada citada no resumo da etapa 03 bate com a soma do histórico mensal", () => {
     const script = [
       "import sys, openpyxl",

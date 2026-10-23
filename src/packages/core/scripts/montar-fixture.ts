@@ -8,16 +8,19 @@ import { carregarCatalogo } from "../src/catalogo"
 import { destinoAprovado, EXTENSAO_POR_TIPO } from "../src/entregaveis"
 import { estadoInicial } from "../src/maquina-estados"
 import { ORDEM_ETAPAS, type Entregavel, type Estado, type EstadoInsumo, type EtapaId, type TipoEntregavel } from "../src/tipos"
-import type { EtapaManifesto, Manifesto } from "../src/fixture"
+import { caminhoSaidaSeguro, type EtapaManifesto, type Manifesto } from "../src/fixture"
 
 const raiz = process.env.PLANEJAMENTO_ROOT ?? path.resolve(import.meta.dirname, "../../../..")
 const argumentos = process.argv.slice(2)
 const argumento = (nome: string, padrao: string) => {
   const i = argumentos.indexOf(nome)
-  return i >= 0 && argumentos[i + 1] ? argumentos[i + 1]! : padrao
+  if (i < 0) return padrao
+  const valor = argumentos[i + 1]
+  if (!valor || valor.startsWith("--")) throw new Error(`${nome} precisa de um valor`)
+  return valor
 }
 const producao = path.resolve(argumento("--producao", path.join(raiz, "clientes/verdeluz-producao")))
-const saida = path.resolve(argumento("--saida", path.join(raiz, "clientes/_fixtures/verdeluz")))
+const saida = caminhoSaidaSeguro(raiz, argumento("--saida", path.join(raiz, "clientes/_fixtures/verdeluz")))
 const catalogo = carregarCatalogo(raiz)
 
 const NOME_DO_CLIENTE = "Verdeluz Teste"
@@ -156,9 +159,18 @@ async function main() {
   await stat(producao).catch(() => {
     throw new Error(`Cliente de produção não encontrado: ${producao}`)
   })
-  await rm(saida, { recursive: true, force: true })
+  // Tudo que pode faltar é lido e validado antes de apagar a saída anterior.
   const diario = await readFile(path.join(raiz, "scripts/fixture_verdeluz/producao.md"), "utf8")
   const overrides = (await readFile(path.join(raiz, "scripts/fixture_verdeluz/overrides.md"), "utf8")).trim()
+  const textosDasEtapas = await Promise.all(
+    catalogo.etapas.map(async (cat) => {
+      const parte = diario.split(new RegExp(`^## Etapa ${cat.id}\\s*$`, "m"))[1]?.split(/^## Etapa /m)[0]
+      if (!parte) throw new Error(`producao.md: falta a seção "## Etapa ${cat.id}"`)
+      const decisoes = await readFile(path.join(producao, `contexto/decisoes/${cat.skill}.md`), "utf8")
+      return { cat, decisoes, handoff: secao(parte, "Handoff"), enviar: secao(parte, "O que enviar"), responder: secao(parte, "O que responder ao agente") }
+    }),
+  )
+  await rm(saida, { recursive: true, force: true })
 
   const arquivos: Manifesto["arquivos"] = []
   const entregaveis: Entregavel[] = []
@@ -179,19 +191,16 @@ async function main() {
 
   const etapas = {} as Estado["etapas"]
   const roteiros: string[] = []
-  for (const cat of catalogo.etapas) {
+  for (const { cat, decisoes, handoff, enviar, responder } of textosDasEtapas) {
     const id = cat.id
-    const parte = diario.split(new RegExp(`^## Etapa ${id}\\s*$`, "m"))[1]?.split(/^## Etapa /m)[0]
-    if (!parte) throw new Error(`producao.md: falta a seção "## Etapa ${id}"`)
-    const decisoes = await readFile(path.join(producao, `contexto/decisoes/${cat.skill}.md`), "utf8")
     etapas[id] = {
       status: "concluida", sessionId: null, iniciadaEm: momento(id), concluidaEm: momento(id, 55), sinalizada: true,
-      resumoDecisoes: decisoes.replace(/^# .*\n+/, "").trim(), handoff: secao(parte, "Handoff"), origem: "app", observacao: null,
+      resumoDecisoes: decisoes.replace(/^# .*\n+/, "").trim(), handoff, origem: "app", observacao: null,
     }
     await mkdir(path.join(saida, "roteiros"), { recursive: true })
     await writeFile(
       path.join(saida, `roteiros/${id}.md`),
-      `# ${cat.rotuloStatus}: roteiro do cliente de teste\n\nMaterial fictício. Use estas informações para preencher a etapa.\n\n## O que enviar\n\n${secao(parte, "O que enviar")}\n\n## O que responder ao agente\n\n${secao(parte, "O que responder ao agente")}\n`,
+      `# ${cat.rotuloStatus}: roteiro do cliente de teste\n\nMaterial fictício. Use estas informações para preencher a etapa.\n\n## O que enviar\n\n${enviar}\n\n## O que responder ao agente\n\n${responder}\n`,
     )
     roteiros.push(id)
   }
