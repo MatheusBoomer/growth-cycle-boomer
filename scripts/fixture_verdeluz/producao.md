@@ -48,3 +48,49 @@ Quando o agente propuser a contextualização consolidada, aprove.
 Nesta sessão, o entendimento do negócio ficou fechado. Para começarmos a Skill 03, preciso que você me mande duas planilhas (Excel): uma com o histórico dos últimos 12 meses de mídia paga e vendas, com investimento, receita, ROAS, sessões e conversão, separados por Google e Meta, e outra com o relatório de produtos vendidos no ano, para eu montar a Curva ABC. Se conseguir, mande também uma terceira, opcional: a receita captada e aprovada de cada mês separada por meio de pagamento (PIX, cartão, boleto).
 
 Quando estiver tudo pronto, rode `/03-diagnostico-performance`.
+
+## Etapa 03
+
+### O que enviar
+
+- **Histórico mensal dos últimos 12 meses (Excel):** o arquivo `historico-mensal.xlsx` da pasta do kit.
+- **Relatório de produtos vendidos no ano (Excel):** o arquivo `produtos-curva-abc.xlsx`.
+- **Quebra por meio de pagamento (Excel, opcional):** o arquivo `quebra-pagamento.xlsx`. Envie, porque ele habilita o recorte por cartão, PIX e boleto.
+
+### O que responder ao agente
+
+O agente mostra cada gráfico e pede que você confirme se os valores batem com a planilha. Confira alguns pontos e confirme. Decisões usadas na produção deste cliente:
+
+- **Período:** seguir com os 12 meses enviados (OUT/25 a SET/26), sem comparar com o ano anterior.
+- **Taxa de quebra:** calculada como 1 menos receita aprovada dividida pela captada.
+- **ROAS global:** receita captada do site dividida pelo investimento total. O ROAS por plataforma (GA4) vale só para ver a tendência.
+- **Benchmark de dependência de mídia paga:** DTC consolidada (45% a 60%), porque o CRM ainda é incipiente.
+- **Faturamento declarado no kickoff (R$ 125 mil por mês):** vale o histórico, que mostra R$ 101,7 mil por mês captados. A meta parte do dado real.
+- **Ruptura de MAR e ABR:** não recalcular a queda declarada, só registrar que os dois meses ficaram no patamar de JAN e FEV.
+- **Curva ABC:** mesmo período do histórico. O relatório cobre 96% da receita captada e essa diferença pode ser aceita. Para a apresentação, usar as tabelas divididas em três (curvas A, B e C).
+
+### Handoff
+
+Nesta sessão, o diagnóstico de performance ficou fechado. Para começarmos a Skill 04, preciso de uma planilha (Excel) com o histórico de vendas por cliente, o maior período que você tiver. Só uma coisa importante antes de me mandar: tira qualquer CPF, e-mail, telefone, endereço ou dado de cartão, e deixa só o ID ou o nome do cliente, com o valor total gasto e o número de pedidos por cliente.
+
+Quando estiver pronto, rode `/04-unidade-economica`.
+
+## Etapa 04
+
+### O que enviar
+
+- **Cliente histórico (Excel):** o arquivo `clientes-historico.xlsx` da pasta do kit. Ele tem só ID, nome, número de pedidos e valor total, sem CPF, e-mail, telefone, endereço ou dado de cartão.
+
+### O que responder ao agente
+
+- **Janela e base:** a base cobre toda a operação (2021 até SET/26), só pedidos do site. O diagnóstico usa a janela de 12 meses.
+- **CAC:** investimento total em mídia dividido pelos clientes novos do mês. Não inclui influenciadoras pagas nem permutas.
+- **Teste do Top 5 por gasto:** confirme contra o relatório da Nuvemshop. No cliente de teste, o ranking confere (sem divergência).
+- **Benchmark:** classificar o LTV/CAC pela faixa do projeto (abaixo de 3 ruim, 3 a 5 normal, acima de 5 escala), com o CAC do último mês.
+- **Ressalva:** o LTV é de receita, não de margem.
+
+### Handoff
+
+Nesta sessão, a unidade econômica ficou fechada e não preciso de arquivo novo agora. Na próxima etapa vou abrir cada problema que encontramos no diagnóstico em hipóteses, soluções e impacto em reais; vale lembrar o que o prospect já tentou para resolver cada um.
+
+Quando estiver pronto, rode `/05-solucoes`.
