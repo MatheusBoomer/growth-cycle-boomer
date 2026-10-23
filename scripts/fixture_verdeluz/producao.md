@@ -94,3 +94,25 @@ Quando estiver pronto, rode `/04-unidade-economica`.
 Nesta sessão, a unidade econômica ficou fechada e não preciso de arquivo novo agora. Na próxima etapa vou abrir cada problema que encontramos no diagnóstico em hipóteses, soluções e impacto em reais; vale lembrar o que o prospect já tentou para resolver cada um.
 
 Quando estiver pronto, rode `/05-solucoes`.
+
+## Etapa 05
+
+### O que enviar
+
+Nada a enviar nesta etapa.
+
+### O que responder ao agente
+
+O agente lista os problemas e os pontos fortes do diagnóstico e pede para você confirmar e ordenar por prioridade. Depois pergunta o que o cliente já tentou. Respostas usadas na produção deste cliente:
+
+- **Problemas:** confirme os 8 que o agente propuser, com estes agrupamentos: eficiência da mídia reúne CAC, ROAS e dependência de mídia paga; mensuração reúne atribuição do GA4, influenciadoras e funil.
+- **Prioridade:** P1 Eficiência da mídia, P2 Ruptura do sérum, P3 Recompra e CRM, P4 Quebra de pagamento, P5 Funil, P6 Black Friday e desconto, P7 Mensuração, P8 Mix.
+- **Pontos fortes:** os cinco entram como argumento do plano (conversão global dentro da faixa, recorrente vale 3 vezes mais, PIX com quebra baixa, prova social robusta, margem bruta declarada).
+- **O que o cliente já tentou:** o cupom PRIMEIRA10 (traz cliente, mas dá desconto a quem compraria de qualquer forma), um e-mail de carrinho abandonado, microinfluenciadoras sem medição e aumento de verba para segurar volume. Nenhuma solução precisa ser descartada por tentativa anterior, mas cupom e aumento de verba não resolveram.
+- **Impactos:** os impactos dos problemas P1, P4, P5 e P8 se sobrepõem e não se somam. Aceite a justificativa de impacto não quantificado em P6 (falta a margem por SKU) e em P7 (ação habilitadora).
+
+### Handoff
+
+Nesta sessão, cada problema do diagnóstico ganhou hipóteses, soluções e impacto. Não preciso de arquivo novo: só pensa numa meta clara (qual número, em quanto tempo) e tenha em mente a receita do ano passado e alguma sazonalidade importante do negócio, porque vou te perguntar isso logo no início da próxima etapa. As soluções com impacto vão virar alavancas dos cenários.
+
+Quando estiver pronto, rode `/06-metas-e-cenarios`.
