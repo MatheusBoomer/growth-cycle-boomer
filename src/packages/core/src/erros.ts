@@ -29,6 +29,12 @@ export class ErroTurnoAtivo extends ErroDominio {
   }
 }
 
+export class ErroNaoAutenticado extends ErroDominio {
+  constructor() {
+    super("Você precisa entrar para continuar.", "nao_autenticado", 401)
+  }
+}
+
 export class ErroFixture extends ErroDominio {
   constructor(message: string) {
     super(message, "fixture_invalido", 409)
