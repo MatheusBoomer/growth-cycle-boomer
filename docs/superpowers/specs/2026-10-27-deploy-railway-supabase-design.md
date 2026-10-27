@@ -26,7 +26,7 @@ Hoje o app só roda no Mac de quem desenvolve: lê e grava em `clientes/<slug>/`
 | 3 | Login | Google pelo Supabase Auth, aceitando só `@boomer.com.br` |
 | 4 | Onde ficam os dados | Supabase é a fonte da verdade: banco (estado, conversas, comentários, uso) e storage (arquivos). O disco da Railway é só a mesa de trabalho |
 | 5 | Skills e scripts | Não mudam. O Agent SDK lê os `.md` como estão |
-| 6 | Prospects atuais | Migrados uma vez do Mac para o Supabase, com as memórias de sessão do agente |
+| 6 | Prospects atuais | Migrados uma vez do Mac para o Supabase, sem as memórias de sessão do agente: as etapas em andamento retomam pelo histórico do chat |
 | 7 | Motor de agentes na nuvem | Sempre o Agent SDK com `ANTHROPIC_API_KEY`. O CLI segue disponível só no Mac |
 | 8 | Região | Supabase em São Paulo (`sa-east-1`), storage privado (LGPD) |
 | 9 | Plano do Supabase | Pro, pelo backup diário automático |
@@ -145,10 +145,10 @@ Funções `salvarSessao(slug, sessionId)` e `restaurarSessao(slug, sessionId)` s
 Script `src/packages/core/scripts/migrar-para-supabase.ts`:
 
 1. `--ensaio`: lista, por prospect, quantos arquivos e bytes seriam enviados, quantas conversas, comentários e sessões, sem gravar nada.
-2. Envio: para cada pasta em `clientes/` (exceto `_template` e `_fixtures`), cria a linha em `prospects` a partir do `estado.json`, envia os arquivos e o manifesto, insere conversas e comentários e envia os `.jsonl` das sessões citadas no estado, lidos de `~/.claude/projects/<cwd do Mac codificado>/`.
+2. Envio: para cada pasta em `clientes/` (exceto `_template` e `_fixtures`), cria a linha em `prospects` a partir do `estado.json`, envia os arquivos e o manifesto e insere conversas e comentários.
 3. Conferência: compara a quantidade e o hash de cada arquivo entre o Mac e o Supabase e imprime as divergências. Pode ser rodado de novo sem duplicar nada (idempotente por `slug` + `caminho`).
 
-O `cwd` muda do Mac para `/app`. Por isso, as sessões migradas são gravadas no caminho codificado de `/app` dentro de `CLAUDE_CONFIG_DIR`, para o `resume` encontrá-las.
+As memórias de sessão do Mac (`~/.claude/projects/`) não são migradas. O `sessionId` das etapas fica no estado migrado. No primeiro turno de uma etapa em andamento, a restauração não encontra o `.jsonl`, e a etapa retoma pelo histórico (seção 4, regra 4). Na data deste desenho, isso vale para 4 etapas: `adda` e `adda-demo` (final), `sottile-jalecos` (01) e `sottile-teste` (07).
 
 ## 6. Falhas
 
@@ -180,7 +180,7 @@ O `cwd` muda do Mac para `/app`. Por isso, as sessões migradas são gravadas no
 | A. Dados | `Repositorio`, `Mesa`, `NuvemArmazenamento`, memória da sessão, tabelas e storage no Supabase | O app no Mac com `PLANEJAMENTO_DADOS=supabase` (Supabase local) roda a Verdeluz de 01 a 03, e os testes 1 a 4 passam |
 | B. Login | Supabase Auth com Google, `proxy.ts`, token interno, autor nos registros | O teste 5 passa e a tela mostra quem está com o agente |
 | C. No ar | `Dockerfile`, `requirements.txt`, `railway.json`, volume, desligamento gracioso, ajustes da 5.7, domínio | O teste 6 passa no ambiente da Railway |
-| D. Migração | Script da 5.8 | O teste 7 passa e os prospects atuais abrem na nuvem com o chat e a memória da etapa |
+| D. Migração | Script da 5.8 | O teste 7 passa, os prospects atuais abrem na nuvem com o chat, e uma etapa em andamento retoma pelo histórico |
 
 ## 9. Custos estimados
 
