@@ -54,7 +54,7 @@ Hoje o app só aceita chamadas que vêm da própria máquina e não sabe quem é
 
 `dominiosPermitidos(valor): string[]` (separa por vírgula, apara espaços, minúsculas, ignora vazios) e `emailPermitido(email, dominios): boolean`: minúsculas, exige exatamente um `@`, e a parte depois do `@` igual a um dos domínios. `usuario@boomer.com.br.evil.com`, `usuario@evilboomer.com.br`, `usuario@gestaoboomer.com.br`, `usuario@boomer.com`, `a@b@boomer.com.br` e e-mail vazio são recusados; `USUARIO@GestaoBoomer.com` é aceito. Funções puras, com testes próprios.
 
-Variáveis novas: `PLANEJAMENTO_AUTH`, `PLANEJAMENTO_DOMINIOS_PERMITIDOS`, `SUPABASE_PUBLISHABLE_KEY` (a chave publicável do projeto; fica só no servidor), `PLANEJAMENTO_URL_INTERNA` (ver 4.4). Documentadas no `.env.example`.
+O `.env` da raiz é carregado uma única vez por processo, antes do `proxy` (módulo `lib/ambiente.ts` e `instrumentation.ts`); depois de editar o `.env`, reinicie o app. Variáveis novas: `PLANEJAMENTO_AUTH`, `PLANEJAMENTO_DOMINIOS_PERMITIDOS`, `SUPABASE_PUBLISHABLE_KEY` (a chave publicável do projeto; fica só no servidor), `PLANEJAMENTO_URL_INTERNA` (ver 4.4). Documentadas no `.env.example`.
 
 ### 4.2 Sessão no servidor (`apps/web/lib/sessao.ts`)
 
