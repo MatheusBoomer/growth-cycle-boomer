@@ -23,6 +23,7 @@
   },
   "exports": {
     "./*": "./src/*.ts",
-    "./executor/*": "./src/executor/*.ts"
+    "./executor/*": "./src/executor/*.ts",
+    "./nuvem/*": "./src/nuvem/*.ts"
   }
 }
