@@ -60,7 +60,11 @@ describe.skipIf(!suiteVivaHabilitada(process.env))("Supabase (integração)", ()
       process.env.SUPABASE_TESTE_SERVICE_ROLE_KEY ?? "",
     ))
 
-  contratoRepositorio("supabase", async () => new SupabaseRepositorio(cliente()))
+  contratoRepositorio("supabase", async () => new SupabaseRepositorio(cliente()), async (_repo, slug) => {
+    const { data, error } = await cliente().from("prospects").select("criado_por").eq("slug", slug).single()
+    if (error) throw new Error(error.message)
+    return (data?.criado_por as string | null) ?? null
+  })
   contratoArmazem(
     "supabase",
     async () => new ArmazemComProspect(new SupabaseArmazem(cliente()), new SupabaseRepositorio(cliente())),

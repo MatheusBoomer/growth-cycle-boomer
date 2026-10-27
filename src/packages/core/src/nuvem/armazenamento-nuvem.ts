@@ -50,9 +50,9 @@ export class NuvemArmazenamento extends FsArmazenamento {
    * Uma pasta local sem linha no banco (prospect antigo do Mac) também bloqueia o slug, sem ser tocada.
    * Um slug excluído é recriado do zero: o banco e a nuvem são limpos antes de copiar o _template.
    */
-  override async criarPasta(slug: string): Promise<void> {
+  override async criarPasta(slug: string, criadoPor: string | null = null): Promise<void> {
     if (await super.existe(slug)) throw new ErroProspectExistente(slug)
-    await this.repositorio.criarProspect(slug)
+    await this.repositorio.criarProspect(slug, criadoPor)
     // Sobras de um prospect excluído (ou objetos órfãos de um slug sem linha) não podem vazar para o novo.
     await this.armazem.apagarTudo(slug)
     await super.criarPasta(slug)

@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
+import { nomeCurto } from "@workspace/core/autenticacao"
 import type { EtapaId, EventoConversa, RespostaEstado } from "@workspace/core/tipos"
 import { Bubble, BubbleContent } from "@workspace/ui/components/bubble"
 import { ChainOfThought, ChainOfThoughtContent, ChainOfThoughtHeader, ChainOfThoughtStep } from "@workspace/ui/components/chain-of-thought"
@@ -28,6 +29,7 @@ import {
   MessageScrollerViewport,
 } from "@workspace/ui/components/message-scroller"
 import { Markdown } from "@/components/markdown"
+import { useEmailDaConta } from "@/components/marca/conta-contexto"
 import { api, mensagemDeErro } from "@/lib/api"
 import { agruparProcesso, cardsDepoisDaResposta, iconeDoPasso, separarProcessoAoVivo, statusDosPassos, type EventoProcesso, type IconePasso } from "@/lib/passos"
 import { Compositor } from "./compositor"
@@ -114,9 +116,12 @@ function resumoDoProcesso(itens: EventoProcesso[]): string {
 }
 
 export function ChatEtapa({ slug, etapa, dados, eventos, delta }: PropsChatEtapa) {
+  const meuEmail = useEmailDaConta()
   const estadoEtapa = dados.estado.etapas[etapa]
   const ativoAqui = dados.turnoAtivo === etapa
   const ativoOutra = dados.turnoAtivo !== null && !ativoAqui
+  // Outro analista com o turno nesta etapa. Sem login (modo off) turnoPor é sempre null e nada aparece.
+  const turnoDeOutro = ativoAqui && dados.turnoPor !== null && dados.turnoPor !== meuEmail ? dados.turnoPor : null
   const somenteLeitura = estadoEtapa.status === "concluida" || estadoEtapa.status === "desatualizada"
   const motivo = somenteLeitura
     ? estadoEtapa.status === "concluida"
@@ -142,6 +147,11 @@ export function ChatEtapa({ slug, etapa, dados, eventos, delta }: PropsChatEtapa
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
+      {turnoDeOutro && (
+        <p role="status" className="bg-muted text-muted-foreground border-b px-4 py-2 text-center text-sm">
+          {`${nomeCurto(turnoDeOutro)} está com o agente rodando nesta etapa.`}
+        </p>
+      )}
       <MessageScrollerProvider autoScroll>
         <MessageScroller className="min-h-0 flex-1">
           <MessageScrollerViewport>

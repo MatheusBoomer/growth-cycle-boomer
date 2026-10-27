@@ -1,6 +1,6 @@
+import { carregarAmbiente, raizDoProjeto } from "./ambiente"
 import os from "node:os"
 import path from "node:path"
-import { loadEnvConfig } from "@next/env"
 import { FsArmazenamento } from "@workspace/core/armazenamento"
 import { Barramento } from "@workspace/core/barramento"
 import { carregarCatalogo } from "@workspace/core/catalogo"
@@ -73,6 +73,15 @@ function turnoEmAndamento(s: Servidor): boolean {
   return ((s.turnos as unknown as { ativos?: Map<string, unknown> }).ativos?.size ?? 0) > 0
 }
 
+/**
+ * Endereço pelo qual o servidor MCP (processo filho do agente) chama este app: PLANEJAMENTO_URL_INTERNA, ou a porta
+ * local. Não usa PLANEJAMENTO_APP_URL, que é o endereço público (o das rotas de login). Vazio ou só espaços
+ * (linha vazia do .env) vale como ausente.
+ */
+export function urlInternaDoApp(env: Record<string, string | undefined>): string {
+  return env.PLANEJAMENTO_URL_INTERNA?.trim() || `http://127.0.0.1:${env.PORT?.trim() || 3000}`
+}
+
 /** Só para código de servidor (rotas e páginas). Nunca importar em componente "use client". */
 export function servidor(): Servidor {
   const atual = registro.__planejamento
@@ -86,10 +95,10 @@ export function servidor(): Servidor {
     return atual
   }
   // `next dev` roda em src/apps/web → a raiz do projeto de planejamento fica três níveis acima.
-  const raiz = process.env.PLANEJAMENTO_ROOT ?? path.resolve(process.cwd(), "../../..")
-  // O .env fica na raiz do projeto, não na pasta do app (a única que o Next lê sozinho). Carregado aqui, no
-  // processo que de fato escolhe o executor: ANTHROPIC_API_KEY e PLANEJAMENTO_EXECUTOR dependem disto.
-  loadEnvConfig(raiz, process.env.NODE_ENV !== "production", undefined, true)
+  const raiz = raizDoProjeto()
+  // O .env da raiz (ANTHROPIC_API_KEY, PLANEJAMENTO_EXECUTOR, PLANEJAMENTO_DADOS) já foi carregado ao importar
+  // lib/ambiente; a chamada aqui não carrega de novo, só deixa explícito que o servidor depende dele.
+  carregarAmbiente()
   const dados = modoDeDados()
   const catalogo = carregarCatalogo(raiz)
   const nuvem = dados === "supabase" ? montarNuvem(raiz) : undefined
@@ -119,7 +128,7 @@ export function servidor(): Servidor {
     memoria: nuvem?.memoria,
     config: {
       raiz,
-      urlApp: process.env.PLANEJAMENTO_APP_URL ?? `http://127.0.0.1:${process.env.PORT ?? 3000}`,
+      urlApp: urlInternaDoApp(process.env),
       caminhoServidorMcp: path.join(pastaMcp, "servidor.ts"),
       caminhoHook: path.join(pastaMcp, "hook-escrita.ts"),
       comandoNode: process.execPath,

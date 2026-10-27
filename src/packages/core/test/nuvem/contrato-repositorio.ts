@@ -17,7 +17,12 @@ function comentario(id: string, texto: string): Comentario {
 }
 
 /** Suíte compartilhada: roda igual contra a memória e contra o banco. Cada caso usa o próprio slug. */
-export function contratoRepositorio(nome: string, criar: () => Promise<Repositorio>) {
+export function contratoRepositorio(
+  nome: string,
+  criar: () => Promise<Repositorio>,
+  /** Lê `prospects.criado_por`, que o Repositorio não expõe; sem ela, só se confere que a criação aceita o criador. */
+  lerCriadoPor?: (repo: Repositorio, slug: string) => Promise<string | null>,
+) {
   describe(`contrato do Repositorio: ${nome}`, () => {
     it("cria, lista e confere existência", async () => {
       const repo = await criar()
@@ -27,6 +32,38 @@ export function contratoRepositorio(nome: string, criar: () => Promise<Repositor
       expect(await repo.listarSlugs()).toContain(slug)
       expect(await repo.existe(slug)).toBe(true)
       await expect(repo.criarProspect(slug)).rejects.toBeInstanceOf(ErroProspectExistente)
+    })
+
+    it("criar prospect grava o criador (ou null) e recriar um excluído troca o criador", async () => {
+      const repo = await criar()
+      const com = novoSlug()
+      const sem = novoSlug()
+      await repo.criarProspect(com, "ana.souza@boomer.com.br")
+      await repo.criarProspect(sem)
+      if (lerCriadoPor) {
+        expect(await lerCriadoPor(repo, com)).toBe("ana.souza@boomer.com.br")
+        expect(await lerCriadoPor(repo, sem)).toBeNull()
+      }
+      await expect(repo.criarProspect(com, "bia@gestaoboomer.com")).rejects.toBeInstanceOf(ErroProspectExistente)
+      await repo.excluirProspect(com)
+      await repo.criarProspect(com, "bia@gestaoboomer.com")
+      if (lerCriadoPor) expect(await lerCriadoPor(repo, com)).toBe("bia@gestaoboomer.com")
+      await repo.excluirProspect(com)
+      await repo.criarProspect(com)
+      if (lerCriadoPor) expect(await lerCriadoPor(repo, com)).toBeNull()
+    })
+
+    it("mensagem do analista volta com o autor; sem autor, sem o campo", async () => {
+      const repo = await criar()
+      const slug = novoSlug()
+      await repo.criarProspect(slug)
+      const com: EventoConversa = { tipo: "mensagem_analista", texto: "oi", automatica: false, autor: "ana.souza@boomer.com.br", em: EM }
+      const sem: EventoConversa = { tipo: "mensagem_analista", texto: "auto", automatica: true, em: EM }
+      await repo.anexarConversa(slug, "01", com)
+      await repo.anexarConversa(slug, "01", sem)
+      const lida = await repo.lerConversa(slug, "01")
+      expect(lida).toEqual([com, sem])
+      expect(lida[1]).not.toHaveProperty("autor")
     })
 
     it("estado começa nulo e grava com versão", async () => {

@@ -33,14 +33,16 @@ export interface Repositorio {
   /**
    * Cria o prospect. ErroProspectExistente se o slug já está ativo. Um slug excluído é recriado do zero:
    * os dados do antigo (conversa, comentários, uso, manifesto, lixeira) são apagados.
+   * `criadoPor` (e-mail de quem criou) vai para `prospects.criado_por`; null sem login. Ao recriar, vale o novo criador.
    */
-  criarProspect(slug: string): Promise<void>
+  criarProspect(slug: string, criadoPor?: string | null): Promise<void>
   /** Marca como excluído; ErroNaoEncontrado se não existe. */
   excluirProspect(slug: string): Promise<void>
   /** Null enquanto o estado ainda não foi gravado. */
   lerEstado(slug: string): Promise<EstadoVersionado | null>
   /** Devolve a nova versão; ErroConflitoVersao se `versaoLida` não é a atual. */
   gravarEstado(slug: string, estado: Estado, versaoLida: number): Promise<number>
+  /** A coluna `autor` vem de `evento.autor` quando o evento é `mensagem_analista`; nos demais fica null. */
   anexarConversa(slug: string, etapa: EtapaId, evento: EventoConversa): Promise<void>
   /** Em ordem de inclusão. */
   lerConversa(slug: string, etapa: EtapaId): Promise<EventoConversa[]>

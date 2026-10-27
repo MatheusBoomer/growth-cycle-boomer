@@ -4,6 +4,17 @@ import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { pastaConfigClaude, servidor } from "./servidor"
 
+const configsDeTurnos = vi.hoisted(() => [] as { urlApp: string }[])
+// Só o que interessa: com o que o MCP é avisado. O resto do servidor() monta em pasta temporária.
+vi.mock("@workspace/core/servico-turnos", () => ({
+  ServicoTurnos: class {
+    constructor(opcoes: { config: { urlApp: string } }) {
+      configsDeTurnos.push(opcoes.config)
+    }
+  },
+}))
+vi.mock("@workspace/core/catalogo", () => ({ carregarCatalogo: () => ({}) }))
+
 // loadEnvConfig guarda um retrato do process.env na primeira chamada e o restaura nas seguintes, o que desfaz o
 // valor que cada teste define. O que se testa aqui é a escolha do modo, não a leitura do .env.
 vi.mock("@next/env", () => ({ loadEnvConfig: () => ({}) }))
@@ -53,6 +64,48 @@ describe("servidor(): modo de dados supabase", () => {
   it('"supabase " com espaço vale como supabase (chega à checagem das variáveis)', () => {
     process.env.PLANEJAMENTO_DADOS = "supabase "
     expect(() => servidor()).toThrow("PLANEJAMENTO_DADOS=supabase exige SUPABASE_URL")
+  })
+})
+
+describe("servidor(): endereço do app que o MCP chama", () => {
+  const nomes = ["PLANEJAMENTO_ROOT", "PLANEJAMENTO_DADOS", "PLANEJAMENTO_APP_URL", "PLANEJAMENTO_URL_INTERNA", "PORT"] as const
+  let raizTemporaria: string
+
+  beforeEach(() => {
+    delete (globalThis as { __planejamento?: unknown }).__planejamento
+    configsDeTurnos.length = 0
+    raizTemporaria = mkdtempSync(path.join(os.tmpdir(), "servidor-teste-"))
+    vi.stubEnv("PLANEJAMENTO_ROOT", raizTemporaria)
+    for (const n of nomes.slice(1)) vi.stubEnv(n, "")
+    vi.spyOn(console, "info").mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.restoreAllMocks()
+    delete (globalThis as { __planejamento?: unknown }).__planejamento
+    rmSync(raizTemporaria, { recursive: true, force: true })
+  })
+
+  it("usa PLANEJAMENTO_URL_INTERNA quando definida, mesmo com PLANEJAMENTO_APP_URL pública", () => {
+    vi.stubEnv("PLANEJAMENTO_URL_INTERNA", "http://127.0.0.1:8080")
+    vi.stubEnv("PLANEJAMENTO_APP_URL", "https://planejamento.exemplo.com.br")
+    servidor()
+    expect(configsDeTurnos[0]?.urlApp).toBe("http://127.0.0.1:8080")
+  })
+
+  it("sem ela, usa o endereço local na porta do app, ignorando PLANEJAMENTO_APP_URL", () => {
+    vi.stubEnv("PORT", "4100")
+    vi.stubEnv("PLANEJAMENTO_APP_URL", "https://planejamento.exemplo.com.br")
+    servidor()
+    expect(configsDeTurnos[0]?.urlApp).toBe("http://127.0.0.1:4100")
+  })
+
+  it("sem PORT, a porta é 3000", () => {
+    vi.stubEnv("PORT", undefined as unknown as string)
+    delete process.env.PORT
+    servidor()
+    expect(configsDeTurnos[0]?.urlApp).toBe("http://127.0.0.1:3000")
   })
 })
 

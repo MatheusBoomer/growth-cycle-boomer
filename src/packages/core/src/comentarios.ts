@@ -11,6 +11,8 @@ export interface Comentario {
   texto: string
   criadoEm: string
   enviadoEm: string | null
+  /** E-mail de quem comentou; ausente sem login ou em comentários antigos. */
+  autor?: string
 }
 
 export interface MapaPrevia {
