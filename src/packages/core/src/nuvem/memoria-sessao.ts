@@ -1,4 +1,4 @@
-import { mkdir, readFile, stat, writeFile } from "node:fs/promises"
+import { mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import type { ArmazemArquivos } from "./tipos"
 
@@ -9,15 +9,36 @@ export function caminhoSessao(configDir: string, cwd: string, sessionId: string)
 
 /** Mantém a sessão do agente (o .jsonl local) em dia com a nuvem, para o `resume` sobreviver a um servidor novo. */
 export interface MemoriaDeSessao {
-  /** true se o .jsonl está no disco (e não vazio) depois de tentar restaurar. */
+  /** true se o .jsonl está no disco e é válido (ver sessaoValida) depois de tentar restaurar. */
   restaurar(slug: string, sessionId: string): Promise<boolean>
   /** Envia o .jsonl local; ausente é ignorado. */
   salvar(slug: string, sessionId: string): Promise<void>
 }
 
-async function tamanhoLocal(arquivo: string): Promise<number | null> {
+/**
+ * Sessão que o `resume` aceita: pelo menos uma linha não vazia e toda linha não
+ * vazia é JSON, menos talvez a última (um processo interrompido no meio da
+ * escrita deixa a última linha truncada).
+ */
+export function sessaoValida(dados: Uint8Array): boolean {
+  const linhas = Buffer.from(dados)
+    .toString("utf8")
+    .split("\n")
+    .filter((l) => l.trim().length > 0)
+  if (linhas.length === 0) return false
+  return linhas.slice(0, -1).every((linha) => {
+    try {
+      JSON.parse(linha)
+      return true
+    } catch {
+      return false
+    }
+  })
+}
+
+async function lerLocal(arquivo: string): Promise<Uint8Array | null> {
   try {
-    return (await stat(arquivo)).size
+    return await readFile(arquivo)
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code === "ENOENT") return null
     throw e
@@ -37,10 +58,11 @@ export class MemoriaSessao implements MemoriaDeSessao {
 
   async restaurar(slug: string, sessionId: string): Promise<boolean> {
     const arquivo = caminhoSessao(this.configDir, this.cwd, sessionId)
-    const local = await tamanhoLocal(arquivo)
-    if (local && local > 0) return true
+    // Local válido basta, sem consultar a nuvem; ausente, vazio ou corrompido tenta a nuvem.
+    const local = await lerLocal(arquivo)
+    if (local && sessaoValida(local)) return true
     const dados = await this.armazem.baixarSessao(slug, sessionId)
-    if (!dados || dados.length === 0) return false
+    if (!dados || !sessaoValida(dados)) return false
     await mkdir(path.dirname(arquivo), { recursive: true })
     await writeFile(arquivo, dados)
     return true

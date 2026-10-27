@@ -1,8 +1,8 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises"
+import { mkdir, readFile, stat, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { beforeEach, describe, expect, it } from "vitest"
 import { MemoriaArmazem } from "../../src/nuvem/memoria"
-import { caminhoSessao, MemoriaSessao } from "../../src/nuvem/memoria-sessao"
+import { caminhoSessao, MemoriaSessao, sessaoValida } from "../../src/nuvem/memoria-sessao"
 import { raizTemporaria } from "../ajuda"
 
 const SLUG = "acme"
@@ -78,5 +78,43 @@ describe("MemoriaSessao", () => {
     await gravarLocal("")
     expect(await memoria.restaurar(SLUG, SESSAO)).toBe(true)
     expect(await readFile(arquivo(), "utf8")).toBe("conteudo\n")
+  })
+  it("arquivo local corrompido e nuvem válida: baixa a da nuvem", async () => {
+    await armazem.enviarSessao(SLUG, SESSAO, bytes('{"a":1}\n{"b":2}\n'))
+    await gravarLocal('lixo que não é json\n{"a":1}\n')
+    expect(await memoria.restaurar(SLUG, SESSAO)).toBe(true)
+    expect(baixadas).toBe(1)
+    expect(await readFile(arquivo(), "utf8")).toBe('{"a":1}\n{"b":2}\n')
+  })
+
+  it("nuvem corrompida e sem arquivo local: cai na retomada sem gravar nada no disco", async () => {
+    await armazem.enviarSessao(SLUG, SESSAO, bytes('{"a":1}\nlixo\n{"b":2}\n'))
+    expect(await memoria.restaurar(SLUG, SESSAO)).toBe(false)
+    await expect(stat(arquivo())).rejects.toThrow()
+  })
+
+  it("local e nuvem corrompidos: cai na retomada e não troca o local", async () => {
+    await armazem.enviarSessao(SLUG, SESSAO, bytes("lixo\n{}\n"))
+    await gravarLocal("outro lixo\n{}\n")
+    expect(await memoria.restaurar(SLUG, SESSAO)).toBe(false)
+    expect(await readFile(arquivo(), "utf8")).toBe("outro lixo\n{}\n")
+  })
+
+  it("última linha truncada é tolerada, local e baixada da nuvem", async () => {
+    await gravarLocal('{"a":1}\n{"b":')
+    expect(await memoria.restaurar(SLUG, SESSAO)).toBe(true)
+    expect(baixadas).toBe(0)
+
+    await armazem.enviarSessao(SLUG, "s2", bytes('{"a":1}\n{"b":2}\n{"c":'))
+    expect(await memoria.restaurar(SLUG, "s2")).toBe(true)
+  })
+
+  it("sessaoValida: critério do .jsonl", () => {
+    expect(sessaoValida(bytes(""))).toBe(false)
+    expect(sessaoValida(bytes("\n  \n"))).toBe(false)
+    expect(sessaoValida(bytes('{"a":1}\n'))).toBe(true)
+    expect(sessaoValida(bytes('{"a":1}\r\n{"b":2}\r\n'))).toBe(true)
+    expect(sessaoValida(bytes('{"a":1}\n\n{"b":2}\n{"c'))).toBe(true)
+    expect(sessaoValida(bytes('{"a":1}\n{"b\n{"c":3}\n'))).toBe(false)
   })
 })
