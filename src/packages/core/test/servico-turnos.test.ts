@@ -6,6 +6,8 @@ import { Barramento } from "../src/barramento"
 import { ErroTurnoAtivo } from "../src/erros"
 import { FakeExecutor, roteiroSimples, type Roteiro } from "../src/executor/fake"
 import type { PedidoTurno } from "../src/executor/tipos"
+import type { MemoriaDeSessao } from "../src/nuvem/memoria-sessao"
+import type { RegistroUsoTurno } from "../src/nuvem/tipos"
 import { ServicoPlanejamento } from "../src/servico-planejamento"
 import { aspasShell, montarMcpConfig, montarSettingsHook, ServicoTurnos, type ConfigTurnos } from "../src/servico-turnos"
 import { catalogoReal, raizTemporaria } from "./ajuda"
@@ -285,5 +287,210 @@ describe("uso da assinatura", () => {
     await t.aguardarOcioso(slug)
     const avisos = (await servico.conversa(slug, "01")).filter((e) => e.tipo === "aviso" && e.nivel === "alerta")
     expect(avisos).toHaveLength(1)
+  })
+})
+
+describe("sincronização dos arquivos do prospect", () => {
+  const AVISO_ANTES = "Não consegui baixar os arquivos do prospect. Tente de novo."
+  const AVISO_DEPOIS = "Os arquivos desta resposta ainda não foram salvos na nuvem. Vou tentar de novo na próxima ação."
+
+  /** Serviço cujo armazenamento registra cada sincronização em `log` e pode falhar na n-ésima chamada. */
+  function comSincronizacao(roteiro: Roteiro, falharNa: number | null = null) {
+    const log: string[] = []
+    let chamadas = 0
+    class ArmEspiao extends FsArmazenamento {
+      override async sincronizar(_slug: string): Promise<void> {
+        chamadas++
+        log.push("sincronizar")
+        if (falharNa === chamadas) throw new Error("rede fora")
+      }
+    }
+    const svc = new ServicoPlanejamento({
+      armazenamento: new ArmEspiao(raiz, async () => {}),
+      catalogo: catalogoReal(),
+      barramento,
+      validar: async () => ({ ok: true, problemas: [], avisos: [], resumo: null }),
+    })
+    const executor = new FakeExecutor(async function* (pedido, sinal) {
+      log.push("executor")
+      yield* roteiro(pedido, sinal)
+    })
+    const t = new ServicoTurnos({ servico: svc, executor, barramento, catalogo: catalogoReal(), config })
+    return { t, svc, executor, log }
+  }
+
+  it("sincroniza antes e depois do turno", async () => {
+    const { t, svc, log } = comSincronizacao(roteiroSimples("ok", "s1"))
+    const slug = await svc.criarProspect("Iszi", null)
+    log.length = 0
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    expect(log).toEqual(["sincronizar", "executor", "sincronizar"])
+  })
+
+  it("falha antes do turno: não chama o executor e avisa", async () => {
+    const { t, svc, executor, log } = comSincronizacao(roteiroSimples("ok", "s1"), 1)
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    expect(executor.pedidos).toHaveLength(0)
+    expect(log).toEqual(["sincronizar"])
+    const conversa = await svc.conversa(slug, "01")
+    expect(conversa.find((e) => e.tipo === "aviso" && e.nivel === "erro" && e.texto === AVISO_ANTES)).toBeTruthy()
+    expect(conversa.at(-1)).toMatchObject({ tipo: "turno_fim", status: "erro", detalhe: AVISO_ANTES })
+    expect(t.ativo(slug)).toBeNull()
+  })
+
+  it("falha depois do turno: avisa com alerta e o turno fica ok", async () => {
+    const { t, svc } = comSincronizacao(roteiroSimples("ok", "s1"), 2)
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    const conversa = await svc.conversa(slug, "01")
+    const iFim = conversa.findIndex((e) => e.tipo === "turno_fim")
+    const iAviso = conversa.findIndex((e) => e.tipo === "aviso" && e.texto === AVISO_DEPOIS)
+    expect(conversa[iFim]).toMatchObject({ status: "ok" })
+    expect(conversa[iAviso]).toMatchObject({ nivel: "alerta" })
+    expect(iAviso).toBeGreaterThan(iFim)
+  })
+
+  it("turno interrompido também sincroniza no fim", async () => {
+    const { t, svc, log } = comSincronizacao(async function* (_p, sinal) {
+      yield { tipo: "sessao", sessionId: "s" }
+      if (!sinal.aborted) await new Promise<void>((r) => sinal.addEventListener("abort", () => r(), { once: true }))
+    })
+    const slug = await svc.criarProspect("Iszi", null)
+    log.length = 0
+    await t.iniciar(slug, "01")
+    t.parar(slug)
+    await t.aguardarOcioso(slug)
+    expect((await svc.conversa(slug, "01")).at(-1)).toMatchObject({ tipo: "turno_fim", status: "interrompido" })
+    expect(log.at(-1)).toBe("sincronizar")
+    expect(log.filter((x) => x === "sincronizar")).toHaveLength(2)
+  })
+})
+
+describe("memória da sessão do agente", () => {
+  class MemoriaFalsa implements MemoriaDeSessao {
+    readonly chamadas: string[] = []
+    constructor(private readonly restaurada: boolean) {}
+    async restaurar(slug: string, sessionId: string): Promise<boolean> {
+      this.chamadas.push(`restaurar ${slug} ${sessionId}`)
+      return this.restaurada
+    }
+    async salvar(slug: string, sessionId: string): Promise<void> {
+      this.chamadas.push(`salvar ${slug} ${sessionId}`)
+    }
+  }
+
+  function comMemoria(memoria: MemoriaDeSessao, roteiro: Roteiro) {
+    const executor = new FakeExecutor(roteiro)
+    const t = new ServicoTurnos({ servico, executor, barramento, catalogo: catalogoReal(), config, memoria })
+    return { t, executor }
+  }
+
+  /** Primeiro turno abre a sessão s1 e o seguinte (sem sessionId) abre s2. */
+  const roteiroDuasSessoes: Roteiro = async function* (pedido) {
+    const id = pedido.sessionId ?? (pedido.mensagem.includes("Histórico desta etapa") ? "s2" : "s1")
+    yield { tipo: "sessao", sessionId: id }
+    yield { tipo: "texto", texto: "resposta" }
+    yield { tipo: "fim", ok: true, erro: null, sessionId: id }
+  }
+
+  it("com sessionId e memória restaurada, envia resume e salva no fim", async () => {
+    const memoria = new MemoriaFalsa(true)
+    const { t, executor } = comMemoria(memoria, roteiroDuasSessoes)
+    const slug = await servico.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    memoria.chamadas.length = 0
+    await t.enviarMensagem(slug, "01", "Continue")
+    await t.aguardarOcioso(slug)
+    expect(executor.pedidos[1]).toMatchObject({ sessionId: "s1", mensagem: "Continue" })
+    expect(memoria.chamadas).toEqual([`restaurar ${slug} s1`, `salvar ${slug} s1`])
+    const conversa = await servico.conversa(slug, "01")
+    expect(conversa.find((e) => e.tipo === "aviso" && e.texto === "Retomei a etapa a partir do histórico.")).toBeUndefined()
+  })
+
+  it("memória não restaurada: sessão nova, prompt de retomada e aviso info", async () => {
+    const memoria = new MemoriaFalsa(false)
+    const { t, executor } = comMemoria(memoria, roteiroDuasSessoes)
+    const slug = await servico.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    memoria.chamadas.length = 0
+    await t.enviarMensagem(slug, "01", "Siga em frente")
+    await t.aguardarOcioso(slug)
+    const pedido = executor.pedidos[1]!
+    expect(pedido.sessionId).toBeNull()
+    expect(pedido.mensagem.startsWith("Vamos trabalhar na ")).toBe(true)
+    expect(pedido.mensagem).toContain("### Histórico desta etapa")
+    expect(pedido.mensagem).toContain("**Agente:** resposta")
+    expect(pedido.mensagem.endsWith("Siga em frente")).toBe(true)
+    const conversa = await servico.conversa(slug, "01")
+    expect(conversa).toContainEqual(
+      expect.objectContaining({ tipo: "aviso", nivel: "info", texto: "Retomei a etapa a partir do histórico." }),
+    )
+    expect((await servico.estado(slug)).etapas["01"].sessionId).toBe("s2")
+    expect(memoria.chamadas).toEqual([`restaurar ${slug} s1`, `salvar ${slug} s2`])
+  })
+})
+
+describe("custo de cada turno", () => {
+  class ArmazenamentoComUso extends FsArmazenamento {
+    readonly usos: RegistroUsoTurno[] = []
+    override async registrarUso(r: RegistroUsoTurno): Promise<void> {
+      this.usos.push(r)
+    }
+  }
+
+  function comArmazenamento(arm: FsArmazenamento, roteiro: Roteiro, agora?: () => string) {
+    const svc = new ServicoPlanejamento({
+      armazenamento: arm,
+      catalogo: catalogoReal(),
+      barramento,
+      validar: async () => ({ ok: true, problemas: [], avisos: [], resumo: null }),
+    })
+    const t = new ServicoTurnos({ servico: svc, executor: new FakeExecutor(roteiro), barramento, catalogo: catalogoReal(), config, agora })
+    return { svc, t }
+  }
+
+  const roteiroComUso: Roteiro = async function* () {
+    yield { tipo: "sessao", sessionId: "s1" }
+    yield { tipo: "fim", ok: true, erro: null, sessionId: "s1", uso: { custoUsd: 0.42, tokensEntrada: 1000, tokensSaida: 200 } }
+  }
+
+  it("registra o uso do turno com início, fim, status e autor nulo", async () => {
+    const arm = new ArmazenamentoComUso(raiz, async () => {})
+    let n = 0
+    const { svc, t } = comArmazenamento(arm, roteiroComUso, () => `2026-10-27T10:00:${String(n++).padStart(2, "0")}.000Z`)
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    expect(arm.usos).toHaveLength(1)
+    const uso = arm.usos[0]!
+    expect(uso).toMatchObject({
+      slug,
+      etapa: "01",
+      autor: null,
+      custoUsd: 0.42,
+      tokensEntrada: 1000,
+      tokensSaida: 200,
+      status: "ok",
+    })
+    expect(uso.inicio < uso.fim).toBe(true)
+  })
+
+  it("falha ao registrar o uso não afeta o turno", async () => {
+    class Quebrado extends FsArmazenamento {
+      override async registrarUso(): Promise<void> {
+        throw new Error("banco fora do ar")
+      }
+    }
+    const { svc, t } = comArmazenamento(new Quebrado(raiz, async () => {}), roteiroComUso)
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    expect((await svc.conversa(slug, "01")).at(-1)).toMatchObject({ tipo: "turno_fim", status: "ok" })
   })
 })

@@ -31,6 +31,7 @@ import { destinoInsumo, extensao, extensaoAceita, nomeSeguro, registrarInsumo } 
 import * as me from "./maquina-estados"
 import { descreverMarcacoes, type MarcaAjuste } from "./marcacoes"
 import { mensagemAjuste, mensagemAjustes, mensagemAprovacao, mensagemEtapaAnteriorAlterada, mensagemInsumoRecebido } from "./prompts"
+import type { RegistroUsoTurno } from "./nuvem/tipos"
 import { aplicarOverrides, lerKit, reposicionarNoFixture } from "./servico-teste"
 import { normalizarSlug } from "./slug"
 import { importarStatusMd, renderStatusMd } from "./status-md"
@@ -127,6 +128,16 @@ export class ServicoPlanejamento {
     this.validar = d.validar
     this.agora = d.agora ?? (() => new Date().toISOString())
     this.gerarId = d.gerarId ?? (() => randomUUID())
+  }
+
+  /** Guarda o custo e os tokens de um turno (no disco local não faz nada). */
+  registrarUso(r: RegistroUsoTurno): Promise<void> {
+    return this.arm.registrarUso(r)
+  }
+
+  /** Sincroniza os arquivos do prospect com a nuvem (no disco local não faz nada). Falha com ErroSincronizacao. */
+  sincronizarArquivos(slug: string): Promise<void> {
+    return this.arm.sincronizar(slug)
   }
 
   conectarTurnos(conexao: ConexaoTurnos): void {

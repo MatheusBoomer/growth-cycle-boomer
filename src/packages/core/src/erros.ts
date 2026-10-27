@@ -59,6 +59,26 @@ export class ErroNaoEncontrado extends ErroDominio {
   }
 }
 
+export class ErroConflitoVersao extends ErroDominio {
+  readonly slug: string
+  constructor(slug: string) {
+    super(
+      `O estado do prospect "${slug}" mudou por fora do app. Recarregue a página.`,
+      "conflito_versao",
+      409,
+    )
+    this.slug = slug
+  }
+}
+
+export class ErroSincronizacao extends ErroDominio {
+  readonly caminho: string | null
+  constructor(message: string, caminho: string | null = null) {
+    super(caminho ? `${message} (arquivo: ${caminho})` : message, "sincronizacao_falhou", 502)
+    this.caminho = caminho
+  }
+}
+
 /** Checagem por forma, não por instanceof: o Next pode carregar este módulo mais de uma vez. */
 export function ehErroDominio(e: unknown): e is ErroDominio {
   return (

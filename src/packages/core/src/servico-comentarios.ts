@@ -100,12 +100,11 @@ export class ServicoComentarios {
   }
 
   async listar(slug: string, id: string): Promise<Comentario[]> {
-    const texto = await this.arm.lerTexto(slug, `.app/comentarios/${id}.json`)
-    return texto ? (JSON.parse(texto) as Comentario[]) : []
+    return this.arm.lerComentarios(slug, id)
   }
 
   private async gravar(slug: string, id: string, lista: Comentario[]): Promise<void> {
-    await this.arm.gravarTexto(slug, `.app/comentarios/${id}.json`, JSON.stringify(lista, null, 2))
+    await this.arm.gravarComentarios(slug, id, lista)
   }
 
   private async roteiro(slug: string, e: Entregavel): Promise<SlideRoteiro[]> {
@@ -193,6 +192,7 @@ export class ServicoComentarios {
         )
         recortes[c.id] = `clientes/${slug}/${rel}`
       }
+      this.arm.agendarSincronizacao(slug)
       rotulo = (n) => {
         const titulo = mapa?.slides[n - 1]?.titulo
         return titulo ? `Slide ${n} · "${titulo}"` : `Slide ${n}`

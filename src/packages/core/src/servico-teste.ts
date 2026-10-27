@@ -78,6 +78,8 @@ export async function reposicionarNoFixture(
   }
 
   for (const pasta of PASTAS_APAGADAS) await rm(arm.caminhoAbsoluto(slug, pasta), { recursive: true, force: true })
+  // No modo nuvem, conversa e comentários não estão em .app/: somem pelo banco.
+  await arm.limparConversasEComentarios(slug)
   for (const pasta of PASTAS_DO_MODELO) {
     const modelo = path.join(arm.pastaClientes, "_template", pasta)
     if (await existe(modelo)) {
@@ -97,6 +99,8 @@ export async function reposicionarNoFixture(
     const roteiro = path.join(fixture.pasta, "roteiros", `${kit.etapa}.md`)
     if (await existe(roteiro)) await copiarArquivo(roteiro, arm.caminhoAbsoluto(slug, `${PASTA_KIT}/${kit.etapa}/${ROTEIRO}`))
   }
+
+  arm.agendarSincronizacao(slug)
 
   const completo = fixture.estadoCompleto
   return {
