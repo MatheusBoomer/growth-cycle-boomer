@@ -44,6 +44,8 @@ export interface Repositorio {
   /** Lista vazia se não há. */
   lerComentarios(slug: string, entregavelId: string): Promise<Comentario[]>
   gravarComentarios(slug: string, entregavelId: string, lista: Comentario[]): Promise<void>
+  /** Apaga toda a conversa e todos os comentários do prospect; o prospect e o uso ficam. */
+  limparConversasEComentarios(slug: string): Promise<void>
   registrarUso(r: RegistroUsoTurno): Promise<void>
   marcarSincronizacao(slug: string, pendente: boolean): Promise<void>
 }

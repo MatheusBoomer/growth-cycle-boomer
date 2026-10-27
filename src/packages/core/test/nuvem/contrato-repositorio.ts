@@ -98,6 +98,31 @@ export function contratoRepositorio(nome: string, criar: () => Promise<Repositor
       expect(await repo.lerComentarios(slug, "roteiro")).toEqual([])
     })
 
+    it("limpa conversas e comentários só do slug pedido, sem apagar o prospect", async () => {
+      const repo = await criar()
+      const slug = novoSlug()
+      const outro = novoSlug()
+      await repo.criarProspect(slug)
+      await repo.criarProspect(outro)
+      const evento: EventoConversa = { tipo: "texto_agente", texto: "olá", em: EM }
+      await repo.anexarConversa(slug, "01", evento)
+      await repo.anexarConversa(slug, "03", evento)
+      await repo.gravarComentarios(slug, "apresentacao", [comentario("c1", "um")])
+      await repo.anexarConversa(outro, "01", evento)
+      await repo.gravarComentarios(outro, "apresentacao", [comentario("c2", "dois")])
+
+      await repo.limparConversasEComentarios(slug)
+
+      expect(await repo.lerConversa(slug, "01")).toEqual([])
+      expect(await repo.lerConversa(slug, "03")).toEqual([])
+      expect(await repo.lerComentarios(slug, "apresentacao")).toEqual([])
+      expect(await repo.existe(slug)).toBe(true)
+      expect(await repo.lerConversa(outro, "01")).toEqual([evento])
+      expect(await repo.lerComentarios(outro, "apresentacao")).toEqual([comentario("c2", "dois")])
+      // Limpar de novo, sem nada a limpar, não falha.
+      await expect(repo.limparConversasEComentarios(slug)).resolves.toBeUndefined()
+    })
+
     it("registra uso e marca sincronização", async () => {
       const repo = await criar()
       const slug = novoSlug()

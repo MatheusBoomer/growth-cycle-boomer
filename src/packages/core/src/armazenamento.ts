@@ -286,6 +286,9 @@ export class FsArmazenamento {
 
   async registrarUso(_r: RegistroUsoTurno): Promise<void> {}
 
+  /** No disco, conversas e comentários vivem em .app/, que o reposicionamento do cliente de teste já apaga. */
+  async limparConversasEComentarios(_slug: string): Promise<void> {}
+
   async lerConversa(slug: string, etapa: EtapaId): Promise<EventoConversa[]> {
     const texto = await this.lerTexto(slug, `.app/conversas/${etapa}.jsonl`)
     if (!texto) return []

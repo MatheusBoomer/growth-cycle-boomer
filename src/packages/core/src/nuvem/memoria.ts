@@ -84,6 +84,12 @@ export class MemoriaRepositorio implements Repositorio {
     this.ativo(slug).comentarios.set(entregavelId, structuredClone(lista))
   }
 
+  async limparConversasEComentarios(slug: string): Promise<void> {
+    const p = this.prospects.get(slug)
+    p?.conversas.clear()
+    p?.comentarios.clear()
+  }
+
   async registrarUso(r: RegistroUsoTurno): Promise<void> {
     this.usos.push({ ...r })
   }

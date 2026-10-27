@@ -195,6 +195,13 @@ export class SupabaseRepositorio implements Repositorio {
     }
   }
 
+  async limparConversasEComentarios(slug: string): Promise<void> {
+    for (const tabela of ["eventos_conversa", "comentarios"]) {
+      const { error } = await this.cliente.from(tabela).delete().eq("slug", slug)
+      if (error) throw falha(error)
+    }
+  }
+
   async registrarUso(r: RegistroUsoTurno): Promise<void> {
     const { error } = await this.cliente.from("uso_turnos").insert({
       slug: r.slug,

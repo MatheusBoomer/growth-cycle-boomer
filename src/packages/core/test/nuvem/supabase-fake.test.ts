@@ -230,6 +230,22 @@ describe("SupabaseRepositorio (cliente falso)", () => {
     expect(await repo.lerComentarios("p", "apresentacao")).toEqual([])
   })
 
+  it("limparConversasEComentarios: apaga eventos_conversa e comentarios só do slug", async () => {
+    const fake = criarFake(() => ok(null))
+    const repo = new SupabaseRepositorio(fake.cliente, () => EM)
+    await repo.limparConversasEComentarios("p")
+    expect(fake.consultas.map((c) => c.tabela).sort()).toEqual(["comentarios", "eventos_conversa"])
+    for (const c of fake.consultas) {
+      expect(op(c, "delete")).toBeDefined()
+      expect(c.ops.filter(([m]) => m === "eq")).toEqual([["eq", "slug", "p"]])
+    }
+
+    const falho = criarFake(() => ({ data: null, error: { message: "caiu em https://abc.supabase.co/rest" } }))
+    const erro = await new SupabaseRepositorio(falho.cliente).limparConversasEComentarios("p").catch((e: unknown) => e)
+    expect(erro).toBeInstanceOf(Error)
+    expect((erro as Error).message).not.toContain("supabase.co")
+  })
+
   it("marcarSincronizacao: zero linhas é ErroNaoEncontrado", async () => {
     const repo = new SupabaseRepositorio(criarFake(() => ok([])).cliente, () => EM)
     await expect(repo.marcarSincronizacao("x", true)).rejects.toBeInstanceOf(ErroNaoEncontrado)

@@ -108,6 +108,11 @@ export class NuvemArmazenamento extends FsArmazenamento {
     return this.repositorio.gravarComentarios(slug, id, lista)
   }
 
+  override limparConversasEComentarios(slug: string): Promise<void> {
+    this.pastaProspect(slug)
+    return this.repositorio.limparConversasEComentarios(slug)
+  }
+
   override async gravarTexto(slug: string, rel: string, conteudo: string): Promise<void> {
     await super.gravarTexto(slug, rel, conteudo)
     this.agendarSincronizacao(slug)
