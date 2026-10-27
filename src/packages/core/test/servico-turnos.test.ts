@@ -7,6 +7,7 @@ import { ErroTurnoAtivo } from "../src/erros"
 import { FakeExecutor, roteiroSimples, type Roteiro } from "../src/executor/fake"
 import type { PedidoTurno } from "../src/executor/tipos"
 import type { MemoriaDeSessao } from "../src/nuvem/memoria-sessao"
+import type { RegistroUsoTurno } from "../src/nuvem/tipos"
 import { ServicoPlanejamento } from "../src/servico-planejamento"
 import { aspasShell, montarMcpConfig, montarSettingsHook, ServicoTurnos, type ConfigTurnos } from "../src/servico-turnos"
 import { catalogoReal, raizTemporaria } from "./ajuda"
@@ -432,5 +433,64 @@ describe("memória da sessão do agente", () => {
     )
     expect((await servico.estado(slug)).etapas["01"].sessionId).toBe("s2")
     expect(memoria.chamadas).toEqual([`restaurar ${slug} s1`, `salvar ${slug} s2`])
+  })
+})
+
+describe("custo de cada turno", () => {
+  class ArmazenamentoComUso extends FsArmazenamento {
+    readonly usos: RegistroUsoTurno[] = []
+    override async registrarUso(r: RegistroUsoTurno): Promise<void> {
+      this.usos.push(r)
+    }
+  }
+
+  function comArmazenamento(arm: FsArmazenamento, roteiro: Roteiro, agora?: () => string) {
+    const svc = new ServicoPlanejamento({
+      armazenamento: arm,
+      catalogo: catalogoReal(),
+      barramento,
+      validar: async () => ({ ok: true, problemas: [], avisos: [], resumo: null }),
+    })
+    const t = new ServicoTurnos({ servico: svc, executor: new FakeExecutor(roteiro), barramento, catalogo: catalogoReal(), config, agora })
+    return { svc, t }
+  }
+
+  const roteiroComUso: Roteiro = async function* () {
+    yield { tipo: "sessao", sessionId: "s1" }
+    yield { tipo: "fim", ok: true, erro: null, sessionId: "s1", uso: { custoUsd: 0.42, tokensEntrada: 1000, tokensSaida: 200 } }
+  }
+
+  it("registra o uso do turno com início, fim, status e autor nulo", async () => {
+    const arm = new ArmazenamentoComUso(raiz, async () => {})
+    let n = 0
+    const { svc, t } = comArmazenamento(arm, roteiroComUso, () => `2026-10-27T10:00:${String(n++).padStart(2, "0")}.000Z`)
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    expect(arm.usos).toHaveLength(1)
+    const uso = arm.usos[0]!
+    expect(uso).toMatchObject({
+      slug,
+      etapa: "01",
+      autor: null,
+      custoUsd: 0.42,
+      tokensEntrada: 1000,
+      tokensSaida: 200,
+      status: "ok",
+    })
+    expect(uso.inicio < uso.fim).toBe(true)
+  })
+
+  it("falha ao registrar o uso não afeta o turno", async () => {
+    class Quebrado extends FsArmazenamento {
+      override async registrarUso(): Promise<void> {
+        throw new Error("banco fora do ar")
+      }
+    }
+    const { svc, t } = comArmazenamento(new Quebrado(raiz, async () => {}), roteiroComUso)
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    expect((await svc.conversa(slug, "01")).at(-1)).toMatchObject({ tipo: "turno_fim", status: "ok" })
   })
 })

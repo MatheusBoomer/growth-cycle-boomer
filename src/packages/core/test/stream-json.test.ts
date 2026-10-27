@@ -11,7 +11,7 @@ describe("parseLinhaStreamJson", () => {
       { tipo: "sessao", sessionId: SID },
       { tipo: "texto_delta", texto: "oi" },
       { tipo: "texto", texto: "oi" },
-      { tipo: "fim", ok: true, erro: null, sessionId: SID },
+      { tipo: "fim", ok: true, erro: null, sessionId: SID, uso: { custoUsd: 0.07, tokensEntrada: null, tokensSaida: null } },
     ])
   })
 
@@ -66,6 +66,32 @@ describe("parseLinhaStreamJson", () => {
   it("resultado com erro vira fim com mensagem", () => {
     const linha = JSON.stringify({ type: "result", subtype: "error_during_execution", is_error: true, session_id: SID })
     expect(parseLinhaStreamJson(linha)).toEqual([{ tipo: "fim", ok: false, erro: "error_during_execution", sessionId: SID }])
+  })
+
+  it("result traz custo e tokens", () => {
+    const linha = JSON.stringify({
+      type: "result",
+      subtype: "success",
+      is_error: false,
+      session_id: SID,
+      total_cost_usd: 0.42,
+      usage: { input_tokens: 1000, output_tokens: 200 },
+    })
+    expect(parseLinhaStreamJson(linha)).toEqual([
+      { tipo: "fim", ok: true, erro: null, sessionId: SID, uso: { custoUsd: 0.42, tokensEntrada: 1000, tokensSaida: 200 } },
+    ])
+  })
+
+  it("result sem custo traz uso com nulos", () => {
+    const linha = JSON.stringify({ type: "result", subtype: "success", is_error: false, session_id: SID, usage: {} })
+    expect(parseLinhaStreamJson(linha)).toEqual([
+      { tipo: "fim", ok: true, erro: null, sessionId: SID, uso: { custoUsd: null, tokensEntrada: null, tokensSaida: null } },
+    ])
+  })
+
+  it("result sem custo nem usage não leva uso", () => {
+    const linha = JSON.stringify({ type: "result", subtype: "success", is_error: false, session_id: SID })
+    expect(parseLinhaStreamJson(linha)).toEqual([{ tipo: "fim", ok: true, erro: null, sessionId: SID }])
   })
 
   it("linha que não é JSON é ignorada", () => {

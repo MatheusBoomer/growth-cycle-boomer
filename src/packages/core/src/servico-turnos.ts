@@ -6,6 +6,7 @@ import { etapaDoCatalogo } from "./catalogo"
 import { ErroTurnoAtivo } from "./erros"
 import type { Executor, PedidoTurno } from "./executor/tipos"
 import type { MemoriaDeSessao } from "./nuvem/memoria-sessao"
+import type { RegistroUsoTurno } from "./nuvem/tipos"
 import { promptInicialEtapa, promptRetomadaEtapa, systemPromptModoInterface } from "./prompts"
 import type { AjusteEnvio, ServicoPlanejamento } from "./servico-planejamento"
 import type { Catalogo, EtapaId, EventoConversa } from "./tipos"
@@ -298,6 +299,15 @@ export class ServicoTurnos {
     }
   }
 
+  /** Guarda o custo do turno. Falha só vai para o console: não pode afetar o turno. */
+  private async registrarUso(r: RegistroUsoTurno): Promise<void> {
+    try {
+      await this.servico.registrarUso(r)
+    } catch (e) {
+      console.error(`Falha ao registrar o uso do turno de "${r.slug}":`, e)
+    }
+  }
+
   /** Guarda a sessão do agente na nuvem. Falha só vai para o console: o analista não precisa saber. */
   private async salvarSessao(slug: string, etapa: EtapaId): Promise<void> {
     if (!this.memoria) return
@@ -359,7 +369,8 @@ export class ServicoTurnos {
       allowedTools: FERRAMENTAS_PERMITIDAS,
     }
 
-    await this.registrar(slug, etapa, { tipo: "turno_inicio", em: this.agora() })
+    const inicio = this.agora()
+    await this.registrar(slug, etapa, { tipo: "turno_inicio", em: inicio })
     if (retomada) await this.registrar(slug, etapa, { tipo: "aviso", nivel: "info", texto: AVISO_RETOMADA, em: this.agora() })
     let terminou = false
     try {
@@ -393,11 +404,19 @@ export class ServicoTurnos {
         } else if (ev.tipo === "fim") {
           terminou = true
           if (ev.sessionId && ev.sessionId !== sessionId) await this.servico.definirSessao(slug, etapa, ev.sessionId)
-          await this.registrar(slug, etapa, {
-            tipo: "turno_fim",
-            status: sinal.aborted ? "interrompido" : ev.ok ? "ok" : "erro",
-            detalhe: ev.ok ? null : ev.erro,
-            em: this.agora(),
+          const status = sinal.aborted ? "interrompido" : ev.ok ? "ok" : "erro"
+          const fim = this.agora()
+          await this.registrar(slug, etapa, { tipo: "turno_fim", status, detalhe: ev.ok ? null : ev.erro, em: fim })
+          await this.registrarUso({
+            slug,
+            etapa,
+            autor: null,
+            custoUsd: ev.uso?.custoUsd ?? null,
+            tokensEntrada: ev.uso?.tokensEntrada ?? null,
+            tokensSaida: ev.uso?.tokensSaida ?? null,
+            inicio,
+            fim,
+            status,
           })
         }
       }

@@ -6,7 +6,14 @@ export type EventoExecutor =
   | { tipo: "ferramenta_resultado"; id: string; erro: boolean }
   | { tipo: "limite"; status: string; resetsAt: number | null }
   | { tipo: "uso"; janelas: JanelaUso[] }
-  | { tipo: "fim"; ok: boolean; erro: string | null; sessionId: string | null }
+  | { tipo: "fim"; ok: boolean; erro: string | null; sessionId: string | null; uso?: UsoDoTurno }
+
+/** Custo e tokens informados pelo Claude no fim do turno (null quando o campo não veio). */
+export interface UsoDoTurno {
+  custoUsd: number | null
+  tokensEntrada: number | null
+  tokensSaida: number | null
+}
 
 export interface PedidoTurno {
   cwd: string
