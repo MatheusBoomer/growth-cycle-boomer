@@ -1,5 +1,6 @@
 "use client"
 
+import { usePathname } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
 import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Button } from "@workspace/ui/components/button"
@@ -11,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@workspace/ui/components/dialog"
+import { ehPaginaDeLogin } from "@/lib/login"
 
 interface Sistema {
   claude: { instalado: boolean; versao: string | null; logado: boolean; metodo: string | null; plano: string | null }
@@ -21,23 +23,29 @@ interface Sistema {
 }
 
 export function VerificacaoSistema() {
+  // Em /login ninguém entrou ainda: a API responderia 401 e a tela não precisa do estado desta máquina.
+  const noLogin = ehPaginaDeLogin(usePathname())
   const [sistema, setSistema] = useState<Sistema | null>(null)
   const [verificando, setVerificando] = useState(false)
 
   const verificar = useCallback(async () => {
     setVerificando(true)
     try {
-      setSistema((await (await fetch("/api/sistema", { cache: "no-store" })).json()) as Sistema)
+      const resposta = await fetch("/api/sistema", { cache: "no-store" })
+      // Resposta que não é de sucesso (401 sem sessão, 403, 500) não diz nada sobre esta máquina: não vira "sistema com problema".
+      if (resposta.ok) setSistema((await resposta.json()) as Sistema)
+    } catch {
+      // sem resposta: segue sem aviso
     } finally {
       setVerificando(false)
     }
   }, [])
 
   useEffect(() => {
-    void verificar()
-  }, [verificar])
+    if (!noLogin) void verificar()
+  }, [noLogin, verificar])
 
-  if (!sistema) return null
+  if (noLogin || !sistema) return null
   const bloqueado = !sistema.claude.instalado || !sistema.claude.logado || !sistema.python.ok
   const cobrado = sistema.claude.logado && sistema.claude.metodo !== "claude.ai"
   const faltasBenchmark = [

@@ -73,6 +73,15 @@ function turnoEmAndamento(s: Servidor): boolean {
   return ((s.turnos as unknown as { ativos?: Map<string, unknown> }).ativos?.size ?? 0) > 0
 }
 
+/**
+ * Endereço pelo qual o servidor MCP (processo filho do agente) chama este app: PLANEJAMENTO_URL_INTERNA, ou a porta
+ * local. Não usa PLANEJAMENTO_APP_URL, que é o endereço público (o das rotas de login). Vazio ou só espaços
+ * (linha vazia do .env) vale como ausente.
+ */
+export function urlInternaDoApp(env: Record<string, string | undefined>): string {
+  return env.PLANEJAMENTO_URL_INTERNA?.trim() || `http://127.0.0.1:${env.PORT?.trim() || 3000}`
+}
+
 /** Só para código de servidor (rotas e páginas). Nunca importar em componente "use client". */
 export function servidor(): Servidor {
   const atual = registro.__planejamento
@@ -119,7 +128,7 @@ export function servidor(): Servidor {
     memoria: nuvem?.memoria,
     config: {
       raiz,
-      urlApp: process.env.PLANEJAMENTO_APP_URL ?? `http://127.0.0.1:${process.env.PORT ?? 3000}`,
+      urlApp: urlInternaDoApp(process.env),
       caminhoServidorMcp: path.join(pastaMcp, "servidor.ts"),
       caminhoHook: path.join(pastaMcp, "hook-escrita.ts"),
       comandoNode: process.execPath,
