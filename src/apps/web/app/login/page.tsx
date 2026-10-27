@@ -1,3 +1,4 @@
+import "@/lib/ambiente"
 import { redirect } from "next/navigation"
 import { caminhoProximoSeguro, modoDeAutenticacao } from "@workspace/core/autenticacao"
 import { CartaoLogin } from "@/components/login/cartao-login"

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { origemDoRedirecionamento, requisicaoEhHttps } from "./origem-publica"
+import { hostPublico, origemDoRedirecionamento, requisicaoEhHttps, urlPublicaMalformada } from "./origem-publica"
 
 const PUBLICO = { PLANEJAMENTO_APP_URL: "https://planejamento.exemplo.com.br" }
 
@@ -76,5 +76,26 @@ describe("requisicaoEhHttps", () => {
 
   it("não depende de PLANEJAMENTO_APP_URL: http local continua http", () => {
     expect(requisicaoEhHttps(cab("127.0.0.1:3000"), "http:")).toBe(false)
+  })
+})
+
+describe("hostPublico e urlPublicaMalformada (o único parser de PLANEJAMENTO_APP_URL)", () => {
+  it("devolve o host (com porta) de uma URL http ou https", () => {
+    expect(hostPublico({ PLANEJAMENTO_APP_URL: "https://planejamento.exemplo.com.br" })).toBe("planejamento.exemplo.com.br")
+    expect(hostPublico({ PLANEJAMENTO_APP_URL: "  http://app.exemplo.com:8443/caminho?x=1  " })).toBe("app.exemplo.com:8443")
+  })
+
+  it("ausente, vazia, sem esquema ou com esquema que não é http ou https vira null", () => {
+    for (const valor of [undefined, "", "   ", "planejamento.exemplo.com", "ftp://planejamento.exemplo.com", "javascript:alert(1)", "file:///etc"]) {
+      expect(hostPublico({ PLANEJAMENTO_APP_URL: valor })).toBeNull()
+    }
+  })
+
+  it("malformada é só a que foi preenchida e não passa no parser (ausente não conta)", () => {
+    expect(urlPublicaMalformada({})).toBe(false)
+    expect(urlPublicaMalformada({ PLANEJAMENTO_APP_URL: "  " })).toBe(false)
+    expect(urlPublicaMalformada({ PLANEJAMENTO_APP_URL: "https://planejamento.exemplo.com.br" })).toBe(false)
+    expect(urlPublicaMalformada({ PLANEJAMENTO_APP_URL: "planejamento.exemplo.com.br" })).toBe(true)
+    expect(urlPublicaMalformada({ PLANEJAMENTO_APP_URL: "ftp://planejamento.exemplo.com.br" })).toBe(true)
   })
 })

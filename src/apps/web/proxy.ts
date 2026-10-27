@@ -1,23 +1,14 @@
+// Primeiro de tudo: o .env da raiz precisa valer antes de qualquer decisão de acesso.
+import "@/lib/ambiente"
 import { NextResponse, type NextRequest } from "next/server"
 import { decidirAcesso, dominiosPermitidos, modoDeAutenticacao } from "@workspace/core/autenticacao"
-import { requisicaoEhHttps } from "@/lib/origem-publica"
+import { hostPublico, requisicaoEhHttps } from "@/lib/origem-publica"
 import { clienteSupabaseDoServidor, usuarioDeClaims } from "@/lib/sessao"
 
 const MENSAGEM_ORIGEM_RECUSADA = "Requisição recusada: só a própria interface local pode chamar esta API."
 const MENSAGEM_NAO_AUTENTICADO = "Você precisa entrar para continuar."
 
 type CookieParaGravar = { name: string; value: string; options: Record<string, unknown> }
-
-/** Host de PLANEJAMENTO_APP_URL (o endereço público), ou null se não há ou não é uma URL. */
-function hostPublico(env: Record<string, string | undefined>): string | null {
-  const valor = (env.PLANEJAMENTO_APP_URL ?? "").trim()
-  if (valor === "") return null
-  try {
-    return new URL(valor).host
-  } catch {
-    return null
-  }
-}
 
 /**
  * Origem para montar redirecionamentos. Sai do cabeçalho Host (já validado pela decisão de acesso) e não de

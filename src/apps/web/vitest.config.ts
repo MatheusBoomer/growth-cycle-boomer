@@ -6,5 +6,5 @@ export default defineConfig({
   resolve: { alias: [{ find: /^@\//, replacement: `${path.resolve(import.meta.dirname)}/` }] },
   // O tsconfig do Next usa jsx "preserve"; para os testes que renderizam componentes o JSX precisa ser compilado.
   oxc: { jsx: { runtime: "automatic" } },
-  test: { exclude: ["node_modules/**", ".next/**"] },
+  test: { exclude: ["node_modules/**", ".next/**"], setupFiles: ["./vitest.setup.ts"] },
 })

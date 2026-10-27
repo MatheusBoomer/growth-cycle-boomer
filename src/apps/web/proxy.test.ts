@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import path from "node:path"
 import { NextRequest } from "next/server"
 
 const getClaims = vi.fn()
@@ -139,6 +140,12 @@ describe("proxy no modo google", () => {
     expect((await proxy(req("/", { host: "planejamento.exemplo.com" }))).status).toBe(200)
   })
 
+  it("PLANEJAMENTO_APP_URL com esquema que não é http ou https não vale como host público (mesmo parser das rotas de login)", async () => {
+    getClaims.mockResolvedValue(SESSAO_BOA)
+    vi.stubEnv("PLANEJAMENTO_APP_URL", "ftp://planejamento.exemplo.com")
+    expect((await proxy(req("/", { host: "planejamento.exemplo.com" }))).status).toBe(403)
+  })
+
   it("rotas livres passam sem sessão e sem consultar o Supabase", async () => {
     for (const caminho of ["/login", "/auth/entrar", "/auth/callback?code=x", "/api/interno/mcp"]) {
       const r = await proxy(req(caminho))
@@ -210,5 +217,53 @@ describe("matcher do proxy", () => {
     for (const caminho of ["/_next/static/chunks/a.js", "/_next/image", "/favicon.ico", "/logo.png", "/a/b.svg", "/foto.jpg", "/foto.jpeg", "/x.gif", "/x.webp"]) {
       expect(re.test(caminho), caminho).toBe(false)
     }
+  })
+})
+
+describe("proxy logo depois de subir: o .env da raiz já vale na primeira requisição", () => {
+  const registro = globalThis as { __planejamentoAmbiente?: unknown }
+  const VARIAVEIS = ["PLANEJAMENTO_AUTH", "SUPABASE_URL", "SUPABASE_PUBLISHABLE_KEY", "PLANEJAMENTO_APP_URL", "PLANEJAMENTO_DOMINIOS_PERMITIDOS"] as const
+  const antes = new Map<string, string | undefined>()
+
+  beforeEach(() => {
+    for (const v of VARIAVEIS) {
+      antes.set(v, process.env[v])
+      delete process.env[v]
+    }
+    delete registro.__planejamentoAmbiente
+    getClaims.mockReset()
+    createServerClient.mockClear()
+    aoConsultar = null
+  })
+  afterEach(async () => {
+    const { loadEnvConfig } = await import("@next/env")
+    vi.mocked(loadEnvConfig).mockReset()
+    for (const v of VARIAVEIS) {
+      if (antes.get(v) === undefined) delete process.env[v]
+      else process.env[v] = antes.get(v)
+    }
+    delete registro.__planejamentoAmbiente
+  })
+
+  it("com PLANEJAMENTO_AUTH=google só no .env da raiz, a primeira chamada já exige login (sem passar por servidor())", async () => {
+    const { loadEnvConfig } = await import("@next/env")
+    // Simula o .env da raiz: só o loadEnvConfig da raiz põe as variáveis no processo.
+    vi.mocked(loadEnvConfig).mockImplementation((dir: string) => {
+      if (dir === path.resolve(process.cwd(), "../../..")) {
+        process.env.PLANEJAMENTO_AUTH = "google"
+        process.env.SUPABASE_URL = "https://projeto.supabase.co"
+        process.env.SUPABASE_PUBLISHABLE_KEY = "sb_publishable_teste"
+      }
+      return { combinedEnv: {}, parsedEnv: undefined, loadedEnvFiles: [] }
+    })
+    getClaims.mockResolvedValue({ data: null, error: null })
+    vi.resetModules()
+    const { proxy: proxyRecemSubido } = await import("./proxy")
+
+    const pagina = await proxyRecemSubido(req("/"))
+    expect(pagina.status).toBe(307)
+    expect(new URL(pagina.headers.get("location") as string).pathname).toBe("/login")
+    const api = await proxyRecemSubido(req("/api/prospects"))
+    expect(api.status).toBe(401)
   })
 })

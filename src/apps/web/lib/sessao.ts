@@ -1,3 +1,4 @@
+import "@/lib/ambiente"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { dominiosPermitidos, emailPermitido, modoDeAutenticacao } from "@workspace/core/autenticacao"

@@ -1,6 +1,6 @@
+import { carregarAmbiente, raizDoProjeto } from "./ambiente"
 import os from "node:os"
 import path from "node:path"
-import { loadEnvConfig } from "@next/env"
 import { FsArmazenamento } from "@workspace/core/armazenamento"
 import { Barramento } from "@workspace/core/barramento"
 import { carregarCatalogo } from "@workspace/core/catalogo"
@@ -95,10 +95,10 @@ export function servidor(): Servidor {
     return atual
   }
   // `next dev` roda em src/apps/web → a raiz do projeto de planejamento fica três níveis acima.
-  const raiz = process.env.PLANEJAMENTO_ROOT ?? path.resolve(process.cwd(), "../../..")
-  // O .env fica na raiz do projeto, não na pasta do app (a única que o Next lê sozinho). Carregado aqui, no
-  // processo que de fato escolhe o executor: ANTHROPIC_API_KEY e PLANEJAMENTO_EXECUTOR dependem disto.
-  loadEnvConfig(raiz, process.env.NODE_ENV !== "production", undefined, true)
+  const raiz = raizDoProjeto()
+  // O .env da raiz (ANTHROPIC_API_KEY, PLANEJAMENTO_EXECUTOR, PLANEJAMENTO_DADOS) já foi carregado ao importar
+  // lib/ambiente; a chamada aqui não carrega de novo, só deixa explícito que o servidor depende dele.
+  carregarAmbiente()
   const dados = modoDeDados()
   const catalogo = carregarCatalogo(raiz)
   const nuvem = dados === "supabase" ? montarNuvem(raiz) : undefined

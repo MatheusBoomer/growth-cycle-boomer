@@ -8,6 +8,10 @@ function primeiro(valor: string | null): string | null {
   return parte ? parte : null
 }
 
+/**
+ * O único parser de PLANEJAMENTO_APP_URL (o endereço público), usado pelo proxy e pelas rotas de login: só vale
+ * uma URL http ou https. Ausente, vazia, sem esquema ou com outro esquema vira null.
+ */
 function urlPublica(env: Record<string, string | undefined>): URL | null {
   const valor = (env.PLANEJAMENTO_APP_URL ?? "").trim()
   if (valor === "") return null
@@ -17,6 +21,16 @@ function urlPublica(env: Record<string, string | undefined>): URL | null {
   } catch {
     return null
   }
+}
+
+/** Host (com porta) de PLANEJAMENTO_APP_URL, o único host de fora que o proxy aceita, ou null se ausente ou inválida. */
+export function hostPublico(env: Record<string, string | undefined>): string | null {
+  return urlPublica(env)?.host ?? null
+}
+
+/** PLANEJAMENTO_APP_URL foi preenchida mas não é uma URL http ou https (ausente não conta: é o host local). */
+export function urlPublicaMalformada(env: Record<string, string | undefined>): boolean {
+  return (env.PLANEJAMENTO_APP_URL ?? "").trim() !== "" && urlPublica(env) === null
 }
 
 /**

@@ -1,3 +1,4 @@
+import "@/lib/ambiente"
 import { NextResponse, type NextRequest } from "next/server"
 import { modoDeAutenticacao } from "@workspace/core/autenticacao"
 import { origemDoRedirecionamento, requisicaoEhHttps } from "@/lib/origem-publica"
