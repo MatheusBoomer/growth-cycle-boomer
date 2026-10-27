@@ -59,7 +59,7 @@ Variáveis novas: `PLANEJAMENTO_AUTH`, `PLANEJAMENTO_DOMINIOS_PERMITIDOS`, `SUPA
 ### 4.2 Sessão no servidor (`apps/web/lib/sessao.ts`)
 
 - `clienteSupabaseDoServidor(cookies)`: `createServerClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { cookies })`.
-- `usuarioDaRequisicao(req): Promise<Usuario | null>` com `Usuario = { email: string }`: chama `getClaims()`, devolve null se não há sessão, o token é inválido, o e-mail não está verificado ou o domínio não é permitido. No modo `off` devolve `{ email: null }`, por isso o tipo é `Usuario = { email: string | null }`.
+- `usuarioDaRequisicao(req): Promise<Usuario | null>` com `Usuario = { email: string }`: chama `getClaims()`, devolve null se não há sessão, o token é inválido, a conta não foi criada pelo Google, o e-mail não está verificado ou o domínio não é permitido. A conta precisa ter sido criada pelo Google: `app_metadata.provider` é `"google"` ou `app_metadata.providers` contém `"google"` (`app_metadata` o usuário não consegue escrever). Um `email_verified` presente (no topo das claims ou em `user_metadata`) e diferente do booleano `true` recusa; a flag ausente é aceita só com essa prova do Google, que já verificou o e-mail no login. `user_metadata` é gravável pelo próprio usuário, então nunca vale como prova, só como motivo de recusa. No modo `off` devolve `{ email: null }`, por isso o tipo é `Usuario = { email: string | null }`.
 - `exigirUsuario(req)`: lança `ErroNaoAutenticado` (novo, `status 401`, `codigo "nao_autenticado"`) quando não há usuário. Toda rota que muda estado e toda leitura de dados de prospect chama esta função; o proxy sozinho não é a única barreira.
 
 ### 4.3 Porta de entrada (`apps/web/proxy.ts`)
@@ -112,7 +112,7 @@ O e-mail sai de `usuarioDaRequisicao` em cada rota e entra como parâmetro opcio
 | Cabeçalho `Origin` de outro site em método de escrita | 403, como hoje |
 | `PLANEJAMENTO_AUTH=google` sem as variáveis do Supabase | O app não sobe, com o nome da variável que falta |
 | Login ligado, mas o modo de dados é `fs` | Permitido (útil para testar o login no Mac), com aviso no log |
-| E-mail sem `email_verified` | Tratado como não autenticado |
+| Conta que não foi criada pelo Google, ou `email_verified` presente e diferente de `true` | Tratado como não autenticado. `email_verified` ausente é aceito só quando `app_metadata.provider` ou `app_metadata.providers` contém `"google"` |
 
 ## 6. Testes
 

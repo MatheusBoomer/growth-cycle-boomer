@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Login só com `PLANEJAMENTO_AUTH=google`. Vazio ou `off` = comportamento atual (regra de host local, agora também para páginas). Qualquer outro valor lança erro na subida e no `proxy`, no formato de `modoDeDados`: `PLANEJAMENTO_AUTH inválido: "<valor>" (use off ou google).`. `google` sem `SUPABASE_URL` ou `SUPABASE_PUBLISHABLE_KEY` lança `PLANEJAMENTO_AUTH=google exige <variável> no .env da raiz.` com o nome da que falta.
-- Domínios: `PLANEJAMENTO_DOMINIOS_PERMITIDOS`, separada por vírgulas, padrão exato `boomer.com.br,gestaoboomer.com`. Só o domínio exato vale (sem subdomínio, sem `gestaoboomer.com.br`, sem `boomer.com`). E-mail em minúsculas. E-mail verificado é obrigatório.
+- Domínios: `PLANEJAMENTO_DOMINIOS_PERMITIDOS`, separada por vírgulas, padrão exato `boomer.com.br,gestaoboomer.com`. Só o domínio exato vale (sem subdomínio, sem `gestaoboomer.com.br`, sem `boomer.com`). E-mail em minúsculas. A conta precisa ter sido criada pelo Google (`app_metadata.provider` ou `app_metadata.providers` contém `"google"`); um `email_verified` presente (no topo ou em `user_metadata`) e diferente de `true` recusa, e a flag ausente é aceita só com essa prova.
 - Nada de `NEXT_PUBLIC_*` e nenhuma chave do Supabase no navegador. `SUPABASE_PUBLISHABLE_KEY` só existe no servidor. A chave secreta (`service_role`) não é usada nesta fase.
 - A decisão de acesso usa `getClaims()` (assinatura conferida contra as chaves públicas do projeto), nunca `getSession()`.
 - `/api/interno/*` fica fora do login, mas só com host local e continua exigindo o token do turno (`ServicoTurnos.contextoDoToken`). O servidor MCP passa a chamar o app em `PLANEJAMENTO_URL_INTERNA` (padrão `http://127.0.0.1:<PORT>`); `PLANEJAMENTO_APP_URL` passa a ser o endereço público (base do `redirectTo` e do host permitido).
@@ -28,7 +28,7 @@
 
 1. **`proximo` malicioso** (`//evil.com`, `/\evil.com`, `http://evil.com`, `javascript:`): sempre vira `/`. Pinado na Task 1.
 2. **Host falso e Origin de outro site** com o login ligado (`127.0.0.1.evil.com`, `meuapp.railway.app.evil.com`, POST com `Origin` diferente): recusados. `/api/interno/*` pelo host público: recusado. Pinado na Task 1.
-3. **Domínios parecidos e e-mail sem verificação** (`x@boomer.com.br.evil.com`, `x@gestaoboomer.com.br`, `x@boomer.com`, `a@b@boomer.com.br`, `email_verified` falso ou ausente): sem usuário. Pinado nas Tasks 1 e 2.
+3. **Domínios parecidos e e-mail sem verificação** (`x@boomer.com.br.evil.com`, `x@gestaoboomer.com.br`, `x@boomer.com`, `a@b@boomer.com.br`, conta que não veio do Google, `email_verified` presente e diferente de `true`): sem usuário. `email_verified` ausente é aceito só quando `app_metadata.provider` ou `app_metadata.providers` contém `"google"`. Pinado nas Tasks 1 e 2.
 4. **Uma rota que esquece `exigirUsuario`**: um teste varre todos os `route.ts` e falha se algum, fora da lista de isentas, não chamar `exigirUsuario`. Pinado na Task 5.
 5. **Sessão expirada no meio do uso**: a API devolve 401 `nao_autenticado` e a interface vai para `/login?proximo=…`; a tela de login não dispara chamadas que dariam 401 em laço (o `VerificacaoSistema` do layout). Pinado na Task 3.
 
