@@ -6,7 +6,7 @@
   "scripts": {
     "teste-sdk": "tsx --env-file=../../../.env scripts/teste-sdk.ts",
     "test": "vitest run",
-    "test:supabase": "vitest run test/nuvem/supabase.test.ts",
+    "test:supabase": "vitest run --config vitest.supabase.config.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint"
   },
