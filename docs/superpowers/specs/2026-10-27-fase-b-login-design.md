@@ -8,12 +8,12 @@
 
 Hoje o app só aceita chamadas que vêm da própria máquina e não sabe quem é o analista. Ao fim da Fase B:
 
-1. na nuvem, só entra quem faz login com uma conta Google `@boomer.com.br`;
+1. na nuvem, só entra quem faz login com uma conta Google `@boomer.com.br` ou `@gestaoboomer.com`;
 2. cada ação do analista fica gravada com o e-mail de quem a fez;
 3. quando outro analista está com o agente rodando numa etapa, a tela diz quem;
 4. no Mac, sem configurar nada, o app segue como hoje, sem tela de login.
 
-**Critério de sucesso:** com `PLANEJAMENTO_AUTH=google`, (a) uma conta `@boomer.com.br` entra e usa o app; (b) uma conta de outro domínio é recusada e fica sem sessão; (c) uma chamada de API sem sessão recebe 401 e uma página sem sessão vai para o login; (d) o agente continua conseguindo propor entregáveis; (e) as linhas de `eventos_conversa`, `uso_turnos`, `prospects` e as decisões, insumos e comentários trazem o e-mail do autor.
+**Critério de sucesso:** com `PLANEJAMENTO_AUTH=google`, (a) uma conta `@boomer.com.br` e uma `@gestaoboomer.com` entram e usam o app; (b) uma conta de outro domínio é recusada e fica sem sessão; (c) uma chamada de API sem sessão recebe 401 e uma página sem sessão vai para o login; (d) o agente continua conseguindo propor entregáveis; (e) as linhas de `eventos_conversa`, `uso_turnos`, `prospects` e as decisões, insumos e comentários trazem o e-mail do autor.
 
 **Não é objetivo:** lista fixa de e-mails, papéis e permissões diferentes por pessoa (todos veem tudo, como combinado), outros provedores de login, login de pessoas fora da Boomer, e bloquear no próprio Supabase o cadastro de e-mails de fora (seção 8).
 
@@ -23,7 +23,7 @@ Hoje o app só aceita chamadas que vêm da própria máquina e não sabe quem é
 |---|---|---|
 | 1 | Quando o login liga | Só com `PLANEJAMENTO_AUTH=google`. Vazio ou `off` = como hoje. Qualquer outro valor falha na subida (como `PLANEJAMENTO_DADOS`) |
 | 2 | Falha segura | Com o login desligado, o app só atende pedidos de máquina local (regra atual, que passa a valer também para páginas). Esquecer de ligar o login na nuvem deixa o app fechado, e não aberto |
-| 3 | Quem entra | Qualquer conta Google cujo e-mail termine em `@<domínio>`, com o domínio em `PLANEJAMENTO_DOMINIO_PERMITIDO` (padrão `boomer.com.br`) e e-mail verificado. A checagem é no servidor; o parâmetro `hd` do Google só melhora a tela de escolha de conta |
+| 3 | Quem entra | Qualquer conta Google cujo e-mail termine em `@<domínio>` de uma lista, em `PLANEJAMENTO_DOMINIOS_PERMITIDOS` (separada por vírgulas; padrão `boomer.com.br,gestaoboomer.com`), com e-mail verificado. Só o domínio exato vale: subdomínios e domínios parecidos (`gestaoboomer.com.br`, `boomer.com`) são recusados. A checagem é no servidor. O parâmetro `hd` do Google não é usado, porque só aceita um domínio |
 | 4 | Onde o login vive | Tudo no servidor. Nada de chave do Supabase no navegador, nenhuma variável `NEXT_PUBLIC_*`. O botão é um link para uma rota do próprio app |
 | 5 | Como o servidor lê a sessão | `@supabase/ssr` com `createServerClient` e `getClaims()`, que confere a assinatura do token contra as chaves públicas do projeto. Nunca `getSession()` para decidir acesso |
 | 6 | Porta do agente | `/api/interno/*` continua protegido pelo token de cada turno (já existe em `ServicoTurnos.contextoDoToken`), que é mais forte que o token único de subida da seção 5.5 anterior. Fica isento do login, não da autenticação |
@@ -52,9 +52,9 @@ Hoje o app só aceita chamadas que vêm da própria máquina e não sabe quem é
 
 `modoDeAutenticacao(env): "off" | "google"` em `packages/core/src/autenticacao.ts`, com a mesma regra de `modoDeDados` (aparar espaços; vazio ou `off` = off; `google` = google; outro valor lança erro; `google` sem `SUPABASE_URL` ou `SUPABASE_PUBLISHABLE_KEY` lança erro com o nome da variável que falta).
 
-`emailPermitido(email, dominio): boolean`: minúsculas, exige exatamente um `@`, e a parte depois do `@` igual ao domínio. `usuario@boomer.com.br.evil.com`, `usuario@evilboomer.com.br`, `a@b@boomer.com.br` e e-mail vazio são recusados. Funções puras, com testes próprios.
+`dominiosPermitidos(valor): string[]` (separa por vírgula, apara espaços, minúsculas, ignora vazios) e `emailPermitido(email, dominios): boolean`: minúsculas, exige exatamente um `@`, e a parte depois do `@` igual a um dos domínios. `usuario@boomer.com.br.evil.com`, `usuario@evilboomer.com.br`, `usuario@gestaoboomer.com.br`, `usuario@boomer.com`, `a@b@boomer.com.br` e e-mail vazio são recusados; `USUARIO@GestaoBoomer.com` é aceito. Funções puras, com testes próprios.
 
-Variáveis novas: `PLANEJAMENTO_AUTH`, `PLANEJAMENTO_DOMINIO_PERMITIDO`, `SUPABASE_PUBLISHABLE_KEY` (a chave publicável do projeto; fica só no servidor), `PLANEJAMENTO_URL_INTERNA` (ver 4.4). Documentadas no `.env.example`.
+Variáveis novas: `PLANEJAMENTO_AUTH`, `PLANEJAMENTO_DOMINIOS_PERMITIDOS`, `SUPABASE_PUBLISHABLE_KEY` (a chave publicável do projeto; fica só no servidor), `PLANEJAMENTO_URL_INTERNA` (ver 4.4). Documentadas no `.env.example`.
 
 ### 4.2 Sessão no servidor (`apps/web/lib/sessao.ts`)
 
@@ -73,8 +73,8 @@ O `proxy` também renova os cookies da sessão (`getClaims()` e `request.cookies
 
 ### 4.4 Rotas de login
 
-- `GET /login`: página com o botão "Entrar com Google" (link para `/auth/entrar`), no visual da marca, e a mensagem de erro quando vem `?erro=dominio` ("Use a conta Google da Boomer (@boomer.com.br).") ou `?erro=falha`.
-- `GET /auth/entrar`: `signInWithOAuth({ provider: "google", options: { redirectTo: <PLANEJAMENTO_APP_URL>/auth/callback?proximo=…, queryParams: { hd: <domínio> } } })` no servidor e redireciona para a URL devolvida.
+- `GET /login`: página com o botão "Entrar com Google" (link para `/auth/entrar`), no visual da marca, e a mensagem de erro quando vem `?erro=dominio` ("Use a conta Google da Boomer (@boomer.com.br ou @gestaoboomer.com).") ou `?erro=falha`.
+- `GET /auth/entrar`: `signInWithOAuth({ provider: "google", options: { redirectTo: <PLANEJAMENTO_APP_URL>/auth/callback?proximo=… } })` no servidor e redireciona para a URL devolvida.
 - `GET /auth/callback`: `exchangeCodeForSession(code)`; depois `getClaims()`; se o e-mail não passa em `emailPermitido` e verificado, `signOut()` e `/login?erro=dominio`. `proximo` só vale se for caminho relativo que começa com uma única `/` (nunca `//`, nunca `http`), senão `/`. Atrás do balanceador da Railway, o redirecionamento usa `x-forwarded-host`.
 - `POST /auth/sair`: `signOut()` e redireciona para `/login`.
 - O servidor MCP chama o app em `PLANEJAMENTO_URL_INTERNA` (padrão `http://127.0.0.1:<PORT>`), e não em `PLANEJAMENTO_APP_URL`, que passa a ser o endereço público usado nos redirecionamentos do login. `montarMcpConfig` e `servidor.ts` mudam para isso.
@@ -125,7 +125,7 @@ O e-mail sai de `usuarioDaRequisicao` em cada rota e entra como parâmetro opcio
 
 ## 7. Pré-requisitos manuais (feitos por você, com roteiro)
 
-1. No Google Cloud: criar uma credencial OAuth do tipo "Aplicativo da Web" e cadastrar como URI de redirecionamento `https://fkvvvnitxvfdvtexmidl.supabase.co/auth/v1/callback`.
+1. No Google Cloud: criar uma credencial OAuth do tipo "Aplicativo da Web" e cadastrar como URI de redirecionamento `https://fkvvvnitxvfdvtexmidl.supabase.co/auth/v1/callback`. Na tela de consentimento, o tipo de usuário precisa ser **Externo** (e não "Interno"): como os e-mails são de dois domínios, uma credencial interna a um único Workspace deixaria o outro de fora. Escopos só `openid`, `email` e `profile`, que não exigem verificação do Google. Publicar o aplicativo ("Em produção") para não ficar limitado a usuários de teste
 2. No Supabase (Authentication → Providers → Google): ligar o provedor e colar o ID e o segredo do cliente.
 3. No Supabase (Authentication → URL Configuration): acrescentar `http://127.0.0.1:3000/auth/callback` à lista de URLs de redirecionamento permitidas (e, na Fase C, o endereço público). **Não mudar a "Site URL"**, que é do projeto inteiro.
 4. Colocar `SUPABASE_PUBLISHABLE_KEY` no `.env`. A chave publicável fica no painel (API Keys) e eu consigo lê-la pelo MCP; a chave secreta não é usada na Fase B.
