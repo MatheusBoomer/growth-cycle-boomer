@@ -37,7 +37,9 @@ export class MemoriaRepositorio implements Repositorio {
   }
 
   async criarProspect(slug: string): Promise<void> {
-    if (this.prospects.has(slug)) throw new ErroProspectExistente(slug)
+    const atual = this.prospects.get(slug)
+    if (atual && !atual.excluido) throw new ErroProspectExistente(slug)
+    // Slug excluído: o registro antigo é substituído por inteiro, como no banco.
     this.prospects.set(slug, {
       excluido: false,
       estado: null,
@@ -164,6 +166,15 @@ export class MemoriaArmazem implements ArmazemArquivos {
   async baixarSessao(slug: string, sessionId: string): Promise<Uint8Array | null> {
     const dados = this.sessoes.get(`${slug}/${sessionId}`)
     return dados ? new Uint8Array(dados) : null
+  }
+
+  async apagarTudo(slug: string): Promise<void> {
+    const prefixo = `${slug}/`
+    for (const mapa of [this.objetos, this.sessoes]) {
+      for (const chave of [...mapa.keys()]) if (chave.startsWith(prefixo)) mapa.delete(chave)
+    }
+    this.manifestos.delete(slug)
+    for (let i = this.lixeira.length - 1; i >= 0; i--) if (this.lixeira[i]!.slug === slug) this.lixeira.splice(i, 1)
   }
 
   private verificar(operacao: OperacaoArmazem, caminho: string): void {

@@ -58,7 +58,7 @@ function montarNuvem(raiz: string): Nuvem {
   const cliente = criarClienteSupabase(process.env.SUPABASE_URL as string, process.env.SUPABASE_SERVICE_ROLE_KEY as string)
   const armazem = new SupabaseArmazem(cliente)
   const mesa = new Mesa({ pastaClientes: path.join(raiz, "clientes"), armazem })
-  const armazenamento = new NuvemArmazenamento({ raiz, repositorio: new SupabaseRepositorio(cliente), mesa })
+  const armazenamento = new NuvemArmazenamento({ raiz, repositorio: new SupabaseRepositorio(cliente), armazem, mesa })
   const memoria = new MemoriaSessao({
     armazem,
     configDir: pastaConfigClaude(process.env.CLAUDE_CONFIG_DIR),

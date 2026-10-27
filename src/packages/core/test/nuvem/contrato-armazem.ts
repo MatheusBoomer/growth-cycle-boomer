@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto"
 import { describe, expect, it } from "vitest"
+import { ErroNaoEncontrado } from "../../src/erros"
 import type { ArmazemArquivos } from "../../src/nuvem/tipos"
 import { novoSlug } from "./suite-viva"
 
@@ -60,6 +61,29 @@ export function contratoArmazem(nome: string, criar: () => Promise<ArmazemArquiv
       const volta = await armazem.baixarSessao(slug, sessionId)
       expect(volta).not.toBeNull()
       expect(Array.from(volta!)).toEqual(Array.from(dados))
+    })
+
+    it("apagarTudo limpa manifesto, objetos e sessões do slug e é idempotente", async () => {
+      const armazem = await criar()
+      const slug = novoSlug()
+      const outro = novoSlug()
+      const sessionId = "5b1d8f3e-0000-4000-8000-000000000002"
+      const entrada = await armazem.enviar(slug, "dados/a.txt", bytes("conteúdo a"))
+      const removida = await armazem.enviar(slug, "dados/b.txt", bytes("conteúdo b"))
+      await armazem.remover(slug, "dados/b.txt")
+      await armazem.enviarSessao(slug, sessionId, bytes('{"tipo":"user"}\n'))
+      const doOutro = await armazem.enviar(outro, "dados/c.txt", bytes("conteúdo c"))
+
+      await armazem.apagarTudo(slug)
+
+      expect(await armazem.listarManifesto(slug)).toEqual([])
+      await expect(armazem.baixar(slug, entrada.sha256)).rejects.toBeInstanceOf(ErroNaoEncontrado)
+      await expect(armazem.baixar(slug, removida.sha256)).rejects.toBeInstanceOf(ErroNaoEncontrado)
+      expect(await armazem.baixarSessao(slug, sessionId)).toBeNull()
+      // Outro slug não é tocado.
+      expect(await armazem.listarManifesto(outro)).toEqual([doOutro])
+      await expect(armazem.apagarTudo(slug)).resolves.toBeUndefined()
+      await expect(armazem.apagarTudo(novoSlug())).resolves.toBeUndefined()
     })
   })
 }

@@ -45,6 +45,9 @@ class ArmazemComProspect implements ArmazemArquivos {
   baixarSessao(slug: string, sessionId: string) {
     return this.armazem.baixarSessao(slug, sessionId)
   }
+  apagarTudo(slug: string) {
+    return this.armazem.apagarTudo(slug)
+  }
 }
 
 /** Suíte viva: só roda com SUPABASE_TESTE_URL e SUPABASE_TESTE_SERVICE_ROLE_KEY no .env da raiz. */

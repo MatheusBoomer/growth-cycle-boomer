@@ -15,6 +15,10 @@ const BUCKET_PROSPECTS = "planejamento-prospects"
 const BUCKET_SESSOES = "planejamento-sessoes"
 /** Limite de linhas por resposta do PostgREST. */
 const TAMANHO_PAGINA = 1000
+/** Objetos por página de `storage.list`. */
+const PAGINA_STORAGE = 1000
+/** Caminhos por chamada de `storage.remove`. */
+const LOTE_REMOCAO = 100
 
 interface ErroDoCliente {
   message: string
@@ -98,10 +102,50 @@ export class SupabaseRepositorio implements Repositorio {
 
   async criarProspect(slug: string): Promise<void> {
     const { error } = await this.cliente.from("prospects").insert({ slug })
-    if (error) {
-      if (error.code === "23505") throw new ErroProspectExistente(slug)
-      throw falha(error)
+    if (!error) return
+    if (error.code !== "23505") throw falha(error)
+    await this.recriarExcluido(slug)
+  }
+
+  /**
+   * O slug já tem linha: se está ativo, é duplicado; se foi excluído, os dados do antigo saem (filhos antes
+   * do prospect, por causa das chaves estrangeiras) e a linha volta a ser nova. O reset só vale enquanto a linha
+   * continua excluída: se outro criador chegou antes, zero linhas atualizadas viram ErroProspectExistente.
+   * Resta uma janela pequena: um segundo criador pode apagar filhos recém-gravados pelo primeiro.
+   */
+  private async recriarExcluido(slug: string): Promise<void> {
+    const { data, error } = await this.cliente
+      .from("prospects")
+      .select("excluido_em")
+      .eq("slug", slug)
+      .maybeSingle()
+    if (error) throw falha(error)
+    if (!data || data.excluido_em == null) throw new ErroProspectExistente(slug)
+
+    for (const tabela of ["eventos_conversa", "comentarios", "uso_turnos", "arquivos", "arquivos_lixeira"]) {
+      const { error: erroApagar } = await this.cliente.from(tabela).delete().eq("slug", slug)
+      if (erroApagar) throw falha(erroApagar)
     }
+
+    const agora = this.agora()
+    const { data: atualizadas, error: erroReset } = await this.cliente
+      .from("prospects")
+      .update({
+        nome: null,
+        estado: null,
+        etapa_atual: null,
+        versao: 0,
+        sincronizacao_pendente: false,
+        excluido_em: null,
+        criado_em: agora,
+        atualizado_em: agora,
+        criado_por: null,
+      })
+      .eq("slug", slug)
+      .not("excluido_em", "is", null)
+      .select("slug")
+    if (erroReset) throw falha(erroReset)
+    if (!atualizadas || atualizadas.length === 0) throw new ErroProspectExistente(slug)
   }
 
   async excluirProspect(slug: string): Promise<void> {
@@ -295,6 +339,36 @@ export class SupabaseArmazem implements ArmazemArquivos {
       .from(BUCKET_SESSOES)
       .upload(`${slug}/${sessionId}.jsonl`, dados, { upsert: true, contentType: "application/octet-stream" })
     if (error) throw falha(error)
+  }
+
+  async apagarTudo(slug: string): Promise<void> {
+    // Linhas antes dos objetos: se a remoção no Storage falhar no meio, sobra objeto solto (que a próxima
+    // chamada limpa), nunca manifesto apontando para objeto que já não existe.
+    for (const tabela of ["arquivos", "arquivos_lixeira"]) {
+      const { error } = await this.cliente.from(tabela).delete().eq("slug", slug)
+      if (error) throw falha(error)
+    }
+    for (const bucket of [BUCKET_PROSPECTS, BUCKET_SESSOES]) {
+      await this.apagarPasta(bucket, slug)
+    }
+  }
+
+  /** Lista a pasta inteira antes de remover (remover durante a paginação deslocaria o offset). */
+  private async apagarPasta(bucket: string, slug: string): Promise<void> {
+    const caminhos: string[] = []
+    for (let offset = 0; ; offset += PAGINA_STORAGE) {
+      const { data, error } = await this.cliente.storage
+        .from(bucket)
+        .list(slug, { limit: PAGINA_STORAGE, offset })
+      if (error) throw falha(error)
+      const pagina = data ?? []
+      for (const objeto of pagina) caminhos.push(`${slug}/${objeto.name}`)
+      if (pagina.length < PAGINA_STORAGE) break
+    }
+    for (let i = 0; i < caminhos.length; i += LOTE_REMOCAO) {
+      const { error } = await this.cliente.storage.from(bucket).remove(caminhos.slice(i, i + LOTE_REMOCAO))
+      if (error) throw falha(error)
+    }
   }
 
   async baixarSessao(slug: string, sessionId: string): Promise<Uint8Array | null> {

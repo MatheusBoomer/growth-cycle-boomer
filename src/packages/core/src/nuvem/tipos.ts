@@ -30,7 +30,10 @@ export interface Repositorio {
   listarSlugs(): Promise<string[]>
   /** False se o prospect foi excluído. */
   existe(slug: string): Promise<boolean>
-  /** ErroProspectExistente se já existe (mesmo excluído). */
+  /**
+   * Cria o prospect. ErroProspectExistente se o slug já está ativo. Um slug excluído é recriado do zero:
+   * os dados do antigo (conversa, comentários, uso, manifesto, lixeira) são apagados.
+   */
   criarProspect(slug: string): Promise<void>
   /** Marca como excluído; ErroNaoEncontrado se não existe. */
   excluirProspect(slug: string): Promise<void>
@@ -61,4 +64,9 @@ export interface ArmazemArquivos {
   remover(slug: string, caminho: string): Promise<void>
   enviarSessao(slug: string, sessionId: string, dados: Uint8Array): Promise<void>
   baixarSessao(slug: string, sessionId: string): Promise<Uint8Array | null>
+  /**
+   * Apaga tudo do slug: manifesto, lixeira e os objetos de `<slug>/` nos dois buckets (arquivos e sessões).
+   * Não falha quando não há nada a apagar.
+   */
+  apagarTudo(slug: string): Promise<void>
 }

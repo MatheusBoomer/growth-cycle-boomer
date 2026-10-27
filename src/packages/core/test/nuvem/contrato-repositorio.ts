@@ -57,10 +57,32 @@ export function contratoRepositorio(nome: string, criar: () => Promise<Repositor
       await repo.excluirProspect(slug)
       expect(await repo.listarSlugs()).not.toContain(slug)
       expect(await repo.existe(slug)).toBe(false)
-      await expect(repo.criarProspect(slug)).rejects.toBeInstanceOf(ErroProspectExistente)
       await expect(repo.excluirProspect(novoSlug())).rejects.toBeInstanceOf(
         ErroNaoEncontrado,
       )
+    })
+
+    it("criar um slug excluído recomeça do zero; criar um ativo continua falhando", async () => {
+      const repo = await criar()
+      const slug = novoSlug()
+      await repo.criarProspect(slug)
+      await repo.gravarEstado(slug, estadoDe(slug), 0)
+      await repo.anexarConversa(slug, "01", { tipo: "turno_inicio", em: EM })
+      await repo.gravarComentarios(slug, "apresentacao", [comentario("c1", "velho")])
+      await repo.marcarSincronizacao(slug, true)
+      await expect(repo.criarProspect(slug)).rejects.toBeInstanceOf(ErroProspectExistente)
+
+      await repo.excluirProspect(slug)
+      await repo.criarProspect(slug)
+
+      expect(await repo.listarSlugs()).toContain(slug)
+      expect(await repo.existe(slug)).toBe(true)
+      expect(await repo.lerEstado(slug)).toBeNull()
+      expect(await repo.lerConversa(slug, "01")).toEqual([])
+      expect(await repo.lerComentarios(slug, "apresentacao")).toEqual([])
+      // A versão volta a zero: gravar com 0 passa.
+      expect(await repo.gravarEstado(slug, estadoDe(slug, "Novo"), 0)).toBe(1)
+      await expect(repo.criarProspect(slug)).rejects.toBeInstanceOf(ErroProspectExistente)
     })
 
     it("conversa volta na ordem e separada por etapa", async () => {

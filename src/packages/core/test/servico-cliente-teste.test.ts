@@ -107,7 +107,7 @@ describe("reposicionarTeste no modo nuvem", () => {
   it("leva a remoção das pastas para a nuvem e limpa conversas e comentários", async () => {
     const armazem = new MemoriaArmazem()
     const mesa = new Mesa({ pastaClientes: path.join(raiz, "clientes"), armazem, esperar: async () => {} })
-    const nuvem = new NuvemArmazenamento({ raiz, repositorio: new MemoriaRepositorio(), mesa, atrasoAgendamentoMs: 0 })
+    const nuvem = new NuvemArmazenamento({ raiz, repositorio: new MemoriaRepositorio(), armazem, mesa, atrasoAgendamentoMs: 0 })
     const servicoNuvem = new ServicoPlanejamento({
       armazenamento: nuvem,
       catalogo: catalogoReal(),

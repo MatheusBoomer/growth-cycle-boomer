@@ -20,7 +20,7 @@ describe("NuvemArmazenamento", () => {
   let mesa: Mesa
   let arm: NuvemArmazenamento
 
-  const criar = () => new NuvemArmazenamento({ raiz, repositorio, mesa, atrasoAgendamentoMs: 0 })
+  const criar = () => new NuvemArmazenamento({ raiz, repositorio, armazem, mesa, atrasoAgendamentoMs: 0 })
   const manifesto = async () => (await armazem.listarManifesto(SLUG)).map((e) => e.caminho)
   const noDisco = (rel: string) => path.join(raiz, "clientes", SLUG, ...rel.split("/"))
 
@@ -39,6 +39,51 @@ describe("NuvemArmazenamento", () => {
     expect(await manifesto()).toContain("contexto/status-planejamento.md")
     expect(await arm.listarSlugs()).toEqual([SLUG])
     await expect(arm.criarPasta(SLUG)).rejects.toBeInstanceOf(ErroProspectExistente)
+  })
+
+  it("recriar um prospect excluído começa do zero: sem manifesto antigo, sem conversa, template de novo", async () => {
+    await arm.criarPasta(SLUG)
+    await arm.gravarTexto(SLUG, "contexto/velho.md", "velho")
+    await arm.gravarEstado(SLUG, estadoInicial({ slug: SLUG, nome: "Acme", site: null }, AGORA))
+    await arm.anexarConversa(SLUG, "03", { tipo: "turno_inicio", em: "t1" })
+    await arm.gravarComentarios(SLUG, "roteiro-1", [
+      { id: "c1", slide: 1, regiao: null, campo: null, texto: "x", criadoEm: AGORA, enviadoEm: null },
+    ])
+    await mesa.sincronizar(SLUG)
+    const sessao = new Uint8Array([1, 2, 3])
+    await armazem.enviarSessao(SLUG, "sessao-1", sessao)
+    expect(await manifesto()).toContain("contexto/velho.md")
+    await arm.excluir(SLUG)
+
+    await arm.criarPasta(SLUG)
+
+    expect(await arm.listarSlugs()).toEqual([SLUG])
+    const aposCriar = await manifesto()
+    expect(aposCriar).not.toContain("contexto/velho.md")
+    expect(aposCriar).toContain("contexto/status-planejamento.md")
+    expect(existsSync(noDisco("contexto/velho.md"))).toBe(false)
+    expect(existsSync(noDisco("contexto/status-planejamento.md"))).toBe(true)
+    expect(await arm.lerEstado(SLUG)).toBeNull()
+    expect(await arm.lerConversa(SLUG, "03")).toEqual([])
+    expect(await arm.lerComentarios(SLUG, "roteiro-1")).toEqual([])
+    expect(await armazem.baixarSessao(SLUG, "sessao-1")).toBeNull()
+    await expect(arm.criarPasta(SLUG)).rejects.toBeInstanceOf(ErroProspectExistente)
+  })
+
+  it("criar prospect novo limpa o que sobrou na nuvem para o slug, mesmo sem linha no banco", async () => {
+    await armazem.enviar(SLUG, "dados/orfao.csv", new Uint8Array([9]))
+    await arm.criarPasta(SLUG)
+    expect(await manifesto()).not.toContain("dados/orfao.csv")
+  })
+
+  it("criar prospect ativo não apaga nada da nuvem", async () => {
+    await arm.criarPasta(SLUG)
+    await arm.gravarTexto(SLUG, "contexto/notas.md", "oi")
+    await mesa.sincronizar(SLUG)
+    const apagar = vi.spyOn(armazem, "apagarTudo")
+    await expect(arm.criarPasta(SLUG)).rejects.toBeInstanceOf(ErroProspectExistente)
+    expect(apagar).not.toHaveBeenCalled()
+    expect(await manifesto()).toContain("contexto/notas.md")
   })
 
   it("estado e conversa vão ao repositório, não ao disco", async () => {

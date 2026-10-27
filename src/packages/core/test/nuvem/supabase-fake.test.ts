@@ -22,14 +22,14 @@ const op = (c: Consulta, metodo: string) => c.ops.find(([m]) => m === metodo)
 function criarFake(responder: (c: Consulta) => Resposta) {
   const consultas: Consulta[] = []
   const armazenamento: Array<{ bucket: string; metodo: string; args: unknown[] }> = []
-  const respostasStorage: Record<string, (args: unknown[]) => Resposta> = {}
+  const respostasStorage: Record<string, (args: unknown[], bucket: string) => Resposta> = {}
 
   function builder(tabela: string) {
     const consulta: Consulta = { tabela, ops: [] }
     consultas.push(consulta)
     const b: Record<string, unknown> = {}
     for (const m of [
-      "select", "insert", "update", "upsert", "delete", "eq", "is", "like", "order", "range", "maybeSingle", "single",
+      "select", "insert", "update", "upsert", "delete", "eq", "is", "not", "like", "order", "range", "maybeSingle", "single",
     ]) {
       b[m] = (...args: unknown[]) => {
         consulta.ops.push([m, ...args])
@@ -47,11 +47,19 @@ function criarFake(responder: (c: Consulta) => Resposta) {
       from: (bucket: string) => ({
         upload: async (...args: unknown[]) => {
           armazenamento.push({ bucket, metodo: "upload", args })
-          return respostasStorage.upload?.(args) ?? { data: {}, error: null }
+          return respostasStorage.upload?.(args, bucket) ?? { data: {}, error: null }
         },
         download: async (...args: unknown[]) => {
           armazenamento.push({ bucket, metodo: "download", args })
-          return respostasStorage.download?.(args) ?? { data: null, error: { message: "Object not found" } }
+          return respostasStorage.download?.(args, bucket) ?? { data: null, error: { message: "Object not found" } }
+        },
+        list: async (...args: unknown[]) => {
+          armazenamento.push({ bucket, metodo: "list", args })
+          return respostasStorage.list?.(args, bucket) ?? { data: [], error: null }
+        },
+        remove: async (...args: unknown[]) => {
+          armazenamento.push({ bucket, metodo: "remove", args })
+          return respostasStorage.remove?.(args, bucket) ?? { data: [], error: null }
         },
       }),
     },
@@ -112,8 +120,10 @@ describe("SupabaseRepositorio (cliente falso)", () => {
     expect((op(fake.consultas[1]!, "update")![1] as { etapa_atual: string | null }).etapa_atual).toBeNull()
   })
 
-  it("criarProspect: código 23505 vira ErroProspectExistente", async () => {
-    const fake = criarFake(() => ({ data: null, error: { message: "duplicate key", code: "23505" } }))
+  it("criarProspect: código 23505 em prospect ativo vira ErroProspectExistente", async () => {
+    const fake = criarFake((c) =>
+      op(c, "insert") ? { data: null, error: { message: "duplicate key", code: "23505" } } : ok({ excluido_em: null }),
+    )
     const repo = new SupabaseRepositorio(fake.cliente, () => EM)
     await expect(repo.criarProspect("p")).rejects.toBeInstanceOf(ErroProspectExistente)
     expect(op(fake.consultas[0]!, "insert")![1]).toEqual({ slug: "p" })
@@ -129,6 +139,91 @@ describe("SupabaseRepositorio (cliente falso)", () => {
     expect(erro).toBeInstanceOf(Error)
     expect((erro as Error).message).toContain("falhou")
     expect((erro as Error).message).not.toContain("supabase.co")
+  })
+
+  describe("criarProspect sobre um slug excluído", () => {
+    /** Insert bate na chave duplicada; o resto responde conforme a tabela e a operação. */
+    function fakeDeExcluido(opts: { excluidoEm: string | null; atualizadas?: unknown[] }) {
+      return criarFake((c) => {
+        if (op(c, "insert")) return { data: null, error: { message: "duplicate key", code: "23505" } }
+        if (op(c, "maybeSingle")) return ok({ excluido_em: opts.excluidoEm })
+        if (op(c, "update")) return ok(opts.atualizadas ?? [{ slug: "p" }])
+        return ok(null)
+      })
+    }
+
+    it("apaga os filhos antes do prospect e zera a linha só se ela continua excluída", async () => {
+      const fake = fakeDeExcluido({ excluidoEm: "2026-10-26T00:00:00.000Z" })
+      await new SupabaseRepositorio(fake.cliente, () => EM).criarProspect("p")
+
+      const passos = fake.consultas.map((c) => [c.tabela, c.ops[0]![0]])
+      expect(passos).toEqual([
+        ["prospects", "insert"],
+        ["prospects", "select"],
+        ["eventos_conversa", "delete"],
+        ["comentarios", "delete"],
+        ["uso_turnos", "delete"],
+        ["arquivos", "delete"],
+        ["arquivos_lixeira", "delete"],
+        ["prospects", "update"],
+      ])
+      for (const c of fake.consultas.slice(2, 7)) {
+        expect(c.ops.filter(([m]) => m === "eq")).toEqual([["eq", "slug", "p"]])
+      }
+      const checagem = fake.consultas[1]!
+      expect(op(checagem, "select")).toEqual(["select", "excluido_em"])
+      expect(op(checagem, "eq")).toEqual(["eq", "slug", "p"])
+
+      const reset = fake.consultas[7]!
+      expect(op(reset, "update")![1]).toEqual({
+        nome: null,
+        estado: null,
+        etapa_atual: null,
+        versao: 0,
+        sincronizacao_pendente: false,
+        excluido_em: null,
+        criado_em: EM,
+        atualizado_em: EM,
+        criado_por: null,
+      })
+      expect(reset.ops.filter(([m]) => m === "eq")).toEqual([["eq", "slug", "p"]])
+      expect(op(reset, "not")).toEqual(["not", "excluido_em", "is", null])
+      expect(op(reset, "select")).toEqual(["select", "slug"])
+    })
+
+    it("slug ativo continua sendo ErroProspectExistente e nada é apagado", async () => {
+      const fake = fakeDeExcluido({ excluidoEm: null })
+      await expect(new SupabaseRepositorio(fake.cliente, () => EM).criarProspect("p")).rejects.toBeInstanceOf(
+        ErroProspectExistente,
+      )
+      expect(fake.consultas.some((c) => op(c, "delete") || op(c, "update"))).toBe(false)
+    })
+
+    it("zero linhas no reset (outro criou antes) vira ErroProspectExistente", async () => {
+      const fake = fakeDeExcluido({ excluidoEm: "2026-10-26T00:00:00.000Z", atualizadas: [] })
+      await expect(new SupabaseRepositorio(fake.cliente, () => EM).criarProspect("p")).rejects.toBeInstanceOf(
+        ErroProspectExistente,
+      )
+    })
+
+    it("falha ao apagar um filho interrompe sem zerar a linha e sem vazar a URL", async () => {
+      const fake = criarFake((c) => {
+        if (op(c, "insert")) return { data: null, error: { message: "duplicate key", code: "23505" } }
+        if (op(c, "maybeSingle")) return ok({ excluido_em: EM })
+        if (c.tabela === "uso_turnos") return { data: null, error: { message: "caiu em https://abc.supabase.co/rest" } }
+        return ok(null)
+      })
+      const erro = await new SupabaseRepositorio(fake.cliente, () => EM).criarProspect("p").catch((e: unknown) => e)
+      expect(erro).toBeInstanceOf(Error)
+      expect((erro as Error).message).not.toContain("supabase.co")
+      expect(fake.consultas.map((c) => c.tabela)).toEqual([
+        "prospects",
+        "prospects",
+        "eventos_conversa",
+        "comentarios",
+        "uso_turnos",
+      ])
+    })
   })
 
   it("excluirProspect: marca excluido_em e zero linhas vira ErroNaoEncontrado", async () => {
@@ -375,5 +470,89 @@ describe("SupabaseArmazem (cliente falso)", () => {
     })
     expect(await armazem.baixarSessao("p", "abc")).toBeNull()
     expect(fake.armazenamento[1]).toMatchObject({ bucket: "planejamento-sessoes", metodo: "download", args: ["p/abc.jsonl"] })
+  })
+
+  describe("apagarTudo", () => {
+    const nomes = (n: number, prefixo = "obj") => Array.from({ length: n }, (_, i) => ({ name: `${prefixo}${i}` }))
+
+    it("apaga manifesto e lixeira do slug e depois os objetos dos dois buckets", async () => {
+      const fake = criarFake(() => ok(null))
+      fake.respostasStorage.list = ([, opcoes], bucket) =>
+        (opcoes as { offset: number }).offset === 0
+          ? ok(bucket === "planejamento-prospects" ? [{ name: "abc" }, { name: "def" }] : [{ name: "s1.jsonl" }])
+          : ok([])
+      await new SupabaseArmazem(fake.cliente).apagarTudo("p")
+
+      expect(fake.consultas.map((c) => [c.tabela, c.ops[0]![0]])).toEqual([
+        ["arquivos", "delete"],
+        ["arquivos_lixeira", "delete"],
+      ])
+      for (const c of fake.consultas) expect(c.ops.filter(([m]) => m === "eq")).toEqual([["eq", "slug", "p"]])
+
+      expect(fake.armazenamento.filter((a) => a.metodo === "remove")).toEqual([
+        { bucket: "planejamento-prospects", metodo: "remove", args: [["p/abc", "p/def"]] },
+        { bucket: "planejamento-sessoes", metodo: "remove", args: [["p/s1.jsonl"]] },
+      ])
+    })
+
+    it("pagina a listagem com limit e offset até a página vir incompleta", async () => {
+      const fake = criarFake(() => ok(null))
+      fake.respostasStorage.list = ([, opcoes], bucket) => {
+        if (bucket !== "planejamento-prospects") return ok([])
+        const { offset } = opcoes as { offset: number }
+        if (offset === 0) return ok(nomes(1000, "a"))
+        if (offset === 1000) return ok(nomes(250, "b"))
+        return ok([])
+      }
+      await new SupabaseArmazem(fake.cliente).apagarTudo("p")
+
+      const listagens = fake.armazenamento.filter((a) => a.metodo === "list")
+      expect(listagens).toEqual([
+        { bucket: "planejamento-prospects", metodo: "list", args: ["p", { limit: 1000, offset: 0 }] },
+        { bucket: "planejamento-prospects", metodo: "list", args: ["p", { limit: 1000, offset: 1000 }] },
+        { bucket: "planejamento-sessoes", metodo: "list", args: ["p", { limit: 1000, offset: 0 }] },
+      ])
+    })
+
+    it("remove em lotes de 100 caminhos, todos com o prefixo do slug", async () => {
+      const fake = criarFake(() => ok(null))
+      fake.respostasStorage.list = ([, opcoes], bucket) =>
+        bucket === "planejamento-prospects" && (opcoes as { offset: number }).offset === 0 ? ok(nomes(250)) : ok([])
+      await new SupabaseArmazem(fake.cliente).apagarTudo("p")
+
+      const remocoes = fake.armazenamento.filter((a) => a.metodo === "remove")
+      expect(remocoes.map((r) => (r.args[0] as string[]).length)).toEqual([100, 100, 50])
+      const todos = remocoes.flatMap((r) => r.args[0] as string[])
+      expect(todos).toHaveLength(250)
+      expect(todos.every((t) => t.startsWith("p/"))).toBe(true)
+      expect(new Set(todos).size).toBe(250)
+    })
+
+    it("sem nada para remover não chama remove (idempotente)", async () => {
+      const fake = criarFake(() => ok(null))
+      await new SupabaseArmazem(fake.cliente).apagarTudo("p")
+      expect(fake.armazenamento.filter((a) => a.metodo === "remove")).toEqual([])
+    })
+
+    it("falha de tabela, de listagem ou de remoção vira Error sem a URL", async () => {
+      const tabela = criarFake(() => ({ data: null, error: { message: "caiu https://abc.supabase.co/rest" } }))
+      const e1 = await new SupabaseArmazem(tabela.cliente).apagarTudo("p").catch((e: unknown) => e)
+      expect((e1 as Error).message).toContain("caiu")
+      expect((e1 as Error).message).not.toContain("supabase.co")
+      expect(tabela.armazenamento).toEqual([])
+
+      const listagem = criarFake(() => ok(null))
+      listagem.respostasStorage.list = () => ({ data: null, error: { message: "boom https://x.supabase.co/storage" } })
+      const e2 = await new SupabaseArmazem(listagem.cliente).apagarTudo("p").catch((e: unknown) => e)
+      expect((e2 as Error).message).toContain("boom")
+      expect((e2 as Error).message).not.toContain("supabase.co")
+
+      const remocao = criarFake(() => ok(null))
+      remocao.respostasStorage.list = ([, o]) => ((o as { offset: number }).offset === 0 ? ok(nomes(2)) : ok([]))
+      remocao.respostasStorage.remove = () => ({ data: null, error: { message: "nope https://x.supabase.co/storage" } })
+      const e3 = await new SupabaseArmazem(remocao.cliente).apagarTudo("p").catch((e: unknown) => e)
+      expect((e3 as Error).message).toContain("nope")
+      expect((e3 as Error).message).not.toContain("supabase.co")
+    })
   })
 })

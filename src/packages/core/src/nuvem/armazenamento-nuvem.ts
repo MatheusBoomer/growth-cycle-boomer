@@ -4,7 +4,7 @@ import type { Comentario } from "../comentarios"
 import { ErroProspectExistente, ErroSincronizacao } from "../erros"
 import type { Estado, EtapaId, EventoConversa } from "../tipos"
 import type { Mesa } from "./mesa"
-import type { RegistroUsoTurno, Repositorio } from "./tipos"
+import type { ArmazemArquivos, RegistroUsoTurno, Repositorio } from "./tipos"
 
 const ATRASO_PADRAO_MS = 1000
 
@@ -15,6 +15,7 @@ const ATRASO_PADRAO_MS = 1000
  */
 export class NuvemArmazenamento extends FsArmazenamento {
   private readonly repositorio: Repositorio
+  private readonly armazem: ArmazemArquivos
   private readonly mesa: Mesa
   private readonly atrasoAgendamentoMs: number
   private readonly sincronizadosNestaExecucao = new Set<string>()
@@ -22,9 +23,16 @@ export class NuvemArmazenamento extends FsArmazenamento {
   private readonly versoes = new Map<string, number>()
   private readonly temporizadores = new Map<string, ReturnType<typeof setTimeout>>()
 
-  constructor(d: { raiz: string; repositorio: Repositorio; mesa: Mesa; atrasoAgendamentoMs?: number }) {
+  constructor(d: {
+    raiz: string
+    repositorio: Repositorio
+    armazem: ArmazemArquivos
+    mesa: Mesa
+    atrasoAgendamentoMs?: number
+  }) {
     super(d.raiz)
     this.repositorio = d.repositorio
+    this.armazem = d.armazem
     this.mesa = d.mesa
     this.atrasoAgendamentoMs = d.atrasoAgendamentoMs ?? ATRASO_PADRAO_MS
   }
@@ -38,10 +46,15 @@ export class NuvemArmazenamento extends FsArmazenamento {
     return this.repositorio.existe(slug)
   }
 
-  /** Uma pasta local sem linha no banco (prospect antigo do Mac) também bloqueia o slug, sem ser tocada. */
+  /**
+   * Uma pasta local sem linha no banco (prospect antigo do Mac) também bloqueia o slug, sem ser tocada.
+   * Um slug excluído é recriado do zero: o banco e a nuvem são limpos antes de copiar o _template.
+   */
   override async criarPasta(slug: string): Promise<void> {
     if (await super.existe(slug)) throw new ErroProspectExistente(slug)
     await this.repositorio.criarProspect(slug)
+    // Sobras de um prospect excluído (ou objetos órfãos de um slug sem linha) não podem vazar para o novo.
+    await this.armazem.apagarTudo(slug)
     await super.criarPasta(slug)
     try {
       await this.sincronizar(slug)
