@@ -30,6 +30,8 @@ const claimsDe = (email: string, extra: Record<string, unknown> = {}) => ({
   error: null,
 })
 
+const proximoCookie = (valor: string) => ({ cookie: `planejamento-proximo=${encodeURIComponent(valor)}` })
+
 function req(caminho: string, headers: Record<string, string> = {}) {
   const host = headers.host ?? "127.0.0.1:3000"
   return new NextRequest(`http://${host}${caminho}`, { headers: { host, ...headers } })
@@ -64,7 +66,7 @@ describe("GET /auth/callback", () => {
 
   it.each(["ana@boomer.com.br", "Ana@GestaoBoomer.com"])("com code e e-mail %s troca o código e vai para o proximo seguro", async (email) => {
     getClaims.mockResolvedValue(claimsDe(email))
-    const r = await GET(req(`/auth/callback?code=abc&proximo=${encodeURIComponent("/prospects/a?etapa=03")}`))
+    const r = await GET(req("/auth/callback?code=abc", proximoCookie("/prospects/a?etapa=03")))
     expect(exchangeCodeForSession).toHaveBeenCalledExactlyOnceWith("abc")
     expect(signOut).not.toHaveBeenCalled()
     expect(r.headers.get("location")).toBe("http://127.0.0.1:3000/prospects/a?etapa=03")
@@ -77,19 +79,60 @@ describe("GET /auth/callback", () => {
 
   it("proximo malicioso vai para / (revalidado aqui)", async () => {
     for (const ruim of ["//evil.com", "http://evil.com", "/\\evil.com", "evil.com", "/\t/evil.com"]) {
-      const r = await GET(req(`/auth/callback?code=abc&proximo=${encodeURIComponent(ruim)}`))
+      const r = await GET(req("/auth/callback?code=abc", proximoCookie(ruim)))
       expect(r.headers.get("location")).toBe("http://127.0.0.1:3000/")
     }
   })
 
   it("proximo duplamente codificado não é decodificado de novo (%2F%2Fevil.com fica sem barra inicial e cai em /)", async () => {
-    const r = await GET(req(`/auth/callback?code=abc&proximo=${encodeURIComponent("%2F%2Fevil.com")}`))
+    const r = await GET(req("/auth/callback?code=abc", proximoCookie("%2F%2Fevil.com")))
     expect(r.headers.get("location")).toBe("http://127.0.0.1:3000/")
+  })
+
+  it("cookie forjado com valor malicioso (cru, sem passar por /auth/entrar) cai em /", async () => {
+    for (const cru of ["//evil.com", "%2F%2Fevil.com", "http://evil.com", "/\\evil.com", "evil.com"]) {
+      const r = await GET(req("/auth/callback?code=abc", { cookie: `planejamento-proximo=${cru}` }))
+      expect(r.headers.get("location")).toBe("http://127.0.0.1:3000/")
+    }
+  })
+
+  it("o proximo da query não vale mais, só o do cookie", async () => {
+    const r = await GET(req("/auth/callback?code=abc&proximo=%2Fprospects%2Fa"))
+    expect(r.headers.get("location")).toBe("http://127.0.0.1:3000/")
+  })
+
+  describe("o cookie planejamento-proximo é apagado em toda saída", () => {
+    const apagado = (r: Response & { cookies: { get: (n: string) => unknown } }) =>
+      expect(r.cookies.get("planejamento-proximo")).toMatchObject({ value: "", maxAge: 0, path: "/auth", httpOnly: true, sameSite: "lax" })
+
+    it("no sucesso", async () => {
+      apagado(await GET(req("/auth/callback?code=abc", proximoCookie("/prospects/a"))))
+    })
+
+    it("em erro=dominio", async () => {
+      getClaims.mockResolvedValue(claimsDe("ana@gmail.com"))
+      apagado(await GET(req("/auth/callback?code=abc", proximoCookie("/prospects/a"))))
+    })
+
+    it("em erro=falha: sem code, erro do provedor, troca com erro, claims com erro e exceção", async () => {
+      apagado(await GET(req("/auth/callback", proximoCookie("/a"))))
+      apagado(await GET(req("/auth/callback?error=access_denied&code=abc", proximoCookie("/a"))))
+      exchangeCodeForSession.mockResolvedValueOnce({ data: { session: null }, error: new Error("x") })
+      apagado(await GET(req("/auth/callback?code=abc", proximoCookie("/a"))))
+      getClaims.mockResolvedValueOnce({ data: null, error: new Error("jwks") })
+      apagado(await GET(req("/auth/callback?code=abc", proximoCookie("/a"))))
+      exchangeCodeForSession.mockRejectedValueOnce(new Error("rede"))
+      apagado(await GET(req("/auth/callback?code=abc", proximoCookie("/a"))))
+    })
+
+    it("mesmo sem o cookie na requisição", async () => {
+      apagado(await GET(req("/auth/callback?code=abc")))
+    })
   })
 
   it("e-mail @gmail.com: signOut e /login?erro=dominio", async () => {
     getClaims.mockResolvedValue(claimsDe("ana@gmail.com"))
-    const r = await GET(req("/auth/callback?code=abc&proximo=%2Fprospects%2Fa"))
+    const r = await GET(req("/auth/callback?code=abc", proximoCookie("/prospects/a")))
     expect(signOut).toHaveBeenCalledOnce()
     expect(r.headers.get("location")).toBe("http://127.0.0.1:3000/login?erro=dominio")
   })
@@ -147,7 +190,8 @@ describe("GET /auth/callback", () => {
 
   it("atrás do balanceador, redireciona para o host público e não para localhost", async () => {
     const r = await GET(
-      req("/auth/callback?code=abc&proximo=%2Fprospects%2Fa", {
+      req("/auth/callback?code=abc", {
+        ...proximoCookie("/prospects/a"),
         host: "localhost:8080",
         "x-forwarded-host": "planejamento.exemplo.com.br",
         "x-forwarded-proto": "https",

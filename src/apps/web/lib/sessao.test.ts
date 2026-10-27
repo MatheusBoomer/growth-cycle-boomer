@@ -13,7 +13,7 @@ vi.mock("@supabase/ssr", () => ({
 const cookieStore = { getAll: vi.fn(() => [{ name: "sb-x-auth-token", value: "abc" }]), set: vi.fn() }
 vi.mock("next/headers", () => ({ cookies: async () => cookieStore }))
 
-const { configuracaoSupabase, exigirUsuario, usuarioDaRequisicao, usuarioDeClaims } = await import("./sessao")
+const { clienteSupabaseDoServidor, configuracaoSupabase, exigirUsuario, usuarioDaRequisicao, usuarioDeClaims } = await import("./sessao")
 
 const DOMINIOS = ["boomer.com.br", "gestaoboomer.com"]
 
@@ -110,6 +110,22 @@ describe("configuracaoSupabase", () => {
     expect(() => configuracaoSupabase({ SUPABASE_URL: "   ", SUPABASE_PUBLISHABLE_KEY: "k" })).toThrow("PLANEJAMENTO_AUTH=google exige SUPABASE_URL no .env da raiz.")
     expect(() => configuracaoSupabase({ SUPABASE_URL: "https://x", SUPABASE_PUBLISHABLE_KEY: " \t" })).toThrow("PLANEJAMENTO_AUTH=google exige SUPABASE_PUBLISHABLE_KEY no .env da raiz.")
     expect(() => configuracaoSupabase({})).toThrow("SUPABASE_URL")
+  })
+})
+
+describe("clienteSupabaseDoServidor: atributos dos cookies", () => {
+  const env = { SUPABASE_URL: "https://projeto.supabase.co", SUPABASE_PUBLISHABLE_KEY: "sb_publishable_teste" }
+  const armazem = { getAll: () => [], setAll: () => {} }
+  const cookieOptions = () => (createServerClient.mock.calls.at(-1) as unknown as [string, string, { cookieOptions: Record<string, unknown> }])[2].cookieOptions
+
+  it("requisição http: httpOnly, lax, path / e sem Secure", () => {
+    clienteSupabaseDoServidor(armazem, false, env)
+    expect(cookieOptions()).toEqual({ httpOnly: true, sameSite: "lax", path: "/", secure: false })
+  })
+
+  it("requisição https: os mesmos atributos e Secure", () => {
+    clienteSupabaseDoServidor(armazem, true, env)
+    expect(cookieOptions()).toEqual({ httpOnly: true, sameSite: "lax", path: "/", secure: true })
   })
 })
 

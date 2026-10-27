@@ -38,38 +38,57 @@ describe("GET /auth/entrar", () => {
   })
   afterEach(() => vi.unstubAllEnvs())
 
-  it("chama signInWithOAuth com google, redirectTo no endereço público e sem hd, e redireciona para a url devolvida", async () => {
+  function redirectTo() {
+    return (signInWithOAuth.mock.calls[0]![0] as { options: { redirectTo: string } }).options.redirectTo
+  }
+
+  it("chama signInWithOAuth com google, redirectTo exato no endereço público (sem query) e sem hd, e redireciona para a url devolvida", async () => {
     const r = await GET(req("/auth/entrar?proximo=%2Fprospects%2Fa"))
     expect(signInWithOAuth).toHaveBeenCalledOnce()
     const arg = signInWithOAuth.mock.calls[0]![0] as { provider: string; options: { redirectTo: string; queryParams?: Record<string, string> } }
     expect(arg.provider).toBe("google")
-    expect(arg.options.redirectTo).toBe("https://planejamento.exemplo.com.br/auth/callback?proximo=%2Fprospects%2Fa")
+    expect(arg.options.redirectTo).toBe("https://planejamento.exemplo.com.br/auth/callback")
+    expect(arg.options.redirectTo).not.toContain("?")
     expect(arg.options.queryParams?.hd).toBeUndefined()
     expect(JSON.stringify(arg)).not.toContain("hd")
     expect(r.status).toBe(307)
     expect(r.headers.get("location")).toBe("https://accounts.google.com/o/oauth2/auth?x=1")
   })
 
-  it("sem proximo, o destino do callback é /", async () => {
-    await GET(req("/auth/entrar"))
-    const arg = signInWithOAuth.mock.calls[0]![0] as { options: { redirectTo: string } }
-    expect(arg.options.redirectTo).toBe("https://planejamento.exemplo.com.br/auth/callback?proximo=%2F")
+  it("o redirectTo nunca tem query, nem com proximo, nem sem PLANEJAMENTO_APP_URL", async () => {
+    await GET(req("/auth/entrar?proximo=%2Fprospects%2Fa%3Fx%3D1"))
+    expect(redirectTo()).not.toContain("?")
+    signInWithOAuth.mockClear()
+    vi.stubEnv("PLANEJAMENTO_APP_URL", "")
+    await GET(req("/auth/entrar?proximo=%2Fprospects%2Fa"))
+    expect(redirectTo()).toBe("http://127.0.0.1:3000/auth/callback")
   })
 
-  it("proximo malicioso vira / no redirectTo", async () => {
+  it("o proximo seguro vai no cookie planejamento-proximo: httpOnly, lax, path /auth, 600 s", async () => {
+    const r = await GET(req(`/auth/entrar?proximo=${encodeURIComponent("/prospects/a?etapa=03&x=1")}`))
+    const c = r.cookies.get("planejamento-proximo")
+    expect(c?.value).toBe("/prospects/a?etapa=03&x=1")
+    expect(c).toMatchObject({ httpOnly: true, sameSite: "lax", path: "/auth", maxAge: 600 })
+    expect(c?.secure).toBeFalsy()
+  })
+
+  it("o cookie do proximo é Secure só quando a requisição é https", async () => {
+    const r = await GET(req("/auth/entrar?proximo=%2Fa", { "x-forwarded-proto": "https" }))
+    expect(r.cookies.get("planejamento-proximo")?.secure).toBe(true)
+    const http = await GET(req("/auth/entrar?proximo=%2Fa", { "x-forwarded-proto": "http" }))
+    expect(http.cookies.get("planejamento-proximo")?.secure).toBeFalsy()
+  })
+
+  it("sem proximo, o cookie guarda /", async () => {
+    const r = await GET(req("/auth/entrar"))
+    expect(r.cookies.get("planejamento-proximo")?.value).toBe("/")
+  })
+
+  it("proximo malicioso vira / no cookie", async () => {
     for (const ruim of ["//evil.com", "http://evil.com", "/\\evil.com", "%2F%2Fevil.com", "evil.com"]) {
-      signInWithOAuth.mockClear()
-      await GET(req(`/auth/entrar?proximo=${encodeURIComponent(ruim)}`))
-      const arg = signInWithOAuth.mock.calls[0]![0] as { options: { redirectTo: string } }
-      expect(arg.options.redirectTo).toBe("https://planejamento.exemplo.com.br/auth/callback?proximo=%2F")
+      const r = await GET(req(`/auth/entrar?proximo=${encodeURIComponent(ruim)}`))
+      expect(r.cookies.get("planejamento-proximo")?.value).toBe("/")
     }
-  })
-
-  it("proximo com query é codificado uma vez só", async () => {
-    await GET(req(`/auth/entrar?proximo=${encodeURIComponent("/prospects/a?etapa=03&x=1")}`))
-    const arg = signInWithOAuth.mock.calls[0]![0] as { options: { redirectTo: string } }
-    const url = new URL(arg.options.redirectTo)
-    expect(url.searchParams.get("proximo")).toBe("/prospects/a?etapa=03&x=1")
   })
 
   it("grava os cookies do PKCE na resposta", async () => {
@@ -95,13 +114,6 @@ describe("GET /auth/entrar", () => {
     signInWithOAuth.mockResolvedValue({ data: { url: "javascript:alert(1)", provider: "google" }, error: null })
     const r = await GET(req("/auth/entrar"))
     expect(r.headers.get("location")).toBe("http://127.0.0.1:3000/login?erro=falha")
-  })
-
-  it("sem PLANEJAMENTO_APP_URL, o redirectTo usa a origem local da requisição", async () => {
-    vi.stubEnv("PLANEJAMENTO_APP_URL", "")
-    await GET(req("/auth/entrar"))
-    const arg = signInWithOAuth.mock.calls[0]![0] as { options: { redirectTo: string } }
-    expect(arg.options.redirectTo).toBe("http://127.0.0.1:3000/auth/callback?proximo=%2F")
   })
 
   it("modo off: não há login, vai para / sem tocar no Supabase", async () => {

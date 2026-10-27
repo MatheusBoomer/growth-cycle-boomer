@@ -1,9 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { modoDeAutenticacao } from "@workspace/core/autenticacao"
-import { origemDoRedirecionamento } from "@/lib/origem-publica"
+import { origemDoRedirecionamento, requisicaoEhHttps } from "@/lib/origem-publica"
 import { clienteSupabaseDoServidor } from "@/lib/sessao"
 
 type CookieParaGravar = { name: string; value: string; options: Record<string, unknown> }
+
+/** Cookie de vida curta que leva o destino do login (`proximo`) de /auth/entrar até /auth/callback. */
+export const COOKIE_PROXIMO = "planejamento-proximo"
+const CAMINHO_COOKIE_PROXIMO = "/auth"
+const VALIDADE_PROXIMO_EM_SEGUNDOS = 600
 
 /**
  * O que as rotas /auth/* precisam: o cliente do Supabase lendo os cookies da requisição, e um jeito de
@@ -13,17 +18,26 @@ type CookieParaGravar = { name: string; value: string; options: Record<string, u
 export function contextoDeRota(request: NextRequest, env: Record<string, string | undefined> = process.env) {
   const gravados: CookieParaGravar[] = []
   const cabecalhos: Record<string, string> = {}
+  const protocolo = new URL(request.url).protocol
+  const seguro = requisicaoEhHttps(request.headers, protocolo)
   const supabase = clienteSupabaseDoServidor(
     {
       getAll: () => request.cookies.getAll(),
       setAll: (aGravar, headers) => {
         gravados.push(...aGravar)
         Object.assign(cabecalhos, headers)
+        // Espelha na requisição: o cliente monta as remoções a partir de getAll(), então um cookie gravado
+        // aqui (a sessão nova) precisa aparecer lá para o signOut seguinte conseguir apagá-lo.
+        for (const { name, value, options } of aGravar) {
+          if (value === "" || options.maxAge === 0) request.cookies.delete(name)
+          else request.cookies.set(name, value)
+        }
       },
     },
+    seguro,
     env,
   )
-  const origem = origemDoRedirecionamento(request.headers, env, new URL(request.url).protocol)
+  const origem = origemDoRedirecionamento(request.headers, env, protocolo)
 
   function comCookies(destino: URL, status: number): NextResponse {
     const resposta = NextResponse.redirect(destino, status)
@@ -42,7 +56,21 @@ export function contextoDeRota(request: NextRequest, env: Record<string, string 
     return comCookies(url, 307)
   }
 
-  return { supabase, origem, redirecionar, redirecionarParaFora }
+  const atributosProximo = { httpOnly: true, sameSite: "lax" as const, path: CAMINHO_COOKIE_PROXIMO, secure: seguro }
+
+  /** Guarda o destino (já validado por quem chama) no cookie `planejamento-proximo`, que vale 10 minutos. */
+  function lembrarProximo(caminhoSeguro: string) {
+    gravados.push({ name: COOKIE_PROXIMO, value: caminhoSeguro, options: { ...atributosProximo, maxAge: VALIDADE_PROXIMO_EM_SEGUNDOS } })
+  }
+
+  /** Lê o destino do cookie (sem validar: quem chama usa `caminhoProximoSeguro`) e apaga o cookie em toda saída. */
+  function consumirProximo(): string | null {
+    const valor = request.cookies.get(COOKIE_PROXIMO)?.value ?? null
+    gravados.push({ name: COOKIE_PROXIMO, value: "", options: { ...atributosProximo, maxAge: 0 } })
+    return valor
+  }
+
+  return { supabase, origem, redirecionar, redirecionarParaFora, lembrarProximo, consumirProximo }
 }
 
 /** O login existe (modo google)? No modo off as rotas /auth/* e /login mandam para /. Valor inválido lança, como no proxy. */

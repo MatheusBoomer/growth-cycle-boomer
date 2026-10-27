@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { decidirAcesso, dominiosPermitidos, modoDeAutenticacao } from "@workspace/core/autenticacao"
+import { requisicaoEhHttps } from "@/lib/origem-publica"
 import { clienteSupabaseDoServidor, usuarioDeClaims } from "@/lib/sessao"
 
 const MENSAGEM_ORIGEM_RECUSADA = "Requisição recusada: só a própria interface local pode chamar esta API."
@@ -46,6 +47,7 @@ async function sessaoValida(
         for (const { name, value } of aGravar) request.cookies.set(name, value)
       },
     },
+    requisicaoEhHttps(request.headers, request.nextUrl.protocol),
     env,
   )
   try {

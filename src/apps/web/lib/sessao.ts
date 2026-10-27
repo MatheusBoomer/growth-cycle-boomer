@@ -31,10 +31,23 @@ export function configuracaoSupabase(env: Record<string, string | undefined>): C
   return { url, chave }
 }
 
-/** Cliente do Supabase para este servidor, lendo e escrevendo a sessão nos cookies dados. Um por requisição. */
-export function clienteSupabaseDoServidor(armazem: ArmazemDeCookies, env: Record<string, string | undefined> = process.env) {
+/**
+ * Atributos dos cookies de sessão e do PKCE. Eles guardam o token de acesso e o de renovação (num projeto
+ * compartilhado com outro sistema), então o navegador não os entrega ao JavaScript da página (httpOnly) nem os
+ * manda em requisição entre sites (lax). `seguro` vem do protocolo efetivo da requisição (https), e não do
+ * endereço público: com http://127.0.0.1 e um endereço público https, um cookie Secure seria descartado.
+ */
+export function opcoesDeCookieDaSessao(seguro: boolean) {
+  return { httpOnly: true, sameSite: "lax" as const, path: "/", secure: seguro }
+}
+
+/**
+ * Cliente do Supabase para este servidor, lendo e escrevendo a sessão nos cookies dados. Um por requisição.
+ * `seguro`: a requisição chegou por https (marca os cookies gravados como Secure).
+ */
+export function clienteSupabaseDoServidor(armazem: ArmazemDeCookies, seguro: boolean, env: Record<string, string | undefined> = process.env) {
   const { url, chave } = configuracaoSupabase(env)
-  return createServerClient(url, chave, { cookies: armazem })
+  return createServerClient(url, chave, { cookies: armazem, cookieOptions: opcoesDeCookieDaSessao(seguro) })
 }
 
 function ehObjeto(valor: unknown): valor is Record<string, unknown> {
@@ -70,7 +83,7 @@ export function usuarioDeClaims(claims: unknown, dominios: readonly string[]): U
   return { email: email.toLowerCase() }
 }
 
-/** Usuário da sessão atual (cookies de `next/headers`), ou null sem sessão válida. No modo off devolve { email: null }. */
+/** Usuário da sessão atual (cookies de `next/headers`, só leitura), ou null sem sessão válida. No modo off devolve { email: null }. */
 export async function usuarioDaRequisicao(): Promise<Usuario | null> {
   const env = process.env
   if (modoDeAutenticacao(env) === "off") return { email: null }
@@ -79,15 +92,10 @@ export async function usuarioDaRequisicao(): Promise<Usuario | null> {
   const supabase = clienteSupabaseDoServidor(
     {
       getAll: () => armazem.getAll(),
-      setAll: (aGravar) => {
-        // Em Server Components os cookies são só de leitura; quem renova a sessão é o proxy.
-        try {
-          for (const { name, value, options } of aGravar) armazem.set(name, value, options)
-        } catch {
-          // ignorado de propósito
-        }
-      },
+      // Só lê: quem renova a sessão e grava os cookies (com os atributos certos) é o proxy.
+      setAll: () => {},
     },
+    false,
     env,
   )
   try {

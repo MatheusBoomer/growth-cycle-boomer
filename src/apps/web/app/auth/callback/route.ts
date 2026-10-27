@@ -8,8 +8,10 @@ export const dynamic = "force-dynamic"
 /** Volta do Google: troca o código por sessão (cookies), confere o domínio e o e-mail e manda para a página pedida. */
 export async function GET(request: NextRequest) {
   if (!loginLigado()) return redirecionarSemLogin(request)
-  const { supabase, redirecionar } = contextoDeRota(request)
+  const { supabase, redirecionar, consumirProximo } = contextoDeRota(request)
   const parametros = request.nextUrl.searchParams
+  // Lido e apagado já na entrada: toda saída abaixo, de erro ou não, leva a remoção do cookie.
+  const proximo = consumirProximo()
   const code = parametros.get("code")
   if (!code || parametros.has("error")) return redirecionar("/login?erro=falha")
 
@@ -36,8 +38,8 @@ export async function GET(request: NextRequest) {
       await encerrar()
       return redirecionar("/login?erro=dominio")
     }
-    // Revalidado aqui: o `proximo` volta pelo navegador e não é confiável só por ter passado por /auth/entrar.
-    return redirecionar(caminhoProximoSeguro(parametros.get("proximo")))
+    // Revalidado aqui: o cookie volta pelo navegador e não é confiável só por /auth/entrar tê-lo gravado.
+    return redirecionar(caminhoProximoSeguro(proximo))
   } catch (e) {
     console.error("[auth] falha no retorno do login", e)
     return redirecionar("/login?erro=falha")

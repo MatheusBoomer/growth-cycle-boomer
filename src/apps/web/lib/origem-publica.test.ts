@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { origemDoRedirecionamento } from "./origem-publica"
+import { origemDoRedirecionamento, requisicaoEhHttps } from "./origem-publica"
 
 const PUBLICO = { PLANEJAMENTO_APP_URL: "https://planejamento.exemplo.com.br" }
 
@@ -57,5 +57,24 @@ describe("origemDoRedirecionamento", () => {
 
   it("PLANEJAMENTO_APP_URL inválida vale como ausente", () => {
     expect(origemDoRedirecionamento(cab("evil.com"), { PLANEJAMENTO_APP_URL: "nao e url" }, "http:")).toBe("http://127.0.0.1:3000")
+  })
+})
+
+describe("requisicaoEhHttps", () => {
+  it("x-forwarded-proto manda; sem ele vale o protocolo da requisição", () => {
+    expect(requisicaoEhHttps(cab("x", { "x-forwarded-proto": "https" }), "http:")).toBe(true)
+    expect(requisicaoEhHttps(cab("x", { "x-forwarded-proto": "HTTPS, http" }), "http:")).toBe(true)
+    expect(requisicaoEhHttps(cab("x", { "x-forwarded-proto": "http" }), "https:")).toBe(false)
+    expect(requisicaoEhHttps(cab("x"), "https:")).toBe(true)
+    expect(requisicaoEhHttps(cab("x"), "http:")).toBe(false)
+  })
+
+  it("valor fora de http/https é ignorado", () => {
+    expect(requisicaoEhHttps(cab("x", { "x-forwarded-proto": "ftp" }), "http:")).toBe(false)
+    expect(requisicaoEhHttps(cab("x", { "x-forwarded-proto": "ftp" }), "https:")).toBe(true)
+  })
+
+  it("não depende de PLANEJAMENTO_APP_URL: http local continua http", () => {
+    expect(requisicaoEhHttps(cab("127.0.0.1:3000"), "http:")).toBe(false)
   })
 })

@@ -167,6 +167,15 @@ describe("proxy no modo google", () => {
     expect(r.headers.get("x-middleware-override-headers")).toContain("cookie")
   })
 
+  it("a renovação grava cookies httpOnly e lax; Secure só quando a requisição é https", async () => {
+    getClaims.mockResolvedValue(SESSAO_BOA)
+    const opcoesDe = () => (createServerClient.mock.calls.at(-1) as unknown as [string, string, { cookieOptions: Record<string, unknown> }])[2].cookieOptions
+    await proxy(req("/prospects/a"))
+    expect(opcoesDe()).toEqual({ httpOnly: true, sameSite: "lax", path: "/", secure: false })
+    await proxy(req("/prospects/a", { headers: { "x-forwarded-proto": "https" } }))
+    expect(opcoesDe()).toEqual({ httpOnly: true, sameSite: "lax", path: "/", secure: true })
+  })
+
   it("cookies renovados também vão na resposta de redirecionamento e na de 401", async () => {
     getClaims.mockResolvedValue({ data: null, error: null })
     aoConsultar = (opcoes) =>

@@ -19,6 +19,16 @@ function urlPublica(env: Record<string, string | undefined>): URL | null {
   }
 }
 
+/**
+ * A requisição chegou por https? Vale x-forwarded-proto (http ou https, o balanceador da Railway termina o TLS),
+ * senão o protocolo da URL da requisição. Serve para marcar cookies como Secure sem depender do endereço público.
+ */
+export function requisicaoEhHttps(headers: Headers, protocoloDaRequisicao: string): boolean {
+  const encaminhado = primeiro(headers.get("x-forwarded-proto"))?.toLowerCase()
+  if (encaminhado === "http" || encaminhado === "https") return encaminhado === "https"
+  return protocoloDaRequisicao === "https:"
+}
+
 /** Origem de PLANEJAMENTO_APP_URL (o endereço público, base do `redirectTo` do login), ou null se ausente ou inválida. */
 export function origemPublica(env: Record<string, string | undefined>): string | null {
   return urlPublica(env)?.origin ?? null
