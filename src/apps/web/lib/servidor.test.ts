@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { servidor } from "./servidor"
+import { pastaConfigClaude, servidor } from "./servidor"
 
 // loadEnvConfig guarda um retrato do process.env na primeira chamada e o restaura nas seguintes, o que desfaz o
 // valor que cada teste define. O que se testa aqui é a escolha do modo, não a leitura do .env.
@@ -53,5 +53,20 @@ describe("servidor(): modo de dados supabase", () => {
   it('"supabase " com espaço vale como supabase (chega à checagem das variáveis)', () => {
     process.env.PLANEJAMENTO_DADOS = "supabase "
     expect(() => servidor()).toThrow("PLANEJAMENTO_DADOS=supabase exige SUPABASE_URL")
+  })
+})
+
+describe("pastaConfigClaude", () => {
+  it("CLAUDE_CONFIG_DIR vazio (linha vazia no .env) cai no padrão ~/.claude", () => {
+    expect(pastaConfigClaude("")).toBe(path.join(os.homedir(), ".claude"))
+    expect(pastaConfigClaude("   ")).toBe(path.join(os.homedir(), ".claude"))
+  })
+
+  it("ausente cai no padrão ~/.claude", () => {
+    expect(pastaConfigClaude(undefined)).toBe(path.join(os.homedir(), ".claude"))
+  })
+
+  it("valor definido é respeitado", () => {
+    expect(pastaConfigClaude("/srv/claude")).toBe("/srv/claude")
   })
 })

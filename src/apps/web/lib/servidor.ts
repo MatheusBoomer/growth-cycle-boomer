@@ -48,6 +48,11 @@ function modoDeDados(): "fs" | "supabase" {
   return "supabase"
 }
 
+/** Pasta de configuração do Claude Code: CLAUDE_CONFIG_DIR, ou ~/.claude quando ausente ou vazio (linha vazia no .env). */
+export function pastaConfigClaude(valor: string | undefined): string {
+  return valor?.trim() || path.join(os.homedir(), ".claude")
+}
+
 function montarNuvem(raiz: string): Nuvem {
   if (registro.__planejamentoNuvem) return registro.__planejamentoNuvem
   const cliente = criarClienteSupabase(process.env.SUPABASE_URL as string, process.env.SUPABASE_SERVICE_ROLE_KEY as string)
@@ -56,7 +61,7 @@ function montarNuvem(raiz: string): Nuvem {
   const armazenamento = new NuvemArmazenamento({ raiz, repositorio: new SupabaseRepositorio(cliente), mesa })
   const memoria = new MemoriaSessao({
     armazem,
-    configDir: process.env.CLAUDE_CONFIG_DIR ?? path.join(os.homedir(), ".claude"),
+    configDir: pastaConfigClaude(process.env.CLAUDE_CONFIG_DIR),
     cwd: raiz,
   })
   registro.__planejamentoNuvem = { armazenamento, memoria }
