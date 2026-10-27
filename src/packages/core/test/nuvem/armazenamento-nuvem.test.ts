@@ -41,6 +41,14 @@ describe("NuvemArmazenamento", () => {
     await expect(arm.criarPasta(SLUG)).rejects.toBeInstanceOf(ErroProspectExistente)
   })
 
+  it("criar prospect grava o criador no repositório; sem criador, null", async () => {
+    await arm.criarPasta(SLUG, "ana.souza@boomer.com.br")
+    expect(repositorio.criadoPor(SLUG)).toBe("ana.souza@boomer.com.br")
+    await arm.excluir(SLUG)
+    await arm.criarPasta(SLUG)
+    expect(repositorio.criadoPor(SLUG)).toBeNull()
+  })
+
   it("recriar um prospect excluído começa do zero: sem manifesto antigo, sem conversa, template de novo", async () => {
     await arm.criarPasta(SLUG)
     await arm.gravarTexto(SLUG, "contexto/velho.md", "velho")

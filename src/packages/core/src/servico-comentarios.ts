@@ -7,7 +7,7 @@ import type { Entregavel, Estado } from "./tipos"
 
 export interface DependenciasComentarios {
   armazenamento: FsArmazenamento
-  planejamento: { estado(slug: string): Promise<Estado>; pedirAjuste(slug: string, id: string, texto: string): Promise<void> }
+  planejamento: { estado(slug: string): Promise<Estado>; pedirAjuste(slug: string, id: string, texto: string, imagem?: Uint8Array, autor?: string | null): Promise<void> }
   previa: Previa
   agora?: () => string
   gerarId?: () => string
@@ -120,11 +120,16 @@ export class ServicoComentarios {
     return e
   }
 
-  criar(slug: string, id: string, d: { slide: number; regiao: Regiao | null; texto: string }): Promise<Comentario> {
-    return this.exclusivo(slug, id, () => this.criarAgora(slug, id, d))
+  criar(slug: string, id: string, d: { slide: number; regiao: Regiao | null; texto: string }, autor: string | null = null): Promise<Comentario> {
+    return this.exclusivo(slug, id, () => this.criarAgora(slug, id, d, autor))
   }
 
-  private async criarAgora(slug: string, id: string, d: { slide: number; regiao: Regiao | null; texto: string }): Promise<Comentario> {
+  private async criarAgora(
+    slug: string,
+    id: string,
+    d: { slide: number; regiao: Regiao | null; texto: string },
+    autor: string | null,
+  ): Promise<Comentario> {
     const e = await this.exigirPendente(slug, id)
     const texto = (d.texto ?? "").trim()
     if (!texto) throw new ErroEntrada("Escreva o comentário.")
@@ -142,6 +147,7 @@ export class ServicoComentarios {
       if (d.regiao && slide) campo = campoDaRegiao(d.regiao, slide.campos)
     }
     const c: Comentario = { id: this.gerarId(), slide: d.slide, regiao: d.regiao, campo, texto, criadoEm: this.agora(), enviadoEm: null }
+    if (autor) c.autor = autor
     await this.gravar(slug, id, [...(await this.listar(slug, id)), c])
     return c
   }
@@ -169,11 +175,12 @@ export class ServicoComentarios {
     await this.alterar(slug, id, cid, () => null)
   }
 
-  enviar(slug: string, id: string): Promise<number> {
-    return this.exclusivo(slug, id, () => this.enviarAgora(slug, id))
+  /** `autor` é quem manda o lote ao agente: vira o `decididoPor` do pedido de ajuste. */
+  enviar(slug: string, id: string, autor: string | null = null): Promise<number> {
+    return this.exclusivo(slug, id, () => this.enviarAgora(slug, id, autor))
   }
 
-  private async enviarAgora(slug: string, id: string): Promise<number> {
+  private async enviarAgora(slug: string, id: string, autor: string | null): Promise<number> {
     const e = await this.exigirPendente(slug, id)
     const lista = await this.listar(slug, id)
     const pendentes = emOrdemDeEnvio(lista)
@@ -205,7 +212,7 @@ export class ServicoComentarios {
         return `Slide ${n} do roteiro · ${s.tipo ?? "slide"}${titulo ? ` "${titulo}"` : ""}`
       }
     }
-    await this.planejamento.pedirAjuste(slug, id, textoDoAjuste({ titulo: e.titulo, comentarios: pendentes, rotulo, recortes }))
+    await this.planejamento.pedirAjuste(slug, id, textoDoAjuste({ titulo: e.titulo, comentarios: pendentes, rotulo, recortes }), undefined, autor)
     const em = this.agora()
     const enviados = new Set(pendentes.map((c) => c.id))
     await this.gravar(slug, id, lista.map((c) => (enviados.has(c.id) ? { ...c, enviadoEm: em } : c)))

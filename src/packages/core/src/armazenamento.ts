@@ -89,7 +89,8 @@ export class FsArmazenamento {
     return existeCaminho(this.pastaProspect(slug))
   }
 
-  async criarPasta(slug: string): Promise<void> {
+  /** `_criadoPor` só interessa ao armazenamento na nuvem; em disco é aceito e ignorado. */
+  async criarPasta(slug: string, _criadoPor?: string | null): Promise<void> {
     const destino = this.pastaProspect(slug)
     if (await existeCaminho(destino)) throw new ErroProspectExistente(slug)
     await cp(path.join(this.pastaClientes, "_template"), destino, {

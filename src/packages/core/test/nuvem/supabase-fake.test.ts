@@ -298,6 +298,63 @@ describe("SupabaseRepositorio (cliente falso)", () => {
     expect(fake.consultas).toHaveLength(2)
   })
 
+  it("criarProspect: grava criado_por quando há criador; sem criador, só o slug", async () => {
+    const fake = criarFake(() => ok(null))
+    const repo = new SupabaseRepositorio(fake.cliente, () => EM)
+    await repo.criarProspect("p", "ana.souza@boomer.com.br")
+    await repo.criarProspect("q")
+    await repo.criarProspect("r", null)
+    expect(op(fake.consultas[0]!, "insert")![1]).toEqual({ slug: "p", criado_por: "ana.souza@boomer.com.br" })
+    expect(op(fake.consultas[1]!, "insert")![1]).toEqual({ slug: "q" })
+    expect(op(fake.consultas[2]!, "insert")![1]).toEqual({ slug: "r" })
+  })
+
+  it("criarProspect: ao recriar um excluído, o reset grava o novo criador (null sem criador)", async () => {
+    const recriar = async (criador?: string) => {
+      const fake = criarFake((c) => {
+        if (op(c, "insert")) return { data: null, error: { message: "duplicate key", code: "23505" } }
+        if (op(c, "update")) return ok([{ slug: "p" }])
+        if (op(c, "delete")) return ok(null)
+        return ok({ excluido_em: EM })
+      })
+      await new SupabaseRepositorio(fake.cliente, () => EM).criarProspect("p", criador)
+      return (op(fake.consultas.find((c) => op(c, "update"))!, "update")![1] as { criado_por: string | null }).criado_por
+    }
+    expect(await recriar("bia@gestaoboomer.com")).toBe("bia@gestaoboomer.com")
+    expect(await recriar()).toBeNull()
+  })
+
+  it("anexarConversa: a coluna autor vem da mensagem do analista; outros eventos gravam null", async () => {
+    const fake = criarFake(() => ok(null))
+    const repo = new SupabaseRepositorio(fake.cliente, () => EM)
+    const msg: EventoConversa = { tipo: "mensagem_analista", texto: "oi", automatica: false, autor: "ana.souza@boomer.com.br", em: EM }
+    const auto: EventoConversa = { tipo: "mensagem_analista", texto: "auto", automatica: true, em: EM }
+    const agente: EventoConversa = { tipo: "texto_agente", texto: "olá", em: EM }
+    await repo.anexarConversa("p", "01", msg)
+    await repo.anexarConversa("p", "01", auto)
+    await repo.anexarConversa("p", "01", agente)
+    const autores = fake.consultas.map((c) => (op(c, "insert")![1] as { autor: string | null }).autor)
+    expect(autores).toEqual(["ana.souza@boomer.com.br", null, null])
+    expect((op(fake.consultas[0]!, "insert")![1] as { evento: EventoConversa }).evento).toEqual(msg)
+  })
+
+  it("registrarUso: grava o autor do turno", async () => {
+    const fake = criarFake(() => ok(null))
+    const repo = new SupabaseRepositorio(fake.cliente, () => EM)
+    await repo.registrarUso({
+      slug: "p",
+      etapa: "01",
+      autor: "ana.souza@boomer.com.br",
+      custoUsd: null,
+      tokensEntrada: null,
+      tokensSaida: null,
+      inicio: EM,
+      fim: EM,
+      status: "ok",
+    })
+    expect((op(fake.consultas[0]!, "insert")![1] as { autor: string | null }).autor).toBe("ana.souza@boomer.com.br")
+  })
+
   it("anexarConversa: grava o evento com o instante dele", async () => {
     const fake = criarFake(() => ok(null))
     const repo = new SupabaseRepositorio(fake.cliente, () => EM)

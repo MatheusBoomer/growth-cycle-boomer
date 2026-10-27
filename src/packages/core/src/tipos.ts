@@ -75,6 +75,8 @@ export interface Entregavel {
   decididoEm: string | null
   /** Quando o analista editou o texto (seção) antes de decidir; a aprovação avisa a IA para reler. */
   editadoEm?: string
+  /** E-mail de quem aprovou ou pediu ajuste; ausente sem login ou em estados antigos. */
+  decididoPor?: string
 }
 
 export type StatusInsumo = "pendente" | "invalido" | "valido"
@@ -89,6 +91,8 @@ export interface EstadoInsumo {
   /** Relativo à pasta do prospect. */
   arquivo: string | null
   atualizadoEm: string
+  /** E-mail de quem enviou o insumo; ausente sem login ou em estados antigos. */
+  enviadoPor?: string
 }
 
 export interface ItemFila {
@@ -149,7 +153,7 @@ export interface ReferenciaAjuste {
 
 export type EventoConversa =
   | { tipo: "turno_inicio"; em: string }
-  | { tipo: "mensagem_analista"; texto: string; automatica: boolean; referencias?: ReferenciaAjuste[]; em: string }
+  | { tipo: "mensagem_analista"; texto: string; automatica: boolean; referencias?: ReferenciaAjuste[]; autor?: string; em: string }
   | { tipo: "texto_agente"; texto: string; em: string }
   | { tipo: "atividade"; nome: string; detalhe: string; em: string }
   | { tipo: "card_entregavel"; entregavelId: string; em: string }

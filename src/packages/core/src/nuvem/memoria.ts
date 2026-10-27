@@ -16,6 +16,7 @@ interface RegistroProspect {
   conversas: Map<EtapaId, EventoConversa[]>
   comentarios: Map<string, Comentario[]>
   sincronizacaoPendente: boolean
+  criadoPor: string | null
 }
 
 /** Implementação em memória do Repositorio: base dos testes e do contrato compartilhado com o banco. */
@@ -36,7 +37,7 @@ export class MemoriaRepositorio implements Repositorio {
     return !!p && !p.excluido
   }
 
-  async criarProspect(slug: string): Promise<void> {
+  async criarProspect(slug: string, criadoPor: string | null = null): Promise<void> {
     const atual = this.prospects.get(slug)
     if (atual && !atual.excluido) throw new ErroProspectExistente(slug)
     // Slug excluído: o registro antigo é substituído por inteiro, como no banco.
@@ -46,6 +47,7 @@ export class MemoriaRepositorio implements Repositorio {
       conversas: new Map(),
       comentarios: new Map(),
       sincronizacaoPendente: false,
+      criadoPor,
     })
   }
 
@@ -103,6 +105,11 @@ export class MemoriaRepositorio implements Repositorio {
   /** Estado da marca de sincronização, para os testes. */
   sincronizacaoPendente(slug: string): boolean {
     return this.prospects.get(slug)?.sincronizacaoPendente ?? false
+  }
+
+  /** Quem criou o prospect (`prospects.criado_por`), para os testes. */
+  criadoPor(slug: string): string | null {
+    return this.prospects.get(slug)?.criadoPor ?? null
   }
 
   private ativo(slug: string): RegistroProspect {

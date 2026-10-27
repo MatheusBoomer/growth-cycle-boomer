@@ -106,7 +106,7 @@ export class ServicoTurnos {
   private readonly agora: () => string
   private readonly memoria: MemoriaDeSessao | undefined
   /** Vaga do turno por prospect. etapa null = reservada enquanto a fila é consultada. */
-  private readonly ativos = new Map<string, { etapa: EtapaId | null; controle: AbortController }>()
+  private readonly ativos = new Map<string, { etapa: EtapaId | null; controle: AbortController; autor: string | null }>()
   private readonly tokens = new Map<string, { slug: string; etapa: EtapaId }>()
   /** Trabalho em andamento por prospect (turnos e disparos da fila), base do aguardarOcioso. */
   private readonly pendentes = new Map<string, Set<Promise<void>>>()
@@ -156,10 +156,10 @@ export class ServicoTurnos {
   }
 
   /** Checa e ocupa a vaga no mesmo tick: entre o teste e o set não pode haver await. */
-  private reservar(slug: string, etapa: EtapaId | null): AbortController {
+  private reservar(slug: string, etapa: EtapaId | null, autor: string | null = null): AbortController {
     if (this.ativos.has(slug)) throw new ErroTurnoAtivo()
     const controle = new AbortController()
-    this.ativos.set(slug, { etapa, controle })
+    this.ativos.set(slug, { etapa, controle, autor })
     return controle
   }
 
@@ -176,27 +176,33 @@ export class ServicoTurnos {
     }
   }
 
-  async iniciar(slug: string, etapa: EtapaId): Promise<void> {
-    const controle = this.reservar(slug, etapa)
+  async iniciar(slug: string, etapa: EtapaId, autor: string | null = null): Promise<void> {
+    const controle = this.reservar(slug, etapa, autor)
     await this.comReserva(slug, controle, () => this.servico.iniciarEtapa(slug, etapa))
-    this.emSegundoPlano(slug, etapa, null, controle)
+    this.emSegundoPlano(slug, etapa, null, controle, autor)
   }
 
-  async enviarMensagem(slug: string, etapa: EtapaId, texto: string): Promise<void> {
-    const controle = this.reservar(slug, etapa)
+  async enviarMensagem(slug: string, etapa: EtapaId, texto: string, autor: string | null = null): Promise<void> {
+    const controle = this.reservar(slug, etapa, autor)
     await this.comReserva(slug, controle, async () => {
       await this.servico.registrarMensagemAnalista(slug, etapa)
-      await this.registrar(slug, etapa, { tipo: "mensagem_analista", texto, automatica: false, em: this.agora() })
+      await this.registrar(slug, etapa, { tipo: "mensagem_analista", texto, automatica: false, ...(autor ? { autor } : {}), em: this.agora() })
     })
-    this.emSegundoPlano(slug, etapa, texto, controle)
+    this.emSegundoPlano(slug, etapa, texto, controle, autor)
   }
 
   /** Mensagem do chat que cita entregáveis pendentes: o balão mostra o texto do analista e as referências; o agente recebe a mensagem composta. */
-  async enviarMensagemComAjustes(slug: string, etapa: EtapaId, texto: string, ajustes: AjusteEnvio[]): Promise<void> {
-    const controle = this.reservar(slug, etapa)
+  async enviarMensagemComAjustes(
+    slug: string,
+    etapa: EtapaId,
+    texto: string,
+    ajustes: AjusteEnvio[],
+    autor: string | null = null,
+  ): Promise<void> {
+    const controle = this.reservar(slug, etapa, autor)
     let textoAgente = ""
     await this.comReserva(slug, controle, async () => {
-      const envio = await this.servico.pedirAjustes(slug, etapa, texto, ajustes)
+      const envio = await this.servico.pedirAjustes(slug, etapa, texto, ajustes, autor)
       textoAgente = envio.textoAgente
       await this.servico.registrarMensagemAnalista(slug, etapa)
       await this.registrar(slug, etapa, {
@@ -204,10 +210,11 @@ export class ServicoTurnos {
         texto: texto.trim(),
         automatica: false,
         referencias: envio.referencias,
+        ...(autor ? { autor } : {}),
         em: this.agora(),
       })
     })
-    this.emSegundoPlano(slug, etapa, textoAgente, controle)
+    this.emSegundoPlano(slug, etapa, textoAgente, controle, autor)
   }
 
   parar(slug: string): void {
@@ -226,7 +233,8 @@ export class ServicoTurnos {
       return
     }
     const { etapa, texto } = item
-    this.ativos.set(slug, { etapa, controle })
+    // A fila não guarda quem provocou cada item: o turno de acompanhamento nasce sem autor.
+    this.ativos.set(slug, { etapa, controle, autor: null })
     await this.comReserva(slug, controle, () =>
       this.registrar(slug, etapa, { tipo: "mensagem_analista", texto, automatica: true, em: this.agora() }),
     )
@@ -242,11 +250,11 @@ export class ServicoTurnos {
     return this.servico.registrarConversa(slug, etapa, evento)
   }
 
-  private emSegundoPlano(slug: string, etapa: EtapaId, texto: string | null, controle: AbortController): void {
+  private emSegundoPlano(slug: string, etapa: EtapaId, texto: string | null, controle: AbortController, autor: string | null = null): void {
     this.barramento.publicar(slug, { tipo: "turno", etapa, ativo: true })
     this.acompanhar(
       slug,
-      this.executarTurno(slug, etapa, texto, controle.signal)
+      this.executarTurno(slug, etapa, texto, controle.signal, autor)
         .catch((e) => console.error(`Turno do prospect ${slug} falhou:`, e))
         .finally(() => {
           this.liberar(slug, controle)
@@ -258,10 +266,10 @@ export class ServicoTurnos {
   }
 
   /** Um turno completo: sincroniza antes, roda o agente e sincroniza de novo no fim (mesmo se interrompido ou com erro). */
-  private async executarTurno(slug: string, etapa: EtapaId, texto: string | null, sinal: AbortSignal): Promise<void> {
+  private async executarTurno(slug: string, etapa: EtapaId, texto: string | null, sinal: AbortSignal, autor: string | null): Promise<void> {
     if (!(await this.prepararTurno(slug, etapa))) return
     try {
-      await this.rodarTurno(slug, etapa, texto, sinal)
+      await this.rodarTurno(slug, etapa, texto, sinal, autor)
     } finally {
       await this.encerrarTurno(slug, etapa)
     }
@@ -330,7 +338,7 @@ export class ServicoTurnos {
     }
   }
 
-  private async rodarTurno(slug: string, etapa: EtapaId, texto: string | null, sinal: AbortSignal): Promise<void> {
+  private async rodarTurno(slug: string, etapa: EtapaId, texto: string | null, sinal: AbortSignal, autor: string | null): Promise<void> {
     const estado = await this.servico.estado(slug)
     const etapaCat = etapaDoCatalogo(this.catalogo, etapa)
     let sessionId = estado.etapas[etapa].sessionId
@@ -410,7 +418,7 @@ export class ServicoTurnos {
           await this.registrarUso({
             slug,
             etapa,
-            autor: null,
+            autor,
             custoUsd: ev.uso?.custoUsd ?? null,
             tokensEntrada: ev.uso?.tokensEntrada ?? null,
             tokensSaida: ev.uso?.tokensSaida ?? null,

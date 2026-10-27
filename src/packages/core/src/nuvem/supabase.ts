@@ -100,11 +100,13 @@ export class SupabaseRepositorio implements Repositorio {
     return !!data
   }
 
-  async criarProspect(slug: string): Promise<void> {
-    const { error } = await this.cliente.from("prospects").insert({ slug })
+  async criarProspect(slug: string, criadoPor: string | null = null): Promise<void> {
+    const { error } = await this.cliente
+      .from("prospects")
+      .insert(criadoPor ? { slug, criado_por: criadoPor } : { slug })
     if (!error) return
     if (error.code !== "23505") throw falha(error)
-    await this.recriarExcluido(slug)
+    await this.recriarExcluido(slug, criadoPor)
   }
 
   /**
@@ -113,7 +115,7 @@ export class SupabaseRepositorio implements Repositorio {
    * continua excluída: se outro criador chegou antes, zero linhas atualizadas viram ErroProspectExistente.
    * Resta uma janela pequena: um segundo criador pode apagar filhos recém-gravados pelo primeiro.
    */
-  private async recriarExcluido(slug: string): Promise<void> {
+  private async recriarExcluido(slug: string, criadoPor: string | null): Promise<void> {
     const { data, error } = await this.cliente
       .from("prospects")
       .select("excluido_em")
@@ -139,7 +141,7 @@ export class SupabaseRepositorio implements Repositorio {
         excluido_em: null,
         criado_em: agora,
         atualizado_em: agora,
-        criado_por: null,
+        criado_por: criadoPor,
       })
       .eq("slug", slug)
       .not("excluido_em", "is", null)
@@ -193,9 +195,8 @@ export class SupabaseRepositorio implements Repositorio {
   }
 
   async anexarConversa(slug: string, etapa: EtapaId, evento: EventoConversa): Promise<void> {
-    const { error } = await this.cliente
-      .from("eventos_conversa")
-      .insert({ slug, etapa, evento, autor: null, em: evento.em })
+    const autor = evento.tipo === "mensagem_analista" ? (evento.autor ?? null) : null
+    const { error } = await this.cliente.from("eventos_conversa").insert({ slug, etapa, evento, autor, em: evento.em })
     if (error) {
       if (error.code === "23503") throw new ErroNaoEncontrado(`Prospect "${slug}" não encontrado.`)
       throw falha(error)

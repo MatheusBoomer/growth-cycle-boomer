@@ -5,7 +5,11 @@ import { estadoInicial } from "../../src/maquina-estados"
 import { contratoArmazem } from "./contrato-armazem"
 import { contratoRepositorio } from "./contrato-repositorio"
 
-contratoRepositorio("memória", async () => new MemoriaRepositorio())
+contratoRepositorio(
+  "memória",
+  async () => new MemoriaRepositorio(),
+  async (repo, slug) => (repo as MemoriaRepositorio).criadoPor(slug),
+)
 contratoArmazem("memória", async () => new MemoriaArmazem())
 
 describe("MemoriaRepositorio", () => {

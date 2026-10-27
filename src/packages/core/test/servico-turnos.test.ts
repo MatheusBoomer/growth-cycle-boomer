@@ -494,3 +494,108 @@ describe("custo de cada turno", () => {
     expect((await svc.conversa(slug, "01")).at(-1)).toMatchObject({ tipo: "turno_fim", status: "ok" })
   })
 })
+
+describe("autoria dos turnos", () => {
+  const ANA = "ana.souza@boomer.com.br"
+
+  class ArmazenamentoComUso extends FsArmazenamento {
+    readonly usos: RegistroUsoTurno[] = []
+    override async registrarUso(r: RegistroUsoTurno): Promise<void> {
+      this.usos.push(r)
+    }
+  }
+
+  const roteiroComUso: Roteiro = async function* () {
+    yield { tipo: "sessao", sessionId: "s1" }
+    yield { tipo: "fim", ok: true, erro: null, sessionId: "s1", uso: { custoUsd: 0.1, tokensEntrada: 10, tokensSaida: 2 } }
+  }
+
+  function montar() {
+    const arm = new ArmazenamentoComUso(raiz, async () => {})
+    const svc = new ServicoPlanejamento({
+      armazenamento: arm,
+      catalogo: catalogoReal(),
+      barramento,
+      validar: async () => ({ ok: true, problemas: [], avisos: [], resumo: null }),
+    })
+    const t = new ServicoTurnos({ servico: svc, executor: new FakeExecutor(roteiroComUso), barramento, catalogo: catalogoReal(), config })
+    return { arm, svc, t }
+  }
+
+  it("iniciar grava o autor em uso_turnos; sem autor, null", async () => {
+    const { arm, svc, t } = montar()
+    const a = await svc.criarProspect("Com Autor", null)
+    const b = await svc.criarProspect("Sem Autor", null)
+    await t.iniciar(a, "01", ANA)
+    await t.aguardarOcioso(a)
+    await t.iniciar(b, "01")
+    await t.aguardarOcioso(b)
+    expect(arm.usos.map((u) => [u.slug, u.autor])).toEqual([
+      [a, ANA],
+      [b, null],
+    ])
+  })
+
+  it("enviarMensagem grava o autor no evento da conversa e em uso_turnos; sem autor, o campo não aparece", async () => {
+    const { arm, svc, t } = montar()
+    const a = await svc.criarProspect("Com Autor", null)
+    const b = await svc.criarProspect("Sem Autor", null)
+    await t.iniciar(a, "01")
+    await t.aguardarOcioso(a)
+    await t.iniciar(b, "01")
+    await t.aguardarOcioso(b)
+    arm.usos.length = 0
+    await t.enviarMensagem(a, "01", "oi", ANA)
+    await t.aguardarOcioso(a)
+    await t.enviarMensagem(b, "01", "oi")
+    await t.aguardarOcioso(b)
+    const msg = async (slug: string) => (await svc.conversa(slug, "01")).find((e) => e.tipo === "mensagem_analista")!
+    expect(await msg(a)).toMatchObject({ texto: "oi", automatica: false, autor: ANA })
+    expect(await msg(b)).not.toHaveProperty("autor")
+    expect(arm.usos.map((u) => [u.slug, u.autor])).toEqual([
+      [a, ANA],
+      [b, null],
+    ])
+  })
+
+  it("enviarMensagemComAjustes grava o autor no balão, em decididoPor e em uso_turnos", async () => {
+    const { arm, svc, t } = montar()
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    arm.usos.length = 0
+    await svc.ferramenta({ slug, etapa: "01" }, "solicitar_insumo", { insumo_id: "kickoff-transcricao" })
+    await mkdir(path.join(raiz, "clientes", slug, ".app/rascunhos"), { recursive: true })
+    await writeFile(path.join(raiz, "clientes", slug, ".app/rascunhos/s.md"), "# S")
+    await svc.ferramenta({ slug, etapa: "01" }, "propor_entregavel", {
+      tipo: "secao",
+      titulo: "Resumo",
+      arquivo_rascunho: `clientes/${slug}/.app/rascunhos/s.md`,
+      nome_final: "resumo",
+    })
+    const id = (await svc.estado(slug)).entregaveis[0]!.id
+    await t.enviarMensagemComAjustes(slug, "01", "tirar o último parágrafo", [{ entregavelId: id, marcas: [] }], ANA)
+    await t.aguardarOcioso(slug)
+    const balao = (await svc.conversa(slug, "01")).find((e) => e.tipo === "mensagem_analista")!
+    expect(balao).toMatchObject({ texto: "tirar o último parágrafo", autor: ANA })
+    expect((await svc.estado(slug)).entregaveis[0]!.decididoPor).toBe(ANA)
+    expect(arm.usos.map((u) => u.autor)).toEqual([ANA])
+  })
+
+  it("a vaga ativa guarda o autor e o turno da fila que vem depois não herda nenhum", async () => {
+    const { arm, svc, t } = montar()
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    arm.usos.length = 0
+    await t.enviarMensagem(slug, "01", "oi", ANA)
+    const ativos = (t as unknown as { ativos: Map<string, { autor: string | null }> }).ativos
+    expect(ativos.get(slug)?.autor).toBe(ANA)
+    await t.aguardarOcioso(slug)
+    expect(ativos.has(slug)).toBe(false)
+    // item da fila automática: turno disparado sem autor
+    await svc.enfileirar(slug, "01", "continue")
+    await t.aguardarOcioso(slug)
+    expect(arm.usos.map((u) => u.autor)).toEqual([ANA, null])
+  })
+})
