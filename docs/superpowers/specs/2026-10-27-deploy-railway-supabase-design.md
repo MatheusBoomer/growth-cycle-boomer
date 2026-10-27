@@ -144,7 +144,7 @@ Funções `salvarSessao(slug, sessionId)` e `restaurarSessao(slug, sessionId)` s
 
 Script `src/packages/core/scripts/migrar-para-supabase.ts`:
 
-1. `--ensaio`: lista, por prospect, quantos arquivos e bytes seriam enviados, quantas conversas, comentários e sessões, sem gravar nada.
+1. `--ensaio`: lista, por prospect, quantos arquivos e bytes seriam enviados, quantas conversas e comentários, e quais etapas em andamento vão retomar pelo histórico, sem gravar nada.
 2. Envio: para cada pasta em `clientes/` (exceto `_template` e `_fixtures`), cria a linha em `prospects` a partir do `estado.json`, envia os arquivos e o manifesto e insere conversas e comentários.
 3. Conferência: compara a quantidade e o hash de cada arquivo entre o Mac e o Supabase e imprime as divergências. Pode ser rodado de novo sem duplicar nada (idempotente por `slug` + `caminho`).
 
