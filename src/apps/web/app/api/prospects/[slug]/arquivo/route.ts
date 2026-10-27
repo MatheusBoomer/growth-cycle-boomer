@@ -5,6 +5,7 @@ import { politicaDeConteudoArquivo } from "@workspace/core/seguranca"
 import { json, respostaDeErro } from "@/lib/http"
 import { nomeDeDownload } from "@/lib/nome-download"
 import { servidor } from "@/lib/servidor"
+import { exigirUsuario } from "@/lib/sessao"
 
 const TIPOS: Record<string, string> = {
   ".png": "image/png",
@@ -28,6 +29,7 @@ const CACHE_IMAGEM = "private, max-age=0, must-revalidate"
 
 export async function GET(req: NextRequest, ctx: RouteContext<"/api/prospects/[slug]/arquivo">) {
   try {
+    await exigirUsuario()
     const { slug } = await ctx.params
     const caminho = req.nextUrl.searchParams.get("caminho") ?? ""
     const download = req.nextUrl.searchParams.get("download") === "1"

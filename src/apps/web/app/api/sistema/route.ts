@@ -3,12 +3,19 @@ import { readFile } from "node:fs/promises"
 import path from "node:path"
 import { promisify } from "node:util"
 import { tokenApifyConfigurado } from "@workspace/core/sistema"
+import { respostaDeErro } from "@/lib/http"
 import { servidor } from "@/lib/servidor"
+import { exigirUsuario } from "@/lib/sessao"
 
 const exec = promisify(execFile)
 export const dynamic = "force-dynamic"
 
 export async function GET() {
+  try {
+    await exigirUsuario()
+  } catch (e) {
+    return respostaDeErro(e)
+  }
   const claude = { instalado: false, versao: null as string | null, logado: false, metodo: null as string | null, plano: null as string | null }
   try {
     const { stdout } = await exec("claude", ["--version"], { timeout: 10_000 })
