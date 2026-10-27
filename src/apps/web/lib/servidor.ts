@@ -1,3 +1,4 @@
+import os from "node:os"
 import path from "node:path"
 import { loadEnvConfig } from "@next/env"
 import { FsArmazenamento } from "@workspace/core/armazenamento"
@@ -6,6 +7,10 @@ import { carregarCatalogo } from "@workspace/core/catalogo"
 import { AgentSdkExecutor } from "@workspace/core/executor/agent-sdk"
 import { ClaudeCliExecutor } from "@workspace/core/executor/claude-cli"
 import { criarExecutorDemo } from "@workspace/core/executor/fake"
+import { NuvemArmazenamento } from "@workspace/core/nuvem/armazenamento-nuvem"
+import { MemoriaSessao, type MemoriaDeSessao } from "@workspace/core/nuvem/memoria-sessao"
+import { Mesa } from "@workspace/core/nuvem/mesa"
+import { SupabaseArmazem, SupabaseRepositorio, criarClienteSupabase } from "@workspace/core/nuvem/supabase"
 import { criarPreviaPython } from "@workspace/core/previa"
 import { ServicoComentarios } from "@workspace/core/servico-comentarios"
 import { ServicoPlanejamento } from "@workspace/core/servico-planejamento"
@@ -24,7 +29,37 @@ interface Servidor {
 }
 
 // Um só conjunto de serviços por processo, mesmo que o Next carregue este módulo em mais de uma rota.
-const registro = globalThis as unknown as { __planejamento?: Servidor }
+// A parte da nuvem (Mesa e NuvemArmazenamento, com temporizadores e fila de sincronização) fica à parte: é uma só
+// por processo e sobrevive à recriação dos serviços, para nunca haver duas instâncias disputando o mesmo prospect.
+interface Nuvem {
+  armazenamento: NuvemArmazenamento
+  memoria: MemoriaDeSessao
+}
+const registro = globalThis as unknown as { __planejamento?: Servidor; __planejamentoNuvem?: Nuvem }
+
+const ERRO_SEM_SUPABASE = "PLANEJAMENTO_DADOS=supabase exige SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no .env da raiz."
+
+/** Modo de dados escolhido por PLANEJAMENTO_DADOS (vazio = fs). Falha cedo se faltar variável do Supabase. */
+function modoDeDados(): "fs" | "supabase" {
+  if (process.env.PLANEJAMENTO_DADOS !== "supabase") return "fs"
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) throw new Error(ERRO_SEM_SUPABASE)
+  return "supabase"
+}
+
+function montarNuvem(raiz: string): Nuvem {
+  if (registro.__planejamentoNuvem) return registro.__planejamentoNuvem
+  const cliente = criarClienteSupabase(process.env.SUPABASE_URL as string, process.env.SUPABASE_SERVICE_ROLE_KEY as string)
+  const armazem = new SupabaseArmazem(cliente)
+  const mesa = new Mesa({ pastaClientes: path.join(raiz, "clientes"), armazem })
+  const armazenamento = new NuvemArmazenamento({ raiz, repositorio: new SupabaseRepositorio(cliente), mesa })
+  const memoria = new MemoriaSessao({
+    armazem,
+    configDir: process.env.CLAUDE_CONFIG_DIR ?? path.join(os.homedir(), ".claude"),
+    cwd: raiz,
+  })
+  registro.__planejamentoNuvem = { armazenamento, memoria }
+  return registro.__planejamentoNuvem
+}
 
 /** Algum agente rodando? (lê o mapa interno: a instância pode ser de uma versão anterior da classe) */
 function turnoEmAndamento(s: Servidor): boolean {
@@ -48,8 +83,10 @@ export function servidor(): Servidor {
   // O .env fica na raiz do projeto, não na pasta do app (a única que o Next lê sozinho). Carregado aqui, no
   // processo que de fato escolhe o executor: ANTHROPIC_API_KEY e PLANEJAMENTO_EXECUTOR dependem disto.
   loadEnvConfig(raiz, process.env.NODE_ENV !== "production", undefined, true)
+  const dados = modoDeDados()
   const catalogo = carregarCatalogo(raiz)
-  const armazenamento = new FsArmazenamento(raiz)
+  const nuvem = dados === "supabase" ? montarNuvem(raiz) : undefined
+  const armazenamento: FsArmazenamento = nuvem?.armazenamento ?? new FsArmazenamento(raiz)
   // Recriando: o barramento antigo continua, para as abas abertas seguirem recebendo os eventos.
   const barramento = atual?.barramento ?? new Barramento()
   const servico = new ServicoPlanejamento({ armazenamento, catalogo, barramento, validar: criarValidadorPython(raiz) })
@@ -63,7 +100,8 @@ export function servidor(): Servidor {
         : new ClaudeCliExecutor()
   console.info(
     `[planejamento] executor: ${process.env.PLANEJAMENTO_EXECUTOR || "cli (assinatura)"}` +
-      ` | ANTHROPIC_API_KEY ${process.env.ANTHROPIC_API_KEY ? "definida" : "NÃO definida"}`,
+      ` | ANTHROPIC_API_KEY ${process.env.ANTHROPIC_API_KEY ? "definida" : "NÃO definida"}` +
+      ` | dados: ${dados}`,
   )
   const pastaMcp = path.join(raiz, "src/packages/mcp-planejamento/src")
   const turnos = new ServicoTurnos({
@@ -71,6 +109,7 @@ export function servidor(): Servidor {
     executor,
     barramento,
     catalogo,
+    memoria: nuvem?.memoria,
     config: {
       raiz,
       urlApp: process.env.PLANEJAMENTO_APP_URL ?? `http://127.0.0.1:${process.env.PORT ?? 3000}`,
