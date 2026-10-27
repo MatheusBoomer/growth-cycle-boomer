@@ -256,6 +256,7 @@ export class Mesa {
     }
   }
 
+  /** Vazia se ausente, ilegível ou não for um objeto. */
   private async lerBase(slug: string): Promise<Hashes> {
     let texto: string
     try {
@@ -264,7 +265,15 @@ export class Mesa {
       if (codigo(e) === "ENOENT") return {}
       throw e
     }
-    return JSON.parse(texto) as Hashes
+    // Base ilegível ou que não é um objeto vale como vazia: o disco vence e nada sai do manifesto.
+    let lida: unknown
+    try {
+      lida = JSON.parse(texto)
+    } catch {
+      return {}
+    }
+    if (typeof lida !== "object" || lida === null || Array.isArray(lida)) return {}
+    return lida as Hashes
   }
 
   private async gravarBase(slug: string, base: Hashes): Promise<void> {

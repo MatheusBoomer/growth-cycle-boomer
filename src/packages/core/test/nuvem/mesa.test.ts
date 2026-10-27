@@ -225,6 +225,25 @@ describe("Mesa", () => {
     expect(arquivoVisivel(MARCADOR_MESA)).toBe(false)
   })
 
+  for (const [nome, conteudo] of [
+    ["lixo", "{isto não é json"],
+    ["null", "null"],
+    ["lista", '["a.md"]'],
+    ["número", "42"],
+  ] as const) {
+    it(`base ilegível (${nome}) vale como vazia: sincroniza e nada sai do manifesto`, async () => {
+      await sincronizado({ "a.md": "1", "b.md": "2" })
+      await rm(abs("a.md"))
+      await noDisco("c.md", "3")
+      await writeFile(path.join(pastaClientes, ".mesa", `${SLUG}.json`), conteudo)
+      const r = await mesa.sincronizar(SLUG)
+      expect(r).toEqual({ enviados: 1, baixados: 1, removidosNaNuvem: 0, removidosNoDisco: 0 })
+      expect(armazem.lixeira).toEqual([])
+      expect(await manifesto()).toEqual({ "a.md": sha("1"), "b.md": sha("2"), "c.md": sha("3") })
+      expect(await base()).toEqual({ "a.md": sha("1"), "b.md": sha("2"), "c.md": sha("3") })
+    })
+  }
+
   it("ignora .DS_Store, ~$x.xlsx, __pycache__/, .tmp, .app/previas/, .app/estado.json, .app/conversas/ e .app/comentarios/<id>.json, mas sincroniza .app/comentarios/<id>/c1.png", async () => {
     const ignorados = [
       ".DS_Store",
