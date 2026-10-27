@@ -1,8 +1,12 @@
 import { mkdtempSync, rmSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { servidor } from "./servidor"
+
+// loadEnvConfig guarda um retrato do process.env na primeira chamada e o restaura nas seguintes, o que desfaz o
+// valor que cada teste define. O que se testa aqui é a escolha do modo, não a leitura do .env.
+vi.mock("@next/env", () => ({ loadEnvConfig: () => ({}) }))
 
 const VARIAVEIS = ["PLANEJAMENTO_ROOT", "PLANEJAMENTO_DADOS", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"] as const
 
@@ -33,5 +37,21 @@ describe("servidor(): modo de dados supabase", () => {
     expect(() => servidor()).toThrow(
       "PLANEJAMENTO_DADOS=supabase exige SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no .env da raiz.",
     )
+  })
+
+  it("valor inválido falha com a mensagem exata, sem criar nada", () => {
+    process.env.PLANEJAMENTO_DADOS = "supabse"
+    expect(() => servidor()).toThrow('PLANEJAMENTO_DADOS inválido: "supabse" (use fs ou supabase).')
+    expect((globalThis as { __planejamento?: unknown }).__planejamento).toBeUndefined()
+  })
+
+  it("maiúscula não vale: Supabase é inválido", () => {
+    process.env.PLANEJAMENTO_DADOS = "Supabase"
+    expect(() => servidor()).toThrow('PLANEJAMENTO_DADOS inválido: "Supabase" (use fs ou supabase).')
+  })
+
+  it('"supabase " com espaço vale como supabase (chega à checagem das variáveis)', () => {
+    process.env.PLANEJAMENTO_DADOS = "supabase "
+    expect(() => servidor()).toThrow("PLANEJAMENTO_DADOS=supabase exige SUPABASE_URL")
   })
 })

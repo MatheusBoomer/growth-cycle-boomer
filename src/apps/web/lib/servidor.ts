@@ -39,9 +39,11 @@ const registro = globalThis as unknown as { __planejamento?: Servidor; __planeja
 
 const ERRO_SEM_SUPABASE = "PLANEJAMENTO_DADOS=supabase exige SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no .env da raiz."
 
-/** Modo de dados escolhido por PLANEJAMENTO_DADOS (vazio = fs). Falha cedo se faltar variável do Supabase. */
+/** Modo de dados escolhido por PLANEJAMENTO_DADOS (vazio = fs). Falha cedo com valor inválido ou sem variável do Supabase. */
 function modoDeDados(): "fs" | "supabase" {
-  if (process.env.PLANEJAMENTO_DADOS !== "supabase") return "fs"
+  const valor = (process.env.PLANEJAMENTO_DADOS ?? "").trim()
+  if (valor === "" || valor === "fs") return "fs"
+  if (valor !== "supabase") throw new Error(`PLANEJAMENTO_DADOS inválido: "${valor}" (use fs ou supabase).`)
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) throw new Error(ERRO_SEM_SUPABASE)
   return "supabase"
 }
