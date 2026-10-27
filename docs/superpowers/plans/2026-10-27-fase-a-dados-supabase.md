@@ -6,7 +6,7 @@
 
 **Architecture:** `NuvemArmazenamento` estende o `FsArmazenamento` atual: estado, conversas e comentários vão a um `Repositorio`; arquivos continuam no disco e uma `Mesa` os sincroniza em três vias (base × disco × manifesto) com um `ArmazemArquivos` endereçado por conteúdo. `ServicoTurnos` sincroniza antes e depois de cada turno e usa uma `MemoriaSessao` para salvar e restaurar o `.jsonl` da sessão do agente, com retomada pelo histórico quando ele falta. Cada peça tem implementação em memória (testes) e Supabase.
 
-**Tech Stack:** TypeScript, Node 20+, Vitest 5, `@supabase/supabase-js` 2.x, Supabase CLI 2.x (migrações), Postgres, Supabase Storage.
+**Tech Stack:** TypeScript, Node 20+, Vitest 5, `@supabase/supabase-js` 2.x, Postgres, Supabase Storage. SQL aplicado pelo MCP do Supabase (`apply_migration`), não pelo CLI.
 
 **Spec:** `docs/superpowers/specs/2026-10-27-deploy-railway-supabase-design.md` (seções 4, 5.1 a 5.4, 6 e 7, itens 1 a 4).
 
@@ -15,7 +15,9 @@
 - Modo escolhido por `PLANEJAMENTO_DADOS=fs|supabase`; vazio = `fs`. Com `fs`, o comportamento atual não muda e todos os testes atuais seguem passando.
 - Variáveis: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`; testes de integração usam `SUPABASE_TESTE_URL` e `SUPABASE_TESTE_SERVICE_ROLE_KEY` e são pulados sem elas. Nenhuma chave aparece em arquivo versionado, log ou mensagem de erro.
 - Só o servidor acessa o Supabase (chave de serviço). RLS ligado em todas as tabelas, sem políticas.
-- Storage privado: buckets `prospects` (objetos `<slug>/<sha256>`) e `sessoes` (objetos `<slug>/<sessionId>.jsonl`).
+- Projeto Supabase compartilhado `fkvvvnitxvfdvtexmidl` (também hospeda o sistema `pit`). Tudo do planejamento no schema `planejamento`; nunca criar, alterar ou ler nada fora dele, de `storage.buckets` (só os dois buckets abaixo) e de `storage.objects` desses buckets.
+- Cliente com `db: { schema: "planejamento" }`.
+- Storage privado: buckets `planejamento-prospects` (objetos `<slug>/<sha256>`) e `planejamento-sessoes` (objetos `<slug>/<sessionId>.jsonl`).
 - Fora da sincronização: `.DS_Store`, nomes começando com `~$`, qualquer segmento `__pycache__`, `*.tmp`, `.app/previas/`, `.app/estado.json`, `.app/conversas/`, `.app/comentarios/*.json` (direto em `.app/comentarios/`).
 - Base da mesa em `clientes/.mesa/<slug>.json` (pasta com ponto: `listarSlugs` já ignora).
 - Sincronização: 3 tentativas com espera de 500 ms, 1 s e 2 s; agendada 1 s depois da última gravação do app; nunca duas ao mesmo tempo para o mesmo prospect.
@@ -37,8 +39,7 @@
 
 | Arquivo | Responsabilidade |
 |---|---|
-| `supabase/config.toml` | Projeto do Supabase CLI (gerado por `supabase init`) |
-| `supabase/migrations/20261027120000_planejamento.sql` | Tabelas, índices, RLS e buckets |
+| `supabase/migrations/20261027120000_planejamento.sql` | Schema `planejamento`: tabelas, índices, RLS, permissões e buckets (aplicado pelo MCP) |
 | `src/packages/core/src/nuvem/tipos.ts` | Interfaces `Repositorio`, `ArmazemArquivos` e tipos de apoio |
 | `src/packages/core/src/nuvem/memoria.ts` | `MemoriaRepositorio` e `MemoriaArmazem` (testes) |
 | `src/packages/core/src/nuvem/supabase.ts` | `criarClienteSupabase`, `SupabaseRepositorio`, `SupabaseArmazem` |
@@ -51,46 +52,47 @@
 
 ---
 
-### Task 0: Projeto Supabase de desenvolvimento (manual, feito pelo analista)
+### Task 0: Variáveis do projeto Supabase existente (manual, feito pelo analista)
 
-Não há Docker no Mac, então a Fase A usa um projeto Supabase na nuvem, no plano gratuito, só para desenvolvimento. O de produção é criado na Fase C.
+O banco é o projeto já existente `fkvvvnitxvfdvtexmidl`, compartilhado com o sistema `pit`. Os testes de integração usam o mesmo projeto, isolados no schema `planejamento` e com slugs `contrato-*` que se apagam ao fim.
 
-- [ ] **Step 1:** Em supabase.com, criar o projeto `planejamento-dev`, na região São Paulo (`sa-east-1`). Anotar a senha do banco num gerenciador de senhas.
-- [ ] **Step 2:** Em *Project Settings → API*, copiar a URL e a chave `service_role` para o `.env` da raiz como `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_TESTE_URL` e `SUPABASE_TESTE_SERVICE_ROLE_KEY`, com os mesmos valores. Nunca colar a chave no chat.
-- [ ] **Step 3:** Rodar `supabase login` no terminal.
+- [ ] **Step 1:** Em *Project Settings → API Keys*, copiar a chave `service_role` (ou a *secret key*) para o `.env` da raiz como `SUPABASE_SERVICE_ROLE_KEY` e `SUPABASE_TESTE_SERVICE_ROLE_KEY`; `SUPABASE_URL` e `SUPABASE_TESTE_URL` = `https://fkvvvnitxvfdvtexmidl.supabase.co`. Nunca colar a chave no chat.
+- [ ] **Step 2 (depois da Task 1):** Em *Project Settings → Data API → Exposed schemas*, acrescentar `planejamento` aos que já estão lá (sem remover nenhum, em especial `pit`) e salvar.
 
-Pronto quando: o `.env` tem as quatro variáveis e `supabase projects list` mostra `planejamento-dev`.
+Pronto quando: o `.env` tem as quatro variáveis e `planejamento` aparece em *Exposed schemas*.
 
 ---
 
 ### Task 1: Esquema do banco e dos buckets
 
 **Files:**
-- Create: `supabase/config.toml` (via `supabase init`), `supabase/migrations/20261027120000_planejamento.sql`
+- Create: `supabase/migrations/20261027120000_planejamento.sql` (registro versionado do SQL aplicado; sem `supabase init`)
 
 **Interfaces:**
-- Produces: tabelas `prospects`, `eventos_conversa`, `comentarios`, `uso_turnos`, `arquivos`, `arquivos_lixeira`; buckets privados `prospects` e `sessoes`.
+- Produces: schema `planejamento` com as tabelas `prospects`, `eventos_conversa`, `comentarios`, `uso_turnos`, `arquivos`, `arquivos_lixeira`; buckets privados `planejamento-prospects` e `planejamento-sessoes`.
 
-- [ ] **Step 1: `supabase init` na raiz do projeto** (aceitar os padrões; não gerar configurações do VS Code).
-- [ ] **Step 2: Escrever a migração** com:
-  - `prospects(slug text primary key, nome text, estado jsonb, etapa_atual text, criado_por text, criado_em timestamptz not null default now(), atualizado_em timestamptz not null default now(), versao integer not null default 0, sincronizacao_pendente boolean not null default false, excluido_em timestamptz)`
-  - `eventos_conversa(id bigint generated always as identity primary key, slug text not null references prospects(slug), etapa text not null, evento jsonb not null, autor text, em timestamptz not null)`, com índice `(slug, etapa, id)`
-  - `comentarios(slug text not null references prospects(slug), entregavel_id text not null, lista jsonb not null, atualizado_em timestamptz not null default now(), primary key (slug, entregavel_id))`
-  - `uso_turnos(id bigint generated always as identity primary key, slug text not null references prospects(slug), etapa text not null, autor text, custo_usd numeric(10,4), tokens_entrada integer, tokens_saida integer, inicio timestamptz not null, fim timestamptz not null, status text not null)`
-  - `arquivos(slug text not null references prospects(slug), caminho text not null, sha256 text not null, tamanho bigint not null, atualizado_em timestamptz not null default now(), primary key (slug, caminho))`
-  - `arquivos_lixeira(id bigint generated always as identity primary key, slug text not null, caminho text not null, sha256 text not null, removido_em timestamptz not null default now())`
-  - `alter table … enable row level security` nas seis tabelas, sem políticas
-  - `insert into storage.buckets (id, name, public) values ('prospects','prospects',false), ('sessoes','sessoes',false) on conflict do nothing`
-- [ ] **Step 3: Aplicar no projeto de desenvolvimento**
+- [ ] **Step 1: Escrever a migração** (tudo com `if not exists` / `on conflict do nothing`; nenhum `drop`, `alter` ou `grant` fora do schema `planejamento`):
+  - `create schema if not exists planejamento`
+  - `planejamento.prospects(slug text primary key, nome text, estado jsonb, etapa_atual text, criado_por text, criado_em timestamptz not null default now(), atualizado_em timestamptz not null default now(), versao integer not null default 0, sincronizacao_pendente boolean not null default false, excluido_em timestamptz)`
+  - `planejamento.eventos_conversa(id bigint generated always as identity primary key, slug text not null references planejamento.prospects(slug), etapa text not null, evento jsonb not null, autor text, em timestamptz not null)`, com índice `(slug, etapa, id)`
+  - `planejamento.comentarios(slug text not null references planejamento.prospects(slug), entregavel_id text not null, lista jsonb not null, atualizado_em timestamptz not null default now(), primary key (slug, entregavel_id))`
+  - `planejamento.uso_turnos(id bigint generated always as identity primary key, slug text not null references planejamento.prospects(slug), etapa text not null, autor text, custo_usd numeric(10,4), tokens_entrada integer, tokens_saida integer, inicio timestamptz not null, fim timestamptz not null, status text not null)`
+  - `planejamento.arquivos(slug text not null references planejamento.prospects(slug), caminho text not null, sha256 text not null, tamanho bigint not null, atualizado_em timestamptz not null default now(), primary key (slug, caminho))`
+  - `planejamento.arquivos_lixeira(id bigint generated always as identity primary key, slug text not null, caminho text not null, sha256 text not null, removido_em timestamptz not null default now())`
+  - RLS ligado nas seis tabelas, sem políticas
+  - `revoke all on schema planejamento from public, anon, authenticated`; `grant usage on schema planejamento to service_role`; `grant all on all tables in schema planejamento to service_role`; `grant usage, select on all sequences in schema planejamento to service_role`; `alter default privileges in schema planejamento grant all on tables to service_role` (idem para sequences)
+  - `insert into storage.buckets (id, name, public, file_size_limit) values ('planejamento-prospects','planejamento-prospects',false,104857600), ('planejamento-sessoes','planejamento-sessoes',false,104857600) on conflict (id) do nothing`
+- [ ] **Step 2: Aplicar pelo MCP** com `apply_migration` (nome `planejamento_esquema_inicial`), depois de mostrar o SQL ao analista e ele aprovar.
+- [ ] **Step 3: Conferir**
 
-Run: `supabase link --project-ref <ref do planejamento-dev> && supabase db push`
-Expected: `Finished supabase db push.`; no painel, as seis tabelas e os dois buckets privados.
+Run (MCP `list_tables` com `schemas: ["planejamento"]` e `get_advisors` tipo `security`)
+Expected: as seis tabelas com `rls_enabled: true`; nenhum aviso novo de segurança sobre o schema `planejamento` (avisos de "RLS sem política" são esperados e aceitos: só `service_role` acessa); as tabelas do `pit` com a mesma contagem de linhas de antes.
 
 - [ ] **Step 4: Commit**
 
 ```bash
 git add supabase/
-git commit -m "feat(supabase): esquema do planejamento (tabelas, RLS e buckets)"
+git commit -m "feat(supabase): esquema planejamento (tabelas, RLS, permissões e buckets)"
 ```
 
 ---
@@ -183,9 +185,9 @@ git commit -m "feat(core): contratos do repositório e do armazém de arquivos, 
 
 **Interfaces:**
 - Consumes: `Repositorio`, `ArmazemArquivos`, `contratoRepositorio`, `contratoArmazem` (Task 2).
-- Produces: `criarClienteSupabase(url: string, chaveServico: string): SupabaseClient` (sem sessão persistida: `auth: { persistSession: false, autoRefreshToken: false }`); `SupabaseRepositorio(cliente: SupabaseClient, agora?: () => string)`; `SupabaseArmazem(cliente: SupabaseClient)`.
+- Produces: `criarClienteSupabase(url: string, chaveServico: string): SupabaseClient` (`db: { schema: "planejamento" }`, sem sessão persistida: `auth: { persistSession: false, autoRefreshToken: false }`); `SupabaseRepositorio(cliente: SupabaseClient, agora?: () => string)`; `SupabaseArmazem(cliente: SupabaseClient)`.
 
-- [ ] **Step 1: Escrever `supabase.test.ts`**: `describe.skipIf(!process.env.SUPABASE_TESTE_URL)`, chamando `contratoRepositorio("supabase", …)` e `contratoArmazem("supabase", …)`; o `afterAll` apaga as linhas e os objetos dos slugs `contrato-*` criados.
+- [ ] **Step 1: Escrever `supabase.test.ts`**: `describe.skipIf(!process.env.SUPABASE_TESTE_URL)`, chamando `contratoRepositorio("supabase", …)` e `contratoArmazem("supabase", …)`; o `afterAll` apaga as linhas e os objetos dos slugs `contrato-*` criados (só nos buckets `planejamento-*`).
 - [ ] **Step 2: Rodar e ver falhar**
 
 Run: `npm run test:supabase`
@@ -195,8 +197,9 @@ Expected: FAIL, módulo `../../src/nuvem/supabase` não encontrado.
   - `gravarEstado`: `update prospects set estado, nome = estado.prospect.nome, etapa_atual, versao = versaoLida + 1, atualizado_em … where slug = ? and versao = versaoLida`, com `.select("versao")`. Zero linhas → `ErroConflitoVersao`. `etapa_atual` = primeira etapa de `ORDEM_ETAPAS` com status diferente de `concluida`, ou `null`.
   - `criarProspect`: `insert`; código Postgres `23505` → `ErroProspectExistente`.
   - `lerConversa`: `order("id")`, paginando de 1000 em 1000 até acabar.
-  - `enviar`: SHA-256 com `node:crypto`; `storage.from("prospects").upload(\`${slug}/${sha}\`, dados, { upsert: true, contentType: "application/octet-stream" })`; depois `upsert` em `arquivos`.
+  - `enviar`: SHA-256 com `node:crypto`; `storage.from("planejamento-prospects").upload(\`${slug}/${sha}\`, dados, { upsert: true, contentType: "application/octet-stream" })`; depois `upsert` em `arquivos`.
   - `remover`: lê a entrada, insere em `arquivos_lixeira`, apaga do manifesto. Não apaga o objeto.
+  - Sessões no bucket `planejamento-sessoes`.
   - Toda falha do cliente vira `Error` com a mensagem do Supabase, sem a URL nem a chave.
 - [ ] **Step 4: Rodar e ver passar**
 
@@ -462,7 +465,7 @@ Expected: tudo PASS.
   2. Rodar as etapas 01 a 03: enviar insumos, aprovar ao menos um entregável por etapa.
   3. No meio da etapa 02, parar o `next dev`, apagar `clientes/verdeluz-teste/` e a sessão em `~/.claude/projects/<raiz codificada>/<sessionId>.jsonl`, subir de novo e mandar uma mensagem. Esperado: os arquivos voltam e o chat mostra `Retomei a etapa a partir do histórico.`
   4. Repetir o passo 3 apagando só a pasta (sem apagar a sessão). Esperado: os arquivos voltam e o agente segue sem o aviso de retomada.
-  5. No painel do Supabase, conferir as linhas em `prospects`, `eventos_conversa`, `arquivos`, `uso_turnos` (com `custo_usd`) e os objetos nos buckets.
+  5. No painel do Supabase, conferir as linhas em `planejamento.prospects`, `eventos_conversa`, `arquivos`, `uso_turnos` (com `custo_usd`) e os objetos nos buckets `planejamento-*`.
 
 Pronto quando os cinco itens se confirmarem (critério da Fase A no spec).
 

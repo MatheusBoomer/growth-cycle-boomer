@@ -30,6 +30,7 @@ Hoje o app só roda no Mac de quem desenvolve: lê e grava em `clientes/<slug>/`
 | 7 | Motor de agentes na nuvem | Sempre o Agent SDK com `ANTHROPIC_API_KEY`. O CLI segue disponível só no Mac |
 | 8 | Região | Supabase em São Paulo (`sa-east-1`), storage privado (LGPD) |
 | 9 | Plano do Supabase | Pro, pelo backup diário automático |
+| 11 | Projeto Supabase | O projeto já existente `fkvvvnitxvfdvtexmidl`, que também hospeda o sistema `pit`. Tudo do planejamento fica no schema `planejamento` e nos buckets `planejamento-prospects` e `planejamento-sessoes`; nada do `pit` é tocado |
 | 10 | Execução | Quatro fases em sequência: A (dados), B (login), C (no ar), D (migração). Cada fase tem o próprio plano de implementação |
 
 ## 3. Arquitetura
@@ -50,7 +51,7 @@ Hoje o app só roda no Mac de quem desenvolve: lê e grava em `clientes/<slug>/`
  ┌───────────────┴──────── SUPABASE ────────▼──────────────────────┐
  │  Postgres: prospects (estado jsonb), eventos_conversa,           │
  │            comentarios, uso_turnos, arquivos (manifesto)          │
- │  Storage (privado): prospects/<slug>/<sha256>, sessoes/<slug>/... │
+ │  Storage: planejamento-prospects, planejamento-sessoes (privados) │
  └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -66,7 +67,7 @@ Três camadas de contexto, cada uma com destino próprio:
 |---|---|---|
 | Entre etapas: resumo de decisões, handoff, `contexto/decisoes/`, ativos aprovados | `estado.json` e arquivos do prospect | `prospects.estado` (banco) e storage |
 | Na tela: histórico do chat | `.app/conversas/` | tabela `eventos_conversa` |
-| Dentro da etapa: memória da sessão do agente | `~/.claude/projects/<cwd>/<sessionId>.jsonl` no Mac | storage `sessoes/<slug>/<sessionId>.jsonl`, restaurado em `CLAUDE_CONFIG_DIR` |
+| Dentro da etapa: memória da sessão do agente | `~/.claude/projects/<cwd>/<sessionId>.jsonl` no Mac | bucket `planejamento-sessoes`, `<slug>/<sessionId>.jsonl`, restaurado em `CLAUDE_CONFIG_DIR` |
 
 Regras da memória da sessão:
 
@@ -79,7 +80,7 @@ Regras da memória da sessão:
 
 ### 5.1 Repositório (banco)
 
-Interface `Repositorio` com duas implementações: `MemoriaRepositorio` (testes) e `SupabaseRepositorio`. No modo local (`PLANEJAMENTO_DADOS=fs`), o `FsArmazenamento` atual segue sem repositório.
+Tabelas no schema `planejamento` (exposto na Data API; acesso só para `service_role`). Interface `Repositorio` com duas implementações: `MemoriaRepositorio` (testes) e `SupabaseRepositorio`. No modo local (`PLANEJAMENTO_DADOS=fs`), o `FsArmazenamento` atual segue sem repositório.
 
 Tabelas:
 
@@ -108,7 +109,7 @@ Só o servidor acessa o banco e o storage (chave de serviço). O navegador nunca
 
 Assim, gravações feitas direto no disco (pelo agente, pelos scripts ou por código que usa `caminhoAbsoluto`) chegam à nuvem, e uma queda do servidor antes do envio não deixa a nuvem sobrescrever trabalho local.
 
-O storage guarda cada arquivo pelo conteúdo, em `prospects/<slug>/<sha256>`. O nome real fica no manifesto. Isso evita os nomes que o storage recusa (acentos, por exemplo "Relatório…") e torna a lixeira só uma mudança de tabela.
+O storage guarda cada arquivo pelo conteúdo, no bucket `planejamento-prospects`, em `<slug>/<sha256>`. O nome real fica no manifesto. Isso evita os nomes que o storage recusa (acentos, por exemplo "Relatório…") e torna a lixeira só uma mudança de tabela.
 
 Ficam fora da sincronização: `.DS_Store`, `~$*`, `__pycache__/`, `*.tmp`, `.app/previas/` (refeitas sob demanda) e os dados que estão no banco (`.app/estado.json`, `.app/conversas/`, `.app/comentarios/*.json`).
 
@@ -180,7 +181,7 @@ As memórias de sessão do Mac (`~/.claude/projects/`) não são migradas. O `se
 ## 7. Testes
 
 1. Os testes atuais de `core` e `web` seguem passando com `PLANEJAMENTO_DADOS=fs`.
-2. Testes de contrato do `Repositorio` e do armazém de arquivos: o mesmo conjunto roda contra a implementação em memória e contra o Supabase local (`supabase start`, via Docker).
+2. Testes de contrato do `Repositorio` e do armazém de arquivos: o mesmo conjunto roda contra a implementação em memória e contra o projeto Supabase real, no schema `planejamento`, com slugs `contrato-*` apagados ao fim.
 3. Testes unitários da `Mesa`: cada linha da tabela da 5.2, arquivos ignorados e duas sincronizações simultâneas.
 4. Testes da memória da sessão: salvar, restaurar e cair na retomada pelo histórico quando o `.jsonl` falta.
 5. Teste do login: e-mail de fora do domínio recusado; `/api/interno` sem token recusado.
