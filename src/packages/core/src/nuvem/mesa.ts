@@ -14,6 +14,15 @@ export interface ResumoSincronizacao {
 /** Hash por caminho (relativo à pasta do prospect, com "/"). */
 type Hashes = Record<string, string>
 
+/**
+ * Marcador gravado na raiz da pasta do prospect a cada passada bem-sucedida.
+ * A base fica fora da pasta: sem o marcador, a pasta foi apagada (ou recriada)
+ * depois da última sincronização e a base não descreve mais o disco.
+ * Fica na raiz para sobreviver ao reposicionamento do cliente de teste, que
+ * apaga só as subpastas.
+ */
+export const MARCADOR_MESA = ".mesa-ok"
+
 /** Espera entre tentativas: uma por tentativa que falhou. */
 const ESPERAS_MS = [500, 1000, 2000]
 
@@ -24,6 +33,7 @@ const ESPERAS_MS = [500, 1000, 2000]
 export function ignorarNaSincronizacao(caminho: string): boolean {
   const segmentos = caminho.split("/").filter((s) => s.length > 0)
   const nome = segmentos[segmentos.length - 1] ?? ""
+  if (caminho === MARCADOR_MESA) return true
   if (segmentos.includes("__pycache__")) return true
   if (nome === ".DS_Store" || nome.startsWith("~$") || nome.endsWith(".tmp")) return true
   if (caminho.startsWith(".app/previas/") || caminho.startsWith(".app/conversas/")) return true
@@ -104,9 +114,10 @@ export class Mesa {
     try {
       const pasta = this.pastaProspect(slug)
       const disco = await this.hashesDoDisco(pasta)
-      // Sem a pasta do prospect não há o que comparar com a base: tratar como a
-      // primeira sincronização, para não tirar tudo do manifesto.
-      const base = disco ? await this.lerBase(slug) : {}
+      // Sem o marcador (pasta ausente, ou apagada e recriada depois da última
+      // passada) a base não vale: tratar como a primeira sincronização, para não
+      // tirar do manifesto o que só falta no disco.
+      const base = disco && (await this.temMarcador(pasta)) ? await this.lerBase(slug) : {}
       const local = disco ?? {}
       const nuvem: Hashes = {}
       for (const e of await this.armazem.listarManifesto(slug)) {
@@ -152,6 +163,7 @@ export class Mesa {
       }
       caminhoAtual = null
       await this.gravarBase(slug, novaBase)
+      await this.gravarMarcador(pasta)
       return resumo
     } catch (e) {
       if (e instanceof ErroSincronizacao && e.caminho) throw e
@@ -229,6 +241,19 @@ export class Mesa {
       return true
     }
     return (await visitar("")) ? hashes : null
+  }
+
+  private async temMarcador(pasta: string): Promise<boolean> {
+    return (await this.hashDoArquivo(path.join(pasta, MARCADOR_MESA))) !== undefined
+  }
+
+  /** Só grava se a pasta existe: não cria a pasta de um prospect sem arquivos. */
+  private async gravarMarcador(pasta: string): Promise<void> {
+    try {
+      await writeFile(path.join(pasta, MARCADOR_MESA), "")
+    } catch (e) {
+      if (codigo(e) !== "ENOENT") throw e
+    }
   }
 
   private async lerBase(slug: string): Promise<Hashes> {

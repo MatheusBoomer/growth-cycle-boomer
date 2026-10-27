@@ -2,9 +2,10 @@ import { createHash } from "node:crypto"
 import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { beforeEach, describe, expect, it } from "vitest"
+import { arquivoVisivel } from "../../src/armazenamento"
 import { ErroSincronizacao } from "../../src/erros"
 import { MemoriaArmazem } from "../../src/nuvem/memoria"
-import { ignorarNaSincronizacao, Mesa } from "../../src/nuvem/mesa"
+import { ignorarNaSincronizacao, MARCADOR_MESA, Mesa } from "../../src/nuvem/mesa"
 import { raizTemporaria } from "../ajuda"
 
 const SLUG = "acme"
@@ -188,6 +189,40 @@ describe("Mesa", () => {
     expect(r).toEqual({ enviados: 0, baixados: 2, removidosNaNuvem: 0, removidosNoDisco: 0 })
     expect(await doDisco("dados/b.md")).toBe("2")
     expect(armazem.lixeira).toEqual([])
+  })
+
+  it("pasta recriada com um arquivo e base antiga: nada sai do manifesto", async () => {
+    await sincronizado({ "a.md": "1", "dados/b.md": "2" })
+    await rm(path.join(pastaClientes, SLUG), { recursive: true })
+    // A primeira sincronização depois do apagamento falha (storage fora do ar).
+    armazem.falharEm = () => true
+    await expect(mesa.sincronizar(SLUG)).rejects.toBeInstanceOf(ErroSincronizacao)
+    armazem.falharEm = undefined
+    // Uma escrita do app recria a pasta com um único arquivo.
+    await noDisco("contexto/status-planejamento.md", "s")
+    const r = await mesa.sincronizar(SLUG)
+    expect(r).toEqual({ enviados: 1, baixados: 2, removidosNaNuvem: 0, removidosNoDisco: 0 })
+    expect(armazem.lixeira).toEqual([])
+    expect(await manifesto()).toEqual({
+      "a.md": sha("1"),
+      "contexto/status-planejamento.md": sha("s"),
+      "dados/b.md": sha("2"),
+    })
+    expect(await doDisco("dados/b.md")).toBe("2")
+  })
+
+  it("pastas apagadas de propósito com o marcador presente: a remoção vai para a nuvem", async () => {
+    await sincronizado({ "dados/a.md": "1", "entrega/c.md": "3", "b.md": "2" })
+    expect(await existeNoDisco(".mesa-ok")).toBe(true)
+    await rm(abs("dados"), { recursive: true })
+    await rm(abs("entrega"), { recursive: true })
+    const r = await mesa.sincronizar(SLUG)
+    expect(r).toEqual({ enviados: 0, baixados: 0, removidosNaNuvem: 2, removidosNoDisco: 0 })
+    expect(await manifesto()).toEqual({ "b.md": sha("2") })
+    expect(MARCADOR_MESA).toBe(".mesa-ok")
+    expect(ignorarNaSincronizacao(MARCADOR_MESA)).toBe(true)
+    // O analista não vê o marcador na lista de arquivos do prospect.
+    expect(arquivoVisivel(MARCADOR_MESA)).toBe(false)
   })
 
   it("ignora .DS_Store, ~$x.xlsx, __pycache__/, .tmp, .app/previas/, .app/estado.json, .app/conversas/ e .app/comentarios/<id>.json, mas sincroniza .app/comentarios/<id>/c1.png", async () => {
