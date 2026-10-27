@@ -5,6 +5,7 @@ import type { EventoExecutor, JanelaUso } from "./tipos"
 type Json = Record<string, unknown>
 const obj = (v: unknown): Json | null => (v && typeof v === "object" && !Array.isArray(v) ? (v as Json) : null)
 const str = (v: unknown): string | null => (typeof v === "string" ? v : null)
+const num = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null)
 
 export function parseLinhaStreamJson(linha: string): EventoExecutor[] {
   let bruto: unknown
@@ -13,6 +14,11 @@ export function parseLinhaStreamJson(linha: string): EventoExecutor[] {
   } catch {
     return []
   }
+  return eventosDaMensagem(bruto)
+}
+
+/** Converte uma mensagem já decodificada (linha do CLI ou mensagem do Agent SDK, que têm o mesmo formato). */
+export function eventosDaMensagem(bruto: unknown): EventoExecutor[] {
   const o = obj(bruto)
   if (!o || o.parent_tool_use_id) return []
 
@@ -67,12 +73,24 @@ export function parseLinhaStreamJson(linha: string): EventoExecutor[] {
     }
     case "result": {
       const ok = o.subtype === "success" && o.is_error !== true
+      const usage = obj(o.usage)
+      // só leva `uso` quando o result trouxe custo ou tokens (um result sem nenhum dos dois não tem o que registrar)
+      const trouxeUso = "total_cost_usd" in o || usage !== null
       return [
         {
           tipo: "fim",
           ok,
           erro: ok ? null : (str(o.result) || str(o.subtype) || "erro desconhecido"),
           sessionId: str(o.session_id),
+          ...(trouxeUso
+            ? {
+                uso: {
+                  custoUsd: num(o.total_cost_usd),
+                  tokensEntrada: num(usage?.input_tokens),
+                  tokensSaida: num(usage?.output_tokens),
+                },
+              }
+            : {}),
         },
       ]
     }

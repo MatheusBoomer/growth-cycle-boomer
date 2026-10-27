@@ -5,10 +5,17 @@ import type { Barramento } from "./barramento"
 import { etapaDoCatalogo } from "./catalogo"
 import { ErroTurnoAtivo } from "./erros"
 import type { Executor, PedidoTurno } from "./executor/tipos"
-import { promptInicialEtapa, systemPromptModoInterface } from "./prompts"
+import type { MemoriaDeSessao } from "./nuvem/memoria-sessao"
+import type { RegistroUsoTurno } from "./nuvem/tipos"
+import { promptInicialEtapa, promptRetomadaEtapa, systemPromptModoInterface } from "./prompts"
 import type { AjusteEnvio, ServicoPlanejamento } from "./servico-planejamento"
 import type { Catalogo, EtapaId, EventoConversa } from "./tipos"
 import { RegistroUso, type UsoAssinatura } from "./uso-assinatura"
+
+const AVISO_SINCRONIZACAO_ANTES = "Não consegui baixar os arquivos do prospect. Tente de novo."
+const AVISO_RETOMADA = "Retomei a etapa a partir do histórico."
+const AVISO_SINCRONIZACAO_DEPOIS =
+  "Os arquivos desta resposta ainda não foram salvos na nuvem. Vou tentar de novo na próxima ação."
 
 /** Tudo o que o agente pode usar sem pedir permissão (o modo -p não pergunta). */
 export const FERRAMENTAS_PERMITIDAS = [
@@ -51,6 +58,8 @@ export interface DependenciasTurnos {
   catalogo: Catalogo
   config: ConfigTurnos
   agora?: () => string
+  /** Guarda a sessão do agente na nuvem. Sem ela, nada muda (modo em disco). */
+  memoria?: MemoriaDeSessao
 }
 
 export function aspasShell(s: string): string {
@@ -95,8 +104,9 @@ export class ServicoTurnos {
   private readonly catalogo: Catalogo
   private readonly config: ConfigTurnos
   private readonly agora: () => string
+  private readonly memoria: MemoriaDeSessao | undefined
   /** Vaga do turno por prospect. etapa null = reservada enquanto a fila é consultada. */
-  private readonly ativos = new Map<string, { etapa: EtapaId | null; controle: AbortController }>()
+  private readonly ativos = new Map<string, { etapa: EtapaId | null; controle: AbortController; autor: string | null }>()
   private readonly tokens = new Map<string, { slug: string; etapa: EtapaId }>()
   /** Trabalho em andamento por prospect (turnos e disparos da fila), base do aguardarOcioso. */
   private readonly pendentes = new Map<string, Set<Promise<void>>>()
@@ -117,6 +127,7 @@ export class ServicoTurnos {
     this.catalogo = d.catalogo
     this.config = d.config
     this.agora = d.agora ?? (() => new Date().toISOString())
+    this.memoria = d.memoria
     this.registroUso = new RegistroUso(d.config.raiz)
     this.servico.conectarTurnos({
       aoEnfileirar: (slug) => this.acompanhar(slug, this.processarFila(slug)),
@@ -140,15 +151,22 @@ export class ServicoTurnos {
     return this.ativos.get(slug)?.etapa ?? null
   }
 
+  /** E-mail de quem está com o turno ativo; null sem turno, sem login ou no turno que a fila disparou. */
+  ativoPor(slug: string): string | null {
+    return this.ativos.get(slug)?.autor ?? null
+  }
+
   contextoDoToken(token: string): { slug: string; etapa: EtapaId } | null {
     return this.tokens.get(token) ?? null
   }
 
   /** Checa e ocupa a vaga no mesmo tick: entre o teste e o set não pode haver await. */
-  private reservar(slug: string, etapa: EtapaId | null): AbortController {
-    if (this.ativos.has(slug)) throw new ErroTurnoAtivo()
+  private reservar(slug: string, etapa: EtapaId | null, autor: string | null = null): AbortController {
+    const ocupada = this.ativos.get(slug)
+    // O nome só ajuda quando o turno é de outra pessoa; para o próprio autor (duplo clique, segunda aba) vale a genérica.
+    if (ocupada) throw new ErroTurnoAtivo(ocupada.autor !== autor ? ocupada.autor : null)
     const controle = new AbortController()
-    this.ativos.set(slug, { etapa, controle })
+    this.ativos.set(slug, { etapa, controle, autor })
     return controle
   }
 
@@ -165,27 +183,33 @@ export class ServicoTurnos {
     }
   }
 
-  async iniciar(slug: string, etapa: EtapaId): Promise<void> {
-    const controle = this.reservar(slug, etapa)
+  async iniciar(slug: string, etapa: EtapaId, autor: string | null = null): Promise<void> {
+    const controle = this.reservar(slug, etapa, autor)
     await this.comReserva(slug, controle, () => this.servico.iniciarEtapa(slug, etapa))
-    this.emSegundoPlano(slug, etapa, null, controle)
+    this.emSegundoPlano(slug, etapa, null, controle, autor)
   }
 
-  async enviarMensagem(slug: string, etapa: EtapaId, texto: string): Promise<void> {
-    const controle = this.reservar(slug, etapa)
+  async enviarMensagem(slug: string, etapa: EtapaId, texto: string, autor: string | null = null): Promise<void> {
+    const controle = this.reservar(slug, etapa, autor)
     await this.comReserva(slug, controle, async () => {
       await this.servico.registrarMensagemAnalista(slug, etapa)
-      await this.registrar(slug, etapa, { tipo: "mensagem_analista", texto, automatica: false, em: this.agora() })
+      await this.registrar(slug, etapa, { tipo: "mensagem_analista", texto, automatica: false, ...(autor ? { autor } : {}), em: this.agora() })
     })
-    this.emSegundoPlano(slug, etapa, texto, controle)
+    this.emSegundoPlano(slug, etapa, texto, controle, autor)
   }
 
   /** Mensagem do chat que cita entregáveis pendentes: o balão mostra o texto do analista e as referências; o agente recebe a mensagem composta. */
-  async enviarMensagemComAjustes(slug: string, etapa: EtapaId, texto: string, ajustes: AjusteEnvio[]): Promise<void> {
-    const controle = this.reservar(slug, etapa)
+  async enviarMensagemComAjustes(
+    slug: string,
+    etapa: EtapaId,
+    texto: string,
+    ajustes: AjusteEnvio[],
+    autor: string | null = null,
+  ): Promise<void> {
+    const controle = this.reservar(slug, etapa, autor)
     let textoAgente = ""
     await this.comReserva(slug, controle, async () => {
-      const envio = await this.servico.pedirAjustes(slug, etapa, texto, ajustes)
+      const envio = await this.servico.pedirAjustes(slug, etapa, texto, ajustes, autor)
       textoAgente = envio.textoAgente
       await this.servico.registrarMensagemAnalista(slug, etapa)
       await this.registrar(slug, etapa, {
@@ -193,10 +217,11 @@ export class ServicoTurnos {
         texto: texto.trim(),
         automatica: false,
         referencias: envio.referencias,
+        ...(autor ? { autor } : {}),
         em: this.agora(),
       })
     })
-    this.emSegundoPlano(slug, etapa, textoAgente, controle)
+    this.emSegundoPlano(slug, etapa, textoAgente, controle, autor)
   }
 
   parar(slug: string): void {
@@ -215,7 +240,8 @@ export class ServicoTurnos {
       return
     }
     const { etapa, texto } = item
-    this.ativos.set(slug, { etapa, controle })
+    // A fila não guarda quem provocou cada item: o turno de acompanhamento nasce sem autor.
+    this.ativos.set(slug, { etapa, controle, autor: null })
     await this.comReserva(slug, controle, () =>
       this.registrar(slug, etapa, { tipo: "mensagem_analista", texto, automatica: true, em: this.agora() }),
     )
@@ -231,11 +257,11 @@ export class ServicoTurnos {
     return this.servico.registrarConversa(slug, etapa, evento)
   }
 
-  private emSegundoPlano(slug: string, etapa: EtapaId, texto: string | null, controle: AbortController): void {
+  private emSegundoPlano(slug: string, etapa: EtapaId, texto: string | null, controle: AbortController, autor: string | null = null): void {
     this.barramento.publicar(slug, { tipo: "turno", etapa, ativo: true })
     this.acompanhar(
       slug,
-      this.executarTurno(slug, etapa, texto, controle.signal)
+      this.executarTurno(slug, etapa, texto, controle.signal, autor)
         .catch((e) => console.error(`Turno do prospect ${slug} falhou:`, e))
         .finally(() => {
           this.liberar(slug, controle)
@@ -246,15 +272,105 @@ export class ServicoTurnos {
     )
   }
 
-  private async executarTurno(slug: string, etapa: EtapaId, texto: string | null, sinal: AbortSignal): Promise<void> {
+  /** Um turno completo: sincroniza antes, roda o agente e sincroniza de novo no fim (mesmo se interrompido ou com erro). */
+  private async executarTurno(slug: string, etapa: EtapaId, texto: string | null, sinal: AbortSignal, autor: string | null): Promise<void> {
+    if (!(await this.prepararTurno(slug, etapa))) return
+    try {
+      await this.rodarTurno(slug, etapa, texto, sinal, autor)
+    } finally {
+      await this.encerrarTurno(slug, etapa)
+    }
+  }
+
+  /** Baixa os arquivos do prospect antes do turno. Sem eles o turno não roda: registra o erro e devolve false. */
+  private async prepararTurno(slug: string, etapa: EtapaId): Promise<boolean> {
+    try {
+      await this.servico.sincronizarArquivos(slug)
+      return true
+    } catch (e) {
+      console.error(`Falha ao sincronizar "${slug}" antes do turno:`, e)
+      await this.registrar(slug, etapa, { tipo: "turno_inicio", em: this.agora() })
+      await this.registrar(slug, etapa, { tipo: "aviso", nivel: "erro", texto: AVISO_SINCRONIZACAO_ANTES, em: this.agora() })
+      await this.registrar(slug, etapa, {
+        tipo: "turno_fim",
+        status: "erro",
+        detalhe: AVISO_SINCRONIZACAO_ANTES,
+        em: this.agora(),
+      })
+      return false
+    }
+  }
+
+  /** Envia à nuvem o que o turno produziu. Se falhar, o turno continua ok e o analista recebe um alerta. */
+  private async encerrarTurno(slug: string, etapa: EtapaId): Promise<void> {
+    await this.salvarSessao(slug, etapa)
+    try {
+      await this.servico.sincronizarArquivos(slug)
+    } catch (e) {
+      console.error(`Falha ao sincronizar "${slug}" depois do turno:`, e)
+      await this.registrar(slug, etapa, { tipo: "aviso", nivel: "alerta", texto: AVISO_SINCRONIZACAO_DEPOIS, em: this.agora() }).catch(
+        (erro) => console.error(`Não consegui registrar o aviso de sincronização de "${slug}":`, erro),
+      )
+    }
+  }
+
+  /** Guarda o custo do turno. Falha só vai para o console: não pode afetar o turno. */
+  private async registrarUso(r: RegistroUsoTurno): Promise<void> {
+    try {
+      await this.servico.registrarUso(r)
+    } catch (e) {
+      console.error(`Falha ao registrar o uso do turno de "${r.slug}":`, e)
+    }
+  }
+
+  /** Guarda a sessão do agente na nuvem. Falha só vai para o console: o analista não precisa saber. */
+  private async salvarSessao(slug: string, etapa: EtapaId): Promise<void> {
+    if (!this.memoria) return
+    try {
+      const sessionId = (await this.servico.estado(slug)).etapas[etapa].sessionId
+      if (sessionId) await this.memoria.salvar(slug, sessionId)
+    } catch (e) {
+      console.error(`Falha ao salvar a sessão do agente de "${slug}":`, e)
+    }
+  }
+
+  /** Confere se o .jsonl da sessão está no disco; se não der para restaurar, devolve false (a etapa recomeça pelo histórico). */
+  private async restaurarSessao(slug: string, sessionId: string): Promise<boolean> {
+    if (!this.memoria) return true
+    try {
+      return await this.memoria.restaurar(slug, sessionId)
+    } catch (e) {
+      console.error(`Falha ao restaurar a sessão do agente de "${slug}":`, e)
+      return false
+    }
+  }
+
+  private async rodarTurno(slug: string, etapa: EtapaId, texto: string | null, sinal: AbortSignal, autor: string | null): Promise<void> {
     const estado = await this.servico.estado(slug)
     const etapaCat = etapaDoCatalogo(this.catalogo, etapa)
     let sessionId = estado.etapas[etapa].sessionId
-    const mensagem = sessionId
-      ? (texto ?? "Continue de onde parou.")
-      : [promptInicialEtapa({ slug, etapa: etapaCat, dossie: await this.servico.dossie(slug, etapa) }), texto]
-          .filter(Boolean)
-          .join("\n\n---\n\n")
+    let retomada = false
+    if (sessionId && !(await this.restaurarSessao(slug, sessionId))) {
+      sessionId = null
+      retomada = true
+    }
+    let mensagem: string
+    if (sessionId) {
+      mensagem = texto ?? "Continue de onde parou."
+    } else if (retomada) {
+      let historico = await this.servico.conversa(slug, etapa)
+      // a mensagem do turno já foi registrada no histórico e segue no fim do prompt
+      const ultimo = historico.at(-1)
+      if (texto && ultimo?.tipo === "mensagem_analista" && ultimo.texto === texto) historico = historico.slice(0, -1)
+      mensagem = [
+        promptRetomadaEtapa({ slug, etapa: etapaCat, dossie: await this.servico.dossie(slug, etapa), historico }),
+        texto ?? "Continue de onde parou.",
+      ].join("\n\n---\n\n")
+    } else {
+      mensagem = [promptInicialEtapa({ slug, etapa: etapaCat, dossie: await this.servico.dossie(slug, etapa) }), texto]
+        .filter(Boolean)
+        .join("\n\n---\n\n")
+    }
 
     const token = randomUUID()
     this.tokens.set(token, { slug, etapa })
@@ -268,7 +384,9 @@ export class ServicoTurnos {
       allowedTools: FERRAMENTAS_PERMITIDAS,
     }
 
-    await this.registrar(slug, etapa, { tipo: "turno_inicio", em: this.agora() })
+    const inicio = this.agora()
+    await this.registrar(slug, etapa, { tipo: "turno_inicio", em: inicio })
+    if (retomada) await this.registrar(slug, etapa, { tipo: "aviso", nivel: "info", texto: AVISO_RETOMADA, em: this.agora() })
     let terminou = false
     try {
       for await (const ev of this.executor.executar(pedido, sinal)) {
@@ -301,11 +419,19 @@ export class ServicoTurnos {
         } else if (ev.tipo === "fim") {
           terminou = true
           if (ev.sessionId && ev.sessionId !== sessionId) await this.servico.definirSessao(slug, etapa, ev.sessionId)
-          await this.registrar(slug, etapa, {
-            tipo: "turno_fim",
-            status: sinal.aborted ? "interrompido" : ev.ok ? "ok" : "erro",
-            detalhe: ev.ok ? null : ev.erro,
-            em: this.agora(),
+          const status = sinal.aborted ? "interrompido" : ev.ok ? "ok" : "erro"
+          const fim = this.agora()
+          await this.registrar(slug, etapa, { tipo: "turno_fim", status, detalhe: ev.ok ? null : ev.erro, em: fim })
+          await this.registrarUso({
+            slug,
+            etapa,
+            autor,
+            custoUsd: ev.uso?.custoUsd ?? null,
+            tokensEntrada: ev.uso?.tokensEntrada ?? null,
+            tokensSaida: ev.uso?.tokensSaida ?? null,
+            inicio,
+            fim,
+            status,
           })
         }
       }

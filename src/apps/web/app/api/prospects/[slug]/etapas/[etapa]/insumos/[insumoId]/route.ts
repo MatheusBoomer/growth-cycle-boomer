@@ -5,9 +5,11 @@ import path from "node:path"
 import { ErroEntrada } from "@workspace/core/erros"
 import { json, lerJson, respostaDeErro, validarEtapa } from "@/lib/http"
 import { servidor } from "@/lib/servidor"
+import { exigirUsuario } from "@/lib/sessao"
 
 export async function POST(req: Request, ctx: RouteContext<"/api/prospects/[slug]/etapas/[etapa]/insumos/[insumoId]">) {
   try {
+    const usuario = await exigirUsuario()
     const { slug, etapa: bruta, insumoId } = await ctx.params
     const etapa = validarEtapa(bruta)
     const { servico } = servidor()
@@ -16,10 +18,10 @@ export async function POST(req: Request, ctx: RouteContext<"/api/prospects/[slug
       if (!(arquivo instanceof File)) throw new ErroEntrada("Nenhum arquivo enviado.")
       const temp = path.join(tmpdir(), `insumo-${randomUUID()}${path.extname(arquivo.name)}`)
       await writeFile(temp, new Uint8Array(await arquivo.arrayBuffer()))
-      return json(await servico.receberInsumoArquivo(slug, etapa, insumoId, temp, arquivo.name))
+      return json(await servico.receberInsumoArquivo(slug, etapa, insumoId, temp, arquivo.name, usuario.email))
     }
     const { url } = await lerJson<{ url?: string }>(req)
-    return json(await servico.receberInsumoLink(slug, etapa, insumoId, url ?? ""))
+    return json(await servico.receberInsumoLink(slug, etapa, insumoId, url ?? "", usuario.email))
   } catch (e) {
     return respostaDeErro(e)
   }
@@ -27,6 +29,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/prospects/[slug
 
 export async function DELETE(_req: Request, ctx: RouteContext<"/api/prospects/[slug]/etapas/[etapa]/insumos/[insumoId]">) {
   try {
+    await exigirUsuario()
     const { slug, etapa: bruta, insumoId } = await ctx.params
     await servidor().servico.removerInsumo(slug, validarEtapa(bruta), insumoId)
     return json({ ok: true })

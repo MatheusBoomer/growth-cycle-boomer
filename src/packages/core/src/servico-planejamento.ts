@@ -31,6 +31,7 @@ import { destinoInsumo, extensao, extensaoAceita, nomeSeguro, registrarInsumo } 
 import * as me from "./maquina-estados"
 import { descreverMarcacoes, type MarcaAjuste } from "./marcacoes"
 import { mensagemAjuste, mensagemAjustes, mensagemAprovacao, mensagemEtapaAnteriorAlterada, mensagemInsumoRecebido } from "./prompts"
+import type { RegistroUsoTurno } from "./nuvem/tipos"
 import { aplicarOverrides, lerKit, reposicionarNoFixture } from "./servico-teste"
 import { normalizarSlug } from "./slug"
 import { importarStatusMd, renderStatusMd } from "./status-md"
@@ -110,6 +111,21 @@ function ultimoIndice<T>(lista: T[], teste: (x: T) => boolean): number {
   return -1
 }
 
+/** Marca quem decidiu o entregável; sem autor o estado segue como está (nada de campo vazio). */
+function comDecididoPor(estado: Estado, id: string, autor: string | null): Estado {
+  if (!autor) return estado
+  return { ...estado, entregaveis: estado.entregaveis.map((e) => (e.id === id ? { ...e, decididoPor: autor } : e)) }
+}
+
+/** Marca quem enviou o insumo; sem autor o estado segue como está. */
+function comEnviadoPor(estado: Estado, etapa: EtapaId, insumoId: string, autor: string | null): Estado {
+  if (!autor) return estado
+  return {
+    ...estado,
+    insumos: estado.insumos.map((i) => (i.etapa === etapa && i.insumoId === insumoId ? { ...i, enviadoPor: autor } : i)),
+  }
+}
+
 export class ServicoPlanejamento {
   private readonly arm: FsArmazenamento
   private readonly catalogo: Catalogo
@@ -127,6 +143,16 @@ export class ServicoPlanejamento {
     this.validar = d.validar
     this.agora = d.agora ?? (() => new Date().toISOString())
     this.gerarId = d.gerarId ?? (() => randomUUID())
+  }
+
+  /** Guarda o custo e os tokens de um turno (no disco local não faz nada). */
+  registrarUso(r: RegistroUsoTurno): Promise<void> {
+    return this.arm.registrarUso(r)
+  }
+
+  /** Sincroniza os arquivos do prospect com a nuvem (no disco local não faz nada). Falha com ErroSincronizacao. */
+  sincronizarArquivos(slug: string): Promise<void> {
+    return this.arm.sincronizar(slug)
   }
 
   conectarTurnos(conexao: ConexaoTurnos): void {
@@ -276,7 +302,7 @@ export class ServicoPlanejamento {
     }
   }
 
-  async respostaEstado(slug: string, turnoAtivo: EtapaId | null): Promise<RespostaEstado> {
+  async respostaEstado(slug: string, turnoAtivo: EtapaId | null, turnoPor: string | null = null): Promise<RespostaEstado> {
     const estado = await this.estado(slug)
     const condicoes = Object.fromEntries(
       ORDEM_ETAPAS.map((id) => [id, me.condicoesConcluir(estado, id, this.catalogo)]),
@@ -288,7 +314,7 @@ export class ServicoPlanejamento {
       estado.entregaveis.filter((e) => e.status === "aprovado").map((e) => destinoAprovado(e)),
     )
     const aprovadosForaDaInterface = (await this.arm.listarAprovados(slug)).filter((a) => !aprovadosPelaInterface.has(a))
-    return { estado, catalogo: this.catalogo, condicoes, turnoAtivo, modelosDisponiveis, aprovadosForaDaInterface }
+    return { estado, catalogo: this.catalogo, condicoes, turnoAtivo, turnoPor, modelosDisponiveis, aprovadosForaDaInterface }
   }
 
   async listarProspects(): Promise<ResumoProspect[]> {
@@ -353,14 +379,14 @@ export class ServicoPlanejamento {
 
   // ---------- prospects ----------
 
-  async criarProspect(nome: string, site: string | null): Promise<string> {
+  async criarProspect(nome: string, site: string | null, autor: string | null = null): Promise<string> {
     const nomeLimpo = nome.trim()
     if (!nomeLimpo) throw new ErroEntrada("Informe o nome do prospect.")
     const slug = normalizarSlug(nomeLimpo)
     if (!slug) throw new ErroEntrada("O nome precisa ter pelo menos uma letra ou número.")
     if (slug === "template") throw new ErroEntrada("Esse nome é reservado. Escolha outro.")
     const siteLimpo = site ? validarUrl(site) : null
-    await this.arm.criarPasta(slug)
+    await this.arm.criarPasta(slug, autor)
     const claudeMd = await this.arm.lerTexto(slug, "CLAUDE.md")
     if (claudeMd) await this.arm.gravarTexto(slug, "CLAUDE.md", claudeMd.replace("# [Nome do Prospect]", `# ${nomeLimpo}`))
     return this.exclusivo(slug, async () => {
@@ -372,6 +398,7 @@ export class ServicoPlanejamento {
           { etapa: "01", insumoId: "site", status: "valido", problemas: [], avisos: [], resumo: siteLimpo, arquivo: "contexto/site-referencia.md" },
           this.agora(),
         )
+        estado = comEnviadoPor(estado, "01", "site", autor)
       }
       await this.salvar(slug, estado)
       return slug
@@ -495,10 +522,10 @@ export class ServicoPlanejamento {
 
   // ---------- entregáveis ----------
 
-  async aprovarEntregavel(slug: string, id: string): Promise<void> {
+  async aprovarEntregavel(slug: string, id: string, autor: string | null = null): Promise<void> {
     const aprovado = await this.mutar(slug, async (e) => {
       const alvo = encontrarEntregavel(e, id)
-      let novo = aprovarEntregavel(e, id, this.agora())
+      let novo = comDecididoPor(aprovarEntregavel(e, id, this.agora()), id, autor)
       const destino = destinoAprovado(alvo)
       await this.arm.copiar(slug, alvo.arquivoRascunho, destino)
       novo = me.reavaliarPronta(novo, alvo.etapa, this.catalogo, this.agora())
@@ -522,10 +549,10 @@ export class ServicoPlanejamento {
   }
 
   /** `imagem`: PNG do gráfico com as marcações numeradas do analista; a IA abre o caminho com Read. */
-  async pedirAjuste(slug: string, id: string, texto: string, imagem?: Uint8Array): Promise<void> {
+  async pedirAjuste(slug: string, id: string, texto: string, imagem?: Uint8Array, autor: string | null = null): Promise<void> {
     const alvo = await this.mutar(slug, (e) => {
       const entregavel = encontrarEntregavel(e, id)
-      let novo = pedirAjuste(e, id, texto, this.agora())
+      let novo = comDecididoPor(pedirAjuste(e, id, texto, this.agora()), id, autor)
       novo = me.registrarMensagemAnalista(novo, entregavel.etapa, this.agora())
       return { estado: novo, resultado: entregavel }
     })
@@ -549,6 +576,7 @@ export class ServicoPlanejamento {
     etapa: EtapaId,
     texto: string,
     ajustes: AjusteEnvio[],
+    autor: string | null = null,
   ): Promise<{ textoAgente: string; referencias: ReferenciaAjuste[] }> {
     if (ajustes.length === 0) throw new ErroEntrada("Escolha ao menos um entregável para ajustar.")
     if (!texto.trim()) throw new ErroEntrada("Escreva o que mudar.")
@@ -558,7 +586,7 @@ export class ServicoPlanejamento {
       for (const a of ajustes) {
         const alvo = encontrarEntregavel(e, a.entregavelId)
         if (alvo.etapa !== etapa) throw new ErroEntrada(`O entregável "${alvo.titulo}" não é desta etapa.`)
-        novo = pedirAjuste(novo, a.entregavelId, texto, this.agora())
+        novo = comDecididoPor(pedirAjuste(novo, a.entregavelId, texto, this.agora()), a.entregavelId, autor)
       }
       const itens: Parameters<typeof mensagemAjustes>[1] = []
       const referencias: ReferenciaAjuste[] = []
@@ -598,6 +626,7 @@ export class ServicoPlanejamento {
     insumoId: string,
     arquivoTemp: string,
     nomeOriginal: string,
+    autor: string | null = null,
   ): Promise<ResultadoValidacao> {
     const insumo = this.insumoDaEtapa(etapa, insumoId)
     if (insumo.tipo !== "arquivo") throw new ErroEntrada("Este insumo é um link, não um arquivo.")
@@ -616,17 +645,17 @@ export class ServicoPlanejamento {
     } else {
       await rm(arquivoTemp, { force: true })
     }
-    await this.registrarResultadoInsumo(slug, etapa, insumo, resultado, destino)
+    await this.registrarResultadoInsumo(slug, etapa, insumo, resultado, destino, autor)
     return resultado
   }
 
-  async receberInsumoLink(slug: string, etapa: EtapaId, insumoId: string, url: string): Promise<ResultadoValidacao> {
+  async receberInsumoLink(slug: string, etapa: EtapaId, insumoId: string, url: string, autor: string | null = null): Promise<ResultadoValidacao> {
     const insumo = this.insumoDaEtapa(etapa, insumoId)
     if (insumo.tipo !== "link") throw new ErroEntrada("Este insumo é um arquivo, não um link.")
     const limpo = validarUrl(url)
     await this.gravarLink(slug, insumo.destino, limpo)
     const resultado: ResultadoValidacao = { ok: true, problemas: [], avisos: [], resumo: limpo }
-    await this.registrarResultadoInsumo(slug, etapa, insumo, resultado, insumo.destino)
+    await this.registrarResultadoInsumo(slug, etapa, insumo, resultado, insumo.destino, autor)
     return resultado
   }
 
@@ -660,6 +689,7 @@ export class ServicoPlanejamento {
     insumo: InsumoCatalogo,
     resultado: ResultadoValidacao,
     destino: string | null,
+    autor: string | null,
   ): Promise<void> {
     const emAndamento = await this.mutar(slug, (e) => {
       let novo = registrarInsumo(
@@ -675,6 +705,7 @@ export class ServicoPlanejamento {
         },
         this.agora(),
       )
+      novo = comEnviadoPor(novo, etapa, insumo.id, autor)
       novo = me.reavaliarPronta(novo, etapa, this.catalogo, this.agora())
       const s = novo.etapas[etapa].status
       return { estado: novo, resultado: s === "em_andamento" || s === "pronta" }

@@ -1,6 +1,7 @@
 import type { AjusteBiblioteca, ItemBiblioteca } from "@workspace/core/biblioteca"
 import type { Comentario, MapaPrevia, Regiao } from "@workspace/core/comentarios"
 import type { EtapaId, ResultadoValidacao, RespostaTeste } from "@workspace/core/tipos"
+import { tratarNaoAutenticado } from "@/lib/login"
 
 export interface AjusteMensagem {
   entregavelId: string
@@ -24,12 +25,10 @@ async function chamar<T>(url: string, init?: RequestInit): Promise<T> {
   const r = await fetch(url, init)
   const corpo = (await r.json().catch(() => ({}))) as Record<string, unknown>
   if (!r.ok) {
-    throw new ErroApi(
-      typeof corpo.erro === "string" ? corpo.erro : `Erro ${r.status}`,
-      r.status,
-      typeof corpo.codigo === "string" ? corpo.codigo : null,
-      corpo,
-    )
+    const codigo = typeof corpo.codigo === "string" ? corpo.codigo : null
+    // Sessão expirada no meio do uso: o erro segue para quem chamou, e o navegador vai ao login.
+    if (typeof window !== "undefined") tratarNaoAutenticado(r.status, codigo, window.location, (destino) => window.location.assign(destino))
+    throw new ErroApi(typeof corpo.erro === "string" ? corpo.erro : `Erro ${r.status}`, r.status, codigo, corpo)
   }
   return corpo as T
 }

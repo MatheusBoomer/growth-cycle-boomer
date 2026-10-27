@@ -1,4 +1,4 @@
-import type { EtapaCatalogo } from "./tipos"
+import type { EtapaCatalogo, EventoConversa } from "./tipos"
 
 export function systemPromptModoInterface({ slug, etapa }: { slug: string; etapa: EtapaCatalogo }): string {
   const pasta = `clientes/${slug}/`
@@ -40,6 +40,47 @@ ${acao}
 ## Dossiê das etapas anteriores
 
 ${dossie}`
+}
+
+const LIMITE_HISTORICO = 40000
+
+/** Retoma a etapa numa sessão nova: o prompt inicial seguido do que já foi conversado (só falas do analista e do agente). */
+export function promptRetomadaEtapa({
+  slug,
+  etapa,
+  dossie,
+  historico,
+}: {
+  slug: string
+  etapa: EtapaCatalogo
+  dossie: string
+  historico: EventoConversa[]
+}): string {
+  const mensagens: string[] = []
+  for (const e of historico) {
+    if (e.tipo === "mensagem_analista") mensagens.push(`**Analista:** ${e.texto}`)
+    else if (e.tipo === "texto_agente") mensagens.push(`**Agente:** ${e.texto}`)
+  }
+  // fica com as mais recentes que cabem no limite
+  const mantidas: string[] = []
+  let total = 0
+  for (let i = mensagens.length - 1; i >= 0; i--) {
+    const m = mensagens[i]!
+    const custo = m.length + (mantidas.length ? 2 : 0)
+    if (total + custo > LIMITE_HISTORICO) {
+      if (mantidas.length === 0) mantidas.unshift(m.slice(-LIMITE_HISTORICO))
+      break
+    }
+    mantidas.unshift(m)
+    total += custo
+  }
+  return `${promptInicialEtapa({ slug, etapa, dossie })}
+
+---
+
+### Histórico desta etapa (a sessão anterior não pôde ser restaurada)
+
+${mantidas.join("\n\n")}`
 }
 
 export function mensagemAprovacao(titulo: string, nomeFinal: string, destino: string, editado = false): string {

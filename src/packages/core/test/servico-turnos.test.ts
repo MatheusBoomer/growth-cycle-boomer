@@ -6,6 +6,8 @@ import { Barramento } from "../src/barramento"
 import { ErroTurnoAtivo } from "../src/erros"
 import { FakeExecutor, roteiroSimples, type Roteiro } from "../src/executor/fake"
 import type { PedidoTurno } from "../src/executor/tipos"
+import type { MemoriaDeSessao } from "../src/nuvem/memoria-sessao"
+import type { RegistroUsoTurno } from "../src/nuvem/tipos"
 import { ServicoPlanejamento } from "../src/servico-planejamento"
 import { aspasShell, montarMcpConfig, montarSettingsHook, ServicoTurnos, type ConfigTurnos } from "../src/servico-turnos"
 import { catalogoReal, raizTemporaria } from "./ajuda"
@@ -285,5 +287,404 @@ describe("uso da assinatura", () => {
     await t.aguardarOcioso(slug)
     const avisos = (await servico.conversa(slug, "01")).filter((e) => e.tipo === "aviso" && e.nivel === "alerta")
     expect(avisos).toHaveLength(1)
+  })
+})
+
+describe("sincronização dos arquivos do prospect", () => {
+  const AVISO_ANTES = "Não consegui baixar os arquivos do prospect. Tente de novo."
+  const AVISO_DEPOIS = "Os arquivos desta resposta ainda não foram salvos na nuvem. Vou tentar de novo na próxima ação."
+
+  /** Serviço cujo armazenamento registra cada sincronização em `log` e pode falhar na n-ésima chamada. */
+  function comSincronizacao(roteiro: Roteiro, falharNa: number | null = null) {
+    const log: string[] = []
+    let chamadas = 0
+    class ArmEspiao extends FsArmazenamento {
+      override async sincronizar(_slug: string): Promise<void> {
+        chamadas++
+        log.push("sincronizar")
+        if (falharNa === chamadas) throw new Error("rede fora")
+      }
+    }
+    const svc = new ServicoPlanejamento({
+      armazenamento: new ArmEspiao(raiz, async () => {}),
+      catalogo: catalogoReal(),
+      barramento,
+      validar: async () => ({ ok: true, problemas: [], avisos: [], resumo: null }),
+    })
+    const executor = new FakeExecutor(async function* (pedido, sinal) {
+      log.push("executor")
+      yield* roteiro(pedido, sinal)
+    })
+    const t = new ServicoTurnos({ servico: svc, executor, barramento, catalogo: catalogoReal(), config })
+    return { t, svc, executor, log }
+  }
+
+  it("sincroniza antes e depois do turno", async () => {
+    const { t, svc, log } = comSincronizacao(roteiroSimples("ok", "s1"))
+    const slug = await svc.criarProspect("Iszi", null)
+    log.length = 0
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    expect(log).toEqual(["sincronizar", "executor", "sincronizar"])
+  })
+
+  it("falha antes do turno: não chama o executor e avisa", async () => {
+    const { t, svc, executor, log } = comSincronizacao(roteiroSimples("ok", "s1"), 1)
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    expect(executor.pedidos).toHaveLength(0)
+    expect(log).toEqual(["sincronizar"])
+    const conversa = await svc.conversa(slug, "01")
+    expect(conversa.find((e) => e.tipo === "aviso" && e.nivel === "erro" && e.texto === AVISO_ANTES)).toBeTruthy()
+    expect(conversa.at(-1)).toMatchObject({ tipo: "turno_fim", status: "erro", detalhe: AVISO_ANTES })
+    expect(t.ativo(slug)).toBeNull()
+  })
+
+  it("falha depois do turno: avisa com alerta e o turno fica ok", async () => {
+    const { t, svc } = comSincronizacao(roteiroSimples("ok", "s1"), 2)
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    const conversa = await svc.conversa(slug, "01")
+    const iFim = conversa.findIndex((e) => e.tipo === "turno_fim")
+    const iAviso = conversa.findIndex((e) => e.tipo === "aviso" && e.texto === AVISO_DEPOIS)
+    expect(conversa[iFim]).toMatchObject({ status: "ok" })
+    expect(conversa[iAviso]).toMatchObject({ nivel: "alerta" })
+    expect(iAviso).toBeGreaterThan(iFim)
+  })
+
+  it("turno interrompido também sincroniza no fim", async () => {
+    const { t, svc, log } = comSincronizacao(async function* (_p, sinal) {
+      yield { tipo: "sessao", sessionId: "s" }
+      if (!sinal.aborted) await new Promise<void>((r) => sinal.addEventListener("abort", () => r(), { once: true }))
+    })
+    const slug = await svc.criarProspect("Iszi", null)
+    log.length = 0
+    await t.iniciar(slug, "01")
+    t.parar(slug)
+    await t.aguardarOcioso(slug)
+    expect((await svc.conversa(slug, "01")).at(-1)).toMatchObject({ tipo: "turno_fim", status: "interrompido" })
+    expect(log.at(-1)).toBe("sincronizar")
+    expect(log.filter((x) => x === "sincronizar")).toHaveLength(2)
+  })
+})
+
+describe("memória da sessão do agente", () => {
+  class MemoriaFalsa implements MemoriaDeSessao {
+    readonly chamadas: string[] = []
+    constructor(private readonly restaurada: boolean) {}
+    async restaurar(slug: string, sessionId: string): Promise<boolean> {
+      this.chamadas.push(`restaurar ${slug} ${sessionId}`)
+      return this.restaurada
+    }
+    async salvar(slug: string, sessionId: string): Promise<void> {
+      this.chamadas.push(`salvar ${slug} ${sessionId}`)
+    }
+  }
+
+  function comMemoria(memoria: MemoriaDeSessao, roteiro: Roteiro) {
+    const executor = new FakeExecutor(roteiro)
+    const t = new ServicoTurnos({ servico, executor, barramento, catalogo: catalogoReal(), config, memoria })
+    return { t, executor }
+  }
+
+  /** Primeiro turno abre a sessão s1 e o seguinte (sem sessionId) abre s2. */
+  const roteiroDuasSessoes: Roteiro = async function* (pedido) {
+    const id = pedido.sessionId ?? (pedido.mensagem.includes("Histórico desta etapa") ? "s2" : "s1")
+    yield { tipo: "sessao", sessionId: id }
+    yield { tipo: "texto", texto: "resposta" }
+    yield { tipo: "fim", ok: true, erro: null, sessionId: id }
+  }
+
+  it("com sessionId e memória restaurada, envia resume e salva no fim", async () => {
+    const memoria = new MemoriaFalsa(true)
+    const { t, executor } = comMemoria(memoria, roteiroDuasSessoes)
+    const slug = await servico.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    memoria.chamadas.length = 0
+    await t.enviarMensagem(slug, "01", "Continue")
+    await t.aguardarOcioso(slug)
+    expect(executor.pedidos[1]).toMatchObject({ sessionId: "s1", mensagem: "Continue" })
+    expect(memoria.chamadas).toEqual([`restaurar ${slug} s1`, `salvar ${slug} s1`])
+    const conversa = await servico.conversa(slug, "01")
+    expect(conversa.find((e) => e.tipo === "aviso" && e.texto === "Retomei a etapa a partir do histórico.")).toBeUndefined()
+  })
+
+  it("memória não restaurada: sessão nova, prompt de retomada e aviso info", async () => {
+    const memoria = new MemoriaFalsa(false)
+    const { t, executor } = comMemoria(memoria, roteiroDuasSessoes)
+    const slug = await servico.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    memoria.chamadas.length = 0
+    await t.enviarMensagem(slug, "01", "Siga em frente")
+    await t.aguardarOcioso(slug)
+    const pedido = executor.pedidos[1]!
+    expect(pedido.sessionId).toBeNull()
+    expect(pedido.mensagem.startsWith("Vamos trabalhar na ")).toBe(true)
+    expect(pedido.mensagem).toContain("### Histórico desta etapa")
+    expect(pedido.mensagem).toContain("**Agente:** resposta")
+    expect(pedido.mensagem.endsWith("Siga em frente")).toBe(true)
+    const conversa = await servico.conversa(slug, "01")
+    expect(conversa).toContainEqual(
+      expect.objectContaining({ tipo: "aviso", nivel: "info", texto: "Retomei a etapa a partir do histórico." }),
+    )
+    expect((await servico.estado(slug)).etapas["01"].sessionId).toBe("s2")
+    expect(memoria.chamadas).toEqual([`restaurar ${slug} s1`, `salvar ${slug} s2`])
+  })
+})
+
+describe("custo de cada turno", () => {
+  class ArmazenamentoComUso extends FsArmazenamento {
+    readonly usos: RegistroUsoTurno[] = []
+    override async registrarUso(r: RegistroUsoTurno): Promise<void> {
+      this.usos.push(r)
+    }
+  }
+
+  function comArmazenamento(arm: FsArmazenamento, roteiro: Roteiro, agora?: () => string) {
+    const svc = new ServicoPlanejamento({
+      armazenamento: arm,
+      catalogo: catalogoReal(),
+      barramento,
+      validar: async () => ({ ok: true, problemas: [], avisos: [], resumo: null }),
+    })
+    const t = new ServicoTurnos({ servico: svc, executor: new FakeExecutor(roteiro), barramento, catalogo: catalogoReal(), config, agora })
+    return { svc, t }
+  }
+
+  const roteiroComUso: Roteiro = async function* () {
+    yield { tipo: "sessao", sessionId: "s1" }
+    yield { tipo: "fim", ok: true, erro: null, sessionId: "s1", uso: { custoUsd: 0.42, tokensEntrada: 1000, tokensSaida: 200 } }
+  }
+
+  it("registra o uso do turno com início, fim, status e autor nulo", async () => {
+    const arm = new ArmazenamentoComUso(raiz, async () => {})
+    let n = 0
+    const { svc, t } = comArmazenamento(arm, roteiroComUso, () => `2026-10-27T10:00:${String(n++).padStart(2, "0")}.000Z`)
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    expect(arm.usos).toHaveLength(1)
+    const uso = arm.usos[0]!
+    expect(uso).toMatchObject({
+      slug,
+      etapa: "01",
+      autor: null,
+      custoUsd: 0.42,
+      tokensEntrada: 1000,
+      tokensSaida: 200,
+      status: "ok",
+    })
+    expect(uso.inicio < uso.fim).toBe(true)
+  })
+
+  it("falha ao registrar o uso não afeta o turno", async () => {
+    class Quebrado extends FsArmazenamento {
+      override async registrarUso(): Promise<void> {
+        throw new Error("banco fora do ar")
+      }
+    }
+    const { svc, t } = comArmazenamento(new Quebrado(raiz, async () => {}), roteiroComUso)
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    expect((await svc.conversa(slug, "01")).at(-1)).toMatchObject({ tipo: "turno_fim", status: "ok" })
+  })
+})
+
+describe("autoria dos turnos", () => {
+  const ANA = "ana.souza@boomer.com.br"
+
+  class ArmazenamentoComUso extends FsArmazenamento {
+    readonly usos: RegistroUsoTurno[] = []
+    override async registrarUso(r: RegistroUsoTurno): Promise<void> {
+      this.usos.push(r)
+    }
+  }
+
+  const roteiroComUso: Roteiro = async function* () {
+    yield { tipo: "sessao", sessionId: "s1" }
+    yield { tipo: "fim", ok: true, erro: null, sessionId: "s1", uso: { custoUsd: 0.1, tokensEntrada: 10, tokensSaida: 2 } }
+  }
+
+  function montar() {
+    const arm = new ArmazenamentoComUso(raiz, async () => {})
+    const svc = new ServicoPlanejamento({
+      armazenamento: arm,
+      catalogo: catalogoReal(),
+      barramento,
+      validar: async () => ({ ok: true, problemas: [], avisos: [], resumo: null }),
+    })
+    const t = new ServicoTurnos({ servico: svc, executor: new FakeExecutor(roteiroComUso), barramento, catalogo: catalogoReal(), config })
+    return { arm, svc, t }
+  }
+
+  it("iniciar grava o autor em uso_turnos; sem autor, null", async () => {
+    const { arm, svc, t } = montar()
+    const a = await svc.criarProspect("Com Autor", null)
+    const b = await svc.criarProspect("Sem Autor", null)
+    await t.iniciar(a, "01", ANA)
+    await t.aguardarOcioso(a)
+    await t.iniciar(b, "01")
+    await t.aguardarOcioso(b)
+    expect(arm.usos.map((u) => [u.slug, u.autor])).toEqual([
+      [a, ANA],
+      [b, null],
+    ])
+  })
+
+  it("enviarMensagem grava o autor no evento da conversa e em uso_turnos; sem autor, o campo não aparece", async () => {
+    const { arm, svc, t } = montar()
+    const a = await svc.criarProspect("Com Autor", null)
+    const b = await svc.criarProspect("Sem Autor", null)
+    await t.iniciar(a, "01")
+    await t.aguardarOcioso(a)
+    await t.iniciar(b, "01")
+    await t.aguardarOcioso(b)
+    arm.usos.length = 0
+    await t.enviarMensagem(a, "01", "oi", ANA)
+    await t.aguardarOcioso(a)
+    await t.enviarMensagem(b, "01", "oi")
+    await t.aguardarOcioso(b)
+    const msg = async (slug: string) => (await svc.conversa(slug, "01")).find((e) => e.tipo === "mensagem_analista")!
+    expect(await msg(a)).toMatchObject({ texto: "oi", automatica: false, autor: ANA })
+    expect(await msg(b)).not.toHaveProperty("autor")
+    expect(arm.usos.map((u) => [u.slug, u.autor])).toEqual([
+      [a, ANA],
+      [b, null],
+    ])
+  })
+
+  it("enviarMensagemComAjustes grava o autor no balão, em decididoPor e em uso_turnos", async () => {
+    const { arm, svc, t } = montar()
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    arm.usos.length = 0
+    await svc.ferramenta({ slug, etapa: "01" }, "solicitar_insumo", { insumo_id: "kickoff-transcricao" })
+    await mkdir(path.join(raiz, "clientes", slug, ".app/rascunhos"), { recursive: true })
+    await writeFile(path.join(raiz, "clientes", slug, ".app/rascunhos/s.md"), "# S")
+    await svc.ferramenta({ slug, etapa: "01" }, "propor_entregavel", {
+      tipo: "secao",
+      titulo: "Resumo",
+      arquivo_rascunho: `clientes/${slug}/.app/rascunhos/s.md`,
+      nome_final: "resumo",
+    })
+    const id = (await svc.estado(slug)).entregaveis[0]!.id
+    await t.enviarMensagemComAjustes(slug, "01", "tirar o último parágrafo", [{ entregavelId: id, marcas: [] }], ANA)
+    await t.aguardarOcioso(slug)
+    const balao = (await svc.conversa(slug, "01")).find((e) => e.tipo === "mensagem_analista")!
+    expect(balao).toMatchObject({ texto: "tirar o último parágrafo", autor: ANA })
+    expect((await svc.estado(slug)).entregaveis[0]!.decididoPor).toBe(ANA)
+    expect(arm.usos.map((u) => u.autor)).toEqual([ANA])
+  })
+
+  it("a vaga ativa guarda o autor e o turno da fila que vem depois não herda nenhum", async () => {
+    const { arm, svc, t } = montar()
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    arm.usos.length = 0
+    await t.enviarMensagem(slug, "01", "oi", ANA)
+    expect(t.ativoPor(slug)).toBe(ANA)
+    await t.aguardarOcioso(slug)
+    expect(t.ativoPor(slug)).toBeNull()
+    // item da fila automática: turno disparado sem autor
+    await svc.enfileirar(slug, "01", "continue")
+    await t.aguardarOcioso(slug)
+    expect(arm.usos.map((u) => u.autor)).toEqual([ANA, null])
+  })
+
+  describe("aviso de quem está com o agente rodando", () => {
+    const BIA = "bia.lima@boomer.com.br"
+    const segurar = (): Roteiro =>
+      async function* (_p, sinal) {
+        yield { tipo: "sessao", sessionId: "s" }
+        if (!sinal.aborted) await new Promise<void>((r) => sinal.addEventListener("abort", () => r(), { once: true }))
+      }
+
+    it("enviarMensagem de outro analista é recusada com o nome de quem está rodando", async () => {
+      const { t } = turnos(segurar())
+      const slug = await servico.criarProspect("Iszi", null)
+      await t.iniciar(slug, "01", "ana.silva@boomer.com.br")
+      const erro = await t.enviarMensagem(slug, "01", "oi", BIA).catch((e) => e)
+      expect(erro).toBeInstanceOf(ErroTurnoAtivo)
+      expect(erro.message).toBe("Ana Silva está com o agente rodando nesta etapa.")
+      expect(erro.status).toBe(409)
+      expect(erro.codigo).toBe("turno_ativo")
+      t.parar(slug)
+      await t.aguardarOcioso(slug)
+    })
+
+    it("iniciar e enviarMensagemComAjustes recusados também citam o autor do turno em andamento", async () => {
+      const { t } = turnos(segurar())
+      const slug = await servico.criarProspect("Iszi", null)
+      await t.iniciar(slug, "01", "ana.silva@boomer.com.br")
+      const a = await t.iniciar(slug, "01", BIA).catch((e) => e)
+      const b = await t.enviarMensagemComAjustes(slug, "01", "x", [], BIA).catch((e) => e)
+      expect(a.message).toBe("Ana Silva está com o agente rodando nesta etapa.")
+      expect(b.message).toBe("Ana Silva está com o agente rodando nesta etapa.")
+      t.parar(slug)
+      await t.aguardarOcioso(slug)
+    })
+
+    it("o próprio autor do turno (duplo clique, segunda aba) recebe a mensagem genérica, não o próprio nome", async () => {
+      const { t } = turnos(segurar())
+      const slug = await servico.criarProspect("Iszi", null)
+      await t.iniciar(slug, "01", "ana.silva@boomer.com.br")
+      const mesmo = await t.enviarMensagem(slug, "01", "oi", "ana.silva@boomer.com.br").catch((e) => e)
+      const outro = await t.enviarMensagem(slug, "01", "oi", BIA).catch((e) => e)
+      expect(mesmo).toBeInstanceOf(ErroTurnoAtivo)
+      expect(mesmo.message).toBe("O agente ainda está respondendo neste prospect. Aguarde ou clique em Parar.")
+      expect(outro.message).toBe("Ana Silva está com o agente rodando nesta etapa.")
+      t.parar(slug)
+      await t.aguardarOcioso(slug)
+    })
+
+    it("sem autor no turno ativo a mensagem de sempre não muda", async () => {
+      const { t } = turnos(segurar())
+      const slug = await servico.criarProspect("Iszi", null)
+      await t.iniciar(slug, "01")
+      expect(t.ativoPor(slug)).toBeNull()
+      const erro = await t.enviarMensagem(slug, "01", "oi", BIA).catch((e) => e)
+      expect(erro.message).toBe("O agente ainda está respondendo neste prospect. Aguarde ou clique em Parar.")
+      t.parar(slug)
+      await t.aguardarOcioso(slug)
+    })
+
+    it("ativoPor devolve o e-mail durante o turno e null antes e depois", async () => {
+      const { t } = turnos(segurar())
+      const slug = await servico.criarProspect("Iszi", null)
+      expect(t.ativoPor(slug)).toBeNull()
+      await t.iniciar(slug, "01", "ana.silva@boomer.com.br")
+      expect(t.ativoPor(slug)).toBe("ana.silva@boomer.com.br")
+      t.parar(slug)
+      await t.aguardarOcioso(slug)
+      expect(t.ativoPor(slug)).toBeNull()
+    })
+
+    it("o turno da fila que vem depois não tem autor: ativoPor volta null e a recusa usa a mensagem de sempre", async () => {
+      let rodadas = 0
+      const { t } = turnos(async function* (_p, sinal) {
+        rodadas++
+        yield { tipo: "sessao", sessionId: "s" }
+        if (rodadas === 2 && !sinal.aborted) await new Promise<void>((r) => sinal.addEventListener("abort", () => r(), { once: true }))
+        yield { tipo: "fim", ok: true, erro: null, sessionId: "s" }
+      })
+      const slug = await servico.criarProspect("Iszi", null)
+      await t.iniciar(slug, "01", "ana.silva@boomer.com.br")
+      await t.aguardarOcioso(slug)
+      await servico.enfileirar(slug, "01", "continue")
+      // o disparo da fila é assíncrono: espera o turno começar
+      while (t.ativo(slug) !== "01" || rodadas < 2) await new Promise((r) => setTimeout(r, 5))
+      expect(t.ativoPor(slug)).toBeNull()
+      const erro = await t.enviarMensagem(slug, "01", "oi", BIA).catch((e) => e)
+      expect(erro.message).toBe("O agente ainda está respondendo neste prospect. Aguarde ou clique em Parar.")
+      t.parar(slug)
+      await t.aguardarOcioso(slug)
+    })
   })
 })

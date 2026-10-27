@@ -2,6 +2,9 @@ import { chmod, rm } from "node:fs/promises"
 import path from "node:path"
 import { beforeEach, describe, expect, it } from "vitest"
 import { FsArmazenamento } from "../src/armazenamento"
+import { NuvemArmazenamento } from "../src/nuvem/armazenamento-nuvem"
+import { MemoriaArmazem, MemoriaRepositorio } from "../src/nuvem/memoria"
+import { Mesa } from "../src/nuvem/mesa"
 import { Barramento } from "../src/barramento"
 import { ErroFixture, ErroNaoEhTeste, ErroProspectExistente, ErroTurnoAtivo } from "../src/erros"
 import { pastaDoFixture } from "../src/fixture"
@@ -97,6 +100,40 @@ describe("reposicionarTeste", () => {
     await rm(pastaDoFixture(raiz, "mini"), { recursive: true })
     await expect(servico.reposicionarTeste(slug, "01")).rejects.toBeInstanceOf(ErroFixture)
     expect(await arm.lerTexto(slug, "dados/marca.txt")).toBe("meu trabalho")
+  })
+})
+
+describe("reposicionarTeste no modo nuvem", () => {
+  it("leva a remoção das pastas para a nuvem e limpa conversas e comentários", async () => {
+    const armazem = new MemoriaArmazem()
+    const mesa = new Mesa({ pastaClientes: path.join(raiz, "clientes"), armazem, esperar: async () => {} })
+    const nuvem = new NuvemArmazenamento({ raiz, repositorio: new MemoriaRepositorio(), armazem, mesa, atrasoAgendamentoMs: 0 })
+    const servicoNuvem = new ServicoPlanejamento({
+      armazenamento: nuvem,
+      catalogo: catalogoReal(),
+      barramento: new Barramento(),
+      validar: async () => ({ ok: true, problemas: [], avisos: [], resumo: null }),
+      agora: () => "2026-10-22T10:00:00.000Z",
+    })
+    servicoNuvem.conectarTurnos({ aoEnfileirar: () => {}, estaOcupado: () => false })
+    const manifesto = async (slug: string) => (await armazem.listarManifesto(slug)).map((e) => e.caminho)
+
+    const slug = await servicoNuvem.criarClienteTeste("mini", "03")
+    await nuvem.sincronizar(slug)
+    expect(await manifesto(slug)).toContain("contexto/contextualizacao-estrategica.md")
+    await nuvem.anexarConversa(slug, "02", { tipo: "texto_agente", texto: "olá", em: "2026-10-22T10:00:00.000Z" })
+    await nuvem.gravarComentarios(slug, "e2", [
+      { id: "c1", slide: 1, regiao: null, campo: null, texto: "ajuste", criadoEm: "2026-10-22T10:00:00.000Z", enviadoEm: null },
+    ])
+
+    await servicoNuvem.reposicionarTeste(slug, "01")
+    await nuvem.sincronizar(slug)
+
+    expect(await manifesto(slug)).not.toContain("contexto/contextualizacao-estrategica.md")
+    expect(await manifesto(slug)).toContain("contexto/status-planejamento.md")
+    expect(await nuvem.lerConversa(slug, "02")).toEqual([])
+    expect(await nuvem.lerComentarios(slug, "e2")).toEqual([])
+    expect((await servicoNuvem.estado(slug)).etapas["01"].status).toBe("liberada")
   })
 })
 

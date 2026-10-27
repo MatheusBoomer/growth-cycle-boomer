@@ -10,7 +10,7 @@ import { raizTemporaria } from "./ajuda"
 const SLUG = "teste-apresentacao"
 let raiz: string
 let arm: FsArmazenamento
-let ajustes: { id: string; texto: string }[]
+let ajustes: { id: string; texto: string; autor?: string | null }[]
 let geradas: number
 let geradasPlanilha: string[]
 let entregaveis: Entregavel[]
@@ -62,8 +62,8 @@ function servico() {
     armazenamento: arm,
     planejamento: {
       estado: async () => ({ entregaveis }) as unknown as Estado,
-      pedirAjuste: async (_slug, id, texto) => {
-        ajustes.push({ id, texto })
+      pedirAjuste: async (_slug, id, texto, _imagem, autor) => {
+        ajustes.push({ id, texto, autor })
       },
     },
     previa: previaFalsa,
@@ -220,5 +220,37 @@ describe("comentários", () => {
     await expect(s.criar(SLUG, "r1", { slide: 2, regiao: { x: 1, y: 1, w: 5, h: 5 }, texto: "x" })).rejects.toThrow("roteiro")
     await s.enviar(SLUG, "r1")
     expect(ajustes[0]!.texto).toContain('Slide 2 do roteiro · grafico "Cenário Atual · ROAS" · slide inteiro')
+  })
+})
+
+describe("autoria dos comentários", () => {
+  const ANA = "ana.souza@boomer.com.br"
+
+  it("criar grava o autor no comentário", async () => {
+    const s = servico()
+    await s.previa(SLUG, "e1")
+    const c = await s.criar(SLUG, "e1", { slide: 1, regiao: null, texto: "tira a capa" }, ANA)
+    expect(c.autor).toBe(ANA)
+    expect((await s.listar(SLUG, "e1"))[0]!.autor).toBe(ANA)
+  })
+
+  it("sem autor o campo não aparece, e a lista antiga continua sendo lida", async () => {
+    const s = servico()
+    await s.previa(SLUG, "e1")
+    const c = await s.criar(SLUG, "e1", { slide: 1, regiao: null, texto: "tira a capa" })
+    expect(c).not.toHaveProperty("autor")
+    const [lido] = await s.listar(SLUG, "e1")
+    expect(lido).not.toHaveProperty("autor")
+    expect(lido!.texto).toBe("tira a capa")
+  })
+
+  it("enviar repassa o autor ao pedido de ajuste (null sem autor)", async () => {
+    const s = servico()
+    await s.previa(SLUG, "e1")
+    await s.criar(SLUG, "e1", { slide: 1, regiao: null, texto: "um" }, ANA)
+    await s.enviar(SLUG, "e1", ANA)
+    await s.criar(SLUG, "e1", { slide: 1, regiao: null, texto: "dois" })
+    await s.enviar(SLUG, "e1")
+    expect(ajustes.map((a) => a.autor ?? null)).toEqual([ANA, null])
   })
 })

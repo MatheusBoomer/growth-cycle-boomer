@@ -493,6 +493,13 @@ describe("arquivos aprovados fora da interface", () => {
       "entrega/ativos-aprovados/secoes/03-macro-financeiro.md",
     ])
   })
+
+  it("respostaEstado leva quem está com o turno ativo (turnoPor) e vale null sem autor", async () => {
+    const slug = await servico.criarProspect("Iszi", null)
+    expect((await servico.respostaEstado(slug, "01", "ana.silva@boomer.com.br")).turnoPor).toBe("ana.silva@boomer.com.br")
+    expect((await servico.respostaEstado(slug, "01", null)).turnoPor).toBeNull()
+    expect((await servico.respostaEstado(slug, null)).turnoPor).toBeNull()
+  })
 })
 
 describe("insumos", () => {
@@ -775,5 +782,120 @@ describe("biblioteca", () => {
     expect(JSON.parse(await readFile(arquivoAjustes, "utf8"))).toEqual({
       [rel]: { etapa: "03" },
     })
+  })
+})
+
+describe("autoria", () => {
+  const ANA = "ana.souza@boomer.com.br"
+
+  /** Prospect na etapa 03 com um gráfico pendente; `nome` distinto cria outro prospect no mesmo serviço. */
+  async function graficoPendente(nome?: string) {
+    let slug: string
+    if (!nome) {
+      slug = await prospectNaEtapa03()
+    } else {
+      slug = await servico.criarProspect(nome, null)
+      const e = await servico.estado(slug)
+      e.etapas["01"].status = "concluida"
+      e.etapas["02"].status = "concluida"
+      e.etapas["03"].status = "liberada"
+      await writeFile(path.join(raiz, "clientes", slug, ".app/estado.json"), JSON.stringify(e))
+      await servico.iniciarEtapa(slug, "03")
+    }
+    await rascunho(slug, "g.png")
+    await servico.ferramenta({ slug, etapa: "03" }, "propor_entregavel", {
+      tipo: "grafico",
+      titulo: "Investimento",
+      arquivo_rascunho: `clientes/${slug}/.app/rascunhos/g.png`,
+      nome_final: "investimento-total-mensal",
+    })
+    const id = (await servico.estado(slug)).entregaveis[0]!.id
+    return { slug, id }
+  }
+
+  const decidido = async (slug: string) => (await servico.estado(slug)).entregaveis[0]!
+
+  it("criar prospect repassa o autor ao armazenamento (null sem autor) e grava o site como enviado por ele", async () => {
+    const criadores: Array<string | null | undefined> = []
+    class Espiao extends FsArmazenamento {
+      override async criarPasta(slug: string, criadoPor?: string | null): Promise<void> {
+        criadores.push(criadoPor)
+        await super.criarPasta(slug, criadoPor)
+      }
+    }
+    const svc = new ServicoPlanejamento({
+      armazenamento: new Espiao(raiz, async () => {}),
+      catalogo: catalogoReal(),
+      barramento,
+      validar: async () => proximaValidacao,
+    })
+    const comAutor = await svc.criarProspect("Com Autor", "https://a.com.br", ANA)
+    const semAutor = await svc.criarProspect("Sem Autor", "https://b.com.br")
+    expect(criadores).toEqual([ANA, null])
+    expect((await svc.estado(comAutor)).insumos.find((i) => i.insumoId === "site")?.enviadoPor).toBe(ANA)
+    expect((await svc.estado(semAutor)).insumos.find((i) => i.insumoId === "site")).not.toHaveProperty("enviadoPor")
+  })
+
+  it("aprovar grava decididoPor; sem autor o campo não aparece", async () => {
+    const com = await graficoPendente()
+    await servico.aprovarEntregavel(com.slug, com.id, ANA)
+    expect((await decidido(com.slug)).decididoPor).toBe(ANA)
+
+    const sem = await graficoPendente("Outro Prospect")
+    await servico.aprovarEntregavel(sem.slug, sem.id)
+    expect(await decidido(sem.slug)).not.toHaveProperty("decididoPor")
+  })
+
+  it("pedir ajuste grava decididoPor; sem autor o campo não aparece", async () => {
+    const com = await graficoPendente()
+    await servico.pedirAjuste(com.slug, com.id, "trocar para barras", undefined, ANA)
+    expect((await decidido(com.slug)).decididoPor).toBe(ANA)
+
+    const sem = await graficoPendente("Outro Prospect")
+    await servico.pedirAjuste(sem.slug, sem.id, "trocar para barras")
+    expect(await decidido(sem.slug)).not.toHaveProperty("decididoPor")
+  })
+
+  it("pedirAjustes (chat) grava decididoPor em cada entregável citado; sem autor não aparece", async () => {
+    const com = await graficoPendente()
+    await servico.pedirAjustes(com.slug, "03", "ajustar", [{ entregavelId: com.id, marcas: [] }], ANA)
+    expect((await decidido(com.slug)).decididoPor).toBe(ANA)
+
+    const sem = await graficoPendente("Outro Prospect")
+    await servico.pedirAjustes(sem.slug, "03", "ajustar", [{ entregavelId: sem.id, marcas: [] }])
+    expect(await decidido(sem.slug)).not.toHaveProperty("decididoPor")
+  })
+
+  it("insumo enviado (arquivo, válido ou não) grava enviadoPor; sem autor o campo não aparece", async () => {
+    const slug = await prospectNaEtapa03()
+    const temp = path.join(raiz, "upload.xlsx")
+    const enviar = async (autor?: string) => {
+      await writeFile(temp, "x")
+      await servico.receberInsumoArquivo(slug, "03", "historico-mensal", temp, "hist.xlsx", autor)
+      return (await servico.estado(slug)).insumos.find((i) => i.insumoId === "historico-mensal")!
+    }
+    expect(await enviar(ANA)).toMatchObject({ status: "valido", enviadoPor: ANA })
+
+    proximaValidacao = { ok: false, problemas: ["ruim"], avisos: [], resumo: null }
+    expect(await enviar("bia@gestaoboomer.com")).toMatchObject({ status: "invalido", enviadoPor: "bia@gestaoboomer.com" })
+
+    proximaValidacao = { ok: true, problemas: [], avisos: [], resumo: "ok" }
+    expect(await enviar()).not.toHaveProperty("enviadoPor")
+  })
+
+  it("insumo enviado (link) grava enviadoPor; sem autor o campo não aparece", async () => {
+    const slug = await servico.criarProspect("Link", null)
+    await servico.receberInsumoLink(slug, "01", "site", "https://a.com.br", ANA)
+    expect((await servico.estado(slug)).insumos.find((i) => i.insumoId === "site")).toMatchObject({ enviadoPor: ANA })
+    await servico.receberInsumoLink(slug, "01", "site", "https://b.com.br")
+    expect((await servico.estado(slug)).insumos.find((i) => i.insumoId === "site")).not.toHaveProperty("enviadoPor")
+  })
+
+  it("estado antigo, sem os campos de autoria, continua carregando", async () => {
+    const { slug } = await graficoPendente()
+    const e = await servico.estado(slug)
+    expect(e.entregaveis[0]).not.toHaveProperty("decididoPor")
+    expect(e.insumos.every((i) => !("enviadoPor" in i))).toBe(true)
+    expect(e.prospect.slug).toBe(slug)
   })
 })

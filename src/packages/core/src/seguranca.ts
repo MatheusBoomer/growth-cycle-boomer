@@ -17,8 +17,12 @@ function nomeDoHost(host: string): string {
   return host.startsWith("[") ? host.slice(0, host.indexOf("]") + 1) : host.split(":")[0]!
 }
 
-export function requisicaoLocalPermitida(r: DadosRequisicao): boolean {
-  if (!r.host || !HOSTS_LOCAIS.has(nomeDoHost(r.host).toLowerCase())) return false
+export function hostEhLocal(host: string | null): boolean {
+  return !!host && HOSTS_LOCAIS.has(nomeDoHost(host).toLowerCase())
+}
+
+/** Regra de escrita: leitura passa; método que muda estado só da própria origem (Origin igual ao Host) ou sem Origin. */
+export function origemDeEscritaPermitida(r: DadosRequisicao): boolean {
   if (r.metodo === "GET" || r.metodo === "HEAD" || r.metodo === "OPTIONS") return true
   if (r.secFetchSite && r.secFetchSite !== "same-origin" && r.secFetchSite !== "none") return false
   if (r.origin) {
@@ -29,6 +33,10 @@ export function requisicaoLocalPermitida(r: DadosRequisicao): boolean {
     }
   }
   return true
+}
+
+export function requisicaoLocalPermitida(r: DadosRequisicao): boolean {
+  return hostEhLocal(r.host) && origemDeEscritaPermitida(r)
 }
 
 /**
