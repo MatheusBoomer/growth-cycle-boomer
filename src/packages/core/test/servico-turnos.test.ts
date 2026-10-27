@@ -6,6 +6,7 @@ import { Barramento } from "../src/barramento"
 import { ErroTurnoAtivo } from "../src/erros"
 import { FakeExecutor, roteiroSimples, type Roteiro } from "../src/executor/fake"
 import type { PedidoTurno } from "../src/executor/tipos"
+import type { MemoriaDeSessao } from "../src/nuvem/memoria-sessao"
 import { ServicoPlanejamento } from "../src/servico-planejamento"
 import { aspasShell, montarMcpConfig, montarSettingsHook, ServicoTurnos, type ConfigTurnos } from "../src/servico-turnos"
 import { catalogoReal, raizTemporaria } from "./ajuda"
@@ -365,5 +366,71 @@ describe("sincronização dos arquivos do prospect", () => {
     expect((await svc.conversa(slug, "01")).at(-1)).toMatchObject({ tipo: "turno_fim", status: "interrompido" })
     expect(log.at(-1)).toBe("sincronizar")
     expect(log.filter((x) => x === "sincronizar")).toHaveLength(2)
+  })
+})
+
+describe("memória da sessão do agente", () => {
+  class MemoriaFalsa implements MemoriaDeSessao {
+    readonly chamadas: string[] = []
+    constructor(private readonly restaurada: boolean) {}
+    async restaurar(slug: string, sessionId: string): Promise<boolean> {
+      this.chamadas.push(`restaurar ${slug} ${sessionId}`)
+      return this.restaurada
+    }
+    async salvar(slug: string, sessionId: string): Promise<void> {
+      this.chamadas.push(`salvar ${slug} ${sessionId}`)
+    }
+  }
+
+  function comMemoria(memoria: MemoriaDeSessao, roteiro: Roteiro) {
+    const executor = new FakeExecutor(roteiro)
+    const t = new ServicoTurnos({ servico, executor, barramento, catalogo: catalogoReal(), config, memoria })
+    return { t, executor }
+  }
+
+  /** Primeiro turno abre a sessão s1 e o seguinte (sem sessionId) abre s2. */
+  const roteiroDuasSessoes: Roteiro = async function* (pedido) {
+    const id = pedido.sessionId ?? (pedido.mensagem.includes("Histórico desta etapa") ? "s2" : "s1")
+    yield { tipo: "sessao", sessionId: id }
+    yield { tipo: "texto", texto: "resposta" }
+    yield { tipo: "fim", ok: true, erro: null, sessionId: id }
+  }
+
+  it("com sessionId e memória restaurada, envia resume e salva no fim", async () => {
+    const memoria = new MemoriaFalsa(true)
+    const { t, executor } = comMemoria(memoria, roteiroDuasSessoes)
+    const slug = await servico.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    memoria.chamadas.length = 0
+    await t.enviarMensagem(slug, "01", "Continue")
+    await t.aguardarOcioso(slug)
+    expect(executor.pedidos[1]).toMatchObject({ sessionId: "s1", mensagem: "Continue" })
+    expect(memoria.chamadas).toEqual([`restaurar ${slug} s1`, `salvar ${slug} s1`])
+    const conversa = await servico.conversa(slug, "01")
+    expect(conversa.find((e) => e.tipo === "aviso" && e.texto === "Retomei a etapa a partir do histórico.")).toBeUndefined()
+  })
+
+  it("memória não restaurada: sessão nova, prompt de retomada e aviso info", async () => {
+    const memoria = new MemoriaFalsa(false)
+    const { t, executor } = comMemoria(memoria, roteiroDuasSessoes)
+    const slug = await servico.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    memoria.chamadas.length = 0
+    await t.enviarMensagem(slug, "01", "Siga em frente")
+    await t.aguardarOcioso(slug)
+    const pedido = executor.pedidos[1]!
+    expect(pedido.sessionId).toBeNull()
+    expect(pedido.mensagem.startsWith("Vamos trabalhar na ")).toBe(true)
+    expect(pedido.mensagem).toContain("### Histórico desta etapa")
+    expect(pedido.mensagem).toContain("**Agente:** resposta")
+    expect(pedido.mensagem.endsWith("Siga em frente")).toBe(true)
+    const conversa = await servico.conversa(slug, "01")
+    expect(conversa).toContainEqual(
+      expect.objectContaining({ tipo: "aviso", nivel: "info", texto: "Retomei a etapa a partir do histórico." }),
+    )
+    expect((await servico.estado(slug)).etapas["01"].sessionId).toBe("s2")
+    expect(memoria.chamadas).toEqual([`restaurar ${slug} s1`, `salvar ${slug} s2`])
   })
 })

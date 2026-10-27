@@ -5,12 +5,14 @@ import type { Barramento } from "./barramento"
 import { etapaDoCatalogo } from "./catalogo"
 import { ErroTurnoAtivo } from "./erros"
 import type { Executor, PedidoTurno } from "./executor/tipos"
-import { promptInicialEtapa, systemPromptModoInterface } from "./prompts"
+import type { MemoriaDeSessao } from "./nuvem/memoria-sessao"
+import { promptInicialEtapa, promptRetomadaEtapa, systemPromptModoInterface } from "./prompts"
 import type { AjusteEnvio, ServicoPlanejamento } from "./servico-planejamento"
 import type { Catalogo, EtapaId, EventoConversa } from "./tipos"
 import { RegistroUso, type UsoAssinatura } from "./uso-assinatura"
 
 const AVISO_SINCRONIZACAO_ANTES = "Não consegui baixar os arquivos do prospect. Tente de novo."
+const AVISO_RETOMADA = "Retomei a etapa a partir do histórico."
 const AVISO_SINCRONIZACAO_DEPOIS =
   "Os arquivos desta resposta ainda não foram salvos na nuvem. Vou tentar de novo na próxima ação."
 
@@ -55,6 +57,8 @@ export interface DependenciasTurnos {
   catalogo: Catalogo
   config: ConfigTurnos
   agora?: () => string
+  /** Guarda a sessão do agente na nuvem. Sem ela, nada muda (modo em disco). */
+  memoria?: MemoriaDeSessao
 }
 
 export function aspasShell(s: string): string {
@@ -99,6 +103,7 @@ export class ServicoTurnos {
   private readonly catalogo: Catalogo
   private readonly config: ConfigTurnos
   private readonly agora: () => string
+  private readonly memoria: MemoriaDeSessao | undefined
   /** Vaga do turno por prospect. etapa null = reservada enquanto a fila é consultada. */
   private readonly ativos = new Map<string, { etapa: EtapaId | null; controle: AbortController }>()
   private readonly tokens = new Map<string, { slug: string; etapa: EtapaId }>()
@@ -121,6 +126,7 @@ export class ServicoTurnos {
     this.catalogo = d.catalogo
     this.config = d.config
     this.agora = d.agora ?? (() => new Date().toISOString())
+    this.memoria = d.memoria
     this.registroUso = new RegistroUso(d.config.raiz)
     this.servico.conectarTurnos({
       aoEnfileirar: (slug) => this.acompanhar(slug, this.processarFila(slug)),
@@ -281,6 +287,7 @@ export class ServicoTurnos {
 
   /** Envia à nuvem o que o turno produziu. Se falhar, o turno continua ok e o analista recebe um alerta. */
   private async encerrarTurno(slug: string, etapa: EtapaId): Promise<void> {
+    await this.salvarSessao(slug, etapa)
     try {
       await this.servico.sincronizarArquivos(slug)
     } catch (e) {
@@ -291,15 +298,54 @@ export class ServicoTurnos {
     }
   }
 
+  /** Guarda a sessão do agente na nuvem. Falha só vai para o console: o analista não precisa saber. */
+  private async salvarSessao(slug: string, etapa: EtapaId): Promise<void> {
+    if (!this.memoria) return
+    try {
+      const sessionId = (await this.servico.estado(slug)).etapas[etapa].sessionId
+      if (sessionId) await this.memoria.salvar(slug, sessionId)
+    } catch (e) {
+      console.error(`Falha ao salvar a sessão do agente de "${slug}":`, e)
+    }
+  }
+
+  /** Confere se o .jsonl da sessão está no disco; se não der para restaurar, devolve false (a etapa recomeça pelo histórico). */
+  private async restaurarSessao(slug: string, sessionId: string): Promise<boolean> {
+    if (!this.memoria) return true
+    try {
+      return await this.memoria.restaurar(slug, sessionId)
+    } catch (e) {
+      console.error(`Falha ao restaurar a sessão do agente de "${slug}":`, e)
+      return false
+    }
+  }
+
   private async rodarTurno(slug: string, etapa: EtapaId, texto: string | null, sinal: AbortSignal): Promise<void> {
     const estado = await this.servico.estado(slug)
     const etapaCat = etapaDoCatalogo(this.catalogo, etapa)
     let sessionId = estado.etapas[etapa].sessionId
-    const mensagem = sessionId
-      ? (texto ?? "Continue de onde parou.")
-      : [promptInicialEtapa({ slug, etapa: etapaCat, dossie: await this.servico.dossie(slug, etapa) }), texto]
-          .filter(Boolean)
-          .join("\n\n---\n\n")
+    let retomada = false
+    if (sessionId && !(await this.restaurarSessao(slug, sessionId))) {
+      sessionId = null
+      retomada = true
+    }
+    let mensagem: string
+    if (sessionId) {
+      mensagem = texto ?? "Continue de onde parou."
+    } else if (retomada) {
+      let historico = await this.servico.conversa(slug, etapa)
+      // a mensagem do turno já foi registrada no histórico e segue no fim do prompt
+      const ultimo = historico.at(-1)
+      if (texto && ultimo?.tipo === "mensagem_analista" && ultimo.texto === texto) historico = historico.slice(0, -1)
+      mensagem = [
+        promptRetomadaEtapa({ slug, etapa: etapaCat, dossie: await this.servico.dossie(slug, etapa), historico }),
+        texto ?? "Continue de onde parou.",
+      ].join("\n\n---\n\n")
+    } else {
+      mensagem = [promptInicialEtapa({ slug, etapa: etapaCat, dossie: await this.servico.dossie(slug, etapa) }), texto]
+        .filter(Boolean)
+        .join("\n\n---\n\n")
+    }
 
     const token = randomUUID()
     this.tokens.set(token, { slug, etapa })
@@ -314,6 +360,7 @@ export class ServicoTurnos {
     }
 
     await this.registrar(slug, etapa, { tipo: "turno_inicio", em: this.agora() })
+    if (retomada) await this.registrar(slug, etapa, { tipo: "aviso", nivel: "info", texto: AVISO_RETOMADA, em: this.agora() })
     let terminou = false
     try {
       for await (const ev of this.executor.executar(pedido, sinal)) {
