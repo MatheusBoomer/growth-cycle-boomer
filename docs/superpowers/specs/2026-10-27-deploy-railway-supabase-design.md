@@ -46,11 +46,11 @@ Hoje o app só roda no Mac de quem desenvolve: lê e grava em `clientes/<slug>/`
  │    /data/clientes/<slug>/   (cópia de trabalho dos arquivos)     │
  │    /data/claude/            (CLAUDE_CONFIG_DIR: memória do agente)│
  └───────────────▲──────────────────────────┬──────────────────────┘
-                 │ publicar (fim do turno)  │ hidratar (início do turno)
+                 │ sincroniza (fim)         │ sincroniza (início do turno)
  ┌───────────────┴──────── SUPABASE ────────▼──────────────────────┐
  │  Postgres: prospects (estado jsonb), eventos_conversa,           │
  │            comentarios, uso_turnos, arquivos (manifesto)          │
- │  Storage (privado): prospects/<slug>/..., sessoes/<slug>/...      │
+ │  Storage (privado): prospects/<slug>/<sha256>, sessoes/<slug>/... │
  └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -79,38 +79,52 @@ Regras da memória da sessão:
 
 ### 5.1 Repositório (banco)
 
-Interface `Repositorio` com duas implementações: `FsRepositorio` (o comportamento atual, em `.app/`, usada no Mac e nos testes) e `SupabaseRepositorio`.
+Interface `Repositorio` com duas implementações: `MemoriaRepositorio` (testes) e `SupabaseRepositorio`. No modo local (`PLANEJAMENTO_DADOS=fs`), o `FsArmazenamento` atual segue sem repositório.
 
 Tabelas:
 
-- `prospects`: `slug` (PK), `nome`, `estado jsonb` (o `Estado` de hoje, inteiro), `etapa_atual`, `criado_por`, `criado_em`, `atualizado_em`, `versao int` (controle de concorrência otimista), `sincronizacao_pendente bool`, `excluido_em`.
+- `prospects`: `slug` (PK), `nome`, `estado jsonb` (o `Estado` de hoje, inteiro; nulo até a primeira gravação), `etapa_atual`, `criado_por`, `criado_em`, `atualizado_em`, `versao int` (concorrência otimista), `sincronizacao_pendente bool`, `excluido_em`.
 - `eventos_conversa`: `id`, `slug`, `etapa`, `evento jsonb`, `autor`, `em`. Só inclusão.
-- `comentarios`: o conteúdo de `.app/comentarios/` hoje, uma linha por comentário.
+- `comentarios`: uma linha por entregável (`slug`, `entregavel_id`, `lista jsonb`), como `.app/comentarios/<id>.json` hoje.
 - `uso_turnos`: `slug`, `etapa`, `autor`, `custo_usd`, `tokens_entrada`, `tokens_saida`, `inicio`, `fim`, `status`. Vem do resultado final do SDK.
-- `arquivos`: manifesto por prospect: `slug`, `caminho`, `sha256`, `tamanho`, `atualizado_em`, `excluido_em`.
+- `arquivos`: manifesto por prospect: `slug`, `caminho`, `sha256`, `tamanho`, `atualizado_em`.
+- `arquivos_lixeira`: `slug`, `caminho`, `sha256`, `removido_em`. O que sai do manifesto vem para cá, e o conteúdo continua no storage (recuperável).
 
-`gravarEstado` grava com `where versao = <lida>`. Se outra gravação chegou antes, relê o estado, reaplica a mudança e tenta de novo (até 3 vezes).
+`gravarEstado` grava com `where versao = <lida>`. Dentro do app, as gravações de um prospect já passam uma de cada vez (`exclusivo` do `ServicoPlanejamento`, com uma instância só). A versão protege contra escrita de fora do app, como o script de migração: se ela mudou, a gravação falha com erro claro e não sobrescreve nada.
 
 Só o servidor acessa o banco e o storage (chave de serviço). O navegador nunca fala com o banco diretamente, então não há políticas de RLS por usuário: RLS fica ligado e fechado para a chave pública.
 
 ### 5.2 Mesa (sincronização)
 
-`Mesa` cuida da cópia de trabalho de um prospect em `/data/clientes/<slug>/`:
+`Mesa` cuida da cópia de trabalho de um prospect em `/data/clientes/<slug>/` com uma operação só, `sincronizar(slug)`, que compara três listas de hashes: a **base** (o que estava igual dos dois lados na última sincronização, guardada em `clientes/.mesa/<slug>.json`), o **disco** e o **manifesto** (nuvem).
 
-- `hidratar(slug)`: compara o manifesto `arquivos` com os hashes da pasta local e baixa o que falta ou difere; apaga localmente o que o manifesto marca como excluído.
-- `publicar(slug)`: calcula o hash de cada arquivo local, envia ao storage os que mudaram, atualiza o manifesto e marca como excluídos os que sumiram. Ignora `.DS_Store`, `~$*` e `__pycache__`.
+| Disco em relação à base | Nuvem em relação à base | Ação |
+|---|---|---|
+| mudou ou é novo | igual ou ausente da base | envia |
+| igual | mudou ou é nova | baixa |
+| mudou | mudou | o disco vence (o servidor é o único que escreve) e envia |
+| apagado | igual | tira do manifesto (vai para `arquivos_lixeira`) |
+| igual | apagada | apaga do disco |
 
-Chamadas: `hidratar` antes de cada turno e antes de abrir um prospect; `publicar` ao fim de cada turno (inclusive interrompido ou com erro) e depois de cada `propor_entregavel`.
+Assim, gravações feitas direto no disco (pelo agente, pelos scripts ou por código que usa `caminhoAbsoluto`) chegam à nuvem, e uma queda do servidor antes do envio não deixa a nuvem sobrescrever trabalho local.
+
+O storage guarda cada arquivo pelo conteúdo, em `prospects/<slug>/<sha256>`. O nome real fica no manifesto. Isso evita os nomes que o storage recusa (acentos, por exemplo "Relatório…") e torna a lixeira só uma mudança de tabela.
+
+Ficam fora da sincronização: `.DS_Store`, `~$*`, `__pycache__/`, `*.tmp`, `.app/previas/` (refeitas sob demanda) e os dados que estão no banco (`.app/estado.json`, `.app/conversas/`, `.app/comentarios/*.json`).
+
+Chamadas: antes de cada turno (falha impede o turno), ao fim de cada turno (inclusive interrompido ou com erro), na primeira leitura do estado de um prospect pelo processo, e agendada (1 s depois da última gravação do app). Duas chamadas para o mesmo prospect nunca rodam ao mesmo tempo.
 
 ### 5.3 Armazenamento na nuvem
 
-`NuvemArmazenamento` mantém os métodos públicos do `FsArmazenamento` atual (os serviços não mudam), delegando:
+`NuvemArmazenamento` estende o `FsArmazenamento` (os serviços não mudam de tipo):
 
-- estado, conversas e comentários ao `Repositorio`;
-- leitura de arquivo à mesa local (já hidratada);
-- gravação de arquivo (`gravarTexto`, `gravarBinario`, `copiar`, `moverParaDentro`) à mesa **e** ao storage, na mesma operação (gravação imediata). Uma falha no storage deixa o prospect com `sincronizacao_pendente`;
-- `criarPasta`: copia `clientes/_template/` (do git) para a mesa e para o storage e cria a linha em `prospects`;
-- `excluir` e `moverParaLixeiraNoProspect`: a lixeira do sistema (`trash`) dá lugar a `excluido_em` no banco e à pasta `lixeira/` no storage, que é recuperável.
+- estado, conversas e comentários vão ao `Repositorio`;
+- leitura e gravação de arquivo continuam na mesa local; gravações do app (`gravarTexto`, `gravarBinario`, `copiar`, `moverParaDentro`) agendam a sincronização;
+- `listarSlugs` e `existe` leem do banco;
+- `criarPasta`: copia `clientes/_template/` (do git) para a mesa, cria a linha em `prospects` e sincroniza;
+- `excluir`: marca `excluido_em` e apaga a pasta da mesa (a nuvem guarda tudo); `moverParaLixeiraNoProspect`: apaga do disco, e a sincronização leva o arquivo para `arquivos_lixeira`.
+
+Uma falha de sincronização, depois de 3 tentativas, marca `sincronizacao_pendente`; a próxima que der certo desmarca.
 
 `servidor.ts` escolhe `FsArmazenamento` ou `NuvemArmazenamento` por `PLANEJAMENTO_DADOS=fs|supabase`.
 
@@ -154,9 +168,9 @@ As memórias de sessão do Mac (`~/.claude/projects/`) não são migradas. O `se
 
 | Situação | Comportamento |
 |---|---|
-| Supabase indisponível ao hidratar | O turno não começa. Aviso no chat: "Não consegui baixar os arquivos do prospect. Tente de novo." |
-| Falha ao publicar no fim do turno | 3 tentativas com espera crescente. Se falhar, marca `sincronizacao_pendente`, mostra um aviso e tenta de novo na próxima ação do prospect. Os arquivos seguem no volume |
-| Duas gravações de estado ao mesmo tempo | Concorrência otimista por `versao` (5.1) |
+| Supabase indisponível no começo do turno | O turno não começa. Aviso no chat: "Não consegui baixar os arquivos do prospect. Tente de novo." |
+| Falha ao sincronizar no fim do turno | 3 tentativas com espera crescente. Se falhar, marca `sincronizacao_pendente`, mostra um aviso e tenta de novo na próxima ação do prospect. Os arquivos seguem no volume |
+| Escrita no estado por fora do app | Concorrência otimista por `versao` (5.1): erro claro, nada sobrescrito |
 | Turno ativo no prospect | O segundo analista não consegue iniciar turno nesse prospect e vê quem está rodando |
 | Login fora do domínio | Recusado no retorno do login, antes de qualquer dado |
 | Sessão do agente não restaurada | Retomada pelo histórico (seção 4, regra 4) |
@@ -166,8 +180,8 @@ As memórias de sessão do Mac (`~/.claude/projects/`) não são migradas. O `se
 ## 7. Testes
 
 1. Os testes atuais de `core` e `web` seguem passando com `PLANEJAMENTO_DADOS=fs`.
-2. Testes de contrato do `Repositorio` e da `Mesa`: o mesmo conjunto roda contra a implementação em disco e contra o Supabase local (`supabase start`, via Docker).
-3. Testes unitários da `Mesa`: hidratar com arquivo faltando, diferente ou excluído; publicar só os alterados; arquivos ignorados.
+2. Testes de contrato do `Repositorio` e do armazém de arquivos: o mesmo conjunto roda contra a implementação em memória e contra o Supabase local (`supabase start`, via Docker).
+3. Testes unitários da `Mesa`: cada linha da tabela da 5.2, arquivos ignorados e duas sincronizações simultâneas.
 4. Testes da memória da sessão: salvar, restaurar e cair na retomada pelo histórico quando o `.jsonl` falta.
 5. Teste do login: e-mail de fora do domínio recusado; `/api/interno` sem token recusado.
 6. Ensaio na Railway com a Verdeluz: criar, enviar insumos, etapas 01 a 03, aprovar entregáveis, reiniciar o serviço no meio da etapa 02 e confirmar que o agente retoma.
