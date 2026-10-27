@@ -16,7 +16,7 @@ vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: 
 
 const { proxy, config } = await import("./proxy")
 
-const SESSAO_BOA = { data: { claims: { email: "ana@boomer.com.br", user_metadata: { email_verified: true } } }, error: null }
+const SESSAO_BOA = { data: { claims: { email: "ana@boomer.com.br", app_metadata: { provider: "google", providers: ["google"] }, user_metadata: { email_verified: true } } }, error: null }
 
 function req(caminho: string, opcoes: { metodo?: string; host?: string; headers?: Record<string, string> } = {}) {
   const host = opcoes.host ?? "127.0.0.1:3000"
@@ -113,10 +113,10 @@ describe("proxy no modo google", () => {
     expect(r.headers.get("x-middleware-next")).toBe("1")
   })
 
-  it("sessão de domínio de fora ou sem e-mail verificado conta como sem sessão", async () => {
-    getClaims.mockResolvedValueOnce({ data: { claims: { email: "x@gmail.com", email_verified: true } }, error: null })
+  it("sessão de domínio de fora ou que não é do Google conta como sem sessão", async () => {
+    getClaims.mockResolvedValueOnce({ data: { claims: { email: "x@gmail.com", app_metadata: { provider: "google" }, email_verified: true } }, error: null })
     expect((await proxy(req("/api/prospects"))).status).toBe(401)
-    getClaims.mockResolvedValueOnce({ data: { claims: { email: "ana@boomer.com.br" } }, error: null })
+    getClaims.mockResolvedValueOnce({ data: { claims: { email: "ana@boomer.com.br", app_metadata: { provider: "email", providers: ["email"] }, user_metadata: { email_verified: true } } }, error: null })
     expect((await proxy(req("/"))).status).toBe(307)
   })
 

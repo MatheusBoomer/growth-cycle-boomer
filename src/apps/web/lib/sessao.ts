@@ -41,21 +41,31 @@ function ehObjeto(valor: unknown): valor is Record<string, unknown> {
   return typeof valor === "object" && valor !== null && !Array.isArray(valor)
 }
 
+/** Prova controlada pelo servidor de que a identidade veio do Google (`app_metadata` o usuário não consegue escrever). */
+function veioDoGoogle(appMetadata: unknown): boolean {
+  if (!ehObjeto(appMetadata)) return false
+  if (appMetadata.provider === "google") return true
+  return Array.isArray(appMetadata.providers) && appMetadata.providers.includes("google")
+}
+
 /**
- * Transforma as claims já verificadas (getClaims confere a assinatura) em usuário. Exige e-mail em texto,
- * verificado (`email_verified` no topo ou em `user_metadata`, sempre o booleano true; um false em qualquer
- * dos dois vence) e de um domínio permitido. Qualquer outra forma vira null.
+ * Transforma as claims já verificadas (getClaims confere a assinatura) em usuário. Exige e-mail em texto
+ * de um domínio permitido e a prova de que a identidade é do Google em `app_metadata` (`provider` ou
+ * `providers`). `user_metadata` é gravável pelo próprio usuário (updateUser, signUp), então NÃO vale como
+ * prova: nele só importa o lado negativo. Com o Google como provedor o e-mail já foi verificado por ele no
+ * login, então `email_verified` ausente é aceito; presente (no topo ou em `user_metadata`) precisa ser o
+ * booleano true, e qualquer outro valor (false, "true", 1) recusa. Qualquer outra forma vira null.
  */
 export function usuarioDeClaims(claims: unknown, dominios: readonly string[]): Usuario | null {
   if (!ehObjeto(claims)) return null
   const { email } = claims
   if (typeof email !== "string" || !emailPermitido(email, dominios)) return null
+  if (!veioDoGoogle(claims.app_metadata)) return null
 
   const metadados = claims.user_metadata
   if (metadados !== undefined && metadados !== null && !ehObjeto(metadados)) return null
   const indicadores = [claims.email_verified, ehObjeto(metadados) ? metadados.email_verified : undefined]
   if (indicadores.some((v) => v !== undefined && v !== true)) return null
-  if (!indicadores.includes(true)) return null
 
   return { email: email.toLowerCase() }
 }
