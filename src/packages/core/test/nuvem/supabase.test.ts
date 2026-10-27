@@ -4,9 +4,9 @@ import { criarClienteSupabase, SupabaseArmazem, SupabaseRepositorio } from "../.
 import type { ArmazemArquivos, EntradaManifesto } from "../../src/nuvem/tipos"
 import { contratoArmazem } from "./contrato-armazem"
 import { contratoRepositorio } from "./contrato-repositorio"
+import { ehSlugDeContrato, PREFIXO_CONTRATO, suiteVivaHabilitada } from "./suite-viva"
 
 const BUCKETS = ["planejamento-prospects", "planejamento-sessoes"]
-const PREFIXO = "contrato-"
 
 /**
  * Só para a suíte viva: `arquivos.slug` tem chave estrangeira para `prospects`, e o contrato do armazém
@@ -48,7 +48,7 @@ class ArmazemComProspect implements ArmazemArquivos {
 }
 
 /** Suíte viva: só roda com SUPABASE_TESTE_URL e SUPABASE_TESTE_SERVICE_ROLE_KEY no .env da raiz. */
-describe.skipIf(!process.env.SUPABASE_TESTE_URL)("Supabase (integração)", () => {
+describe.skipIf(!suiteVivaHabilitada(process.env))("Supabase (integração)", () => {
   // O corpo do describe roda mesmo quando a suíte é pulada: o cliente só nasce quando alguém o pede.
   let instancia: ReturnType<typeof criarClienteSupabase> | null = null
   const cliente = () =>
@@ -63,7 +63,10 @@ describe.skipIf(!process.env.SUPABASE_TESTE_URL)("Supabase (integração)", () =
     async () => new ArmazemComProspect(new SupabaseArmazem(cliente()), new SupabaseRepositorio(cliente())),
   )
 
-  /** Apaga linhas e objetos dos slugs `contrato-*`, só no schema planejamento e nos buckets planejamento-*. */
+  /**
+   * Apaga linhas e objetos dos slugs gerados pelos contratos (formato exato de novoSlug, nunca só o prefixo:
+   * um prospect real "Contrato X" vira contrato-x), só no schema planejamento e nos buckets planejamento-*.
+   */
   afterAll(async () => {
     const c = cliente()
     const falhas: string[] = []
@@ -73,9 +76,9 @@ describe.skipIf(!process.env.SUPABASE_TESTE_URL)("Supabase (integração)", () =
 
     const slugs = new Set<string>()
     for (const tabela of ["prospects", "arquivos_lixeira"]) {
-      const { data, error } = await c.from(tabela).select("slug").like("slug", `${PREFIXO}%`)
+      const { data, error } = await c.from(tabela).select("slug").like("slug", `${PREFIXO_CONTRATO}%`)
       registrar(`ler ${tabela}`, error)
-      for (const linha of data ?? []) slugs.add(String(linha.slug))
+      for (const linha of data ?? []) if (ehSlugDeContrato(String(linha.slug))) slugs.add(String(linha.slug))
     }
 
     for (const slug of slugs) {
@@ -87,9 +90,11 @@ describe.skipIf(!process.env.SUPABASE_TESTE_URL)("Supabase (integração)", () =
 
     // Objetos sem linha no banco também vazam: a busca parte da raiz de cada bucket.
     for (const bucket of BUCKETS) {
-      const { data: raiz, error: erroRaiz } = await c.storage.from(bucket).list("", { search: PREFIXO, limit: 1000 })
+      const { data: raiz, error: erroRaiz } = await c.storage
+        .from(bucket)
+        .list("", { search: PREFIXO_CONTRATO, limit: 1000 })
       registrar(`listar ${bucket}`, erroRaiz)
-      const pastas = new Set((raiz ?? []).map((o) => o.name).filter((n) => n.startsWith(PREFIXO)))
+      const pastas = new Set((raiz ?? []).map((o) => o.name).filter(ehSlugDeContrato))
       for (const slug of slugs) pastas.add(slug)
       for (const pasta of pastas) {
         const { data: objetos, error: erroPasta } = await c.storage.from(bucket).list(pasta, { limit: 1000 })

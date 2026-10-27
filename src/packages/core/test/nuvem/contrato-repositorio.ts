@@ -1,16 +1,12 @@
-import { randomBytes } from "node:crypto"
 import { describe, expect, it } from "vitest"
 import type { Repositorio } from "../../src/nuvem/tipos"
 import { ErroConflitoVersao, ErroNaoEncontrado, ErroProspectExistente } from "../../src/erros"
 import { estadoInicial } from "../../src/maquina-estados"
 import type { Comentario } from "../../src/comentarios"
 import type { EventoConversa } from "../../src/tipos"
+import { novoSlug } from "./suite-viva"
 
 const EM = "2026-10-27T12:00:00.000Z"
-
-function novoSlug(): string {
-  return `contrato-${randomBytes(6).toString("hex")}`
-}
 
 function estadoDe(slug: string, nome = "Prospect de contrato") {
   return estadoInicial({ slug, nome, site: null }, EM)
@@ -62,7 +58,7 @@ export function contratoRepositorio(nome: string, criar: () => Promise<Repositor
       expect(await repo.listarSlugs()).not.toContain(slug)
       expect(await repo.existe(slug)).toBe(false)
       await expect(repo.criarProspect(slug)).rejects.toBeInstanceOf(ErroProspectExistente)
-      await expect(repo.excluirProspect(`contrato-${randomBytes(6).toString("hex")}`)).rejects.toBeInstanceOf(
+      await expect(repo.excluirProspect(novoSlug())).rejects.toBeInstanceOf(
         ErroNaoEncontrado,
       )
     })

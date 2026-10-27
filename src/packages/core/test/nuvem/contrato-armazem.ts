@@ -1,10 +1,7 @@
-import { createHash, randomBytes } from "node:crypto"
+import { createHash } from "node:crypto"
 import { describe, expect, it } from "vitest"
 import type { ArmazemArquivos } from "../../src/nuvem/tipos"
-
-function novoSlug(): string {
-  return `contrato-${randomBytes(6).toString("hex")}`
-}
+import { novoSlug } from "./suite-viva"
 
 const bytes = (texto: string) => new TextEncoder().encode(texto)
 const sha = (dados: Uint8Array) => createHash("sha256").update(dados).digest("hex")
