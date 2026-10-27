@@ -631,6 +631,19 @@ describe("autoria dos turnos", () => {
       await t.aguardarOcioso(slug)
     })
 
+    it("o próprio autor do turno (duplo clique, segunda aba) recebe a mensagem genérica, não o próprio nome", async () => {
+      const { t } = turnos(segurar())
+      const slug = await servico.criarProspect("Iszi", null)
+      await t.iniciar(slug, "01", "ana.silva@boomer.com.br")
+      const mesmo = await t.enviarMensagem(slug, "01", "oi", "ana.silva@boomer.com.br").catch((e) => e)
+      const outro = await t.enviarMensagem(slug, "01", "oi", BIA).catch((e) => e)
+      expect(mesmo).toBeInstanceOf(ErroTurnoAtivo)
+      expect(mesmo.message).toBe("O agente ainda está respondendo neste prospect. Aguarde ou clique em Parar.")
+      expect(outro.message).toBe("Ana Silva está com o agente rodando nesta etapa.")
+      t.parar(slug)
+      await t.aguardarOcioso(slug)
+    })
+
     it("sem autor no turno ativo a mensagem de sempre não muda", async () => {
       const { t } = turnos(segurar())
       const slug = await servico.criarProspect("Iszi", null)

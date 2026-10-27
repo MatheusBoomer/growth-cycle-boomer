@@ -163,7 +163,8 @@ export class ServicoTurnos {
   /** Checa e ocupa a vaga no mesmo tick: entre o teste e o set não pode haver await. */
   private reservar(slug: string, etapa: EtapaId | null, autor: string | null = null): AbortController {
     const ocupada = this.ativos.get(slug)
-    if (ocupada) throw new ErroTurnoAtivo(ocupada.autor)
+    // O nome só ajuda quando o turno é de outra pessoa; para o próprio autor (duplo clique, segunda aba) vale a genérica.
+    if (ocupada) throw new ErroTurnoAtivo(ocupada.autor !== autor ? ocupada.autor : null)
     const controle = new AbortController()
     this.ativos.set(slug, { etapa, controle, autor })
     return controle
