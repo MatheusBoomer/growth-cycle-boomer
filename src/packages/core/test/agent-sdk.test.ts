@@ -1,0 +1,128 @@
+import { tmpdir } from "node:os"
+import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { AgentSdkExecutor, montarOpcoesSdk, type ConsultaSdk } from "../src/executor/agent-sdk"
+import type { EventoExecutor, PedidoTurno } from "../src/executor/tipos"
+
+const pedido = (sessionId: string | null = null): PedidoTurno => ({
+  cwd: tmpdir(),
+  mensagem: "olá",
+  sessionId,
+  systemPrompt: "SP",
+  mcpConfig: '{"mcpServers":{"planejamento":{"command":"node","args":["s.ts"]}}}',
+  settings: '{"hooks":{}}',
+  allowedTools: ["Read", "Bash(python3 *)"],
+})
+
+async function coletar(it: AsyncIterable<EventoExecutor>) {
+  const r: EventoExecutor[] = []
+  for await (const e of it) r.push(e)
+  return r
+}
+
+const mensagens = [
+  { type: "system", subtype: "init", session_id: "s1" },
+  { type: "stream_event", event: { type: "content_block_delta", delta: { type: "text_delta", text: "oi" } } },
+  { type: "assistant", message: { content: [{ type: "text", text: "oi" }] } },
+  { type: "result", subtype: "success", is_error: false, session_id: "s1", result: "oi" },
+]
+
+const consultaCom = (itens: unknown[]): ConsultaSdk =>
+  async function* () {
+    yield* itens
+  }
+
+const chaveOriginal = process.env.ANTHROPIC_API_KEY
+beforeEach(() => {
+  process.env.ANTHROPIC_API_KEY = "chave-de-teste"
+})
+afterEach(() => {
+  if (chaveOriginal === undefined) delete process.env.ANTHROPIC_API_KEY
+  else process.env.ANTHROPIC_API_KEY = chaveOriginal
+})
+
+describe("montarOpcoesSdk", () => {
+  it("traduz o pedido nas opções do SDK e só usa resume com sessão", () => {
+    const controle = new AbortController()
+    const sem = montarOpcoesSdk(pedido(), controle, {})
+    expect(sem.cwd).toBe(tmpdir())
+    expect(sem.systemPrompt).toEqual({ type: "preset", preset: "claude_code", append: "SP" })
+    expect(sem.mcpServers).toEqual({ planejamento: { command: "node", args: ["s.ts"] } })
+    expect(sem.settings).toEqual({ hooks: {} })
+    expect(sem.allowedTools).toEqual(["Read", "Bash(python3 *)"])
+    expect(sem.includePartialMessages).toBe(true)
+    expect(sem.abortController).toBe(controle)
+    expect(sem.resume).toBeUndefined()
+    expect(montarOpcoesSdk(pedido("abc"), controle, {}).resume).toBe("abc")
+  })
+})
+
+describe("AgentSdkExecutor", () => {
+  it("converte as mensagens do SDK nos mesmos eventos do CLI", async () => {
+    const exec = new AgentSdkExecutor({ consulta: consultaCom(mensagens) })
+    const eventos = await coletar(exec.executar(pedido(), new AbortController().signal))
+    expect(eventos.map((e) => e.tipo)).toEqual(["sessao", "texto_delta", "texto", "fim"])
+    expect(eventos.at(-1)).toEqual({ tipo: "fim", ok: true, erro: null, sessionId: "s1" })
+  })
+
+  it("passa a mensagem e a chave de API para o SDK", async () => {
+    let recebido: Parameters<ConsultaSdk>[0] | undefined
+    const exec = new AgentSdkExecutor({
+      consulta: (entrada) => {
+        recebido = entrada
+        return consultaCom(mensagens)(entrada)
+      },
+    })
+    await coletar(exec.executar(pedido(), new AbortController().signal))
+    expect(recebido?.prompt).toBe("olá")
+    expect(recebido?.options.env?.ANTHROPIC_API_KEY).toBe("chave-de-teste")
+  })
+
+  it("sem chave de API, falha antes de chamar o SDK com mensagem legível", async () => {
+    delete process.env.ANTHROPIC_API_KEY
+    let chamou = false
+    const exec = new AgentSdkExecutor({
+      consulta: (entrada) => {
+        chamou = true
+        return consultaCom([])(entrada)
+      },
+    })
+    const eventos = await coletar(exec.executar(pedido(), new AbortController().signal))
+    expect(chamou).toBe(false)
+    expect(eventos).toEqual([
+      { tipo: "fim", ok: false, erro: expect.stringContaining("ANTHROPIC_API_KEY"), sessionId: null },
+    ])
+  })
+
+  it("erro lançado pelo SDK vira evento fim com a mensagem", async () => {
+    const exec = new AgentSdkExecutor({
+      consulta: async function* () {
+        yield mensagens[0]
+        throw new Error("credit balance is too low")
+      },
+    })
+    const eventos = await coletar(exec.executar(pedido(), new AbortController().signal))
+    expect(eventos.at(-1)).toEqual({ tipo: "fim", ok: false, erro: "credit balance is too low", sessionId: null })
+  })
+
+  it("stream que termina sem result gera fim de erro", async () => {
+    const exec = new AgentSdkExecutor({ consulta: consultaCom(mensagens.slice(0, 2)) })
+    const eventos = await coletar(exec.executar(pedido(), new AbortController().signal))
+    expect(eventos.at(-1)).toMatchObject({ tipo: "fim", ok: false })
+  })
+
+  it("abortar repassa o sinal ao SDK e encerra como interrompido", async () => {
+    const controle = new AbortController()
+    const exec = new AgentSdkExecutor({
+      consulta: ({ options }) =>
+        (async function* () {
+          yield mensagens[0]
+          await new Promise<void>((_, rejeitar) => {
+            options.abortController?.signal.addEventListener("abort", () => rejeitar(new Error("aborted")))
+          })
+        })(),
+    })
+    setTimeout(() => controle.abort(), 50)
+    const eventos = await coletar(exec.executar(pedido(), controle.signal))
+    expect(eventos.at(-1)).toMatchObject({ tipo: "fim", ok: false, erro: "Interrompido pelo analista." })
+  })
+})

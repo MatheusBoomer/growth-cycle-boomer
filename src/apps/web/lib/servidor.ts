@@ -1,7 +1,9 @@
 import path from "node:path"
+import { loadEnvConfig } from "@next/env"
 import { FsArmazenamento } from "@workspace/core/armazenamento"
 import { Barramento } from "@workspace/core/barramento"
 import { carregarCatalogo } from "@workspace/core/catalogo"
+import { AgentSdkExecutor } from "@workspace/core/executor/agent-sdk"
 import { ClaudeCliExecutor } from "@workspace/core/executor/claude-cli"
 import { criarExecutorDemo } from "@workspace/core/executor/fake"
 import { criarPreviaPython } from "@workspace/core/previa"
@@ -43,13 +45,26 @@ export function servidor(): Servidor {
   }
   // `next dev` roda em src/apps/web → a raiz do projeto de planejamento fica três níveis acima.
   const raiz = process.env.PLANEJAMENTO_ROOT ?? path.resolve(process.cwd(), "../../..")
+  // O .env fica na raiz do projeto, não na pasta do app (a única que o Next lê sozinho). Carregado aqui, no
+  // processo que de fato escolhe o executor: ANTHROPIC_API_KEY e PLANEJAMENTO_EXECUTOR dependem disto.
+  loadEnvConfig(raiz, process.env.NODE_ENV !== "production", undefined, true)
   const catalogo = carregarCatalogo(raiz)
   const armazenamento = new FsArmazenamento(raiz)
   // Recriando: o barramento antigo continua, para as abas abertas seguirem recebendo os eventos.
   const barramento = atual?.barramento ?? new Barramento()
   const servico = new ServicoPlanejamento({ armazenamento, catalogo, barramento, validar: criarValidadorPython(raiz) })
   const comentarios = new ServicoComentarios({ armazenamento, planejamento: servico, previa: criarPreviaPython(raiz) })
-  const executor = process.env.PLANEJAMENTO_EXECUTOR === "demo" ? criarExecutorDemo() : new ClaudeCliExecutor()
+  // "demo" = respostas de mentira; "sdk" = Agent SDK com ANTHROPIC_API_KEY (cobrança por uso); padrão = CLI com a assinatura.
+  const executor =
+    process.env.PLANEJAMENTO_EXECUTOR === "demo"
+      ? criarExecutorDemo()
+      : process.env.PLANEJAMENTO_EXECUTOR === "sdk"
+        ? new AgentSdkExecutor()
+        : new ClaudeCliExecutor()
+  console.info(
+    `[planejamento] executor: ${process.env.PLANEJAMENTO_EXECUTOR || "cli (assinatura)"}` +
+      ` | ANTHROPIC_API_KEY ${process.env.ANTHROPIC_API_KEY ? "definida" : "NÃO definida"}`,
+  )
   const pastaMcp = path.join(raiz, "src/packages/mcp-planejamento/src")
   const turnos = new ServicoTurnos({
     servico,

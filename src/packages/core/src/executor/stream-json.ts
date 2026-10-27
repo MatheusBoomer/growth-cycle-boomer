@@ -13,6 +13,11 @@ export function parseLinhaStreamJson(linha: string): EventoExecutor[] {
   } catch {
     return []
   }
+  return eventosDaMensagem(bruto)
+}
+
+/** Converte uma mensagem já decodificada (linha do CLI ou mensagem do Agent SDK, que têm o mesmo formato). */
+export function eventosDaMensagem(bruto: unknown): EventoExecutor[] {
   const o = obj(bruto)
   if (!o || o.parent_tool_use_id) return []
 
