@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from "node:fs"
 import path from "node:path"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { ErroNaoAutenticado } from "@workspace/core/erros"
+import { problemasDePagina, problemasDeRota } from "./varredura-rotas"
 
 const exigirUsuario = vi.hoisted(() => vi.fn())
 vi.mock("@/lib/sessao", () => ({ exigirUsuario }))
@@ -27,63 +28,43 @@ const { POST: enviarComentarios } = await import("./prospects/[slug]/entregaveis
 // Varredura: toda rota de dados autentica por conta própria (defesa em profundidade além do proxy).
 // ---------------------------------------------------------------------------------------------------------------
 
-const PASTA_API = import.meta.dirname
+const PASTA_APP = path.resolve(import.meta.dirname, "..")
 
 /**
- * Rotas que NÃO chamam `exigirUsuario`, por caminho relativo a `app/api`. Cada entrada precisa continuar existindo
+ * Rotas que NÃO chamam `exigirUsuario`, por caminho relativo a `app`. Cada entrada precisa continuar existindo
  * (o teste abaixo falha se uma sumir), para a lista não apodrecer.
- *   - `interno/ferramentas/route.ts`: protegida pelo token do turno (`ServicoTurnos.contextoDoToken`), chamada só pelo servidor MCP.
- *   - `dev/**`: ferramenta de comentários do modo dev, só responde em `next dev` (404 em produção).
+ *   - `api/interno/ferramentas/route.ts`: protegida pelo token do turno (`ServicoTurnos.contextoDoToken`), chamada só pelo servidor MCP.
+ *   - `api/dev/**`: ferramenta de comentários do modo dev, só responde em `next dev` (404 em produção).
+ *   - `auth/**`: o próprio fluxo de login (entrar, callback, sair), que existe para quem ainda não tem sessão.
  */
 const ISENTAS = [
-  "interno/ferramentas/route.ts",
-  "dev/comentarios/route.ts",
-  "dev/comentarios/[id]/route.ts",
-  "dev/comentarios/[id]/imagem/route.ts",
+  "api/interno/ferramentas/route.ts",
+  "api/dev/comentarios/route.ts",
+  "api/dev/comentarios/[id]/route.ts",
+  "api/dev/comentarios/[id]/imagem/route.ts",
+  "auth/entrar/route.ts",
+  "auth/callback/route.ts",
+  "auth/sair/route.ts",
 ] as const
 
-const METODOS = "GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS"
-const MARCAS_DE_TRABALHO = ["await ctx.params", "lerJson(", "servidor(", "req.json(", "req.formData(", "req.headers", "req.signal", "req.url", "req.nextUrl"]
+/** Exceções declaradas à regra "página ou layout que chama servidor() checa a sessão antes". Nenhuma hoje. */
+const PAGINAS_ISENTAS: readonly string[] = []
 
-function listarRotas(pasta: string, base = pasta): string[] {
+function listar(pasta: string, nomes: readonly string[], base = pasta): string[] {
   const achados: string[] = []
   for (const e of readdirSync(pasta, { withFileTypes: true })) {
     const cheio = path.join(pasta, e.name)
-    if (e.isDirectory()) achados.push(...listarRotas(cheio, base))
-    else if (e.name === "route.ts") achados.push(path.relative(base, cheio).split(path.sep).join("/"))
+    if (e.isDirectory()) achados.push(...listar(cheio, nomes, base))
+    else if (nomes.includes(e.name)) achados.push(path.relative(base, cheio).split(path.sep).join("/"))
   }
   return achados.sort()
 }
 
-/**
- * Motivos pelos quais o fonte de uma rota não passa: sem o import, sem handler reconhecível, ou algum handler que não
- * chama `await exigirUsuario()` ou que o chama depois de ler parâmetros, corpo ou do `servidor()`. Lista vazia = ok.
- */
-export function problemasDeRota(fonte: string): string[] {
-  const problemas: string[] = []
-  if (!/import\s*\{[^}]*\bexigirUsuario\b[^}]*\}\s*from\s*"@\/lib\/sessao"/.test(fonte)) problemas.push("não importa exigirUsuario de @/lib/sessao")
-  if (new RegExp(`export\\s+(const|let|var)\\s+(${METODOS})\\b|export\\s*\\{`).test(fonte)) problemas.push("handler declarado de um jeito que a varredura não entende")
-  const inicios = [...fonte.matchAll(new RegExp(`export\\s+(?:async\\s+)?function\\s+(${METODOS})\\b`, "g"))]
-  if (inicios.length === 0) problemas.push("nenhum handler HTTP encontrado")
-  inicios.forEach((m, i) => {
-    const corpo = fonte.slice(m.index, inicios[i + 1]?.index ?? fonte.length)
-    const nome = m[1]
-    const chamada = corpo.indexOf("await exigirUsuario()")
-    if (chamada === -1) {
-      problemas.push(`${nome}: não chama await exigirUsuario()`)
-      return
-    }
-    const abertura = corpo.indexOf("{", corpo.indexOf(")", corpo.indexOf("(")))
-    const antes = corpo.slice(abertura, chamada)
-    const trabalho = MARCAS_DE_TRABALHO.find((t) => antes.includes(t))
-    if (trabalho) problemas.push(`${nome}: chama exigirUsuario depois de ${trabalho}`)
-    if (!antes.includes("try")) problemas.push(`${nome}: exigirUsuario fora do try (respostaDeErro não converteria o 401)`)
-  })
-  return problemas
-}
+const ehIsenta = (r: string) => (ISENTAS as readonly string[]).includes(r)
+const ler = (r: string) => readFileSync(path.join(PASTA_APP, r), "utf-8")
 
-describe("varredura de app/api: toda rota exige usuário", () => {
-  const rotas = listarRotas(PASTA_API)
+describe("varredura de app: toda rota exige usuário", () => {
+  const rotas = listar(PASTA_APP, ["route.ts"])
 
   it("encontra as rotas (a varredura não é vazia)", () => {
     expect(rotas.length).toBeGreaterThan(20)
@@ -94,59 +75,152 @@ describe("varredura de app/api: toda rota exige usuário", () => {
     expect(sumidas, `isentas que não existem mais: ${sumidas.join(", ")}`).toEqual([])
   })
 
-  it("toda dev/** existente está na lista de isentas (nenhuma rota nova escapa por ficar em dev)", () => {
-    const naoDeclaradas = rotas.filter((r) => r.startsWith("dev/") && !(ISENTAS as readonly string[]).includes(r))
+  it("toda rota de dev/** e de auth/** existente está declarada (nenhuma rota nova escapa por ficar lá)", () => {
+    const naoDeclaradas = rotas.filter((r) => /^(api\/dev|auth)\//.test(r) && !ehIsenta(r))
     expect(naoDeclaradas).toEqual([])
   })
 
   it("nenhuma rota fora da lista de isentas esquece exigirUsuario", () => {
-    const ofensoras = rotas
-      .filter((r) => !(ISENTAS as readonly string[]).includes(r))
-      .flatMap((r) => problemasDeRota(readFileSync(path.join(PASTA_API, r), "utf-8")).map((p) => `${r}: ${p}`))
+    const ofensoras = rotas.filter((r) => !ehIsenta(r)).flatMap((r) => problemasDeRota(ler(r)).map((p) => `${r}: ${p}`))
     expect(ofensoras, `rotas sem exigirUsuario:\n${ofensoras.join("\n")}`).toEqual([])
   })
 
   it("as isentas não chamam exigirUsuario (a lista não esconde rota que já autentica)", () => {
-    const chamam = ISENTAS.filter((r) => readFileSync(path.join(PASTA_API, r), "utf-8").includes("exigirUsuario"))
-    expect(chamam).toEqual([])
+    expect(ISENTAS.filter((r) => ler(r).includes("exigirUsuario"))).toEqual([])
   })
 })
 
-describe("problemasDeRota (a varredura pega ofensoras de verdade)", () => {
-  const cabecalho = `import { exigirUsuario } from "@/lib/sessao"\nimport { json, respostaDeErro } from "@/lib/http"\n`
-  const handler = (corpo: string) => `${cabecalho}export async function GET(_req: Request, ctx: Ctx) {\n  try {\n${corpo}\n  } catch (e) {\n    return respostaDeErro(e)\n  }\n}\n`
+describe("varredura de app: páginas e layouts que leem dados checam a sessão antes", () => {
+  const paginas = listar(PASTA_APP, ["page.tsx", "layout.tsx"])
 
-  it("aceita a forma correta", () => {
-    expect(problemasDeRota(handler("    await exigirUsuario()\n    const { slug } = await ctx.params\n    return json({ slug })"))).toEqual([])
+  it("encontra as páginas", () => {
+    expect(paginas.length).toBeGreaterThanOrEqual(3)
+  })
+
+  it("cada exceção declarada ainda existe", () => {
+    expect(PAGINAS_ISENTAS.filter((p) => !paginas.includes(p))).toEqual([])
+  })
+
+  it("nenhuma chama servidor() sem checar a sessão antes", () => {
+    const ofensoras = paginas.filter((p) => !PAGINAS_ISENTAS.includes(p)).flatMap((p) => problemasDePagina(ler(p)).map((m) => `${p}: ${m}`))
+    expect(ofensoras, `páginas lendo dados sem sessão:\n${ofensoras.join("\n")}`).toEqual([])
+  })
+})
+
+describe("problemasDePagina (sondas)", () => {
+  it("aceita a sessão antes de servidor()", () => {
+    expect(problemasDePagina('const u = await usuarioDaRequisicao()\nawait servidor().servico.x()')).toEqual([])
+  })
+  it("pega servidor() sem sessão, sessão depois, ou só em comentário", () => {
+    expect(problemasDePagina("await servidor().servico.x()")).toHaveLength(1)
+    expect(problemasDePagina("await servidor().x()\nawait usuarioDaRequisicao()")).toHaveLength(1)
+    expect(problemasDePagina("// usuarioDaRequisicao()\nawait servidor().x()")).toHaveLength(1)
+  })
+  it("página que não lê dados passa", () => {
+    expect(problemasDePagina("export default function P() { return null }")).toEqual([])
+  })
+})
+
+describe("problemasDeRota (sondas: a varredura pega ofensoras de verdade)", () => {
+  const importe = `import { exigirUsuario } from "@/lib/sessao"\nimport { json, respostaDeErro } from "@/lib/http"\n`
+  const arquivo = (corpo: string, verbo = "GET") => `${importe}export async function ${verbo}(_req: Request, ctx: Ctx) {\n${corpo}\n}\n`
+  const padrao = (dentro: string) => `  try {\n${dentro}\n  } catch (e) {\n    return respostaDeErro(e)\n  }`
+
+  it("aceita a forma correta, com e sem usuario", () => {
+    expect(problemasDeRota(arquivo(padrao("    await exigirUsuario()\n    return json({})")))).toEqual([])
+    expect(problemasDeRota(arquivo(padrao("    const usuario = await exigirUsuario()\n    return json(usuario)")))).toEqual([])
+  })
+
+  it("aceita a forma curta (SSE, sistema), com o resto fora do try", () => {
+    const fonte = arquivo("  try {\n    await exigirUsuario()\n  } catch (e) {\n    return respostaDeErro(e)\n  }\n  const fluxo = new ReadableStream()\n  return new Response(fluxo)")
+    expect(problemasDeRota(fonte)).toEqual([])
+  })
+
+  it("aceita try externo com try interno de arquivo ausente (modelos)", () => {
+    const fonte = arquivo(padrao("    await exigirUsuario()\n    try {\n      return new Response()\n    } catch {\n      return json({}, 404)\n    }"))
+    expect(problemasDeRota(fonte)).toEqual([])
+  })
+
+  it("aceita arquivo com vários verbos e handlers com helper depois", () => {
+    const fonte = `${arquivo(padrao("    await exigirUsuario()\n    return json({})"))}\nexport async function PATCH() {\n${padrao("    await exigirUsuario()\n    return json({})")}\n}\n\nfunction ajuda() {\n  return 1\n}\n`
+    expect(problemasDeRota(fonte)).toEqual([])
+  })
+
+  it("aceita relançar o erro no catch", () => {
+    expect(problemasDeRota(arquivo("  try {\n    await exigirUsuario()\n  } catch (e) {\n    throw e\n  }\n  return json({})"))).toEqual([])
   })
 
   it("pega rota sem a chamada", () => {
-    expect(problemasDeRota(handler("    const { slug } = await ctx.params\n    return json({ slug })"))).toEqual(["GET: não chama await exigirUsuario()"])
+    expect(problemasDeRota(arquivo(padrao("    return json({})")))).toHaveLength(1)
   })
 
-  it("pega rota sem o import", () => {
-    const fonte = handler("    await exigirUsuario()\n    return json({})").replace(cabecalho.split("\n")[0] ?? "", "")
-    expect(problemasDeRota(fonte)).toContain("não importa exigirUsuario de @/lib/sessao")
+  it("pega rota sem o import, ou com o import só em comentário", () => {
+    expect(problemasDeRota(arquivo(padrao("    await exigirUsuario()")).replace(importe.split("\n")[0]!, ""))).toContain("não importa exigirUsuario de @/lib/sessao")
+    const comentado = arquivo(padrao("    await exigirUsuario()")).replace(importe.split("\n")[0]!, '// import { exigirUsuario } from "@/lib/sessao"')
+    expect(problemasDeRota(comentado)).toContain("não importa exigirUsuario de @/lib/sessao")
   })
 
   it("pega a chamada depois de ler parâmetros ou corpo", () => {
-    expect(problemasDeRota(handler("    const { slug } = await ctx.params\n    await exigirUsuario()\n    return json({ slug })"))).toEqual([
-      "GET: chama exigirUsuario depois de await ctx.params",
-    ])
+    expect(problemasDeRota(arquivo(padrao("    const { slug } = await ctx.params\n    await exigirUsuario()")))).toHaveLength(1)
   })
 
   it("pega a chamada fora do try", () => {
-    const fonte = `${cabecalho}export async function GET() {\n  await exigirUsuario()\n  try {\n    return json({})\n  } catch (e) {\n    return respostaDeErro(e)\n  }\n}\n`
-    expect(problemasDeRota(fonte)).toEqual(["GET: exigirUsuario fora do try (respostaDeErro não converteria o 401)"])
+    expect(problemasDeRota(arquivo("  await exigirUsuario()\n  try {\n    return json({})\n  } catch (e) {\n    return respostaDeErro(e)\n  }"))).toHaveLength(1)
   })
 
   it("cobra cada handler do arquivo, não só o primeiro", () => {
-    const fonte = `${handler("    await exigirUsuario()\n    return json({})")}\nexport async function PATCH() {\n  try {\n    return json({})\n  } catch (e) {\n    return respostaDeErro(e)\n  }\n}\n`
-    expect(problemasDeRota(fonte)).toEqual(["PATCH: não chama await exigirUsuario()"])
+    const fonte = `${arquivo(padrao("    await exigirUsuario()"))}\nexport async function PATCH() {\n  try {\n    return json({})\n  } catch (e) {\n    return respostaDeErro(e)\n  }\n}\n`
+    expect(problemasDeRota(fonte)).toEqual([expect.stringContaining("PATCH")])
   })
 
   it("não aceita handler que a varredura não consegue ler", () => {
-    expect(problemasDeRota(`${cabecalho}export const GET = async () => json({})\n`)).toContain("handler declarado de um jeito que a varredura não entende")
+    expect(problemasDeRota(`${importe}export const GET = async () => json({})\n`)).toContain("handler declarado de um jeito que a varredura não entende")
+    expect(problemasDeRota(`${importe}export { GET } from "./outra"\n`)).toContain("handler declarado de um jeito que a varredura não entende")
+  })
+
+  // As seis formas que enganavam a primeira versão da varredura.
+  it("sonda 1: chamada só em comentário", () => {
+    expect(problemasDeRota(arquivo(padrao("    // await exigirUsuario()\n    return json({})")))).toHaveLength(1)
+    expect(problemasDeRota(arquivo(padrao("    /* await exigirUsuario() */\n    return json({})")))).toHaveLength(1)
+  })
+
+  it("sonda 1b: chamada só dentro de texto", () => {
+    expect(problemasDeRota(arquivo(padrao('    const t = "await exigirUsuario()"\n    return json({ t })')))).toHaveLength(1)
+    expect(problemasDeRota(arquivo(padrao("    const t = `await exigirUsuario() ${1}`\n    return json({ t })")))).toHaveLength(1)
+  })
+
+  it("sonda 2: ramo morto", () => {
+    expect(problemasDeRota(arquivo(padrao("    if (false) await exigirUsuario()\n    return json({})")))).toHaveLength(1)
+    expect(problemasDeRota(arquivo("  if (false) await exigirUsuario()\n  try {\n    return json({})\n  } catch (e) {\n    return respostaDeErro(e)\n  }"))).toHaveLength(1)
+  })
+
+  it("sonda 3: efeito colateral antes da chamada, fora de qualquer lista de nomes", () => {
+    for (const antes of ['execFile("open", [])', "await readFile(x)", "await req.text()", "await req.arrayBuffer()", "const c = req.body", "armazenamento.limpar()", "new RegistroUso(r)", "algoNovo()"]) {
+      expect(problemasDeRota(arquivo(padrao(`    ${antes}\n    await exigirUsuario()\n    return json({})`))), antes).toHaveLength(1)
+    }
+  })
+
+  it("sonda 4: 'try' como pedaço de outro nome", () => {
+    expect(problemasDeRota(arquivo("  const retry = 1\n  await exigirUsuario()\n  return json({ retry })"))).toHaveLength(1)
+    expect(problemasDeRota(arquivo("  await exigirUsuario() // sem try\n  return json({})"))).toHaveLength(1)
+  })
+
+  it("sonda 5: catch vazio engole o erro e depois serve dados", () => {
+    expect(problemasDeRota(arquivo("  try { await exigirUsuario() } catch {}\n  return json({ dados: 1 })"))).toHaveLength(1)
+    expect(problemasDeRota(arquivo("  try { await exigirUsuario() } catch (e) {}\n  return json({ dados: 1 })"))).toHaveLength(1)
+    expect(problemasDeRota(arquivo("  try { await exigirUsuario() } catch (e) { console.log(e) }\n  return json({ dados: 1 })"))).toHaveLength(1)
+    expect(problemasDeRota(arquivo("  try { await exigirUsuario() } finally {}\n  return json({ dados: 1 })"))).toHaveLength(1)
+    expect(problemasDeRota(arquivo("  try { await exigirUsuario() } catch (e) { return respostaDeErro(outro) }\n  return json({})"))).toHaveLength(1)
+  })
+
+  it("sonda 6: helper não exportado depois do handler não credita o handler anterior", () => {
+    const fonte = `${importe}export async function GET() {\n  try {\n    return json({})\n  } catch (e) {\n    return respostaDeErro(e)\n  }\n}\n\nasync function ajuda() {\n  await exigirUsuario()\n}\n`
+    expect(problemasDeRota(fonte)).toHaveLength(1)
+  })
+
+  it("exigirUsuario encadeado ou combinado não vale", () => {
+    expect(problemasDeRota(arquivo(padrao("    await exigirUsuario().catch(() => null)\n    return json({})")))).toHaveLength(1)
+    expect(problemasDeRota(arquivo(padrao("    await exigirUsuario() || null\n    return json({})")))).toHaveLength(1)
   })
 })
 
