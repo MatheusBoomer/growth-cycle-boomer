@@ -493,6 +493,13 @@ describe("arquivos aprovados fora da interface", () => {
       "entrega/ativos-aprovados/secoes/03-macro-financeiro.md",
     ])
   })
+
+  it("respostaEstado leva quem está com o turno ativo (turnoPor) e vale null sem autor", async () => {
+    const slug = await servico.criarProspect("Iszi", null)
+    expect((await servico.respostaEstado(slug, "01", "ana.silva@boomer.com.br")).turnoPor).toBe("ana.silva@boomer.com.br")
+    expect((await servico.respostaEstado(slug, "01", null)).turnoPor).toBeNull()
+    expect((await servico.respostaEstado(slug, null)).turnoPor).toBeNull()
+  })
 })
 
 describe("insumos", () => {

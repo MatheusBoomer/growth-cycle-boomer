@@ -197,6 +197,8 @@ export interface RespostaEstado {
   catalogo: Catalogo
   condicoes: Record<EtapaId, string[]>
   turnoAtivo: EtapaId | null
+  /** E-mail de quem está com o turno ativo (null sem turno, sem login ou turno da fila). */
+  turnoPor: string | null
   modelosDisponiveis: string[]
   /** Arquivos em entrega/ativos-aprovados/ sem entregável aprovado pela interface (terminal ou escrita direta). */
   aprovadosForaDaInterface: string[]

@@ -302,7 +302,7 @@ export class ServicoPlanejamento {
     }
   }
 
-  async respostaEstado(slug: string, turnoAtivo: EtapaId | null): Promise<RespostaEstado> {
+  async respostaEstado(slug: string, turnoAtivo: EtapaId | null, turnoPor: string | null = null): Promise<RespostaEstado> {
     const estado = await this.estado(slug)
     const condicoes = Object.fromEntries(
       ORDEM_ETAPAS.map((id) => [id, me.condicoesConcluir(estado, id, this.catalogo)]),
@@ -314,7 +314,7 @@ export class ServicoPlanejamento {
       estado.entregaveis.filter((e) => e.status === "aprovado").map((e) => destinoAprovado(e)),
     )
     const aprovadosForaDaInterface = (await this.arm.listarAprovados(slug)).filter((a) => !aprovadosPelaInterface.has(a))
-    return { estado, catalogo: this.catalogo, condicoes, turnoAtivo, modelosDisponiveis, aprovadosForaDaInterface }
+    return { estado, catalogo: this.catalogo, condicoes, turnoAtivo, turnoPor, modelosDisponiveis, aprovadosForaDaInterface }
   }
 
   async listarProspects(): Promise<ResumoProspect[]> {

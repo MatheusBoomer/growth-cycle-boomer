@@ -589,13 +589,89 @@ describe("autoria dos turnos", () => {
     await t.aguardarOcioso(slug)
     arm.usos.length = 0
     await t.enviarMensagem(slug, "01", "oi", ANA)
-    const ativos = (t as unknown as { ativos: Map<string, { autor: string | null }> }).ativos
-    expect(ativos.get(slug)?.autor).toBe(ANA)
+    expect(t.ativoPor(slug)).toBe(ANA)
     await t.aguardarOcioso(slug)
-    expect(ativos.has(slug)).toBe(false)
+    expect(t.ativoPor(slug)).toBeNull()
     // item da fila automática: turno disparado sem autor
     await svc.enfileirar(slug, "01", "continue")
     await t.aguardarOcioso(slug)
     expect(arm.usos.map((u) => u.autor)).toEqual([ANA, null])
+  })
+
+  describe("aviso de quem está com o agente rodando", () => {
+    const BIA = "bia.lima@boomer.com.br"
+    const segurar = (): Roteiro =>
+      async function* (_p, sinal) {
+        yield { tipo: "sessao", sessionId: "s" }
+        if (!sinal.aborted) await new Promise<void>((r) => sinal.addEventListener("abort", () => r(), { once: true }))
+      }
+
+    it("enviarMensagem de outro analista é recusada com o nome de quem está rodando", async () => {
+      const { t } = turnos(segurar())
+      const slug = await servico.criarProspect("Iszi", null)
+      await t.iniciar(slug, "01", "ana.silva@boomer.com.br")
+      const erro = await t.enviarMensagem(slug, "01", "oi", BIA).catch((e) => e)
+      expect(erro).toBeInstanceOf(ErroTurnoAtivo)
+      expect(erro.message).toBe("Ana Silva está com o agente rodando nesta etapa.")
+      expect(erro.status).toBe(409)
+      expect(erro.codigo).toBe("turno_ativo")
+      t.parar(slug)
+      await t.aguardarOcioso(slug)
+    })
+
+    it("iniciar e enviarMensagemComAjustes recusados também citam o autor do turno em andamento", async () => {
+      const { t } = turnos(segurar())
+      const slug = await servico.criarProspect("Iszi", null)
+      await t.iniciar(slug, "01", "ana.silva@boomer.com.br")
+      const a = await t.iniciar(slug, "01", BIA).catch((e) => e)
+      const b = await t.enviarMensagemComAjustes(slug, "01", "x", [], BIA).catch((e) => e)
+      expect(a.message).toBe("Ana Silva está com o agente rodando nesta etapa.")
+      expect(b.message).toBe("Ana Silva está com o agente rodando nesta etapa.")
+      t.parar(slug)
+      await t.aguardarOcioso(slug)
+    })
+
+    it("sem autor no turno ativo a mensagem de sempre não muda", async () => {
+      const { t } = turnos(segurar())
+      const slug = await servico.criarProspect("Iszi", null)
+      await t.iniciar(slug, "01")
+      expect(t.ativoPor(slug)).toBeNull()
+      const erro = await t.enviarMensagem(slug, "01", "oi", BIA).catch((e) => e)
+      expect(erro.message).toBe("O agente ainda está respondendo neste prospect. Aguarde ou clique em Parar.")
+      t.parar(slug)
+      await t.aguardarOcioso(slug)
+    })
+
+    it("ativoPor devolve o e-mail durante o turno e null antes e depois", async () => {
+      const { t } = turnos(segurar())
+      const slug = await servico.criarProspect("Iszi", null)
+      expect(t.ativoPor(slug)).toBeNull()
+      await t.iniciar(slug, "01", "ana.silva@boomer.com.br")
+      expect(t.ativoPor(slug)).toBe("ana.silva@boomer.com.br")
+      t.parar(slug)
+      await t.aguardarOcioso(slug)
+      expect(t.ativoPor(slug)).toBeNull()
+    })
+
+    it("o turno da fila que vem depois não tem autor: ativoPor volta null e a recusa usa a mensagem de sempre", async () => {
+      let rodadas = 0
+      const { t } = turnos(async function* (_p, sinal) {
+        rodadas++
+        yield { tipo: "sessao", sessionId: "s" }
+        if (rodadas === 2 && !sinal.aborted) await new Promise<void>((r) => sinal.addEventListener("abort", () => r(), { once: true }))
+        yield { tipo: "fim", ok: true, erro: null, sessionId: "s" }
+      })
+      const slug = await servico.criarProspect("Iszi", null)
+      await t.iniciar(slug, "01", "ana.silva@boomer.com.br")
+      await t.aguardarOcioso(slug)
+      await servico.enfileirar(slug, "01", "continue")
+      // o disparo da fila é assíncrono: espera o turno começar
+      while (t.ativo(slug) !== "01" || rodadas < 2) await new Promise((r) => setTimeout(r, 5))
+      expect(t.ativoPor(slug)).toBeNull()
+      const erro = await t.enviarMensagem(slug, "01", "oi", BIA).catch((e) => e)
+      expect(erro.message).toBe("O agente ainda está respondendo neste prospect. Aguarde ou clique em Parar.")
+      t.parar(slug)
+      await t.aguardarOcioso(slug)
+    })
   })
 })

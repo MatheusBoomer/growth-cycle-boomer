@@ -151,13 +151,19 @@ export class ServicoTurnos {
     return this.ativos.get(slug)?.etapa ?? null
   }
 
+  /** E-mail de quem está com o turno ativo; null sem turno, sem login ou no turno que a fila disparou. */
+  ativoPor(slug: string): string | null {
+    return this.ativos.get(slug)?.autor ?? null
+  }
+
   contextoDoToken(token: string): { slug: string; etapa: EtapaId } | null {
     return this.tokens.get(token) ?? null
   }
 
   /** Checa e ocupa a vaga no mesmo tick: entre o teste e o set não pode haver await. */
   private reservar(slug: string, etapa: EtapaId | null, autor: string | null = null): AbortController {
-    if (this.ativos.has(slug)) throw new ErroTurnoAtivo()
+    const ocupada = this.ativos.get(slug)
+    if (ocupada) throw new ErroTurnoAtivo(ocupada.autor)
     const controle = new AbortController()
     this.ativos.set(slug, { etapa, controle, autor })
     return controle

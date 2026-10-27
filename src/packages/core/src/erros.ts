@@ -1,3 +1,5 @@
+import { nomeCurto } from "./autenticacao"
+
 export class ErroDominio extends Error {
   readonly codigo: string
   readonly status: number
@@ -24,8 +26,15 @@ export class ErroProspectExistente extends ErroDominio {
 }
 
 export class ErroTurnoAtivo extends ErroDominio {
-  constructor() {
-    super("O agente ainda está respondendo neste prospect. Aguarde ou clique em Parar.", "turno_ativo", 409)
+  /** `autor` = e-mail de quem está com o turno rodando; sem ele (modo off, fila automática) vale a mensagem genérica. */
+  constructor(autor?: string | null) {
+    super(
+      autor
+        ? `${nomeCurto(autor)} está com o agente rodando nesta etapa.`
+        : "O agente ainda está respondendo neste prospect. Aguarde ou clique em Parar.",
+      "turno_ativo",
+      409,
+    )
   }
 }
 
