@@ -287,3 +287,83 @@ describe("uso da assinatura", () => {
     expect(avisos).toHaveLength(1)
   })
 })
+
+describe("sincronização dos arquivos do prospect", () => {
+  const AVISO_ANTES = "Não consegui baixar os arquivos do prospect. Tente de novo."
+  const AVISO_DEPOIS = "Os arquivos desta resposta ainda não foram salvos na nuvem. Vou tentar de novo na próxima ação."
+
+  /** Serviço cujo armazenamento registra cada sincronização em `log` e pode falhar na n-ésima chamada. */
+  function comSincronizacao(roteiro: Roteiro, falharNa: number | null = null) {
+    const log: string[] = []
+    let chamadas = 0
+    class ArmEspiao extends FsArmazenamento {
+      override async sincronizar(_slug: string): Promise<void> {
+        chamadas++
+        log.push("sincronizar")
+        if (falharNa === chamadas) throw new Error("rede fora")
+      }
+    }
+    const svc = new ServicoPlanejamento({
+      armazenamento: new ArmEspiao(raiz, async () => {}),
+      catalogo: catalogoReal(),
+      barramento,
+      validar: async () => ({ ok: true, problemas: [], avisos: [], resumo: null }),
+    })
+    const executor = new FakeExecutor(async function* (pedido, sinal) {
+      log.push("executor")
+      yield* roteiro(pedido, sinal)
+    })
+    const t = new ServicoTurnos({ servico: svc, executor, barramento, catalogo: catalogoReal(), config })
+    return { t, svc, executor, log }
+  }
+
+  it("sincroniza antes e depois do turno", async () => {
+    const { t, svc, log } = comSincronizacao(roteiroSimples("ok", "s1"))
+    const slug = await svc.criarProspect("Iszi", null)
+    log.length = 0
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    expect(log).toEqual(["sincronizar", "executor", "sincronizar"])
+  })
+
+  it("falha antes do turno: não chama o executor e avisa", async () => {
+    const { t, svc, executor, log } = comSincronizacao(roteiroSimples("ok", "s1"), 1)
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    expect(executor.pedidos).toHaveLength(0)
+    expect(log).toEqual(["sincronizar"])
+    const conversa = await svc.conversa(slug, "01")
+    expect(conversa.find((e) => e.tipo === "aviso" && e.nivel === "erro" && e.texto === AVISO_ANTES)).toBeTruthy()
+    expect(conversa.at(-1)).toMatchObject({ tipo: "turno_fim", status: "erro", detalhe: AVISO_ANTES })
+    expect(t.ativo(slug)).toBeNull()
+  })
+
+  it("falha depois do turno: avisa com alerta e o turno fica ok", async () => {
+    const { t, svc } = comSincronizacao(roteiroSimples("ok", "s1"), 2)
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    const conversa = await svc.conversa(slug, "01")
+    const iFim = conversa.findIndex((e) => e.tipo === "turno_fim")
+    const iAviso = conversa.findIndex((e) => e.tipo === "aviso" && e.texto === AVISO_DEPOIS)
+    expect(conversa[iFim]).toMatchObject({ status: "ok" })
+    expect(conversa[iAviso]).toMatchObject({ nivel: "alerta" })
+    expect(iAviso).toBeGreaterThan(iFim)
+  })
+
+  it("turno interrompido também sincroniza no fim", async () => {
+    const { t, svc, log } = comSincronizacao(async function* (_p, sinal) {
+      yield { tipo: "sessao", sessionId: "s" }
+      if (!sinal.aborted) await new Promise<void>((r) => sinal.addEventListener("abort", () => r(), { once: true }))
+    })
+    const slug = await svc.criarProspect("Iszi", null)
+    log.length = 0
+    await t.iniciar(slug, "01")
+    t.parar(slug)
+    await t.aguardarOcioso(slug)
+    expect((await svc.conversa(slug, "01")).at(-1)).toMatchObject({ tipo: "turno_fim", status: "interrompido" })
+    expect(log.at(-1)).toBe("sincronizar")
+    expect(log.filter((x) => x === "sincronizar")).toHaveLength(2)
+  })
+})

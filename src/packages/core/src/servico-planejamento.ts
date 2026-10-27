@@ -129,6 +129,11 @@ export class ServicoPlanejamento {
     this.gerarId = d.gerarId ?? (() => randomUUID())
   }
 
+  /** Sincroniza os arquivos do prospect com a nuvem (no disco local não faz nada). Falha com ErroSincronizacao. */
+  sincronizarArquivos(slug: string): Promise<void> {
+    return this.arm.sincronizar(slug)
+  }
+
   conectarTurnos(conexao: ConexaoTurnos): void {
     this.turnos = conexao
   }

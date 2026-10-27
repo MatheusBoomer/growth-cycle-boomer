@@ -10,6 +10,10 @@ import type { AjusteEnvio, ServicoPlanejamento } from "./servico-planejamento"
 import type { Catalogo, EtapaId, EventoConversa } from "./tipos"
 import { RegistroUso, type UsoAssinatura } from "./uso-assinatura"
 
+const AVISO_SINCRONIZACAO_ANTES = "Não consegui baixar os arquivos do prospect. Tente de novo."
+const AVISO_SINCRONIZACAO_DEPOIS =
+  "Os arquivos desta resposta ainda não foram salvos na nuvem. Vou tentar de novo na próxima ação."
+
 /** Tudo o que o agente pode usar sem pedir permissão (o modo -p não pergunta). */
 export const FERRAMENTAS_PERMITIDAS = [
   "Read",
@@ -246,7 +250,48 @@ export class ServicoTurnos {
     )
   }
 
+  /** Um turno completo: sincroniza antes, roda o agente e sincroniza de novo no fim (mesmo se interrompido ou com erro). */
   private async executarTurno(slug: string, etapa: EtapaId, texto: string | null, sinal: AbortSignal): Promise<void> {
+    if (!(await this.prepararTurno(slug, etapa))) return
+    try {
+      await this.rodarTurno(slug, etapa, texto, sinal)
+    } finally {
+      await this.encerrarTurno(slug, etapa)
+    }
+  }
+
+  /** Baixa os arquivos do prospect antes do turno. Sem eles o turno não roda: registra o erro e devolve false. */
+  private async prepararTurno(slug: string, etapa: EtapaId): Promise<boolean> {
+    try {
+      await this.servico.sincronizarArquivos(slug)
+      return true
+    } catch (e) {
+      console.error(`Falha ao sincronizar "${slug}" antes do turno:`, e)
+      await this.registrar(slug, etapa, { tipo: "turno_inicio", em: this.agora() })
+      await this.registrar(slug, etapa, { tipo: "aviso", nivel: "erro", texto: AVISO_SINCRONIZACAO_ANTES, em: this.agora() })
+      await this.registrar(slug, etapa, {
+        tipo: "turno_fim",
+        status: "erro",
+        detalhe: AVISO_SINCRONIZACAO_ANTES,
+        em: this.agora(),
+      })
+      return false
+    }
+  }
+
+  /** Envia à nuvem o que o turno produziu. Se falhar, o turno continua ok e o analista recebe um alerta. */
+  private async encerrarTurno(slug: string, etapa: EtapaId): Promise<void> {
+    try {
+      await this.servico.sincronizarArquivos(slug)
+    } catch (e) {
+      console.error(`Falha ao sincronizar "${slug}" depois do turno:`, e)
+      await this.registrar(slug, etapa, { tipo: "aviso", nivel: "alerta", texto: AVISO_SINCRONIZACAO_DEPOIS, em: this.agora() }).catch(
+        (erro) => console.error(`Não consegui registrar o aviso de sincronização de "${slug}":`, erro),
+      )
+    }
+  }
+
+  private async rodarTurno(slug: string, etapa: EtapaId, texto: string | null, sinal: AbortSignal): Promise<void> {
     const estado = await this.servico.estado(slug)
     const etapaCat = etapaDoCatalogo(this.catalogo, etapa)
     let sessionId = estado.etapas[etapa].sessionId
