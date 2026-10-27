@@ -2,9 +2,11 @@ import { randomUUID } from "node:crypto"
 import { appendFile, copyFile, cp, mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { ehImagem } from "./biblioteca"
+import type { Comentario } from "./comentarios"
 import { ErroCaminhoForaDoProspect, ErroEntrada, ErroNaoEncontrado, ErroProspectExistente } from "./erros"
 import { etapaVazia } from "./maquina-estados"
 import { normalizarSlug } from "./slug"
+import type { RegistroUsoTurno } from "./nuvem/tipos"
 import { ORDEM_ETAPAS, type Estado, type EtapaId, type EventoConversa } from "./tipos"
 
 const ARQUIVO_ESTADO = ".app/estado.json"
@@ -40,6 +42,15 @@ export function arquivoVisivel(relativo: string): boolean {
   if (!nome || nome.startsWith(".") || nome.startsWith("~$")) return false
   if (relativo.startsWith(".app/")) return PASTAS_DO_APP_VISIVEIS.some((p) => relativo.startsWith(p))
   return true
+}
+
+/** Completa um estado gravado antes de etapas ou campos novos existirem. */
+export function normalizarEstado(estado: Estado): Estado {
+  // estado.json gravado antes de uma etapa nova (ex.: 05 · Soluções) não tem a chave dela
+  const etapas = { ...estado.etapas }
+  for (const id of ORDEM_ETAPAS) etapas[id] ??= etapaVazia("bloqueada")
+  // estado.json gravado antes do card de perguntas não tem o campo
+  return { ...estado, etapas, perguntas: estado.perguntas ?? [] }
 }
 
 export interface ArquivoProspect {
@@ -126,12 +137,7 @@ export class FsArmazenamento {
   async lerEstado(slug: string): Promise<Estado | null> {
     const texto = await this.lerTexto(slug, ARQUIVO_ESTADO)
     if (!texto) return null
-    const estado = JSON.parse(texto) as Estado
-    // estado.json gravado antes de uma etapa nova (ex.: 05 · Soluções) não tem a chave dela
-    const etapas = { ...estado.etapas }
-    for (const id of ORDEM_ETAPAS) etapas[id] ??= etapaVazia("bloqueada")
-    // estado.json gravado antes do card de perguntas não tem o campo
-    return { ...estado, etapas, perguntas: estado.perguntas ?? [] }
+    return normalizarEstado(JSON.parse(texto) as Estado)
   }
 
   gravarEstado(slug: string, estado: Estado): Promise<void> {
@@ -262,6 +268,23 @@ export class FsArmazenamento {
     await mkdir(path.dirname(abs), { recursive: true })
     await appendFile(abs, `${JSON.stringify(evento)}\n`, "utf8")
   }
+
+  /** Comentários do entregável (`.app/comentarios/<id>.json`); lista vazia se não há. */
+  async lerComentarios(slug: string, id: string): Promise<Comentario[]> {
+    const texto = await this.lerTexto(slug, `.app/comentarios/${id}.json`)
+    return texto ? (JSON.parse(texto) as Comentario[]) : []
+  }
+
+  async gravarComentarios(slug: string, id: string, lista: Comentario[]): Promise<void> {
+    await this.gravarTexto(slug, `.app/comentarios/${id}.json`, JSON.stringify(lista, null, 2))
+  }
+
+  /** Ganchos da nuvem: no disco local não há o que sincronizar nem registrar. */
+  async sincronizar(_slug: string): Promise<void> {}
+
+  agendarSincronizacao(_slug: string): void {}
+
+  async registrarUso(_r: RegistroUsoTurno): Promise<void> {}
 
   async lerConversa(slug: string, etapa: EtapaId): Promise<EventoConversa[]> {
     const texto = await this.lerTexto(slug, `.app/conversas/${etapa}.jsonl`)

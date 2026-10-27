@@ -98,6 +98,8 @@ export async function reposicionarNoFixture(
     if (await existe(roteiro)) await copiarArquivo(roteiro, arm.caminhoAbsoluto(slug, `${PASTA_KIT}/${kit.etapa}/${ROTEIRO}`))
   }
 
+  arm.agendarSincronizacao(slug)
+
   const completo = fixture.estadoCompleto
   return {
     ...estadoInicial(atual.prospect, agora),
