@@ -49,6 +49,11 @@ export interface ConfigTurnos {
   caminhoServidorMcp: string
   caminhoHook: string
   comandoNode: string
+  /**
+   * Acrescenta o Firecrawl ao MCP do turno (se FIRECRAWL_API_KEY existir). Só no executor SDK:
+   * no modo CLI a configuração do Claude Code do analista já traz o Firecrawl.
+   */
+  firecrawlNoMcp?: boolean
 }
 
 export interface DependenciasTurnos {
@@ -66,16 +71,18 @@ export function aspasShell(s: string): string {
   return `'${s.replace(/'/g, `'\\''`)}'`
 }
 
-export function montarMcpConfig(config: ConfigTurnos, token: string): string {
-  return JSON.stringify({
-    mcpServers: {
-      planejamento: {
-        command: config.comandoNode,
-        args: [config.caminhoServidorMcp],
-        env: { PLANEJAMENTO_APP_URL: config.urlApp, PLANEJAMENTO_TOKEN: token },
-      },
+export function montarMcpConfig(config: ConfigTurnos, token: string, env: Record<string, string | undefined> = {}): string {
+  const mcpServers: Record<string, unknown> = {
+    planejamento: {
+      command: config.comandoNode,
+      args: [config.caminhoServidorMcp],
+      env: { PLANEJAMENTO_APP_URL: config.urlApp, PLANEJAMENTO_TOKEN: token },
     },
-  })
+  }
+  if (env.FIRECRAWL_API_KEY) {
+    mcpServers.firecrawl = { command: "firecrawl-mcp", args: [], env: { FIRECRAWL_API_KEY: env.FIRECRAWL_API_KEY } }
+  }
+  return JSON.stringify({ mcpServers })
 }
 
 export function montarSettingsHook(config: ConfigTurnos, pastaProspect: string): string {
@@ -430,7 +437,7 @@ export class ServicoTurnos {
       mensagem,
       sessionId,
       systemPrompt: systemPromptModoInterface({ slug, etapa: etapaCat }),
-      mcpConfig: montarMcpConfig(this.config, token),
+      mcpConfig: montarMcpConfig(this.config, token, this.config.firecrawlNoMcp ? process.env : {}),
       settings: montarSettingsHook(this.config, path.join(this.config.raiz, "clientes", slug)),
       allowedTools: FERRAMENTAS_PERMITIDAS,
     }

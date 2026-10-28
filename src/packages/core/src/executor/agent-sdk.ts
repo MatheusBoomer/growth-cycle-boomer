@@ -1,4 +1,5 @@
 import { query, type Options } from "@anthropic-ai/claude-agent-sdk"
+import { ambienteDoAgente } from "./ambiente-agente"
 import { eventosDaMensagem } from "./stream-json"
 import type { EventoExecutor, Executor, PedidoTurno } from "./tipos"
 
@@ -18,7 +19,7 @@ function lerJson(texto: string): Json {
   return valor && typeof valor === "object" && !Array.isArray(valor) ? (valor as Json) : {}
 }
 
-export function montarOpcoesSdk(p: PedidoTurno, controle: AbortController, env: NodeJS.ProcessEnv): Options {
+export function montarOpcoesSdk(p: PedidoTurno, controle: AbortController, env: Record<string, string | undefined>): Options {
   const opcoes: Options = {
     cwd: p.cwd,
     systemPrompt: { type: "preset", preset: "claude_code", append: p.systemPrompt },
@@ -65,7 +66,7 @@ export class AgentSdkExecutor implements Executor {
     try {
       const mensagens = this.consulta({
         prompt: pedido.mensagem,
-        options: montarOpcoesSdk(pedido, controle, { ...process.env }),
+        options: montarOpcoesSdk(pedido, controle, ambienteDoAgente(process.env)),
       })
       for await (const mensagem of mensagens) {
         for (const evento of eventosDaMensagem(mensagem)) {

@@ -64,6 +64,42 @@ describe("configuração passada ao claude", () => {
     expect(mcp.mcpServers.planejamento.args).toEqual([config.caminhoServidorMcp])
     expect(mcp.mcpServers.planejamento.env).toEqual({ PLANEJAMENTO_APP_URL: config.urlApp, PLANEJAMENTO_TOKEN: "tok" })
   })
+
+  it("sem FIRECRAWL_API_KEY, o MCP é só o planejamento (JSON idêntico ao de antes)", () => {
+    const base = montarMcpConfig(config, "tok")
+    expect(montarMcpConfig(config, "tok", {})).toBe(base)
+    expect(montarMcpConfig(config, "tok", { FIRECRAWL_API_KEY: "" })).toBe(base)
+    expect(Object.keys((JSON.parse(base) as { mcpServers: object }).mcpServers)).toEqual(["planejamento"])
+  })
+
+  it("com FIRECRAWL_API_KEY, acrescenta o firecrawl e não mexe no planejamento", () => {
+    const base = JSON.parse(montarMcpConfig(config, "tok")) as { mcpServers: Record<string, unknown> }
+    const com = JSON.parse(montarMcpConfig(config, "tok", { FIRECRAWL_API_KEY: "fc-123" })) as {
+      mcpServers: Record<string, unknown>
+    }
+    expect(com.mcpServers.planejamento).toEqual(base.mcpServers.planejamento)
+    expect(com.mcpServers.firecrawl).toEqual({ command: "firecrawl-mcp", args: [], env: { FIRECRAWL_API_KEY: "fc-123" } })
+  })
+
+  it("o turno só leva o firecrawl no MCP quando firecrawlNoMcp está ligado", async () => {
+    const chaveOriginal = process.env.FIRECRAWL_API_KEY
+    process.env.FIRECRAWL_API_KEY = "fc-turno"
+    try {
+      const servidoresDoTurno = async (cfg: ConfigTurnos, nome: string) => {
+        const executor = new FakeExecutor(roteiroSimples("ok"))
+        const t = new ServicoTurnos({ servico, executor, barramento, catalogo: catalogoReal(), config: cfg })
+        const slug = await servico.criarProspect(nome, null)
+        await t.iniciar(slug, "01")
+        await t.aguardarOcioso(slug)
+        return Object.keys((JSON.parse(executor.pedidos[0]!.mcpConfig) as { mcpServers: object }).mcpServers)
+      }
+      expect(await servidoresDoTurno(config, "Sem Firecrawl")).toEqual(["planejamento"])
+      expect(await servidoresDoTurno({ ...config, firecrawlNoMcp: true }, "Com Firecrawl")).toEqual(["planejamento", "firecrawl"])
+    } finally {
+      if (chaveOriginal === undefined) delete process.env.FIRECRAWL_API_KEY
+      else process.env.FIRECRAWL_API_KEY = chaveOriginal
+    }
+  })
 })
 
 describe("turnos", () => {

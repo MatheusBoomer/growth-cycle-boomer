@@ -129,6 +129,7 @@ export function servidor(): Servidor {
       caminhoServidorMcp: path.join(pastaMcp, "servidor.ts"),
       caminhoHook: path.join(pastaMcp, "hook-escrita.ts"),
       comandoNode: process.execPath,
+      firecrawlNoMcp: modoExecutor === "sdk",
     },
   })
   registro.__planejamento = { raiz, catalogo, armazenamento, barramento, servico, turnos, comentarios }

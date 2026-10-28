@@ -77,6 +77,34 @@ describe("AgentSdkExecutor", () => {
     expect(recebido?.options.env?.ANTHROPIC_API_KEY).toBe("chave-de-teste")
   })
 
+  it("o subprocesso do agente não recebe nenhuma chave SUPABASE_* nem segredo fora da lista", async () => {
+    const originais = { ...process.env }
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role"
+    process.env.SUPABASE_URL = "https://x.supabase.co"
+    process.env.PLANEJAMENTO_APP_URL = "https://app.exemplo.com"
+    process.env.DATABASE_URL = "postgres://x"
+    try {
+      let recebido: Parameters<ConsultaSdk>[0] | undefined
+      const exec = new AgentSdkExecutor({
+        consulta: (entrada) => {
+          recebido = entrada
+          return consultaCom(mensagens)(entrada)
+        },
+      })
+      await coletar(exec.executar(pedido(), new AbortController().signal))
+      const chaves = Object.keys(recebido?.options.env ?? {})
+      expect(chaves.filter((c) => c.startsWith("SUPABASE_"))).toEqual([])
+      expect(chaves).not.toContain("PLANEJAMENTO_APP_URL")
+      expect(chaves).not.toContain("DATABASE_URL")
+      expect(recebido?.options.env?.ANTHROPIC_API_KEY).toBe("chave-de-teste")
+    } finally {
+      for (const k of ["SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_URL", "PLANEJAMENTO_APP_URL", "DATABASE_URL"]) {
+        if (originais[k] === undefined) delete process.env[k]
+        else process.env[k] = originais[k]
+      }
+    }
+  })
+
   it("sem chave de API, falha antes de chamar o SDK com mensagem legível", async () => {
     delete process.env.ANTHROPIC_API_KEY
     let chamou = false
