@@ -45,6 +45,13 @@ describe("proxy no modo off", () => {
     expect(createServerClient).not.toHaveBeenCalled()
   })
 
+  it("/login no modo off segue passando pelo proxy, sem tocar no Supabase", async () => {
+    const r = await proxy(req("/login"))
+    expect(r.status).toBe(200)
+    expect(r.headers.get("x-middleware-next")).toBe("1")
+    expect(createServerClient).not.toHaveBeenCalled()
+  })
+
   it("não exige variáveis do Supabase no modo off", async () => {
     vi.stubEnv("SUPABASE_URL", "")
     vi.stubEnv("SUPABASE_PUBLISHABLE_KEY", "")
@@ -147,11 +154,92 @@ describe("proxy no modo google", () => {
   })
 
   it("rotas livres passam sem sessão e sem consultar o Supabase", async () => {
-    for (const caminho of ["/login", "/auth/entrar", "/auth/callback?code=x", "/api/interno/mcp"]) {
+    for (const caminho of ["/auth/entrar", "/auth/callback?code=x", "/api/interno/mcp"]) {
       const r = await proxy(req(caminho))
       expect(r.status).toBe(200)
     }
     expect(createServerClient).not.toHaveBeenCalled()
+  })
+
+  describe("/login", () => {
+    it("sem sessão passa (a página de login abre)", async () => {
+      getClaims.mockResolvedValue({ data: null, error: null })
+      const r = await proxy(req("/login?proximo=/prospects/a"))
+      expect(r.status).toBe(200)
+      expect(r.headers.get("x-middleware-next")).toBe("1")
+      expect(getClaims).toHaveBeenCalledTimes(1)
+    })
+
+    it("com sessão válida redireciona 307 para o proximo seguro", async () => {
+      getClaims.mockResolvedValue(SESSAO_BOA)
+      const r = await proxy(req(`/login?proximo=${encodeURIComponent("/prospects/a?x=1")}`))
+      expect(r.status).toBe(307)
+      const destino = new URL(r.headers.get("location")!)
+      expect(destino.origin).toBe("http://127.0.0.1:3000")
+      expect(destino.pathname + destino.search).toBe("/prospects/a?x=1")
+    })
+
+    it("com sessão válida e sem proximo vai para /", async () => {
+      getClaims.mockResolvedValue(SESSAO_BOA)
+      const r = await proxy(req("/login"))
+      expect(r.status).toBe(307)
+      expect(new URL(r.headers.get("location")!).pathname).toBe("/")
+    })
+
+    it("proximo inseguro vira /", async () => {
+      getClaims.mockResolvedValue(SESSAO_BOA)
+      for (const ruim of ["//evil.com", "https://evil.com", "/\\evil.com"]) {
+        const r = await proxy(req(`/login?proximo=${encodeURIComponent(ruim)}`))
+        expect(r.status).toBe(307)
+        const destino = new URL(r.headers.get("location")!)
+        expect(destino.origin, ruim).toBe("http://127.0.0.1:3000")
+        expect(destino.pathname, ruim).toBe("/")
+      }
+    })
+
+    it("proximo=/login não faz o redirecionamento girar: vai para /", async () => {
+      getClaims.mockResolvedValue(SESSAO_BOA)
+      const r = await proxy(req("/login?proximo=/login"))
+      expect(new URL(r.headers.get("location")!).pathname).toBe("/")
+    })
+
+    it("o redirecionamento usa o protocolo encaminhado e o host público", async () => {
+      getClaims.mockResolvedValue(SESSAO_BOA)
+      const r = await proxy(req("/login", { host: "planejamento.exemplo.com", headers: { "x-forwarded-proto": "https" } }))
+      expect(r.status).toBe(307)
+      expect(new URL(r.headers.get("location")!).origin).toBe("https://planejamento.exemplo.com")
+    })
+
+    it("leva junto os cookies renovados e os cabeçalhos de cache", async () => {
+      getClaims.mockResolvedValue(SESSAO_BOA)
+      aoConsultar = (opcoes) =>
+        opcoes.cookies.setAll([{ name: "sb-x-auth-token", value: "novo", options: { path: "/", httpOnly: true } }], {
+          "Cache-Control": "private, no-store",
+        })
+      const r = await proxy(req("/login"))
+      expect(r.status).toBe(307)
+      expect(r.cookies.get("sb-x-auth-token")?.value).toBe("novo")
+      expect(r.headers.get("cache-control")).toContain("no-store")
+    })
+
+    it("sessão de domínio de fora ou erro do getClaims conta como sem sessão e a tela de login abre", async () => {
+      getClaims.mockResolvedValueOnce({ data: { claims: { email: "x@gmail.com", app_metadata: { provider: "google" }, email_verified: true } }, error: null })
+      expect((await proxy(req("/login"))).status).toBe(200)
+      getClaims.mockRejectedValueOnce(new Error("rede"))
+      expect((await proxy(req("/login"))).status).toBe(200)
+    })
+
+    it("host de fora continua recusado, sem consultar o Supabase", async () => {
+      const r = await proxy(req("/login", { host: "evil.com" }))
+      expect(r.status).toBe(403)
+      expect(createServerClient).not.toHaveBeenCalled()
+    })
+
+    it("outras rotas livres (/auth/*) não consultam o Supabase", async () => {
+      const r = await proxy(req("/auth/entrar"))
+      expect(r.status).toBe(200)
+      expect(createServerClient).not.toHaveBeenCalled()
+    })
   })
 
   it("/api/interno pelo host público é recusado", async () => {

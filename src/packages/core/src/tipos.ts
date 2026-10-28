@@ -98,6 +98,8 @@ export interface EstadoInsumo {
 export interface ItemFila {
   etapa: EtapaId
   texto: string
+  /** E-mail de quem provocou o item; ausente quando não houve login ou o item nasceu sem autor. */
+  autor?: string | null
 }
 
 export interface OpcaoPergunta {

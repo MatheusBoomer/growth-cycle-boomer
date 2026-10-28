@@ -151,7 +151,7 @@ export class ServicoTurnos {
     return this.ativos.get(slug)?.etapa ?? null
   }
 
-  /** E-mail de quem está com o turno ativo; null sem turno, sem login ou no turno que a fila disparou. */
+  /** E-mail de quem está com o turno ativo; null sem turno, sem login ou quando o item da fila não tinha autor. */
   ativoPor(slug: string): string | null {
     return this.ativos.get(slug)?.autor ?? null
   }
@@ -239,13 +239,13 @@ export class ServicoTurnos {
       this.liberar(slug, controle)
       return
     }
-    const { etapa, texto } = item
-    // A fila não guarda quem provocou cada item: o turno de acompanhamento nasce sem autor.
-    this.ativos.set(slug, { etapa, controle, autor: null })
+    const { etapa, texto, autor } = item
+    // O turno de acompanhamento é de quem provocou o item (aprovou, pediu ajuste, enviou o insumo).
+    this.ativos.set(slug, { etapa, controle, autor })
     await this.comReserva(slug, controle, () =>
-      this.registrar(slug, etapa, { tipo: "mensagem_analista", texto, automatica: true, em: this.agora() }),
+      this.registrar(slug, etapa, { tipo: "mensagem_analista", texto, automatica: true, ...(autor ? { autor } : {}), em: this.agora() }),
     )
-    this.emSegundoPlano(slug, etapa, texto, controle)
+    this.emSegundoPlano(slug, etapa, texto, controle, autor)
   }
 
   /** Para testes e para o desligamento: espera o turno atual e os que a fila disparar. */

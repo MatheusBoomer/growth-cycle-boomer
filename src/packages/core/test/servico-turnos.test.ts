@@ -582,7 +582,7 @@ describe("autoria dos turnos", () => {
     expect(arm.usos.map((u) => u.autor)).toEqual([ANA])
   })
 
-  it("a vaga ativa guarda o autor e o turno da fila que vem depois não herda nenhum", async () => {
+  it("a vaga ativa guarda o autor do turno do analista e volta a null no fim", async () => {
     const { arm, svc, t } = montar()
     const slug = await svc.criarProspect("Iszi", null)
     await t.iniciar(slug, "01")
@@ -592,10 +592,35 @@ describe("autoria dos turnos", () => {
     expect(t.ativoPor(slug)).toBe(ANA)
     await t.aguardarOcioso(slug)
     expect(t.ativoPor(slug)).toBeNull()
-    // item da fila automática: turno disparado sem autor
+    expect(arm.usos.map((u) => u.autor)).toEqual([ANA])
+  })
+
+  it("o turno disparado pela fila grava o autor do item em uso_turnos e no evento automático", async () => {
+    const { arm, svc, t } = montar()
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    arm.usos.length = 0
+    await svc.enfileirar(slug, "01", "continue", ANA)
+    await t.aguardarOcioso(slug)
+    expect(arm.usos.map((u) => u.autor)).toEqual([ANA])
+    const automatica = (await svc.conversa(slug, "01")).filter((e) => e.tipo === "mensagem_analista" && e.automatica)
+    expect(automatica).toHaveLength(1)
+    expect(automatica[0]).toMatchObject({ texto: "continue", automatica: true, autor: ANA })
+  })
+
+  it("item da fila sem autor: uso_turnos com null e o evento automático sem a chave autor", async () => {
+    const { arm, svc, t } = montar()
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    arm.usos.length = 0
     await svc.enfileirar(slug, "01", "continue")
     await t.aguardarOcioso(slug)
-    expect(arm.usos.map((u) => u.autor)).toEqual([ANA, null])
+    expect(arm.usos.map((u) => u.autor)).toEqual([null])
+    const automatica = (await svc.conversa(slug, "01")).find((e) => e.tipo === "mensagem_analista" && e.automatica)
+    expect(automatica).toBeDefined()
+    expect(automatica).not.toHaveProperty("autor")
   })
 
   describe("aviso de quem está com o agente rodando", () => {
@@ -666,7 +691,28 @@ describe("autoria dos turnos", () => {
       expect(t.ativoPor(slug)).toBeNull()
     })
 
-    it("o turno da fila que vem depois não tem autor: ativoPor volta null e a recusa usa a mensagem de sempre", async () => {
+    it("o turno da fila leva o autor do item: ativoPor o devolve e a recusa cita o nome", async () => {
+      let rodadas = 0
+      const { t } = turnos(async function* (_p, sinal) {
+        rodadas++
+        yield { tipo: "sessao", sessionId: "s" }
+        if (rodadas === 2 && !sinal.aborted) await new Promise<void>((r) => sinal.addEventListener("abort", () => r(), { once: true }))
+        yield { tipo: "fim", ok: true, erro: null, sessionId: "s" }
+      })
+      const slug = await servico.criarProspect("Iszi", null)
+      await t.iniciar(slug, "01", "ana.silva@boomer.com.br")
+      await t.aguardarOcioso(slug)
+      await servico.enfileirar(slug, "01", "continue", "ana.silva@boomer.com.br")
+      // o disparo da fila é assíncrono: espera o turno começar
+      while (t.ativo(slug) !== "01" || rodadas < 2) await new Promise((r) => setTimeout(r, 5))
+      expect(t.ativoPor(slug)).toBe("ana.silva@boomer.com.br")
+      const erro = await t.enviarMensagem(slug, "01", "oi", BIA).catch((e) => e)
+      expect(erro.message).toBe("Ana Silva está com o agente rodando nesta etapa.")
+      t.parar(slug)
+      await t.aguardarOcioso(slug)
+    })
+
+    it("o turno da fila sem autor no item: ativoPor é null e a recusa usa a mensagem de sempre", async () => {
       let rodadas = 0
       const { t } = turnos(async function* (_p, sinal) {
         rodadas++
@@ -678,7 +724,6 @@ describe("autoria dos turnos", () => {
       await t.iniciar(slug, "01", "ana.silva@boomer.com.br")
       await t.aguardarOcioso(slug)
       await servico.enfileirar(slug, "01", "continue")
-      // o disparo da fila é assíncrono: espera o turno começar
       while (t.ativo(slug) !== "01" || rodadas < 2) await new Promise((r) => setTimeout(r, 5))
       expect(t.ativoPor(slug)).toBeNull()
       const erro = await t.enviarMensagem(slug, "01", "oi", BIA).catch((e) => e)
