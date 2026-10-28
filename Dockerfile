@@ -37,7 +37,7 @@ RUN python3 -m venv /opt/venv \
  && rm /tmp/requirements.txt
 
 # ---------------------------------------------------------------- MCP do Firecrawl (pesquisa web do agente)
-RUN npm install -g --no-fund --no-audit firecrawl-mcp@3.36.0 \
+RUN npm install -g --no-fund --no-audit firecrawl-mcp@3.29.1 \
  && npm cache clean --force
 
 # ---------------------------------------------------------------- dependências Node
