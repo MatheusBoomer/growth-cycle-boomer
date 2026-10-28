@@ -63,7 +63,7 @@ Hoje o app só roda no Mac de quem desenvolve. Ao fim da Fase C, ele roda num se
 3. Se o prazo estoura, aborta os turnos que sobraram (viram "interrompido"), sincroniza e sai.
 4. Fecha o servidor HTTP e termina com código 0.
 
-O provedor precisa esperar o mesmo tempo entre o `SIGTERM` e o `SIGKILL` (na Railway, `RAILWAY_DEPLOYMENT_DRAINING_SECONDS=300`). Com volume, não existem duas instâncias ao mesmo tempo: o app fica fora do ar por alguns instantes a cada atualização.
+O provedor precisa esperar MAIS que a drenagem entre o `SIGTERM` e o `SIGKILL`: o turno abortado no prazo ainda precisa registrar `turno_fim` e sincronizar. Regra: drenagem mais uma margem de 60 s para abortar e sincronizar é menor ou igual à espera do provedor (na Railway, `RAILWAY_DEPLOYMENT_DRAINING_SECONDS=360` com a drenagem padrão de 300 s). Com volume, não existem duas instâncias ao mesmo tempo: o app fica fora do ar por alguns instantes a cada atualização.
 
 ### 4.3 Ajustes de interface e de API para a nuvem
 

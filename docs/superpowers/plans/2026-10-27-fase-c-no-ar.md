@@ -317,7 +317,7 @@ Pronto quando os seis passos se confirmam (critérios (b) a (d) do spec, no cont
 ### Task 8: Deploy no provedor e aceitação pelo endereço público (depende da Task 0)
 
 - [ ] **Step 1:** Criar o projeto, o serviço (build a partir do `Dockerfile` do repositório, na `main`) e o volume montado em `/data`.
-- [ ] **Step 2:** Variáveis do painel: segredos da seção 3 do spec; `PLANEJAMENTO_APP_URL` com o endereço público gratuito que o provedor gerar; espera de desligamento do provedor igual à drenagem (na Railway, `RAILWAY_DEPLOYMENT_DRAINING_SECONDS=300`); verificação de saúde em `/api/saude`; uma réplica só.
+- [ ] **Step 2:** Variáveis do painel: segredos da seção 3 do spec; `PLANEJAMENTO_APP_URL` com o endereço público gratuito que o provedor gerar; espera de desligamento do provedor MAIOR que a drenagem em pelo menos 60 s, para o turno abortado no prazo ainda registrar o fim e sincronizar (na Railway, `RAILWAY_DEPLOYMENT_DRAINING_SECONDS=360` com a drenagem padrão de 300 s); verificação de saúde em `/api/saude`; uma réplica só.
 - [ ] **Step 3:** No Google Cloud e no Supabase, acrescentar o endereço público às listas de URLs de retorno (`https://<endereço>/auth/callback`, exato, sem curinga). Não mudar a "Site URL".
 - [ ] **Step 4:** Repetir o roteiro da Task 7 pelo endereço público, mais: conferir que `Host` e `x-forwarded-*` do provedor passam na regra de acesso (a falha é fechada, 403) e que um segundo analista vê o aviso de turno ativo.
 - [ ] **Step 5:** Limite de gasto da Anthropic conferido (Task 0, passo 2).
