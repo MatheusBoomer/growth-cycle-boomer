@@ -11,6 +11,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@workspace/ui/components/dropdown-menu"
 import { Progress } from "@workspace/ui/components/progress"
+import { useAmbiente } from "@/components/marca/conta-contexto"
 import { api, mensagemDeErro } from "@/lib/api"
 import { DialogoExcluirProspect } from "./dialogo-excluir-prospect"
 
@@ -21,6 +22,7 @@ function quando(iso: string): string {
 
 export function CardProspect({ prospect: p }: { prospect: ResumoProspect }) {
   const router = useRouter()
+  const { nuvem } = useAmbiente()
   const [excluindo, setExcluindo] = useState(false)
   const concluido = p.etapaAtual === null
 
@@ -41,9 +43,11 @@ export function CardProspect({ prospect: p }: { prospect: ResumoProspect }) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => router.push(`/prospects/${p.slug}`)}>Abrir</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => api.abrirPasta(p.slug).catch((e) => toast.error(mensagemDeErro(e)))}>
-                Abrir pasta no Finder
-              </DropdownMenuItem>
+              {!nuvem && (
+                <DropdownMenuItem onClick={() => api.abrirPasta(p.slug).catch((e) => toast.error(mensagemDeErro(e)))}>
+                  Abrir pasta no Finder
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onClick={() => setExcluindo(true)}>
                 Excluir…

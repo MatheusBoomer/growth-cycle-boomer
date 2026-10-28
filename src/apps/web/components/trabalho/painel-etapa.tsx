@@ -20,6 +20,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
 import { CardInsumo } from "@/components/cards/card-insumo"
+import { useAmbiente } from "@/components/marca/conta-contexto"
 import { api, mensagemDeErro, urlArquivo, type AcaoEtapa } from "@/lib/api"
 import { celebrarEtapaConcluida } from "@/lib/confete"
 import { useVisualizador } from "./contexto-visualizador"
@@ -32,6 +33,7 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
   const entregaveis = dados.estado.entregaveis.filter((e) => e.etapa === etapa && e.status !== "substituido")
   const condicoes = dados.condicoes[etapa]
   const [ocupado, setOcupado] = useState<AcaoEtapa | null>(null)
+  const { nuvem } = useAmbiente()
   const { abrir, abrirArquivo } = useVisualizador()
   const final = apresentacaoFinal(dados.estado.entregaveis.filter((e) => e.etapa === etapa))
 
@@ -72,13 +74,15 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
               >
                 <DownloadIcon /> Baixar .pptx
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => void api.mostrarNoFinder(slug, final.caminho).catch((e) => toast.error(mensagemDeErro(e)))}
-              >
-                <FolderOpenIcon /> Mostrar no Finder
-              </Button>
+              {!nuvem && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => void api.mostrarNoFinder(slug, final.caminho).catch((e) => toast.error(mensagemDeErro(e)))}
+                >
+                  <FolderOpenIcon /> Mostrar no Finder
+                </Button>
+              )}
             </div>
           </section>
         )}

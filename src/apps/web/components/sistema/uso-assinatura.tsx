@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import type { UsoAssinatura } from "@workspace/core/uso-assinatura"
 import { cn } from "@workspace/ui/lib/utils"
+import { useAmbiente } from "@/components/marca/conta-contexto"
 import { resumoUso } from "@/lib/uso"
 
 const COR = { ok: "bg-volume", alerta: "bg-aviso", critico: "bg-destructive" } as const
@@ -12,10 +13,15 @@ const COR = { ok: "bg-volume", alerta: "bg-aviso", critico: "bg-destructive" } a
  * Claude a cada resposta do agente; entre uma resposta e outra, mostra o último conhecido.
  */
 export function UsoAssinaturaBarra() {
+  // Só o executor cli usa a assinatura; com a chave da API (sdk) ou no demo não há consumo de assinatura para mostrar.
+  const { executor } = useAmbiente()
   const [uso, setUso] = useState<UsoAssinatura | null | undefined>(undefined)
   const [agora, setAgora] = useState(() => Date.now())
 
+  const comAssinatura = executor === "cli"
+
   useEffect(() => {
+    if (!comAssinatura) return
     let ativo = true
     const carregar = () =>
       void fetch("/api/uso", { cache: "no-store" })
@@ -34,9 +40,9 @@ export function UsoAssinaturaBarra() {
       window.clearInterval(id)
       window.removeEventListener("focus", carregar)
     }
-  }, [])
+  }, [comAssinatura])
 
-  if (uso === undefined) return null
+  if (!comAssinatura || uso === undefined) return null
   const linhas = resumoUso(uso, agora)
   const atualizado = uso ? new Date(uso.atualizadoEm).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : null
 

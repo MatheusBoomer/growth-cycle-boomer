@@ -20,6 +20,10 @@ interface Sistema {
   ffmpeg: boolean
   apify: boolean
   previa: boolean
+  /** Ausentes numa resposta antiga: valem como modo local (cli). */
+  executor?: "sdk" | "cli" | "demo"
+  chaveApi?: boolean
+  nuvem?: boolean
 }
 
 export function VerificacaoSistema() {
@@ -46,11 +50,16 @@ export function VerificacaoSistema() {
   }, [noLogin, verificar])
 
   if (noLogin || !sistema) return null
-  const bloqueado = !sistema.claude.instalado || !sistema.claude.logado || !sistema.python.ok
-  const cobrado = sistema.claude.logado && sistema.claude.metodo !== "claude.ai"
+  const nuvem = sistema.nuvem === true
+  const comChaveDaApi = sistema.executor === "sdk"
+  const semChave = comChaveDaApi && sistema.chaveApi !== true
+  // No executor sdk não há Claude Code a instalar: só a chave da API e o Python do servidor contam.
+  const bloqueado = comChaveDaApi ? semChave || !sistema.python.ok : !sistema.claude.instalado || !sistema.claude.logado || !sistema.python.ok
+  const cobrado = !comChaveDaApi && sistema.claude.logado && sistema.claude.metodo !== "claude.ai"
   const faltasBenchmark = [
-    !sistema.ffmpeg && "instale o ffmpeg (brew install ffmpeg)",
-    !sistema.apify && "coloque o APIFY_TOKEN no arquivo .env da raiz do projeto (modelo em .env.example)",
+    !sistema.ffmpeg && (nuvem ? "o ffmpeg precisa ser configurado no servidor" : "instale o ffmpeg (brew install ffmpeg)"),
+    !sistema.apify &&
+      (nuvem ? "o APIFY_TOKEN precisa ser configurado no servidor" : "coloque o APIFY_TOKEN no arquivo .env da raiz do projeto (modelo em .env.example)"),
   ].filter(Boolean) as string[]
   const semPrevia = !sistema.previa
 
@@ -60,22 +69,33 @@ export function VerificacaoSistema() {
         <DialogContent showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>Falta configurar esta máquina</DialogTitle>
-            <DialogDescription>O agente roda pelo Claude Code instalado aqui. Resolva os itens abaixo e verifique de novo.</DialogDescription>
+            <DialogDescription>
+              {comChaveDaApi
+                ? "O agente roda pela API da Anthropic, a partir do servidor. Resolva os itens abaixo e verifique de novo."
+                : "O agente roda pelo Claude Code instalado aqui. Resolva os itens abaixo e verifique de novo."}
+            </DialogDescription>
           </DialogHeader>
           <ol className="list-decimal space-y-2 pl-5 text-sm">
-            {!sistema.claude.instalado && (
+            {semChave && <li>Falta a chave da API do agente (ANTHROPIC_API_KEY).</li>}
+            {!comChaveDaApi && !sistema.claude.instalado && (
               <li>
                 Instale o Claude Code (<a className="underline" href="https://docs.claude.com/en/docs/claude-code/setup" target="_blank" rel="noreferrer">guia de instalação</a>).
               </li>
             )}
-            {sistema.claude.instalado && !sistema.claude.logado && (
+            {!comChaveDaApi && sistema.claude.instalado && !sistema.claude.logado && (
               <li>
                 No terminal, rode <code className="font-mono">claude auth login</code> e entre com a conta da Boomer.
               </li>
             )}
             {!sistema.python.ok && (
               <li>
-                Instale o Python 3 e rode <code className="font-mono">pip3 install openpyxl pandas matplotlib</code>.
+                {nuvem ? (
+                  "O Python 3 com openpyxl, pandas e matplotlib precisa estar disponível no servidor."
+                ) : (
+                  <>
+                    Instale o Python 3 e rode <code className="font-mono">pip3 install openpyxl pandas matplotlib</code>.
+                  </>
+                )}
               </li>
             )}
           </ol>
@@ -105,7 +125,9 @@ export function VerificacaoSistema() {
           {semPrevia && (
             <Alert className="bg-popover text-popover-foreground shadow-(--sombra-card)">
               <AlertDescription>
-                Para ver a prévia da apresentação no app, instale LibreOffice e poppler (brew install --cask libreoffice; brew install poppler). O download do .pptx funciona normalmente.
+                {nuvem
+                  ? "A prévia da apresentação no app precisa de LibreOffice e poppler configurados no servidor. O download do .pptx funciona normalmente."
+                  : "Para ver a prévia da apresentação no app, instale LibreOffice e poppler (brew install --cask libreoffice; brew install poppler). O download do .pptx funciona normalmente."}
               </AlertDescription>
             </Alert>
           )}
