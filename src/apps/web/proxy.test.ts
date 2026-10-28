@@ -153,6 +153,22 @@ describe("proxy no modo google", () => {
     expect((await proxy(req("/", { host: "planejamento.exemplo.com" }))).status).toBe(403)
   })
 
+  it("/api/saude passa sem sessão, em qualquer host, e sem consultar o Supabase (só GET e HEAD)", async () => {
+    for (const host of ["healthcheck.railway.app", "127.0.0.1:3000", "evil.com"]) {
+      for (const metodo of ["GET", "HEAD"]) {
+        const r = await proxy(req("/api/saude", { host, metodo }))
+        expect(r.status, `${host} ${metodo}`).toBe(200)
+        expect(r.headers.get("x-middleware-next")).toBe("1")
+      }
+    }
+    expect((await proxy(req("/api/saude", { host: "evil.com", metodo: "POST" }))).status).toBe(403)
+    expect((await proxy(req("/api/saude/x", { host: "evil.com" }))).status).toBe(403)
+    expect(createServerClient).not.toHaveBeenCalled()
+    // Caminho parecido segue a regra normal (consulta a sessão e, sem ela, 401).
+    getClaims.mockResolvedValue({ data: null, error: null })
+    expect((await proxy(req("/api/saudex"))).status).toBe(401)
+  })
+
   it("rotas livres passam sem sessão e sem consultar o Supabase", async () => {
     for (const caminho of ["/auth/entrar", "/auth/callback?code=x", "/api/interno/mcp"]) {
       const r = await proxy(req(caminho))
@@ -296,7 +312,7 @@ describe("matcher do proxy", () => {
   const re = new RegExp(`^${padrao.replace(/^\/\(/, "/(")}$`)
 
   it("cobre páginas e APIs", () => {
-    for (const caminho of ["/", "/login", "/prospects/a", "/api/prospects", "/api/interno/x", "/auth/callback", "/api/grafico.png"]) {
+    for (const caminho of ["/", "/login", "/prospects/a", "/api/prospects", "/api/interno/x", "/auth/callback", "/api/grafico.png", "/api/saude"]) {
       expect(re.test(caminho), caminho).toBe(true)
     }
   })

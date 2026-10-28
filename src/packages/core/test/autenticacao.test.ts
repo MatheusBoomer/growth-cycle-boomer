@@ -277,6 +277,51 @@ describe("decidirAcesso, modo google", () => {
   })
 })
 
+describe("decidirAcesso, rota de saúde (/api/saude)", () => {
+  const hosts = ["healthcheck.railway.app", "127.0.0.1:3000", "evil.example.com"]
+  const modos = ["off", "google"] as const
+
+  it("GET e HEAD passam para qualquer host e qualquer modo, sem sessão", () => {
+    for (const modo of modos) {
+      for (const host of hosts) {
+        for (const metodo of ["GET", "HEAD"]) {
+          const e = entrada({ modo, host, metodo, caminho: "/api/saude", hostPublico: modo === "google" ? publico : null })
+          expect(decidirAcesso(e), `${modo} ${host} ${metodo}`).toEqual({ tipo: "passar" })
+        }
+      }
+    }
+  })
+
+  it("passa também sem Host e com query", () => {
+    expect(decidirAcesso(entrada({ host: null, caminho: "/api/saude" }))).toEqual({ tipo: "passar" })
+    expect(decidirAcesso(entrada({ modo: "off", hostPublico: null, host: null, caminho: "/api/saude?x=1" }))).toEqual({ tipo: "passar" })
+  })
+
+  it("outro método é recusado, em qualquer host e modo", () => {
+    for (const modo of modos) {
+      for (const host of hosts) {
+        for (const metodo of ["POST", "DELETE", "PUT", "PATCH", "OPTIONS"]) {
+          const e = entrada({ modo, host, metodo, caminho: "/api/saude", hostPublico: modo === "google" ? publico : null, autenticado: true })
+          expect(decidirAcesso(e), `${modo} ${host} ${metodo}`).toEqual({ tipo: "recusar" })
+        }
+      }
+    }
+  })
+
+  it("caminhos parecidos seguem a regra normal: host de fora é recusado, sem sessão é nao_autenticado", () => {
+    for (const caminho of ["/api/saude/x", "/api/saudex", "/API/saude", "/api/saude/../prospects", "/api/saude/", "/api/saude%2f", "/x/api/saude"]) {
+      expect(decidirAcesso(entrada({ caminho, host: "evil.example.com" })), caminho).toEqual({ tipo: "recusar" })
+      expect(decidirAcesso(entrada({ caminho, host: "evil.example.com", modo: "off", hostPublico: null })), caminho).toEqual({ tipo: "recusar" })
+    }
+    for (const caminho of ["/api/saude/x", "/api/saudex", "/api/saude/../prospects", "/api/saude/", "/api/saude%2f"]) {
+      expect(decidirAcesso(entrada({ caminho })), caminho).toEqual({ tipo: "nao_autenticado" })
+    }
+    expect(decidirAcesso(entrada({ caminho: "/API/saude" }))).toEqual({ tipo: "login", proximo: "/API/saude" })
+    expect(decidirAcesso(entrada({ caminho: "/x/api/saude" }))).toEqual({ tipo: "login", proximo: "/x/api/saude" })
+    expect(decidirAcesso(entrada({ caminho: "/api/saudex", autenticado: true }))).toEqual({ tipo: "passar" })
+  })
+})
+
 describe("origemDeEscritaPermitida", () => {
   const base = { metodo: "POST", host: publico, origin: null, secFetchSite: null }
   it("leitura sempre passa; escrita só da mesma origem ou sem Origin", () => {

@@ -35,6 +35,7 @@ const PASTA_APP = path.resolve(import.meta.dirname, "..")
  * (o teste abaixo falha se uma sumir), para a lista não apodrecer.
  *   - `api/interno/ferramentas/route.ts`: protegida pelo token do turno (`ServicoTurnos.contextoDoToken`), chamada só pelo servidor MCP.
  *   - `api/dev/**`: ferramenta de comentários do modo dev, só responde em `next dev` (404 em produção).
+ *   - `api/saude/route.ts`: verificação de saúde do provedor, livre para qualquer host, sem dado nenhum (só `{ ok: true }`).
  *   - `auth/**`: o próprio fluxo de login (entrar, callback, sair), que existe para quem ainda não tem sessão.
  */
 const ISENTAS = [
@@ -42,6 +43,7 @@ const ISENTAS = [
   "api/dev/comentarios/route.ts",
   "api/dev/comentarios/[id]/route.ts",
   "api/dev/comentarios/[id]/imagem/route.ts",
+  "api/saude/route.ts",
   "auth/entrar/route.ts",
   "auth/callback/route.ts",
   "auth/sair/route.ts",
@@ -87,6 +89,11 @@ describe("varredura de app: toda rota exige usuário", () => {
 
   it("as isentas não chamam exigirUsuario (a lista não esconde rota que já autentica)", () => {
     expect(ISENTAS.filter((r) => ler(r).includes("exigirUsuario"))).toEqual([])
+  })
+
+  it("a rota de saúde não toca em sessão nem em dados (nem importa servidor ou sessao)", () => {
+    const fonte = ler("api/saude/route.ts")
+    expect(fonte).not.toMatch(/exigirUsuario|servidor|@\/lib\/sessao/)
   })
 })
 
