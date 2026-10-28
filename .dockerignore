@@ -1,0 +1,37 @@
+# Contexto do build da imagem do servidor. Nada de segredo, dado de prospect nem estado local.
+
+# Segredos e ambiente (todas as variações, inclusive o modelo)
+.env*
+**/.env*
+*.pem
+
+# Dados de prospects: só o _template e as fixtures (fictícias) entram
+clientes/*
+!clientes/_template
+!clientes/_fixtures
+**/.app
+
+# Git, rascunhos e ferramentas locais
+.git
+.gitignore
+.superpowers
+.claude/worktrees
+.dev-comentarios
+/.app
+.mcp.json
+docs
+supabase
+.pytest_cache
+**/__pycache__
+**/*.pyc
+**/.DS_Store
+
+# Dependências e builds (instalados e compilados dentro da imagem)
+node_modules
+**/node_modules
+.next
+**/.next
+.turbo
+**/.turbo
+**/*.tsbuildinfo
+**/next-env.d.ts
