@@ -145,13 +145,15 @@ import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 plt.plot([1, 2, 3]); plt.savefig("grafico.png")
 PY
+  # Cada arquivo vai para a própria pasta de saída: um PDF nunca sobrescreve o outro.
   for f in teste.pptx teste.xlsx; do
-    timeout 180 soffice -env:UserInstallation=file://$d/perfil --headless --convert-to pdf --outdir "$d" "$f" >/dev/null 2>&1
+    n="${f%.*}"
+    mkdir -p "$d/pdf-$n"
+    timeout 180 soffice -env:UserInstallation=file://$d/perfil --headless --convert-to pdf --outdir "$d/pdf-$n" "$f" >/dev/null 2>&1
+    test -s "$d/pdf-$n/$n.pdf"
+    pdftoppm -png -r 50 "$d/pdf-$n/$n.pdf" "$d/png-$n"
+    ls "$d"/png-"$n"*.png >/dev/null
   done
-  test -s teste.pdf
-  pdftoppm -png -r 50 teste.pdf slide
-  pdftoppm -png -r 50 teste.pdf planilha 2>/dev/null || true
-  ls slide*.png >/dev/null
   test -s grafico.png
   rm -rf "$d"
 ' >"$TMP_LOCAL/office.log" 2>&1; then
@@ -192,7 +194,7 @@ done
 # firecrawl-mcp pode ficar esperando o stdin: roda com timeout e confere a versão pelo npm.
 VERSAO_FC="$(no_conteiner 'npm ls -g --depth=0 firecrawl-mcp 2>/dev/null' | grep -o 'firecrawl-mcp@[0-9][^ ]*' || true)"
 no_conteiner 'timeout 10 firecrawl-mcp --help </dev/null' >/dev/null 2>&1; rc_fc=$?
-if no_conteiner 'command -v firecrawl-mcp' >/dev/null 2>&1 && [ -n "$VERSAO_FC" ] && { [ "$rc_fc" = "0" ] || [ "$rc_fc" = "124" ] || [ "$rc_fc" = "1" ]; }; then
+if no_conteiner 'command -v firecrawl-mcp' >/dev/null 2>&1 && [ -n "$VERSAO_FC" ] && { [ "$rc_fc" = "0" ] || [ "$rc_fc" = "124" ]; }; then
   ok "firecrawl-mcp no PATH ($VERSAO_FC, --help saiu com $rc_fc)"
 else
   falha "firecrawl-mcp (versão='$VERSAO_FC', --help=$rc_fc)"
@@ -290,15 +292,19 @@ else
 fi
 
 # ---------------------------------------------------------------- 6. desligamento
+# `docker logs` guarda a saída entre reinícios: a linha de desligamento da parada da verificação 4
+# ainda está lá. Só vale o que nasceu depois desta parada, então conta antes e depois.
+antes="$(docker logs "$NOME" 2>&1 | grep -c "desligamento")"
 inicio=$(date +%s)
 docker stop -t 30 "$NOME" >/dev/null
 duracao=$(($(date +%s) - inicio))
 codigo="$(docker inspect -f '{{.State.ExitCode}}' "$NOME")"
-if [ "$codigo" = "0" ] && [ "$duracao" -lt 15 ] && docker logs "$NOME" 2>&1 | grep -q "desligamento"; then
+depois="$(docker logs "$NOME" 2>&1 | grep -c "desligamento")"
+if [ "$codigo" = "0" ] && [ "$duracao" -lt 15 ] && [ "$depois" -gt "$antes" ]; then
   ok "docker stop -t 30 ocioso: código 0 em ${duracao}s e log com a linha de desligamento"
 else
   docker logs --tail 20 "$NOME" 2>&1
-  falha "desligamento (código=$codigo, ${duracao}s)"
+  falha "desligamento (código=$codigo, ${duracao}s, linhas de desligamento $antes -> $depois)"
 fi
 
 encerrar
