@@ -2,7 +2,7 @@
  * Roda uma vez quando o servidor do Next sobe, e termina antes da primeira requisição (inclusive a do proxy).
  * Carrega o .env da raiz e confere a configuração do login: um valor inválido derruba a subida, em vez de
  * aparecer só na primeira requisição. Os avisos nunca imprimem URL, chave nem valor de variável.
- * Com NEXT_MANUAL_SIG_HANDLE=true (imagem da nuvem), o Next não trata SIGTERM e SIGINT e o app instala o
+ * Com NEXT_MANUAL_SIG_HANDLE não vazio (imagem da nuvem usa true), o Next não trata SIGTERM e SIGINT e o app instala o
  * desligamento seguro (lib/desligamento.ts). Sem ela (next dev, uso local), nada muda.
  */
 
@@ -13,8 +13,9 @@ const AVISO_URL_PUBLICA =
 export async function register(): Promise<void> {
   // O ambiente da raiz e as regras do login só existem no servidor Node (o proxy do Next 16 também roda nele).
   if (process.env.NEXT_RUNTIME !== "nodejs") return
-  // Lido antes do .env da raiz: o Next decide se trata os sinais só pelo ambiente do processo.
-  const sinaisManuais = process.env.NEXT_MANUAL_SIG_HANDLE === "true"
+  // Lido antes do .env da raiz: o Next decide se trata os sinais só pelo ambiente do processo, e desliga o
+  // tratamento dele para qualquer valor não vazio (não só "true"). A mesma leitura aqui evita ficar sem os dois.
+  const sinaisManuais = Boolean(process.env.NEXT_MANUAL_SIG_HANDLE)
   const { carregarAmbiente } = await import("./lib/ambiente")
   carregarAmbiente()
   if (sinaisManuais) {

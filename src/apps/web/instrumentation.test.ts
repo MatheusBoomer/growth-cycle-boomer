@@ -99,11 +99,20 @@ describe("instrumentation register()", () => {
       expect(instalarDesligamento).toHaveBeenCalledTimes(1)
     })
 
-    it("sem a variável (ou com outro valor), não instala: o Next trata os sinais", async () => {
-      for (const valor of ["", "false"]) {
+    it("com qualquer valor não vazio (true, 1), instala: o Next também desliga o tratamento dele", async () => {
+      for (const valor of ["true", "1"]) {
+        instalarDesligamento.mockClear()
         vi.stubEnv("NEXT_MANUAL_SIG_HANDLE", valor)
         await register()
+        expect(instalarDesligamento).toHaveBeenCalledTimes(1)
       }
+    })
+
+    it("vazia ou ausente, não instala: o Next trata os sinais", async () => {
+      vi.stubEnv("NEXT_MANUAL_SIG_HANDLE", "")
+      await register()
+      vi.stubEnv("NEXT_MANUAL_SIG_HANDLE", undefined)
+      await register()
       expect(instalarDesligamento).not.toHaveBeenCalled()
     })
 
