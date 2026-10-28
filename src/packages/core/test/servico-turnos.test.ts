@@ -1,9 +1,9 @@
 import { mkdir, writeFile } from "node:fs/promises"
 import path from "node:path"
-import { beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { FsArmazenamento } from "../src/armazenamento"
 import { Barramento } from "../src/barramento"
-import { ErroTurnoAtivo } from "../src/erros"
+import { ErroReiniciando, ErroTurnoAtivo } from "../src/erros"
 import { FakeExecutor, roteiroSimples, type Roteiro } from "../src/executor/fake"
 import type { PedidoTurno } from "../src/executor/tipos"
 import type { MemoriaDeSessao } from "../src/nuvem/memoria-sessao"
@@ -731,5 +731,182 @@ describe("autoria dos turnos", () => {
       t.parar(slug)
       await t.aguardarOcioso(slug)
     })
+  })
+})
+
+describe("desligamento: drenar os turnos", () => {
+  const REINICIANDO = "O servidor está reiniciando. Tente de novo em instantes."
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  /** Portão que o teste abre quando quer que o agente termine a resposta. */
+  function portao() {
+    let abrir: () => void = () => {}
+    const aberto = new Promise<void>((r) => (abrir = r))
+    return { aberto, abrir: () => abrir() }
+  }
+
+  /** Turnos sobre um armazenamento que registra cada sincronização em `log`. */
+  function comLog(roteiro: Roteiro) {
+    const log: string[] = []
+    class ArmEspiao extends FsArmazenamento {
+      override async sincronizar(_slug: string): Promise<void> {
+        log.push("sincronizar")
+      }
+    }
+    const svc = new ServicoPlanejamento({
+      armazenamento: new ArmEspiao(raiz, async () => {}),
+      catalogo: catalogoReal(),
+      barramento,
+      validar: async () => ({ ok: true, problemas: [], avisos: [], resumo: null }),
+    })
+    const executor = new FakeExecutor(async function* (pedido, sinal) {
+      log.push("executor")
+      yield* roteiro(pedido, sinal)
+      log.push("executor fim")
+    })
+    const t = new ServicoTurnos({ servico: svc, executor, barramento, catalogo: catalogoReal(), config })
+    return { t, svc, executor, log }
+  }
+
+  /** Responde só depois de o portão abrir. */
+  const roteiroComPortao = (p: { aberto: Promise<void> }): Roteiro =>
+    async function* () {
+      yield { tipo: "sessao", sessionId: "s" }
+      await p.aberto
+      yield { tipo: "texto", texto: "pronto" }
+      yield { tipo: "fim", ok: true, erro: null, sessionId: "s" }
+    }
+
+  /** Só termina quando o turno é abortado (mesmo contrato do executor real). */
+  const roteiroAteAbortar: Roteiro = async function* (_p, sinal) {
+    yield { tipo: "sessao", sessionId: "s" }
+    if (!sinal.aborted) await new Promise<void>((r) => sinal.addEventListener("abort", () => r(), { once: true }))
+  }
+
+  it("drenar sem turno ativo resolve na hora e não deixa temporizador", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] })
+    const { t } = turnos(roteiroSimples("ok", "s"))
+    await expect(t.drenar(300000)).resolves.toEqual({ abortados: [] })
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it("depois de drenar, iniciar, enviarMensagem e enviarMensagemComAjustes lançam ErroReiniciando (503)", async () => {
+    const { t, executor } = turnos(roteiroSimples("ok", "s"))
+    const slug = await servico.criarProspect("Iszi", null)
+    await t.drenar(1000)
+    for (const tentativa of [
+      t.iniciar(slug, "01"),
+      t.enviarMensagem(slug, "01", "oi"),
+      t.enviarMensagemComAjustes(slug, "01", "ajustar", []),
+    ]) {
+      const erro = await tentativa.catch((e: unknown) => e)
+      expect(erro).toBeInstanceOf(ErroReiniciando)
+      expect(erro).toMatchObject({ message: REINICIANDO, codigo: "reiniciando", status: 503 })
+    }
+    expect(executor.pedidos).toHaveLength(0)
+    expect(t.ativo(slug)).toBeNull()
+    expect((await servico.estado(slug)).etapas["01"].status).not.toBe("em_andamento")
+  })
+
+  it("SIGTERM no meio do turno: o turno termina, sincroniza no fim e drenar resolve sem abortar", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] })
+    const p = portao()
+    const { t, svc, log } = comLog(roteiroComPortao(p))
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await vi.waitFor(() => expect(log).toContain("executor"))
+    let resultado: { abortados: string[] } | null = null
+    const drenagem = t.drenar(5000).then((r) => (resultado = r))
+    // um turno novo é recusado com o aviso de reinício, mesmo com a vaga ocupada
+    await expect(t.enviarMensagem(slug, "01", "oi")).rejects.toBeInstanceOf(ErroReiniciando)
+    await vi.advanceTimersByTimeAsync(4000)
+    expect(resultado).toBeNull()
+    p.abrir()
+    await drenagem
+    expect(resultado).toEqual({ abortados: [] })
+    expect(log).toEqual(["sincronizar", "executor", "executor fim", "sincronizar"])
+    const conversa = await svc.conversa(slug, "01")
+    expect(conversa.at(-1)).toMatchObject({ tipo: "turno_fim", status: "ok" })
+    expect(conversa.some((e) => e.tipo === "texto_agente" && e.texto === "pronto")).toBe(true)
+    expect(t.ativo(slug)).toBeNull()
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it("passou do prazo: drenar aborta o turno, espera o turno_fim interrompido e a sincronização, e devolve o slug", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] })
+    const { t, svc, log } = comLog(roteiroAteAbortar)
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await vi.waitFor(() => expect(log).toContain("executor"))
+    let resultado: { abortados: string[] } | null = null
+    const drenagem = t.drenar(1000).then((r) => (resultado = r))
+    await vi.advanceTimersByTimeAsync(999)
+    expect(resultado).toBeNull()
+    expect(t.ativo(slug)).toBe("01")
+    await vi.advanceTimersByTimeAsync(1)
+    await drenagem
+    expect(resultado).toEqual({ abortados: [slug] })
+    expect((await svc.conversa(slug, "01")).at(-1)).toMatchObject({ tipo: "turno_fim", status: "interrompido" })
+    expect(log.at(-1)).toBe("sincronizar")
+    expect(t.ativo(slug)).toBeNull()
+  })
+
+  it("o turno da fila que ia nascer depois do turno atual não nasce: o item continua na fila", async () => {
+    const p = portao()
+    const { t, svc, executor, log } = comLog(roteiroComPortao(p))
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await vi.waitFor(() => expect(log).toContain("executor"))
+    await svc.enfileirar(slug, "01", "O analista APROVOU o entregável X.")
+    const erro = vi.spyOn(console, "error").mockImplementation(() => {})
+    const drenagem = t.drenar(5000)
+    p.abrir()
+    await expect(drenagem).resolves.toEqual({ abortados: [] })
+    await t.aguardarOcioso(slug)
+    // a fila nem tenta reservar a vaga: nada de "turno falhou" no log
+    expect(erro).not.toHaveBeenCalled()
+    erro.mockRestore()
+    expect(executor.pedidos).toHaveLength(1)
+    expect((await svc.estado(slug)).filaAutomatica).toEqual([{ etapa: "01", texto: "O analista APROVOU o entregável X." }])
+    expect(t.ativo(slug)).toBeNull()
+  })
+
+  it("item enfileirado depois de drenar não dispara turno", async () => {
+    const { t, svc, executor } = comLog(roteiroSimples("ok", "s"))
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.drenar(1000)
+    const erro = vi.spyOn(console, "error").mockImplementation(() => {})
+    await svc.enfileirar(slug, "01", "O analista APROVOU X.", "ana.silva@boomer.com.br")
+    await t.aguardarOcioso(slug)
+    expect(erro).not.toHaveBeenCalled()
+    erro.mockRestore()
+    expect(executor.pedidos).toHaveLength(0)
+    expect(t.ativo(slug)).toBeNull()
+    expect((await svc.estado(slug)).filaAutomatica).toHaveLength(1)
+  })
+
+  it("turno aceito antes do drenar, ainda se preparando, também é esperado até o fim", async () => {
+    const p = portao()
+    const { t, svc, log } = comLog(roteiroSimples("ok", "s"))
+    const slug = await svc.criarProspect("Iszi", null)
+    const original = svc.iniciarEtapa.bind(svc)
+    svc.iniciarEtapa = async (s, e) => {
+      await p.aberto
+      return original(s, e)
+    }
+    const inicio = t.iniciar(slug, "01")
+    let resultado: { abortados: string[] } | null = null
+    const drenagem = t.drenar(5000).then((r) => (resultado = r))
+    await new Promise((r) => setTimeout(r, 10))
+    expect(resultado).toBeNull()
+    p.abrir()
+    await inicio
+    await drenagem
+    expect(resultado).toEqual({ abortados: [] })
+    expect(log).toContain("executor fim")
+    expect((await svc.conversa(slug, "01")).at(-1)).toMatchObject({ tipo: "turno_fim", status: "ok" })
   })
 })

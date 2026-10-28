@@ -2,6 +2,8 @@
  * Roda uma vez quando o servidor do Next sobe, e termina antes da primeira requisição (inclusive a do proxy).
  * Carrega o .env da raiz e confere a configuração do login: um valor inválido derruba a subida, em vez de
  * aparecer só na primeira requisição. Os avisos nunca imprimem URL, chave nem valor de variável.
+ * Com NEXT_MANUAL_SIG_HANDLE=true (imagem da nuvem), o Next não trata SIGTERM e SIGINT e o app instala o
+ * desligamento seguro (lib/desligamento.ts). Sem ela (next dev, uso local), nada muda.
  */
 
 const AVISO_DADOS_EM_DISCO = "[planejamento] login ligado com dados em disco (PLANEJAMENTO_DADOS=fs): útil só para testar o login."
@@ -11,8 +13,14 @@ const AVISO_URL_PUBLICA =
 export async function register(): Promise<void> {
   // O ambiente da raiz e as regras do login só existem no servidor Node (o proxy do Next 16 também roda nele).
   if (process.env.NEXT_RUNTIME !== "nodejs") return
+  // Lido antes do .env da raiz: o Next decide se trata os sinais só pelo ambiente do processo.
+  const sinaisManuais = process.env.NEXT_MANUAL_SIG_HANDLE === "true"
   const { carregarAmbiente } = await import("./lib/ambiente")
   carregarAmbiente()
+  if (sinaisManuais) {
+    const { instalarDesligamento, servidorJaCriado } = await import("./lib/desligamento")
+    instalarDesligamento({ env: process.env, servidor: servidorJaCriado, sair: (codigo) => process.exit(codigo) })
+  }
   const { modoDeAutenticacao } = await import("@workspace/core/autenticacao")
   const { urlPublicaMalformada } = await import("./lib/origem-publica")
 

@@ -285,6 +285,9 @@ export class FsArmazenamento {
 
   agendarSincronizacao(_slug: string): void {}
 
+  /** Desligamento: na nuvem, envia agora tudo o que ainda estava agendado. */
+  async sincronizarTudo(): Promise<void> {}
+
   async registrarUso(_r: RegistroUsoTurno): Promise<void> {}
 
   /** No disco, conversas e comentários vivem em .app/, que o reposicionamento do cliente de teste já apaga. */

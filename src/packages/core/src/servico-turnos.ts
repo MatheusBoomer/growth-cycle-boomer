@@ -3,7 +3,7 @@ import path from "node:path"
 import { descreverAtividade } from "./atividade"
 import type { Barramento } from "./barramento"
 import { etapaDoCatalogo } from "./catalogo"
-import { ErroTurnoAtivo } from "./erros"
+import { ErroReiniciando, ErroTurnoAtivo } from "./erros"
 import type { Executor, PedidoTurno } from "./executor/tipos"
 import type { MemoriaDeSessao } from "./nuvem/memoria-sessao"
 import type { RegistroUsoTurno } from "./nuvem/tipos"
@@ -105,8 +105,16 @@ export class ServicoTurnos {
   private readonly config: ConfigTurnos
   private readonly agora: () => string
   private readonly memoria: MemoriaDeSessao | undefined
-  /** Vaga do turno por prospect. etapa null = reservada enquanto a fila é consultada. */
-  private readonly ativos = new Map<string, { etapa: EtapaId | null; controle: AbortController; autor: string | null }>()
+  /**
+   * Vaga do turno por prospect. etapa null = reservada enquanto a fila é consultada.
+   * `liberada` resolve quando a vaga é devolvida: é o que o drenar espera de um turno ainda se preparando.
+   */
+  private readonly ativos = new Map<
+    string,
+    { etapa: EtapaId | null; controle: AbortController; autor: string | null; liberada: Promise<void>; liberar: () => void }
+  >()
+  /** Ligado pelo drenar (desligamento): nenhum turno novo nasce depois disso, nem pela fila. */
+  private drenando = false
   private readonly tokens = new Map<string, { slug: string; etapa: EtapaId }>()
   /** Trabalho em andamento por prospect (turnos e disparos da fila), base do aguardarOcioso. */
   private readonly pendentes = new Map<string, Set<Promise<void>>>()
@@ -162,16 +170,22 @@ export class ServicoTurnos {
 
   /** Checa e ocupa a vaga no mesmo tick: entre o teste e o set não pode haver await. */
   private reservar(slug: string, etapa: EtapaId | null, autor: string | null = null): AbortController {
+    if (this.drenando) throw new ErroReiniciando()
     const ocupada = this.ativos.get(slug)
     // O nome só ajuda quando o turno é de outra pessoa; para o próprio autor (duplo clique, segunda aba) vale a genérica.
     if (ocupada) throw new ErroTurnoAtivo(ocupada.autor !== autor ? ocupada.autor : null)
     const controle = new AbortController()
-    this.ativos.set(slug, { etapa, controle, autor })
+    let liberar: () => void = () => {}
+    const liberada = new Promise<void>((r) => (liberar = r))
+    this.ativos.set(slug, { etapa, controle, autor, liberada, liberar })
     return controle
   }
 
   private liberar(slug: string, controle: AbortController): void {
-    if (this.ativos.get(slug)?.controle === controle) this.ativos.delete(slug)
+    const vaga = this.ativos.get(slug)
+    if (vaga?.controle !== controle) return
+    this.ativos.delete(slug)
+    vaga.liberar()
   }
 
   private async comReserva(slug: string, controle: AbortController, preparar: () => Promise<void>): Promise<void> {
@@ -229,7 +243,8 @@ export class ServicoTurnos {
   }
 
   async processarFila(slug: string): Promise<void> {
-    if (this.ativos.has(slug)) return
+    // Durante o desligamento o item fica na fila: roda na próxima ação do analista depois de o servidor voltar.
+    if (this.drenando || this.ativos.has(slug)) return
     const controle = this.reservar(slug, null)
     let item: Awaited<ReturnType<ServicoPlanejamento["retirarFila"]>> = null
     await this.comReserva(slug, controle, async () => {
@@ -241,7 +256,8 @@ export class ServicoTurnos {
     }
     const { etapa, texto, autor } = item
     // O turno de acompanhamento é de quem provocou o item (aprovou, pediu ajuste, enviou o insumo).
-    this.ativos.set(slug, { etapa, controle, autor })
+    const vaga = this.ativos.get(slug)
+    if (vaga?.controle === controle) this.ativos.set(slug, { ...vaga, etapa, autor })
     await this.comReserva(slug, controle, () =>
       this.registrar(slug, etapa, { tipo: "mensagem_analista", texto, automatica: true, ...(autor ? { autor } : {}), em: this.agora() }),
     )
@@ -251,6 +267,41 @@ export class ServicoTurnos {
   /** Para testes e para o desligamento: espera o turno atual e os que a fila disparar. */
   async aguardarOcioso(slug: string): Promise<void> {
     while (this.pendentes.get(slug)?.size) await Promise.all([...this.pendentes.get(slug)!])
+  }
+
+  /**
+   * Desligamento: recusa turnos novos (ErroReiniciando), não dispara a fila e espera os turnos em andamento,
+   * inclusive os aceitos que ainda se preparam. Passado `prazoMs`, aborta os que sobraram (viram "interrompido",
+   * e o fim do turno ainda sincroniza os arquivos) e espera eles saírem. Devolve os slugs abortados.
+   */
+  async drenar(prazoMs: number): Promise<{ abortados: string[] }> {
+    this.drenando = true
+    const ocioso = this.aguardarTudo()
+    let estourou = false
+    let temporizador: ReturnType<typeof setTimeout> | undefined
+    const prazo = new Promise<void>((r) => {
+      temporizador = setTimeout(() => {
+        estourou = true
+        r()
+      }, prazoMs)
+    })
+    await Promise.race([ocioso, prazo])
+    clearTimeout(temporizador)
+    if (!estourou) return { abortados: [] }
+    const abortados = [...this.ativos.keys()]
+    for (const vaga of this.ativos.values()) vaga.controle.abort()
+    await ocioso
+    return { abortados }
+  }
+
+  /** Espera até não sobrar vaga ocupada nem trabalho pendente em nenhum prospect. */
+  private async aguardarTudo(): Promise<void> {
+    while (this.ativos.size || this.pendentes.size) {
+      await Promise.all([
+        ...[...this.ativos.values()].map((v) => v.liberada),
+        ...[...this.pendentes.values()].flatMap((c) => [...c]),
+      ])
+    }
   }
 
   private registrar(slug: string, etapa: EtapaId, evento: EventoConversa): Promise<void> {

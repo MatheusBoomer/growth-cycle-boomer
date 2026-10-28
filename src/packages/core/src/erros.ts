@@ -38,6 +38,13 @@ export class ErroTurnoAtivo extends ErroDominio {
   }
 }
 
+/** Turno recusado porque o servidor recebeu o sinal de desligamento e está esperando os turnos em andamento. */
+export class ErroReiniciando extends ErroDominio {
+  constructor() {
+    super("O servidor está reiniciando. Tente de novo em instantes.", "reiniciando", 503)
+  }
+}
+
 export class ErroNaoAutenticado extends ErroDominio {
   constructor() {
     super("Você precisa entrar para continuar.", "nao_autenticado", 401)
