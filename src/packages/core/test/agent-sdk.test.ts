@@ -1,6 +1,8 @@
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync } from "node:fs"
 import { tmpdir } from "node:os"
+import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
-import { AgentSdkExecutor, montarOpcoesSdk, type ConsultaSdk } from "../src/executor/agent-sdk"
+import { AgentSdkExecutor, diretoriosExtrasDoAgente, montarOpcoesSdk, type ConsultaSdk } from "../src/executor/agent-sdk"
 import type { EventoExecutor, PedidoTurno } from "../src/executor/tipos"
 
 const pedido = (sessionId: string | null = null): PedidoTurno => ({
@@ -53,6 +55,44 @@ describe("montarOpcoesSdk", () => {
     expect(sem.abortController).toBe(controle)
     expect(sem.resume).toBeUndefined()
     expect(montarOpcoesSdk(pedido("abc"), controle, {}).resume).toBe("abc")
+  })
+})
+
+describe("pasta clientes como link (volume da nuvem)", () => {
+  let raiz: string
+  beforeEach(() => {
+    raiz = realpathSync(mkdtempSync(path.join(tmpdir(), "agente-sdk-")))
+  })
+  afterEach(() => {
+    rmSync(raiz, { recursive: true, force: true })
+  })
+
+  it("com clientes apontando para outra pasta, libera o caminho real", () => {
+    mkdirSync(path.join(raiz, "dados"))
+    symlinkSync(path.join(raiz, "dados"), path.join(raiz, "clientes"))
+    const real = realpathSync(path.join(raiz, "dados"))
+    expect(diretoriosExtrasDoAgente(raiz)).toEqual([real])
+    const opcoes = montarOpcoesSdk({ ...pedido(), cwd: raiz }, new AbortController(), {})
+    expect(opcoes.additionalDirectories).toEqual([real])
+    expect(opcoes.cwd).toBe(raiz)
+  })
+
+  it("com clientes como pasta comum, não define a opção", () => {
+    mkdirSync(path.join(raiz, "clientes"))
+    expect(diretoriosExtrasDoAgente(raiz)).toEqual([])
+    const opcoes = montarOpcoesSdk({ ...pedido(), cwd: raiz }, new AbortController(), {})
+    expect("additionalDirectories" in opcoes).toBe(false)
+  })
+
+  it("sem pasta clientes, não define a opção", () => {
+    expect(diretoriosExtrasDoAgente(raiz)).toEqual([])
+    const opcoes = montarOpcoesSdk({ ...pedido(), cwd: raiz }, new AbortController(), {})
+    expect("additionalDirectories" in opcoes).toBe(false)
+  })
+
+  it("com link quebrado, não define a opção", () => {
+    symlinkSync(path.join(raiz, "inexistente"), path.join(raiz, "clientes"))
+    expect(diretoriosExtrasDoAgente(raiz)).toEqual([])
   })
 })
 
