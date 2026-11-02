@@ -47,6 +47,14 @@ def test_pagina_escapa_o_titulo():
     assert "<title>&lt;b&gt;x</title>" in pp.pagina(pp.abas(EXPORTADO), "<b>x")
 
 
+def test_abas_de_planilha_com_uma_aba_so_vem_sem_ancora_nem_nome():
+    # LibreOffice 7.4 (imagem da nuvem): com uma única aba visível não há "Sheet 1: <em>Nome</em>".
+    exportado = '<html><body><table cellspacing="0" border="0"><tr><td sdval="1" sdnum="1033;">42</td></tr></table></body></html>'
+    abas = pp.abas(exportado)
+    assert [nome for nome, _ in abas] == ["Planilha"]
+    assert "42" in abas[0][1] and "sdval" not in abas[0][1]
+
+
 def test_abas_sem_nenhuma_tabela_e_erro_claro():
     with pytest.raises(pp.ErroPrevia, match="vazia"):
         pp.abas("<html><body></body></html>")
