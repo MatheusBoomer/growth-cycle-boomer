@@ -135,6 +135,23 @@ describe("reposicionarTeste no modo nuvem", () => {
     expect(await nuvem.lerComentarios(slug, "e2")).toEqual([])
     expect((await servicoNuvem.estado(slug)).etapas["01"].status).toBe("liberada")
   })
+
+  it("grava quem criou o cliente de teste, como num prospect comum", async () => {
+    const repositorio = new MemoriaRepositorio()
+    const armazem = new MemoriaArmazem()
+    const mesa = new Mesa({ pastaClientes: path.join(raiz, "clientes"), armazem, esperar: async () => {} })
+    const nuvem = new NuvemArmazenamento({ raiz, repositorio, armazem, mesa, atrasoAgendamentoMs: 0 })
+    const servicoNuvem = new ServicoPlanejamento({
+      armazenamento: nuvem,
+      catalogo: catalogoReal(),
+      barramento: new Barramento(),
+      validar: async () => ({ ok: true, problemas: [], avisos: [], resumo: null }),
+    })
+    servicoNuvem.conectarTurnos({ aoEnfileirar: () => {}, estaOcupado: () => false })
+
+    const slug = await servicoNuvem.criarClienteTeste("mini", "03", "analista@boomer.com.br")
+    expect(repositorio.criadoPor(slug)).toBe("analista@boomer.com.br")
+  })
 })
 
 describe("falha no meio do reposicionamento", () => {

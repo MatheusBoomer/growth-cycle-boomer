@@ -2,14 +2,15 @@
 
 import { FolderOpenIcon } from "lucide-react"
 import { useState } from "react"
-import type { ResumoProspect } from "@workspace/core/tipos"
+import type { EtapaId, ResumoProspect } from "@workspace/core/tipos"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@workspace/ui/components/empty"
 import { Input } from "@workspace/ui/components/input"
 import { BarraTopo } from "@/components/marca/barra-topo"
 import { CardProspect } from "./card-prospect"
+import { DialogoClienteTeste } from "./dialogo-cliente-teste"
 import { DialogoNovoProspect } from "./dialogo-novo-prospect"
 
-export function GradeProspects({ prospects }: { prospects: ResumoProspect[] }) {
+export function GradeProspects({ prospects, etapas }: { prospects: ResumoProspect[]; etapas: { id: EtapaId; rotulo: string }[] }) {
   const [busca, setBusca] = useState("")
   const filtrados = prospects.filter((p) => p.nome.toLowerCase().includes(busca.trim().toLowerCase()))
 
@@ -24,6 +25,7 @@ export function GradeProspects({ prospects }: { prospects: ResumoProspect[] }) {
           </div>
           <div className="ml-auto flex items-center gap-2">
             <Input className="w-64" placeholder="Buscar prospect…" value={busca} onChange={(e) => setBusca(e.target.value)} />
+            <DialogoClienteTeste etapas={etapas} />
             <DialogoNovoProspect />
           </div>
         </header>

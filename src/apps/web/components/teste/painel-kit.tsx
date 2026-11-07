@@ -1,6 +1,6 @@
 "use client"
 
-import { FileIcon } from "lucide-react"
+import { DownloadIcon, FileIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import type { EtapaId, RespostaTeste } from "@workspace/core/tipos"
@@ -8,7 +8,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import { Markdown } from "@/components/markdown"
 import { useAmbiente } from "@/components/marca/conta-contexto"
-import { api, mensagemDeErro } from "@/lib/api"
+import { api, mensagemDeErro, urlArquivo } from "@/lib/api"
 
 /** Kit do analista no cliente de teste: arquivos para enviar e roteiro de respostas. Não aparece fora de cliente de teste. */
 export function PainelKit({
@@ -52,6 +52,9 @@ export function PainelKit({
               <li key={caminho} className="flex items-center gap-2 text-sm">
                 <FileIcon className="text-muted-foreground size-4 shrink-0" />
                 <span className="min-w-0 flex-1 truncate">{caminho.split("/").pop()}</span>
+                <Button variant="outline" size="sm" render={<a href={urlArquivo(slug, caminho, true)} download />} nativeButton={false}>
+                  <DownloadIcon /> Baixar
+                </Button>
                 {!nuvem && (
                   <Button
                     variant="outline"
@@ -80,7 +83,7 @@ export function PainelKit({
     <Card>
       <CardHeader>
         <CardTitle>Kit desta etapa</CardTitle>
-        <CardDescription>Material do cliente de teste: envie os arquivos e use o roteiro para responder ao agente.</CardDescription>
+        <CardDescription>Material do cliente de teste: baixe os arquivos, envie quando o agente pedir e use o roteiro para responder.</CardDescription>
       </CardHeader>
       <CardContent>{conteudo}</CardContent>
     </Card>

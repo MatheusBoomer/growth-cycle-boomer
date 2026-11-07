@@ -417,9 +417,9 @@ export class ServicoPlanejamento {
   // ---------- cliente de teste ----------
 
   /** Cria o cliente de teste a partir de clientes/_fixtures/<id>/ já posicionado em `etapaInicial`. */
-  async criarClienteTeste(fixtureId: string, etapaInicial: EtapaId = "01"): Promise<string> {
+  async criarClienteTeste(fixtureId: string, etapaInicial: EtapaId = "01", autor: string | null = null): Promise<string> {
     const fixture = await carregarFixture(this.arm.raiz, fixtureId)
-    const slug = await this.criarProspect(fixture.manifesto.prospect.nome, fixture.manifesto.prospect.site)
+    const slug = await this.criarProspect(fixture.manifesto.prospect.nome, fixture.manifesto.prospect.site, autor)
     const claudeMd = await this.arm.lerTexto(slug, "CLAUDE.md")
     if (claudeMd) await this.arm.gravarTexto(slug, "CLAUDE.md", aplicarOverrides(claudeMd, fixture.manifesto.overrides))
     await this.mutar(slug, (e) => ({ estado: { ...e, teste: { fixture: fixtureId, etapaInicial } }, resultado: undefined }))

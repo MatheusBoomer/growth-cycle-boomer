@@ -10,6 +10,8 @@ export default async function Pagina() {
   // vem com e-mail nulo, então nada muda por lá.
   const usuario = await usuarioDaRequisicao()
   if (!usuario) redirect("/login")
-  const prospects = await servidor().servico.listarProspects()
-  return <GradeProspects prospects={prospects} />
+  const { servico, catalogo } = servidor()
+  const prospects = await servico.listarProspects()
+  const etapas = catalogo.etapas.map((e) => ({ id: e.id, rotulo: e.rotuloStatus }))
+  return <GradeProspects prospects={prospects} etapas={etapas} />
 }
