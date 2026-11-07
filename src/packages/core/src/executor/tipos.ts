@@ -13,6 +13,8 @@ export interface UsoDoTurno {
   custoUsd: number | null
   tokensEntrada: number | null
   tokensSaida: number | null
+  /** Custo acumulado por modelo (chave = nome do modelo); null quando o result não trouxe modelUsage. */
+  modelos: Record<string, number> | null
 }
 
 export interface PedidoTurno {

@@ -493,7 +493,7 @@ describe("custo de cada turno", () => {
 
   const roteiroComUso: Roteiro = async function* () {
     yield { tipo: "sessao", sessionId: "s1" }
-    yield { tipo: "fim", ok: true, erro: null, sessionId: "s1", uso: { custoUsd: 0.42, tokensEntrada: 1000, tokensSaida: 200 } }
+    yield { tipo: "fim", ok: true, erro: null, sessionId: "s1", uso: { custoUsd: 0.42, tokensEntrada: 1000, tokensSaida: 200, modelos: null } }
   }
 
   it("registra o uso do turno com início, fim, status e autor nulo", async () => {
@@ -543,7 +543,7 @@ describe("autoria dos turnos", () => {
 
   const roteiroComUso: Roteiro = async function* () {
     yield { tipo: "sessao", sessionId: "s1" }
-    yield { tipo: "fim", ok: true, erro: null, sessionId: "s1", uso: { custoUsd: 0.1, tokensEntrada: 10, tokensSaida: 2 } }
+    yield { tipo: "fim", ok: true, erro: null, sessionId: "s1", uso: { custoUsd: 0.1, tokensEntrada: 10, tokensSaida: 2, modelos: null } }
   }
 
   function montar() {
