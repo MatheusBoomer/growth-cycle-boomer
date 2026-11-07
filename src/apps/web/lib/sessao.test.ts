@@ -33,6 +33,10 @@ describe("usuarioDeClaims", () => {
     expect(usuarioDeClaims(claims, DOMINIOS)).toEqual({ email: "ana.silva@boomer.com.br" })
   })
 
+  it("e-mail com espaço nas pontas é recusado antes de normalizar (emailPermitido não tolera espaço)", () => {
+    expect(usuarioDeClaims({ email: "  Ana@Boomer.com.br ", app_metadata: GOOGLE }, DOMINIOS)).toBeNull()
+  })
+
   it("aceita conta Google com e-mail verificado no topo das claims", () => {
     expect(usuarioDeClaims({ email: "a@gestaoboomer.com", app_metadata: GOOGLE, email_verified: true }, DOMINIOS)).toEqual({ email: "a@gestaoboomer.com" })
   })

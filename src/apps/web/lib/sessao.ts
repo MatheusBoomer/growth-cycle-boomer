@@ -3,8 +3,7 @@ import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { dominiosPermitidos, emailPermitido, modoDeAutenticacao } from "@workspace/core/autenticacao"
 import { ErroEntrada, ErroNaoAutenticado, ErroNaoEncontrado, ErroSemPermissao } from "@workspace/core/erros"
-import { ehAdmin, type UsuarioComPapel } from "@workspace/core/papeis"
-import { servidor } from "@/lib/servidor"
+import { ehAdmin, normalizarEmail, type UsuarioComPapel } from "@workspace/core/papeis"
 
 /** Quem está usando o app, com o papel. `email` é null só no modo off (sem login, ninguém para identificar), e só para admin. */
 export type Usuario = UsuarioComPapel
@@ -81,7 +80,7 @@ export function usuarioDeClaims(claims: unknown, dominios: readonly string[]): {
   const indicadores = [claims.email_verified, ehObjeto(metadados) ? metadados.email_verified : undefined]
   if (indicadores.some((v) => v !== undefined && v !== true)) return null
 
-  return { email: email.toLowerCase() }
+  return { email: normalizarEmail(email) }
 }
 
 /**
@@ -113,6 +112,8 @@ export async function usuarioDaRequisicao(): Promise<Usuario | null> {
   }
   if (!identidade) return null
   // Fora do try: se o banco falhar, o erro sobe. Nunca vira "sem sessão" nem admin por engano.
+  // Import tardio: o proxy e as rotas de login importam este módulo só pelo cliente do Supabase e não devem carregar o grafo do servidor.
+  const { servidor } = await import("@/lib/servidor")
   const { usuarios } = servidor()
   if (usuarios === null) return { email: identidade.email, papel: "admin" }
   return { email: identidade.email, papel: await usuarios.registrarAcesso(identidade.email) }
@@ -142,6 +143,7 @@ export async function exigirAcessoAoProspect(params: Promise<{ slug: string }>):
   const { slug } = await params
   let visivel: boolean
   try {
+    const { servidor } = await import("@/lib/servidor")
     visivel = await servidor().servico.prospectVisivel(usuario, slug)
   } catch (e) {
     if (!(e instanceof ErroEntrada)) throw e

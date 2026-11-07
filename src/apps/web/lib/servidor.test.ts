@@ -67,6 +67,56 @@ describe("servidor(): modo de dados supabase", () => {
   })
 })
 
+describe("servidor(): repositório de usuários", () => {
+  const registro = globalThis as { __planejamento?: unknown; __planejamentoNuvem?: unknown }
+  let raizTemporaria: string
+
+  beforeEach(() => {
+    delete registro.__planejamento
+    delete registro.__planejamentoNuvem
+    raizTemporaria = mkdtempSync(path.join(os.tmpdir(), "servidor-teste-"))
+    vi.stubEnv("PLANEJAMENTO_ROOT", raizTemporaria)
+    vi.stubEnv("PLANEJAMENTO_DADOS", "supabase")
+    vi.stubEnv("SUPABASE_URL", "https://projeto.supabase.co")
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "chave-de-teste")
+    vi.spyOn(console, "info").mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.restoreAllMocks()
+    delete registro.__planejamento
+    delete registro.__planejamentoNuvem
+    rmSync(raizTemporaria, { recursive: true, force: true })
+  })
+
+  it("modo fs: sem repositório (null)", () => {
+    vi.stubEnv("PLANEJAMENTO_DADOS", "fs")
+    expect(servidor().usuarios).toBeNull()
+  })
+
+  it("modo supabase: sempre há repositório", () => {
+    expect(servidor().usuarios).not.toBeNull()
+    expect(typeof servidor().usuarios?.registrarAcesso).toBe("function")
+  })
+
+  it("modo supabase com nuvem em cache de versão antiga (sem usuarios): completa o repositório, nunca null", () => {
+    registro.__planejamentoNuvem = { armazenamento: {}, memoria: {} }
+    const usuarios = servidor().usuarios
+    expect(usuarios).not.toBeNull()
+    expect(typeof usuarios?.registrarAcesso).toBe("function")
+  })
+
+  it("modo supabase com servidor em cache de versão antiga (sem usuarios): completa o repositório, nunca null", () => {
+    const atual = servidor()
+    delete (atual as { usuarios?: unknown }).usuarios
+    delete registro.__planejamentoNuvem
+    const usuarios = servidor().usuarios
+    expect(usuarios).not.toBeNull()
+    expect(typeof usuarios?.registrarAcesso).toBe("function")
+  })
+})
+
 describe("servidor(): endereço do app que o MCP chama", () => {
   const nomes = ["PLANEJAMENTO_ROOT", "PLANEJAMENTO_DADOS", "PLANEJAMENTO_APP_URL", "PLANEJAMENTO_URL_INTERNA", "PORT"] as const
   let raizTemporaria: string

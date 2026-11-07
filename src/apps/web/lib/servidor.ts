@@ -60,7 +60,15 @@ export function pastaConfigClaude(valor: string | undefined): string {
 }
 
 function montarNuvem(raiz: string): Nuvem {
-  if (registro.__planejamentoNuvem) return registro.__planejamentoNuvem
+  const existente = registro.__planejamentoNuvem
+  if (existente) {
+    // Instância criada por uma versão anterior do código (next dev de longa duração) não tem `usuarios`. Sem completar,
+    // o servidor trataria a falta como "sem banco" e daria admin a todos. O cliente novo só serve ao repositório de usuários.
+    if (!existente.usuarios) {
+      existente.usuarios = new SupabaseUsuarios(criarClienteSupabase(process.env.SUPABASE_URL as string, process.env.SUPABASE_SERVICE_ROLE_KEY as string))
+    }
+    return existente
+  }
   const cliente = criarClienteSupabase(process.env.SUPABASE_URL as string, process.env.SUPABASE_SERVICE_ROLE_KEY as string)
   const armazem = new SupabaseArmazem(cliente)
   const mesa = new Mesa({ pastaClientes: path.join(raiz, "clientes"), armazem })
@@ -98,6 +106,8 @@ export function servidor(): Servidor {
     // Processo do next dev que já rodava antes do serviço de comentários existir (ou antes de um método novo dele,
     // como a prévia de planilha): completa sem recriar os demais.
     if (typeof atual.comentarios?.previaPlanilha !== "function") atual.comentarios = new ServicoComentarios({ armazenamento: atual.armazenamento, planejamento: atual.servico, previa: criarPreviaPython(atual.raiz) })
+    // Idem para o repositório de usuários: null só no modo fs; no supabase ele sempre existe (ver montarNuvem).
+    if (atual.usuarios === undefined) atual.usuarios = modoDeDados() === "fs" ? null : montarNuvem(atual.raiz).usuarios
     return atual
   }
   // `next dev` roda em src/apps/web → a raiz do projeto de planejamento fica três níveis acima.
@@ -137,6 +147,6 @@ export function servidor(): Servidor {
       firecrawlNoMcp: modoExecutor === "sdk",
     },
   })
-  registro.__planejamento = { raiz, catalogo, armazenamento, barramento, servico, turnos, comentarios, usuarios: nuvem?.usuarios ?? null }
+  registro.__planejamento = { raiz, catalogo, armazenamento, barramento, servico, turnos, comentarios, usuarios: nuvem ? nuvem.usuarios : null }
   return registro.__planejamento
 }
