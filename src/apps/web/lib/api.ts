@@ -1,5 +1,7 @@
 import type { AjusteBiblioteca, ItemBiblioteca } from "@workspace/core/biblioteca"
 import type { Comentario, MapaPrevia, Regiao } from "@workspace/core/comentarios"
+import type { PessoaRegistrada } from "@workspace/core/nuvem/usuarios"
+import type { Papel } from "@workspace/core/papeis"
 import type { EtapaId, ResultadoValidacao, RespostaTeste } from "@workspace/core/tipos"
 import { tratarNaoAutenticado } from "@/lib/login"
 
@@ -46,6 +48,7 @@ function multipart(arquivo: File): RequestInit {
 }
 
 const base = (slug: string) => `/api/prospects/${encodeURIComponent(slug)}`
+export type PessoaComProjetos = PessoaRegistrada & { projetos: number }
 export type AcaoEtapa = "iniciar" | "concluir" | "reabrir" | "confirmar" | "revisar" | "parar"
 
 export const api = {
@@ -88,6 +91,10 @@ export const api = {
   biblioteca: (slug: string) => chamar<{ itens: ItemBiblioteca[] }>(`${base(slug)}/biblioteca`, { cache: "no-store" }),
   ajustarBiblioteca: (slug: string, caminho: string, mudanca: AjusteBiblioteca) =>
     chamar<{ item: ItemBiblioteca }>(`${base(slug)}/biblioteca`, comJson("PATCH", { caminho, ...mudanca })),
+  /** Só admin: quem já entrou no app, com o papel e quantos projetos ativos cada um tem. */
+  listarPessoas: () => chamar<{ pessoas: PessoaComProjetos[]; admins: number }>("/api/admin/pessoas", { cache: "no-store" }),
+  alterarPapel: (email: string, papel: Papel) => chamar<{ ok: true }>("/api/admin/pessoas/papel", comJson("POST", { email, papel })),
+  trocarDono: (slug: string, email: string) => chamar<{ ok: true }>(`/api/admin/prospects/${encodeURIComponent(slug)}/dono`, comJson("POST", { email })),
 }
 
 /** `nome` (só com download): nome do arquivo baixado, sem extensão. */
