@@ -1201,6 +1201,40 @@ describe("custo por turno e métricas (dados na nuvem)", () => {
     expect(m.porEtapa["01"]?.custo.turnos).toBe(1)
   })
 
+  describe("detalheDoProjeto", () => {
+    it("devolve o resumo e as métricas do projeto, lendo só o uso e a presença dele", async () => {
+      await nuvem.criarProspect("Cliente", null, ANA)
+      await nuvem.criarProspect("Outro", null)
+      await nuvem.registrarUso(entrada("cliente"))
+      await nuvem.registrarUso(entrada("outro", { custoUsd: 9, modelosAcumulado: { opus: 9 } }))
+      const espiaUsos = vi.spyOn(repositorio, "listarUsos")
+      const espiaPresencas = vi.spyOn(repositorio, "listarPresencas")
+      const espiaSlugs = vi.spyOn(repositorio, "listarSlugs")
+
+      const d = await nuvem.detalheDoProjeto("cliente", LIMITES)
+
+      expect(d.projeto).toMatchObject({ slug: "cliente", nome: "Cliente", dono: ANA, teste: false })
+      expect(d.metricas.custoUsd).toBe(0.3)
+      expect(espiaUsos.mock.calls.map((c) => c[0])).toEqual(["cliente"])
+      expect(espiaPresencas.mock.calls.map((c) => c[0])).toEqual(["cliente"])
+      expect(espiaSlugs).not.toHaveBeenCalled()
+    })
+
+    it("inexistente, excluído ou malformado dá ErroNaoEncontrado com o texto fixo", async () => {
+      await nuvem.criarProspect("Apagado", null)
+      await nuvem.excluirProspect("apagado", "apagado")
+      for (const slug of ["nao-existe", "apagado", "../etc"]) {
+        await expect(nuvem.detalheDoProjeto(slug, LIMITES)).rejects.toMatchObject({ codigo: "nao_encontrado", message: "Projeto não encontrado." })
+      }
+    })
+
+    it("um estado que falha ao carregar por outro motivo propaga o erro (não vira 404)", async () => {
+      await nuvem.criarProspect("Cliente", null)
+      vi.spyOn(repositorio, "lerEstado").mockRejectedValue(new Error("banco fora do ar"))
+      await expect(nuvem.detalheDoProjeto("cliente", LIMITES)).rejects.toThrow("banco fora do ar")
+    })
+  })
+
   describe("metricasGerais", () => {
     /** Passa a etapa 01 do prospect para concluída direto no repositório. */
     async function concluir01(slug: string): Promise<void> {

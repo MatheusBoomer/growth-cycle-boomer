@@ -189,6 +189,29 @@ export class ServicoPlanejamento {
   }
 
   /**
+   * Resumo e métricas de um prospect ativo, lendo só os dados dele (a tela de detalhe consulta isso de tempos em tempos).
+   * Inexistente, excluído ou com slug malformado dá ErroNaoEncontrado; um estado ilegível propaga o erro.
+   */
+  async detalheDoProjeto(slug: string, limites: Limites): Promise<{ projeto: ResumoProspect; metricas: MetricasProjeto }> {
+    const naoEncontrado = () => new ErroNaoEncontrado("Projeto não encontrado.")
+    try {
+      if (!(await this.arm.existe(slug))) throw naoEncontrado()
+    } catch (e) {
+      if (e instanceof ErroEntrada) throw naoEncontrado()
+      throw e
+    }
+    let dono: string | null
+    try {
+      dono = await this.arm.lerDono(slug)
+    } catch (e) {
+      if (e instanceof ErroNaoEncontrado) throw naoEncontrado()
+      throw e
+    }
+    const projeto = this.resumir(await this.estado(slug), dono)
+    return { projeto, metricas: await this.metricasDoProjeto(slug, limites) }
+  }
+
+  /**
    * Métricas de todos os prospects ativos (os de teste vêm marcados) e a média por etapa. Uso e presença são lidos
    * uma vez e agrupados por slug. Um prospect ilegível é pulado, como em `listarProspects`.
    */

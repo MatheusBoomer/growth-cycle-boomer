@@ -36,6 +36,7 @@ function entrarComo(email: string) {
 }
 
 const requisicao = new Request("http://127.0.0.1:3000/api/x")
+const comMedias = new Request("http://127.0.0.1:3000/api/x?medias=1")
 const contexto = (slug: string) => ({ params: Promise.resolve({ slug }) }) as Parameters<typeof detalharProjeto>[1]
 
 /** Grava um turno de IA de 4 minutos e US$ 2,50 de Ana na etapa 01 do projeto. */
@@ -140,10 +141,11 @@ describe("GET /api/admin/projetos", () => {
 })
 
 describe("GET /api/admin/projetos/[slug]", () => {
-  it("o admin recebe o resumo, as métricas e as médias do projeto", async () => {
+  it("o admin recebe o resumo e as métricas do projeto, com medias nulo e sem varrer a base", async () => {
     await servico.criarProspect("Da Ana", null, ANA)
     await servico.criarProspect("Outro", null, ANA)
     await registrarTurno("da-ana")
+    const espiaGerais = vi.spyOn(servico, "metricasGerais")
     entrarComo(CHEFE)
 
     const r = await detalharProjeto(requisicao, contexto("da-ana"))
@@ -153,7 +155,23 @@ describe("GET /api/admin/projetos/[slug]", () => {
     expect(corpo.projeto).not.toHaveProperty("metricas")
     expect(corpo.metricas.custoUsd).toBeCloseTo(2.5)
     expect(Object.keys(corpo.metricas.porEtapa)).toEqual(["01"])
+    expect(corpo.medias).toBeNull()
+    expect(espiaGerais).not.toHaveBeenCalled()
+  })
+
+  it("com ?medias=1 traz também as médias por etapa", async () => {
+    await servico.criarProspect("Da Ana", null, ANA)
+    await registrarTurno("da-ana")
+    const espiaGerais = vi.spyOn(servico, "metricasGerais")
+    entrarComo(CHEFE)
+
+    const r = await detalharProjeto(comMedias, contexto("da-ana"))
+    expect(r.status).toBe(200)
+    const corpo = (await r.json()) as { projeto: { slug: string }; metricas: { custoUsd: number }; medias: unknown }
+    expect(corpo.projeto.slug).toBe("da-ana")
+    expect(corpo.metricas.custoUsd).toBeCloseTo(2.5)
     expect(corpo.medias).toEqual({})
+    expect(espiaGerais).toHaveBeenCalledOnce()
   })
 
   it("slug inexistente, excluído ou malformado dá 404 Projeto não encontrado.", async () => {
