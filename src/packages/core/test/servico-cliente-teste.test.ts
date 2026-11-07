@@ -197,7 +197,7 @@ describe("listarProspects", () => {
   it("marca teste: true só no cliente de teste", async () => {
     await servico.criarClienteTeste("mini")
     await servico.criarProspect("Prospect Real", null)
-    const lista = await servico.listarProspects()
+    const lista = await servico.listarProspects({ email: null, papel: "admin" })
     expect(lista.find((p) => p.slug === "cliente-teste")?.teste).toBe(true)
     expect(lista.find((p) => p.slug === "prospect-real")?.teste).toBe(false)
   })

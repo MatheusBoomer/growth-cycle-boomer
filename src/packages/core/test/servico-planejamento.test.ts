@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs"
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
-import { beforeEach, describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { FsArmazenamento } from "../src/armazenamento"
 import { Barramento } from "../src/barramento"
 import {
@@ -12,9 +12,15 @@ import {
   ErroTurnoAtivo,
   TransicaoInvalida,
 } from "../src/erros"
+import { NuvemArmazenamento } from "../src/nuvem/armazenamento-nuvem"
+import { MemoriaArmazem, MemoriaRepositorio } from "../src/nuvem/memoria"
+import { Mesa } from "../src/nuvem/mesa"
+import type { UsuarioComPapel } from "../src/papeis"
 import { ServicoPlanejamento } from "../src/servico-planejamento"
 import type { EventoTempoReal, ResultadoValidacao } from "../src/tipos"
+import { pastaDoFixture } from "../src/fixture"
 import { catalogoReal, raizTemporaria } from "./ajuda"
+import { criarFixtureMinimo } from "./fixture-minimo"
 
 let raiz: string
 let servico: ServicoPlanejamento
@@ -51,6 +57,8 @@ beforeEach(async () => {
     estaOcupado: () => ocupado,
   })
 })
+
+const ADMIN: UsuarioComPapel = { email: null, papel: "admin" }
 
 const ctx03 = { slug: "iszi-cosmeticos", etapa: "03" as const }
 
@@ -146,7 +154,7 @@ describe("prospect antigo, feito no terminal", () => {
       path.join(pasta, "contexto/status-planejamento.md"),
       "| 00 · Criar prospect | ✅ | 2026-09-21 | |\n| 01 · Preparação de contexto | ✅ | 2026-09-21 | |\n| 02 · Contextualização estratégica | ✅ | 2026-09-21 | |\n"
     )
-    const [resumo] = await servico.listarProspects()
+    const [resumo] = await servico.listarProspects(ADMIN)
     expect(resumo).toMatchObject({
       slug: "adda",
       nome: "Adda",
@@ -980,5 +988,120 @@ describe("autoria", () => {
     expect(e.entregaveis[0]).not.toHaveProperty("decididoPor")
     expect(e.insumos.every((i) => !("enviadoPor" in i))).toBe(true)
     expect(e.prospect.slug).toBe(slug)
+  })
+})
+
+describe("dono e visibilidade dos prospects (dados na nuvem)", () => {
+  const ANA: UsuarioComPapel = { email: "ana.souza@boomer.com.br", papel: "usuario" }
+  const BIA: UsuarioComPapel = { email: "bia@gestaoboomer.com", papel: "usuario" }
+  const ADM: UsuarioComPapel = { email: "admin@boomer.com.br", papel: "admin" }
+  let repositorio: MemoriaRepositorio
+  let nuvem: ServicoPlanejamento
+
+  beforeEach(async () => {
+    await criarFixtureMinimo(pastaDoFixture(raiz, "mini"))
+    repositorio = new MemoriaRepositorio()
+    const armazem = new MemoriaArmazem()
+    const mesa = new Mesa({ pastaClientes: path.join(raiz, "clientes"), armazem, esperar: async () => {} })
+    nuvem = new ServicoPlanejamento({
+      armazenamento: new NuvemArmazenamento({ raiz, repositorio, armazem, mesa, atrasoAgendamentoMs: 0 }),
+      catalogo: catalogoReal(),
+      barramento: new Barramento(),
+      validar: async () => proximaValidacao,
+      agora: () => "2026-09-28T10:00:00.000Z",
+    })
+    nuvem.conectarTurnos({ aoEnfileirar: () => {}, estaOcupado: () => false })
+  })
+
+  it("um usuário comum lista só os prospects dele, com o dono preenchido", async () => {
+    await nuvem.criarProspect("Da Ana", null, ANA.email)
+    await nuvem.criarProspect("Da Bia", null, BIA.email)
+    await nuvem.criarProspect("Sem Dono", null)
+    const lista = await nuvem.listarProspects(ANA)
+    expect(lista.map((p) => [p.slug, p.dono])).toEqual([["da-ana", "ana.souza@boomer.com.br"]])
+  })
+
+  it("compara o dono sem diferenciar maiúsculas de minúsculas", async () => {
+    await nuvem.criarProspect("Da Ana", null, "Ana.Souza@Boomer.com.br")
+    expect((await nuvem.listarProspects(ANA)).map((p) => p.slug)).toEqual(["da-ana"])
+  })
+
+  it("o admin recebe todos, inclusive sem dono, e usa um único listarDonos", async () => {
+    await nuvem.criarProspect("Da Ana", null, ANA.email)
+    await nuvem.criarProspect("Da Bia", null, BIA.email)
+    await nuvem.criarProspect("Sem Dono", null)
+    const espiao = vi.spyOn(repositorio, "listarDonos")
+    const lista = await nuvem.listarProspects(ADM)
+    expect(lista.map((p) => p.slug).sort()).toEqual(["da-ana", "da-bia", "sem-dono"])
+    expect(lista.find((p) => p.slug === "sem-dono")?.dono).toBeNull()
+    expect(espiao).toHaveBeenCalledTimes(1)
+  })
+
+  it("o cliente de teste não aparece para um usuário comum, nem para o dono dele", async () => {
+    await nuvem.criarClienteTeste("mini", "01", ANA.email)
+    await nuvem.criarProspect("Da Ana", null, ANA.email)
+    expect((await nuvem.listarProspects(ANA)).map((p) => p.slug)).toEqual(["da-ana"])
+    expect((await nuvem.listarProspects(ADM)).map((p) => p.slug).sort()).toEqual(["cliente-teste", "da-ana"])
+    expect(await nuvem.prospectVisivel(ANA, "cliente-teste")).toBe(false)
+    expect(await nuvem.prospectVisivel(ADM, "cliente-teste")).toBe(true)
+  })
+
+  it("prospectVisivel: true para o próprio; false para alheio, sem dono, inexistente e excluído (sem lançar)", async () => {
+    await nuvem.criarProspect("Da Ana", null, ANA.email)
+    await nuvem.criarProspect("Sem Dono", null)
+    await nuvem.criarProspect("Excluida", null, ANA.email)
+    await nuvem.excluirProspect("excluida", "excluida")
+
+    expect(await nuvem.prospectVisivel(ANA, "da-ana")).toBe(true)
+    expect(await nuvem.prospectVisivel(BIA, "da-ana")).toBe(false)
+    expect(await nuvem.prospectVisivel(ANA, "sem-dono")).toBe(false)
+    expect(await nuvem.prospectVisivel(ANA, "nao-existe")).toBe(false)
+    expect(await nuvem.prospectVisivel(ANA, "excluida")).toBe(false)
+  })
+
+  it("prospectVisivel para admin só confere se o prospect existe", async () => {
+    await nuvem.criarProspect("Sem Dono", null)
+    await nuvem.criarProspect("Excluida", null)
+    await nuvem.excluirProspect("excluida", "excluida")
+    expect(await nuvem.prospectVisivel(ADM, "sem-dono")).toBe(true)
+    expect(await nuvem.prospectVisivel(ADM, "nao-existe")).toBe(false)
+    expect(await nuvem.prospectVisivel(ADM, "excluida")).toBe(false)
+  })
+
+  it("trocarDono normaliza o e-mail e passa a prospect para o novo dono", async () => {
+    await nuvem.criarProspect("Da Ana", null, ANA.email)
+    await nuvem.trocarDono("da-ana", "  Bia@GestaoBoomer.com ")
+    expect(repositorio.criadoPor("da-ana")).toBe("bia@gestaoboomer.com")
+    expect(await nuvem.prospectVisivel(ANA, "da-ana")).toBe(false)
+    expect(await nuvem.prospectVisivel(BIA, "da-ana")).toBe(true)
+  })
+
+  it("trocarDono de um prospect inexistente lança ErroNaoEncontrado", async () => {
+    await expect(nuvem.trocarDono("nao-existe", "bia@gestaoboomer.com")).rejects.toBeInstanceOf(ErroNaoEncontrado)
+  })
+})
+
+describe("dono com os dados em disco", () => {
+  it("listarProspects de admin traz todos, com dono null", async () => {
+    await servico.criarProspect("Um", null)
+    await servico.criarProspect("Dois", null, "ana.souza@boomer.com.br")
+    const lista = await servico.listarProspects(ADMIN)
+    expect(lista.map((p) => [p.slug, p.dono])).toEqual([
+      ["dois", null],
+      ["um", null],
+    ])
+  })
+
+  it("trocar o dono só existe na nuvem", async () => {
+    await servico.criarProspect("Um", null)
+    await expect(servico.trocarDono("um", "ana@boomer.com.br")).rejects.toBeInstanceOf(ErroEntrada)
+  })
+
+  it("usuário comum não vê nada em disco (sem dono gravado)", async () => {
+    await servico.criarProspect("Um", null)
+    const ana: UsuarioComPapel = { email: "ana@boomer.com.br", papel: "usuario" }
+    expect(await servico.listarProspects(ana)).toEqual([])
+    expect(await servico.prospectVisivel(ana, "um")).toBe(false)
+    expect(await servico.prospectVisivel(ADMIN, "um")).toBe(true)
   })
 })

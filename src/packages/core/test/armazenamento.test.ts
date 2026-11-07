@@ -26,6 +26,16 @@ describe("FsArmazenamento", () => {
     await expect(arm.criarPasta("iszi")).rejects.toBeInstanceOf(ErroProspectExistente)
   })
 
+  it("em disco não há dono: lerDono é null, listarDonos é vazio e trocarDono lança ErroEntrada", async () => {
+    await arm.criarPasta("iszi", "ana.souza@boomer.com.br")
+    expect(await arm.lerDono("iszi")).toBeNull()
+    expect((await arm.listarDonos()).size).toBe(0)
+    await expect(arm.trocarDono("iszi", "bia@gestaoboomer.com")).rejects.toThrow(
+      "Trocar o dono só existe com os dados na nuvem.",
+    )
+    await expect(arm.trocarDono("iszi", "bia@gestaoboomer.com")).rejects.toBeInstanceOf(ErroEntrada)
+  })
+
   it("lista prospects ignorando _template e pastas ocultas", async () => {
     await arm.criarPasta("b")
     await arm.criarPasta("a")

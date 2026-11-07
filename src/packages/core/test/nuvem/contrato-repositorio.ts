@@ -53,6 +53,33 @@ export function contratoRepositorio(
       if (lerCriadoPor) expect(await lerCriadoPor(repo, com)).toBeNull()
     })
 
+    it("lê o dono, troca o dono e não lista nem lê o dono de um excluído", async () => {
+      const repo = await criar()
+      const dela = novoSlug()
+      const sem = novoSlug()
+      const excluido = novoSlug()
+      await repo.criarProspect(dela, "ana.souza@boomer.com.br")
+      await repo.criarProspect(sem)
+      await repo.criarProspect(excluido, "bia@gestaoboomer.com")
+
+      expect(await repo.lerDono(dela)).toBe("ana.souza@boomer.com.br")
+      expect(await repo.lerDono(sem)).toBeNull()
+
+      await repo.trocarDono(dela, "carla@boomer.com.br")
+      expect(await repo.lerDono(dela)).toBe("carla@boomer.com.br")
+
+      await repo.excluirProspect(excluido)
+      const donos = await repo.listarDonos()
+      expect(donos.get(dela)).toBe("carla@boomer.com.br")
+      expect(donos.get(sem)).toBeNull()
+      expect(donos.has(sem)).toBe(true)
+      expect(donos.has(excluido)).toBe(false)
+      await expect(repo.lerDono(excluido)).rejects.toBeInstanceOf(ErroNaoEncontrado)
+      await expect(repo.trocarDono(excluido, "x@boomer.com.br")).rejects.toBeInstanceOf(ErroNaoEncontrado)
+      await expect(repo.trocarDono(novoSlug(), "x@boomer.com.br")).rejects.toBeInstanceOf(ErroNaoEncontrado)
+      await expect(repo.lerDono(novoSlug())).rejects.toBeInstanceOf(ErroNaoEncontrado)
+    })
+
     it("mensagem do analista volta com o autor; sem autor, sem o campo", async () => {
       const repo = await criar()
       const slug = novoSlug()

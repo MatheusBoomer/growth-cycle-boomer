@@ -5,7 +5,7 @@ import { exigirUsuario } from "@/lib/sessao"
 export async function GET() {
   try {
     await exigirUsuario()
-    return json(await servidor().servico.listarProspects())
+    return json(await servidor().servico.listarProspects({ email: null, papel: "admin" }))
   } catch (e) {
     return respostaDeErro(e)
   }

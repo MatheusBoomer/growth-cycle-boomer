@@ -33,6 +33,7 @@ import { descreverMarcacoes, type MarcaAjuste } from "./marcacoes"
 import { mensagemAjuste, mensagemAjustes, mensagemAprovacao, mensagemEtapaAnteriorAlterada, mensagemInsumoRecebido } from "./prompts"
 import type { RegistroUsoTurno } from "./nuvem/tipos"
 import { aplicarOverrides, lerKit, reposicionarNoFixture } from "./servico-teste"
+import { ehAdmin, normalizarEmail, podeVerProspect, type UsuarioComPapel } from "./papeis"
 import { normalizarSlug } from "./slug"
 import { importarStatusMd, renderStatusMd } from "./status-md"
 import {
@@ -317,11 +318,17 @@ export class ServicoPlanejamento {
     return { estado, catalogo: this.catalogo, condicoes, turnoAtivo, turnoPor, modelosDisponiveis, aprovadosForaDaInterface }
   }
 
-  async listarProspects(): Promise<ResumoProspect[]> {
+  /** Só os prospects que `usuario` pode ver; o dono vem de um único `listarDonos`. */
+  async listarProspects(usuario: UsuarioComPapel): Promise<ResumoProspect[]> {
     const resumos: ResumoProspect[] = []
+    const donos = await this.arm.listarDonos()
     for (const slug of await this.arm.listarSlugs()) {
+      const dono = donos.get(slug) ?? null
+      // Evita ler o estado de quem já é recusado só pelo dono; o cliente de teste é conferido com o resumo.
+      if (!podeVerProspect(usuario, { criadoPor: dono, teste: false })) continue
       try {
-        resumos.push(this.resumir(await this.estado(slug)))
+        const resumo = this.resumir(await this.estado(slug), dono)
+        if (podeVerProspect(usuario, { criadoPor: dono, teste: resumo.teste })) resumos.push(resumo)
       } catch (e) {
         console.error(`Não consegui ler o prospect ${slug}:`, e)
       }
@@ -329,7 +336,27 @@ export class ServicoPlanejamento {
     return resumos.sort((a, b) => b.atualizadoEm.localeCompare(a.atualizadoEm))
   }
 
-  private resumir(e: Estado): ResumoProspect {
+  /** False para prospect inexistente ou excluído, sem lançar. Admin só precisa que o prospect exista. */
+  async prospectVisivel(usuario: UsuarioComPapel, slug: string): Promise<boolean> {
+    if (!(await this.arm.existe(slug))) return false
+    if (ehAdmin(usuario)) return true
+    let criadoPor: string | null
+    try {
+      criadoPor = await this.arm.lerDono(slug)
+    } catch (e) {
+      if (e instanceof ErroNaoEncontrado) return false
+      throw e
+    }
+    if (!podeVerProspect(usuario, { criadoPor, teste: false })) return false
+    return podeVerProspect(usuario, { criadoPor, teste: (await this.estado(slug)).teste !== undefined })
+  }
+
+  /** Passa o prospect para outro dono (só com os dados na nuvem). O e-mail é gravado normalizado. */
+  trocarDono(slug: string, email: string): Promise<void> {
+    return this.arm.trocarDono(slug, normalizarEmail(email))
+  }
+
+  private resumir(e: Estado, dono: string | null): ResumoProspect {
     const prioridades = [["em_andamento", "pronta"], ["desatualizada"], ["liberada"]]
     let atual: EtapaId | null = null
     for (const grupo of prioridades) {
@@ -345,6 +372,7 @@ export class ServicoPlanejamento {
       totalEtapas: ORDEM_ETAPAS.length - 1,
       pendencias: e.entregaveis.filter((x) => x.status === "pendente").length,
       teste: e.teste !== undefined,
+      dono,
       atualizadoEm: e.atualizadoEm,
     }
   }

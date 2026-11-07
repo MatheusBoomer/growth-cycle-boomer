@@ -186,6 +186,8 @@ export interface ResumoProspect {
   totalEtapas: number
   pendencias: number
   teste: boolean
+  /** E-mail de quem criou o prospect; null em disco ou quando não há dono gravado. */
+  dono: string | null
   atualizadoEm: string
 }
 

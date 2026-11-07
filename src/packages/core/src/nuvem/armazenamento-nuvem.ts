@@ -86,6 +86,20 @@ export class NuvemArmazenamento extends FsArmazenamento {
     this.agendarSincronizacao(slug)
   }
 
+  override lerDono(slug: string): Promise<string | null> {
+    this.pastaProspect(slug)
+    return this.repositorio.lerDono(slug)
+  }
+
+  override listarDonos(): Promise<Map<string, string | null>> {
+    return this.repositorio.listarDonos()
+  }
+
+  override trocarDono(slug: string, email: string): Promise<void> {
+    this.pastaProspect(slug)
+    return this.repositorio.trocarDono(slug, email)
+  }
+
   override async lerEstado(slug: string): Promise<Estado | null> {
     this.pastaProspect(slug)
     await this.sincronizarNaPrimeiraLeitura(slug)

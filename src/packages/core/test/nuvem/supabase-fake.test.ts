@@ -263,6 +263,55 @@ describe("SupabaseRepositorio (cliente falso)", () => {
     expect(await recriar()).toBeNull()
   })
 
+  it("lerDono: lê criado_por do prospect ativo; sem linha ativa vira ErroNaoEncontrado", async () => {
+    const fake = criarFake(() => ok({ criado_por: "ana.souza@boomer.com.br" }))
+    const repo = new SupabaseRepositorio(fake.cliente, () => EM)
+    expect(await repo.lerDono("p")).toBe("ana.souza@boomer.com.br")
+    const c = fake.consultas[0]!
+    expect(op(c, "select")).toEqual(["select", "criado_por"])
+    expect(op(c, "eq")).toEqual(["eq", "slug", "p"])
+    expect(op(c, "is")).toEqual(["is", "excluido_em", null])
+
+    const semDono = new SupabaseRepositorio(criarFake(() => ok({ criado_por: null })).cliente, () => EM)
+    expect(await semDono.lerDono("p")).toBeNull()
+    const ausente = new SupabaseRepositorio(criarFake(() => ok(null)).cliente, () => EM)
+    await expect(ausente.lerDono("p")).rejects.toBeInstanceOf(ErroNaoEncontrado)
+  })
+
+  it("listarDonos: só ativos, em páginas, com null para quem não tem dono", async () => {
+    const fake = criarFake((c) => {
+      const [, de] = op(c, "range") as [string, number, number]
+      return ok(
+        de === 0
+          ? [
+              ...Array.from({ length: 999 }, (_, i) => ({ slug: `p${i}`, criado_por: "ana@boomer.com.br" })),
+              { slug: "sem-dono", criado_por: null },
+            ]
+          : [{ slug: "ultimo", criado_por: "bia@gestaoboomer.com" }],
+      )
+    })
+    const donos = await new SupabaseRepositorio(fake.cliente, () => EM).listarDonos()
+    expect(donos.size).toBe(1001)
+    expect(donos.get("sem-dono")).toBeNull()
+    expect(donos.get("ultimo")).toBe("bia@gestaoboomer.com")
+    expect(fake.consultas).toHaveLength(2)
+    expect(op(fake.consultas[0]!, "select")).toEqual(["select", "slug, criado_por"])
+    expect(op(fake.consultas[0]!, "is")).toEqual(["is", "excluido_em", null])
+  })
+
+  it("trocarDono: atualiza criado_por só de prospect ativo; zero linhas vira ErroNaoEncontrado", async () => {
+    const fake = criarFake(() => ok([{ slug: "p" }]))
+    await new SupabaseRepositorio(fake.cliente, () => EM).trocarDono("p", "carla@boomer.com.br")
+    const c = fake.consultas[0]!
+    expect(op(c, "update")![1]).toEqual({ criado_por: "carla@boomer.com.br" })
+    expect(op(c, "eq")).toEqual(["eq", "slug", "p"])
+    expect(op(c, "is")).toEqual(["is", "excluido_em", null])
+    expect(op(c, "select")).toEqual(["select", "slug"])
+
+    const vazio = new SupabaseRepositorio(criarFake(() => ok([])).cliente, () => EM)
+    await expect(vazio.trocarDono("p", "carla@boomer.com.br")).rejects.toBeInstanceOf(ErroNaoEncontrado)
+  })
+
   it("anexarConversa: a coluna autor vem da mensagem do analista; outros eventos gravam null", async () => {
     const fake = criarFake(() => ok(null))
     const repo = new SupabaseRepositorio(fake.cliente, () => EM)

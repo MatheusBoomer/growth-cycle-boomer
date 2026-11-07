@@ -38,6 +38,12 @@ export interface Repositorio {
   criarProspect(slug: string, criadoPor?: string | null): Promise<void>
   /** Marca como excluído; ErroNaoEncontrado se não existe. */
   excluirProspect(slug: string): Promise<void>
+  /** E-mail de quem é dono do prospect (`prospects.criado_por`), ou null sem dono. ErroNaoEncontrado se não existe ou foi excluído. */
+  lerDono(slug: string): Promise<string | null>
+  /** Dono de cada prospect ativo (null quando não há); excluídos ficam de fora. */
+  listarDonos(): Promise<Map<string, string | null>>
+  /** Passa o prospect para outro dono. ErroNaoEncontrado se não existe ou foi excluído. */
+  trocarDono(slug: string, email: string): Promise<void>
   /** Null enquanto o estado ainda não foi gravado. */
   lerEstado(slug: string): Promise<EstadoVersionado | null>
   /** Devolve a nova versão; ErroConflitoVersao se `versaoLida` não é a atual. */
