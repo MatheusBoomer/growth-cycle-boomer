@@ -9,6 +9,7 @@ import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@workspace/ui/components/dialog"
 import { Input } from "@workspace/ui/components/input"
+import { useAmbiente } from "@/components/marca/conta-contexto"
 import { api, mensagemDeErro, urlArquivo } from "@/lib/api"
 import { ROTULO_ORIGEM, rotuloEtapa } from "@/lib/biblioteca"
 
@@ -35,6 +36,7 @@ export function ImagemAmpliada(props: Props) {
 }
 
 function Conteudo({ slug, catalogo, itens, indice, item, aoMudarIndice, aoAjustar, aoMencionar }: Props & { item: ItemBiblioteca; indice: number }) {
+  const { nuvem } = useAmbiente()
   const [sub, setSub] = useState(0)
   const [titulo, setTitulo] = useState<string | null>(null)
   const [quebrada, setQuebrada] = useState<string | null>(null)
@@ -177,9 +179,11 @@ function Conteudo({ slug, catalogo, itens, indice, item, aoMudarIndice, aoAjusta
           <Button variant="outline" render={<a href={urlArquivo(slug, atual, true)} download />} nativeButton={false}>
             <DownloadIcon /> Baixar
           </Button>
-          <Button variant="outline" onClick={() => void api.mostrarNoFinder(slug, atual).catch((e) => toast.error(mensagemDeErro(e)))}>
-            <FolderOpenIcon /> Mostrar no Finder
-          </Button>
+          {!nuvem && (
+            <Button variant="outline" onClick={() => void api.mostrarNoFinder(slug, atual).catch((e) => toast.error(mensagemDeErro(e)))}>
+              <FolderOpenIcon /> Mostrar no Finder
+            </Button>
+          )}
         </div>
       </aside>
     </div>

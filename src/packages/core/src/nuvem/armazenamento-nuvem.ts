@@ -22,6 +22,8 @@ export class NuvemArmazenamento extends FsArmazenamento {
   private readonly sincronizacoesIniciais = new Map<string, Promise<void>>()
   private readonly versoes = new Map<string, number>()
   private readonly temporizadores = new Map<string, ReturnType<typeof setTimeout>>()
+  /** Prospects com escrita (ou sincronização que falhou) desde a subida: o que o sincronizarTudo envia. */
+  private readonly tocados = new Set<string>()
 
   constructor(d: {
     raiz: string
@@ -74,6 +76,7 @@ export class NuvemArmazenamento extends FsArmazenamento {
     await rm(this.pastaProspect(slug), { recursive: true, force: true })
     this.sincronizadosNestaExecucao.delete(slug)
     this.sincronizacoesIniciais.delete(slug)
+    this.tocados.delete(slug)
     this.versoes.delete(slug)
   }
 
@@ -152,6 +155,7 @@ export class NuvemArmazenamento extends FsArmazenamento {
     try {
       await this.mesa.sincronizar(slug)
     } catch (e) {
+      this.tocados.add(slug)
       if (e instanceof ErroSincronizacao) {
         try {
           await this.repositorio.marcarSincronizacao(slug, true)
@@ -166,12 +170,26 @@ export class NuvemArmazenamento extends FsArmazenamento {
 
   /** Reinicia o temporizador do prospect; o erro é registrado (a marca de pendente já foi feita). */
   override agendarSincronizacao(slug: string): void {
+    this.tocados.add(slug)
     this.cancelarAgendamento(slug)
     const t = setTimeout(() => {
       this.temporizadores.delete(slug)
       this.sincronizar(slug).catch((e) => console.error(`Falha ao sincronizar "${slug}":`, e))
     }, this.atrasoAgendamentoMs)
     this.temporizadores.set(slug, t)
+  }
+
+  /**
+   * Desligamento: cancela os temporizadores e sincroniza agora cada prospect tocado desde a subida. A falha de um
+   * não impede os outros; depois de tentar todos, relança o último erro (o prospect já ficou marcado como pendente).
+   * A Mesa enfileira por prospect, então uma sincronização do temporizador que já estava rodando termina antes.
+   */
+  override async sincronizarTudo(): Promise<void> {
+    for (const slug of [...this.temporizadores.keys()]) this.cancelarAgendamento(slug)
+    const resultados = await Promise.allSettled([...this.tocados].map((slug) => this.sincronizar(slug)))
+    const falhas = resultados.filter((r): r is PromiseRejectedResult => r.status === "rejected")
+    for (const f of falhas) console.error("Falha ao sincronizar no desligamento:", f.reason)
+    if (falhas.length) throw falhas.at(-1)!.reason
   }
 
   override registrarUso(r: RegistroUsoTurno): Promise<void> {

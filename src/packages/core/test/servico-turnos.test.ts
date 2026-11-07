@@ -1,9 +1,9 @@
 import { mkdir, writeFile } from "node:fs/promises"
 import path from "node:path"
-import { beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { FsArmazenamento } from "../src/armazenamento"
 import { Barramento } from "../src/barramento"
-import { ErroTurnoAtivo } from "../src/erros"
+import { ErroReiniciando, ErroTurnoAtivo } from "../src/erros"
 import { FakeExecutor, roteiroSimples, type Roteiro } from "../src/executor/fake"
 import type { PedidoTurno } from "../src/executor/tipos"
 import type { MemoriaDeSessao } from "../src/nuvem/memoria-sessao"
@@ -63,6 +63,42 @@ describe("configuração passada ao claude", () => {
     const mcp = JSON.parse(montarMcpConfig(config, "tok")) as { mcpServers: { planejamento: { args: string[]; env: Record<string, string> } } }
     expect(mcp.mcpServers.planejamento.args).toEqual([config.caminhoServidorMcp])
     expect(mcp.mcpServers.planejamento.env).toEqual({ PLANEJAMENTO_APP_URL: config.urlApp, PLANEJAMENTO_TOKEN: "tok" })
+  })
+
+  it("sem FIRECRAWL_API_KEY, o MCP é só o planejamento (JSON idêntico ao de antes)", () => {
+    const base = montarMcpConfig(config, "tok")
+    expect(montarMcpConfig(config, "tok", {})).toBe(base)
+    expect(montarMcpConfig(config, "tok", { FIRECRAWL_API_KEY: "" })).toBe(base)
+    expect(Object.keys((JSON.parse(base) as { mcpServers: object }).mcpServers)).toEqual(["planejamento"])
+  })
+
+  it("com FIRECRAWL_API_KEY, acrescenta o firecrawl e não mexe no planejamento", () => {
+    const base = JSON.parse(montarMcpConfig(config, "tok")) as { mcpServers: Record<string, unknown> }
+    const com = JSON.parse(montarMcpConfig(config, "tok", { FIRECRAWL_API_KEY: "fc-123" })) as {
+      mcpServers: Record<string, unknown>
+    }
+    expect(com.mcpServers.planejamento).toEqual(base.mcpServers.planejamento)
+    expect(com.mcpServers.firecrawl).toEqual({ command: "firecrawl-mcp", args: [], env: { FIRECRAWL_API_KEY: "fc-123" } })
+  })
+
+  it("o turno só leva o firecrawl no MCP quando firecrawlNoMcp está ligado", async () => {
+    const chaveOriginal = process.env.FIRECRAWL_API_KEY
+    process.env.FIRECRAWL_API_KEY = "fc-turno"
+    try {
+      const servidoresDoTurno = async (cfg: ConfigTurnos, nome: string) => {
+        const executor = new FakeExecutor(roteiroSimples("ok"))
+        const t = new ServicoTurnos({ servico, executor, barramento, catalogo: catalogoReal(), config: cfg })
+        const slug = await servico.criarProspect(nome, null)
+        await t.iniciar(slug, "01")
+        await t.aguardarOcioso(slug)
+        return Object.keys((JSON.parse(executor.pedidos[0]!.mcpConfig) as { mcpServers: object }).mcpServers)
+      }
+      expect(await servidoresDoTurno(config, "Sem Firecrawl")).toEqual(["planejamento"])
+      expect(await servidoresDoTurno({ ...config, firecrawlNoMcp: true }, "Com Firecrawl")).toEqual(["planejamento", "firecrawl"])
+    } finally {
+      if (chaveOriginal === undefined) delete process.env.FIRECRAWL_API_KEY
+      else process.env.FIRECRAWL_API_KEY = chaveOriginal
+    }
   })
 })
 
@@ -582,7 +618,7 @@ describe("autoria dos turnos", () => {
     expect(arm.usos.map((u) => u.autor)).toEqual([ANA])
   })
 
-  it("a vaga ativa guarda o autor e o turno da fila que vem depois não herda nenhum", async () => {
+  it("a vaga ativa guarda o autor do turno do analista e volta a null no fim", async () => {
     const { arm, svc, t } = montar()
     const slug = await svc.criarProspect("Iszi", null)
     await t.iniciar(slug, "01")
@@ -592,10 +628,35 @@ describe("autoria dos turnos", () => {
     expect(t.ativoPor(slug)).toBe(ANA)
     await t.aguardarOcioso(slug)
     expect(t.ativoPor(slug)).toBeNull()
-    // item da fila automática: turno disparado sem autor
+    expect(arm.usos.map((u) => u.autor)).toEqual([ANA])
+  })
+
+  it("o turno disparado pela fila grava o autor do item em uso_turnos e no evento automático", async () => {
+    const { arm, svc, t } = montar()
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    arm.usos.length = 0
+    await svc.enfileirar(slug, "01", "continue", ANA)
+    await t.aguardarOcioso(slug)
+    expect(arm.usos.map((u) => u.autor)).toEqual([ANA])
+    const automatica = (await svc.conversa(slug, "01")).filter((e) => e.tipo === "mensagem_analista" && e.automatica)
+    expect(automatica).toHaveLength(1)
+    expect(automatica[0]).toMatchObject({ texto: "continue", automatica: true, autor: ANA })
+  })
+
+  it("item da fila sem autor: uso_turnos com null e o evento automático sem a chave autor", async () => {
+    const { arm, svc, t } = montar()
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    arm.usos.length = 0
     await svc.enfileirar(slug, "01", "continue")
     await t.aguardarOcioso(slug)
-    expect(arm.usos.map((u) => u.autor)).toEqual([ANA, null])
+    expect(arm.usos.map((u) => u.autor)).toEqual([null])
+    const automatica = (await svc.conversa(slug, "01")).find((e) => e.tipo === "mensagem_analista" && e.automatica)
+    expect(automatica).toBeDefined()
+    expect(automatica).not.toHaveProperty("autor")
   })
 
   describe("aviso de quem está com o agente rodando", () => {
@@ -666,7 +727,28 @@ describe("autoria dos turnos", () => {
       expect(t.ativoPor(slug)).toBeNull()
     })
 
-    it("o turno da fila que vem depois não tem autor: ativoPor volta null e a recusa usa a mensagem de sempre", async () => {
+    it("o turno da fila leva o autor do item: ativoPor o devolve e a recusa cita o nome", async () => {
+      let rodadas = 0
+      const { t } = turnos(async function* (_p, sinal) {
+        rodadas++
+        yield { tipo: "sessao", sessionId: "s" }
+        if (rodadas === 2 && !sinal.aborted) await new Promise<void>((r) => sinal.addEventListener("abort", () => r(), { once: true }))
+        yield { tipo: "fim", ok: true, erro: null, sessionId: "s" }
+      })
+      const slug = await servico.criarProspect("Iszi", null)
+      await t.iniciar(slug, "01", "ana.silva@boomer.com.br")
+      await t.aguardarOcioso(slug)
+      await servico.enfileirar(slug, "01", "continue", "ana.silva@boomer.com.br")
+      // o disparo da fila é assíncrono: espera o turno começar
+      while (t.ativo(slug) !== "01" || rodadas < 2) await new Promise((r) => setTimeout(r, 5))
+      expect(t.ativoPor(slug)).toBe("ana.silva@boomer.com.br")
+      const erro = await t.enviarMensagem(slug, "01", "oi", BIA).catch((e) => e)
+      expect(erro.message).toBe("Ana Silva está com o agente rodando nesta etapa.")
+      t.parar(slug)
+      await t.aguardarOcioso(slug)
+    })
+
+    it("o turno da fila sem autor no item: ativoPor é null e a recusa usa a mensagem de sempre", async () => {
       let rodadas = 0
       const { t } = turnos(async function* (_p, sinal) {
         rodadas++
@@ -678,7 +760,6 @@ describe("autoria dos turnos", () => {
       await t.iniciar(slug, "01", "ana.silva@boomer.com.br")
       await t.aguardarOcioso(slug)
       await servico.enfileirar(slug, "01", "continue")
-      // o disparo da fila é assíncrono: espera o turno começar
       while (t.ativo(slug) !== "01" || rodadas < 2) await new Promise((r) => setTimeout(r, 5))
       expect(t.ativoPor(slug)).toBeNull()
       const erro = await t.enviarMensagem(slug, "01", "oi", BIA).catch((e) => e)
@@ -686,5 +767,182 @@ describe("autoria dos turnos", () => {
       t.parar(slug)
       await t.aguardarOcioso(slug)
     })
+  })
+})
+
+describe("desligamento: drenar os turnos", () => {
+  const REINICIANDO = "O servidor está reiniciando. Tente de novo em instantes."
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  /** Portão que o teste abre quando quer que o agente termine a resposta. */
+  function portao() {
+    let abrir: () => void = () => {}
+    const aberto = new Promise<void>((r) => (abrir = r))
+    return { aberto, abrir: () => abrir() }
+  }
+
+  /** Turnos sobre um armazenamento que registra cada sincronização em `log`. */
+  function comLog(roteiro: Roteiro) {
+    const log: string[] = []
+    class ArmEspiao extends FsArmazenamento {
+      override async sincronizar(_slug: string): Promise<void> {
+        log.push("sincronizar")
+      }
+    }
+    const svc = new ServicoPlanejamento({
+      armazenamento: new ArmEspiao(raiz, async () => {}),
+      catalogo: catalogoReal(),
+      barramento,
+      validar: async () => ({ ok: true, problemas: [], avisos: [], resumo: null }),
+    })
+    const executor = new FakeExecutor(async function* (pedido, sinal) {
+      log.push("executor")
+      yield* roteiro(pedido, sinal)
+      log.push("executor fim")
+    })
+    const t = new ServicoTurnos({ servico: svc, executor, barramento, catalogo: catalogoReal(), config })
+    return { t, svc, executor, log }
+  }
+
+  /** Responde só depois de o portão abrir. */
+  const roteiroComPortao = (p: { aberto: Promise<void> }): Roteiro =>
+    async function* () {
+      yield { tipo: "sessao", sessionId: "s" }
+      await p.aberto
+      yield { tipo: "texto", texto: "pronto" }
+      yield { tipo: "fim", ok: true, erro: null, sessionId: "s" }
+    }
+
+  /** Só termina quando o turno é abortado (mesmo contrato do executor real). */
+  const roteiroAteAbortar: Roteiro = async function* (_p, sinal) {
+    yield { tipo: "sessao", sessionId: "s" }
+    if (!sinal.aborted) await new Promise<void>((r) => sinal.addEventListener("abort", () => r(), { once: true }))
+  }
+
+  it("drenar sem turno ativo resolve na hora e não deixa temporizador", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] })
+    const { t } = turnos(roteiroSimples("ok", "s"))
+    await expect(t.drenar(300000)).resolves.toEqual({ abortados: [] })
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it("depois de drenar, iniciar, enviarMensagem e enviarMensagemComAjustes lançam ErroReiniciando (503)", async () => {
+    const { t, executor } = turnos(roteiroSimples("ok", "s"))
+    const slug = await servico.criarProspect("Iszi", null)
+    await t.drenar(1000)
+    for (const tentativa of [
+      t.iniciar(slug, "01"),
+      t.enviarMensagem(slug, "01", "oi"),
+      t.enviarMensagemComAjustes(slug, "01", "ajustar", []),
+    ]) {
+      const erro = await tentativa.catch((e: unknown) => e)
+      expect(erro).toBeInstanceOf(ErroReiniciando)
+      expect(erro).toMatchObject({ message: REINICIANDO, codigo: "reiniciando", status: 503 })
+    }
+    expect(executor.pedidos).toHaveLength(0)
+    expect(t.ativo(slug)).toBeNull()
+    expect((await servico.estado(slug)).etapas["01"].status).not.toBe("em_andamento")
+  })
+
+  it("SIGTERM no meio do turno: o turno termina, sincroniza no fim e drenar resolve sem abortar", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] })
+    const p = portao()
+    const { t, svc, log } = comLog(roteiroComPortao(p))
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await vi.waitFor(() => expect(log).toContain("executor"))
+    let resultado: { abortados: string[] } | null = null
+    const drenagem = t.drenar(5000).then((r) => (resultado = r))
+    // um turno novo é recusado com o aviso de reinício, mesmo com a vaga ocupada
+    await expect(t.enviarMensagem(slug, "01", "oi")).rejects.toBeInstanceOf(ErroReiniciando)
+    await vi.advanceTimersByTimeAsync(4000)
+    expect(resultado).toBeNull()
+    p.abrir()
+    await drenagem
+    expect(resultado).toEqual({ abortados: [] })
+    expect(log).toEqual(["sincronizar", "executor", "executor fim", "sincronizar"])
+    const conversa = await svc.conversa(slug, "01")
+    expect(conversa.at(-1)).toMatchObject({ tipo: "turno_fim", status: "ok" })
+    expect(conversa.some((e) => e.tipo === "texto_agente" && e.texto === "pronto")).toBe(true)
+    expect(t.ativo(slug)).toBeNull()
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it("passou do prazo: drenar aborta o turno, espera o turno_fim interrompido e a sincronização, e devolve o slug", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] })
+    const { t, svc, log } = comLog(roteiroAteAbortar)
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await vi.waitFor(() => expect(log).toContain("executor"))
+    let resultado: { abortados: string[] } | null = null
+    const drenagem = t.drenar(1000).then((r) => (resultado = r))
+    await vi.advanceTimersByTimeAsync(999)
+    expect(resultado).toBeNull()
+    expect(t.ativo(slug)).toBe("01")
+    await vi.advanceTimersByTimeAsync(1)
+    await drenagem
+    expect(resultado).toEqual({ abortados: [slug] })
+    expect((await svc.conversa(slug, "01")).at(-1)).toMatchObject({ tipo: "turno_fim", status: "interrompido" })
+    expect(log.at(-1)).toBe("sincronizar")
+    expect(t.ativo(slug)).toBeNull()
+  })
+
+  it("o turno da fila que ia nascer depois do turno atual não nasce: o item continua na fila", async () => {
+    const p = portao()
+    const { t, svc, executor, log } = comLog(roteiroComPortao(p))
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await vi.waitFor(() => expect(log).toContain("executor"))
+    await svc.enfileirar(slug, "01", "O analista APROVOU o entregável X.")
+    const erro = vi.spyOn(console, "error").mockImplementation(() => {})
+    const drenagem = t.drenar(5000)
+    p.abrir()
+    await expect(drenagem).resolves.toEqual({ abortados: [] })
+    await t.aguardarOcioso(slug)
+    // a fila nem tenta reservar a vaga: nada de "turno falhou" no log
+    expect(erro).not.toHaveBeenCalled()
+    erro.mockRestore()
+    expect(executor.pedidos).toHaveLength(1)
+    expect((await svc.estado(slug)).filaAutomatica).toEqual([{ etapa: "01", texto: "O analista APROVOU o entregável X." }])
+    expect(t.ativo(slug)).toBeNull()
+  })
+
+  it("item enfileirado depois de drenar não dispara turno", async () => {
+    const { t, svc, executor } = comLog(roteiroSimples("ok", "s"))
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.drenar(1000)
+    const erro = vi.spyOn(console, "error").mockImplementation(() => {})
+    await svc.enfileirar(slug, "01", "O analista APROVOU X.", "ana.silva@boomer.com.br")
+    await t.aguardarOcioso(slug)
+    expect(erro).not.toHaveBeenCalled()
+    erro.mockRestore()
+    expect(executor.pedidos).toHaveLength(0)
+    expect(t.ativo(slug)).toBeNull()
+    expect((await svc.estado(slug)).filaAutomatica).toHaveLength(1)
+  })
+
+  it("turno aceito antes do drenar, ainda se preparando, também é esperado até o fim", async () => {
+    const p = portao()
+    const { t, svc, log } = comLog(roteiroSimples("ok", "s"))
+    const slug = await svc.criarProspect("Iszi", null)
+    const original = svc.iniciarEtapa.bind(svc)
+    svc.iniciarEtapa = async (s, e) => {
+      await p.aberto
+      return original(s, e)
+    }
+    const inicio = t.iniciar(slug, "01")
+    let resultado: { abortados: string[] } | null = null
+    const drenagem = t.drenar(5000).then((r) => (resultado = r))
+    await new Promise((r) => setTimeout(r, 10))
+    expect(resultado).toBeNull()
+    p.abrir()
+    await inicio
+    await drenagem
+    expect(resultado).toEqual({ abortados: [] })
+    expect(log).toContain("executor fim")
+    expect((await svc.conversa(slug, "01")).at(-1)).toMatchObject({ tipo: "turno_fim", status: "ok" })
   })
 })

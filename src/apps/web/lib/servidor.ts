@@ -15,6 +15,7 @@ import { criarPreviaPython } from "@workspace/core/previa"
 import { ServicoComentarios } from "@workspace/core/servico-comentarios"
 import { ServicoPlanejamento } from "@workspace/core/servico-planejamento"
 import { ServicoTurnos } from "@workspace/core/servico-turnos"
+import { executorDoAmbiente } from "@workspace/core/sistema"
 import type { Catalogo } from "@workspace/core/tipos"
 import { criarValidadorPython } from "@workspace/core/validador"
 
@@ -108,12 +109,8 @@ export function servidor(): Servidor {
   const servico = new ServicoPlanejamento({ armazenamento, catalogo, barramento, validar: criarValidadorPython(raiz) })
   const comentarios = new ServicoComentarios({ armazenamento, planejamento: servico, previa: criarPreviaPython(raiz) })
   // "demo" = respostas de mentira; "sdk" = Agent SDK com ANTHROPIC_API_KEY (cobrança por uso); padrão = CLI com a assinatura.
-  const executor =
-    process.env.PLANEJAMENTO_EXECUTOR === "demo"
-      ? criarExecutorDemo()
-      : process.env.PLANEJAMENTO_EXECUTOR === "sdk"
-        ? new AgentSdkExecutor()
-        : new ClaudeCliExecutor()
+  const modoExecutor = executorDoAmbiente(process.env)
+  const executor = modoExecutor === "demo" ? criarExecutorDemo() : modoExecutor === "sdk" ? new AgentSdkExecutor() : new ClaudeCliExecutor()
   console.info(
     `[planejamento] executor: ${process.env.PLANEJAMENTO_EXECUTOR || "cli (assinatura)"}` +
       ` | ANTHROPIC_API_KEY ${process.env.ANTHROPIC_API_KEY ? "definida" : "NÃO definida"}` +
@@ -132,6 +129,7 @@ export function servidor(): Servidor {
       caminhoServidorMcp: path.join(pastaMcp, "servidor.ts"),
       caminhoHook: path.join(pastaMcp, "hook-escrita.ts"),
       comandoNode: process.execPath,
+      firecrawlNoMcp: modoExecutor === "sdk",
     },
   })
   registro.__planejamento = { raiz, catalogo, armazenamento, barramento, servico, turnos, comentarios }

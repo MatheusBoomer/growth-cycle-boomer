@@ -1,4 +1,7 @@
+import { realpathSync } from "node:fs"
+import path from "node:path"
 import { query, type Options } from "@anthropic-ai/claude-agent-sdk"
+import { ambienteDoAgente } from "./ambiente-agente"
 import { eventosDaMensagem } from "./stream-json"
 import type { EventoExecutor, Executor, PedidoTurno } from "./tipos"
 
@@ -18,7 +21,25 @@ function lerJson(texto: string): Json {
   return valor && typeof valor === "object" && !Array.isArray(valor) ? (valor as Json) : {}
 }
 
-export function montarOpcoesSdk(p: PedidoTurno, controle: AbortController, env: NodeJS.ProcessEnv): Options {
+/**
+ * Na nuvem, `<raiz>/clientes` é um link para o volume (`/data/clientes`). O Claude Code resolve links
+ * na checagem de permissão de caminho, então escrever em `<raiz>/clientes/<slug>/...` cai fora do
+ * diretório de trabalho e é negado (o SDK não tem aprovador interativo). Devolve o caminho real da
+ * pasta `clientes` só quando ela difere do caminho lógico; em pasta comum ou ausente devolve [].
+ */
+export function diretoriosExtrasDoAgente(cwd: string): string[] {
+  const logico = path.resolve(cwd, "clientes")
+  try {
+    const real = realpathSync(logico)
+    // O cwd também pode passar por link (ex.: /tmp no macOS); compara com o caminho lógico já resolvido.
+    const logicoReal = path.join(realpathSync(cwd), "clientes")
+    return real === logicoReal ? [] : [real]
+  } catch {
+    return []
+  }
+}
+
+export function montarOpcoesSdk(p: PedidoTurno, controle: AbortController, env: Record<string, string | undefined>): Options {
   const opcoes: Options = {
     cwd: p.cwd,
     systemPrompt: { type: "preset", preset: "claude_code", append: p.systemPrompt },
@@ -29,6 +50,8 @@ export function montarOpcoesSdk(p: PedidoTurno, controle: AbortController, env: 
     abortController: controle,
     env,
   }
+  const extras = diretoriosExtrasDoAgente(p.cwd)
+  if (extras.length > 0) opcoes.additionalDirectories = extras
   if (p.sessionId) opcoes.resume = p.sessionId
   return opcoes
 }
@@ -65,7 +88,7 @@ export class AgentSdkExecutor implements Executor {
     try {
       const mensagens = this.consulta({
         prompt: pedido.mensagem,
-        options: montarOpcoesSdk(pedido, controle, { ...process.env }),
+        options: montarOpcoesSdk(pedido, controle, ambienteDoAgente(process.env)),
       })
       for await (const mensagem of mensagens) {
         for (const evento of eventosDaMensagem(mensagem)) {

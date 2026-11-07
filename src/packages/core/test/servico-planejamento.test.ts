@@ -891,6 +891,89 @@ describe("autoria", () => {
     expect((await servico.estado(slug)).insumos.find((i) => i.insumoId === "site")).not.toHaveProperty("enviadoPor")
   })
 
+  describe("autor na fila automática", () => {
+    const BIA = "bia.lima@boomer.com.br"
+    const fila = async (slug: string) => (await servico.estado(slug)).filaAutomatica
+
+    it("aprovar com autor enfileira o item com esse autor; sem autor a chave não aparece", async () => {
+      const com = await graficoPendente()
+      await servico.aprovarEntregavel(com.slug, com.id, ANA)
+      expect((await fila(com.slug))[0]).toMatchObject({ etapa: "03", autor: ANA })
+      expect(await servico.retirarFila(com.slug)).toMatchObject({ etapa: "03", autor: ANA })
+
+      const sem = await graficoPendente("Outro Prospect")
+      await servico.aprovarEntregavel(sem.slug, sem.id)
+      expect((await fila(sem.slug))[0]).not.toHaveProperty("autor")
+      expect(await servico.retirarFila(sem.slug)).toMatchObject({ etapa: "03", autor: null })
+    })
+
+    it("pedir ajuste com autor enfileira o item com esse autor", async () => {
+      const { slug, id } = await graficoPendente()
+      await servico.pedirAjuste(slug, id, "trocar para barras", undefined, ANA)
+      expect((await fila(slug))[0]).toMatchObject({ etapa: "03", autor: ANA })
+    })
+
+    it("pedir ajuste sem autor enfileira sem a chave autor", async () => {
+      const { slug, id } = await graficoPendente()
+      await servico.pedirAjuste(slug, id, "trocar para barras")
+      expect((await fila(slug))[0]).not.toHaveProperty("autor")
+    })
+
+    it("pedirAjustes (chat) não enfileira: o turno é do próprio analista e a fila não ganha item", async () => {
+      const { slug, id } = await graficoPendente()
+      await servico.pedirAjustes(slug, "03", "ajustar", [{ entregavelId: id, marcas: [] }], ANA)
+      expect(await fila(slug)).toEqual([])
+    })
+
+    it("insumo enviado (arquivo) com autor enfileira o item com esse autor; sem autor a chave não aparece", async () => {
+      const slug = await prospectNaEtapa03()
+      const temp = path.join(raiz, "upload.xlsx")
+      await writeFile(temp, "x")
+      await servico.receberInsumoArquivo(slug, "03", "historico-mensal", temp, "hist.xlsx", ANA)
+      expect((await fila(slug))[0]).toMatchObject({ etapa: "03", autor: ANA })
+      await servico.retirarFila(slug)
+
+      await writeFile(temp, "x")
+      await servico.receberInsumoArquivo(slug, "03", "historico-mensal", temp, "hist.xlsx")
+      expect((await fila(slug))[0]).not.toHaveProperty("autor")
+    })
+
+    it("insumo enviado (link) com autor enfileira o item com esse autor", async () => {
+      const slug = await servico.criarProspect("Link", null)
+      await servico.iniciarEtapa(slug, "01")
+      await servico.receberInsumoLink(slug, "01", "site", "https://a.com.br", ANA)
+      expect((await fila(slug))[0]).toMatchObject({ etapa: "01", autor: ANA })
+    })
+
+    it("reabrir etapa enfileira sem autor, sem a chave no JSON do estado", async () => {
+      const slug = await prospectNaEtapa03()
+      await servico.reabrirEtapa(slug, "02")
+      const itens = await fila(slug)
+      expect(itens).toHaveLength(1)
+      expect(itens[0]).not.toHaveProperty("autor")
+      const bruto = JSON.parse(await readFile(path.join(raiz, "clientes", slug, ".app/estado.json"), "utf8"))
+      expect(bruto.filaAutomatica[0]).not.toHaveProperty("autor")
+      expect(await servico.retirarFila(slug)).toMatchObject({ etapa: "03", autor: null })
+    })
+
+    it("retirarFila junta a etapa e devolve o primeiro autor não nulo", async () => {
+      const slug = await prospectNaEtapa03()
+      await servico.enfileirar(slug, "03", "a")
+      await servico.enfileirar(slug, "03", "b", ANA)
+      await servico.enfileirar(slug, "03", "c", BIA)
+      expect(await servico.retirarFila(slug)).toEqual({ etapa: "03", texto: "a\n\nb\n\nc", autor: ANA })
+      expect(await servico.retirarFila(slug)).toBeNull()
+    })
+
+    it("retirarFila ignora o autor de itens de outra etapa", async () => {
+      const slug = await prospectNaEtapa03()
+      await servico.enfileirar(slug, "03", "a")
+      await servico.enfileirar(slug, "02", "b", ANA)
+      expect(await servico.retirarFila(slug)).toEqual({ etapa: "03", texto: "a", autor: null })
+      expect(await servico.retirarFila(slug)).toEqual({ etapa: "02", texto: "b", autor: ANA })
+    })
+  })
+
   it("estado antigo, sem os campos de autoria, continua carregando", async () => {
     const { slug } = await graficoPendente()
     const e = await servico.estado(slug)

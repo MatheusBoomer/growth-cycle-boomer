@@ -27,7 +27,12 @@ export class RegistroUso {
   }
 
   async gravar(janelas: JanelaUso[], em: string): Promise<void> {
-    await mkdir(path.dirname(this.arquivo), { recursive: true })
-    await writeFile(this.arquivo, JSON.stringify({ janelas, atualizadoEm: em } satisfies UsoAssinatura, null, 2))
+    try {
+      await mkdir(path.dirname(this.arquivo), { recursive: true })
+      await writeFile(this.arquivo, JSON.stringify({ janelas, atualizadoEm: em } satisfies UsoAssinatura, null, 2))
+    } catch {
+      // O painel de uso é só informativo e a raiz pode ser somente leitura (contêiner da nuvem):
+      // uma falha aqui nunca pode derrubar o turno que chamou.
+    }
   }
 }

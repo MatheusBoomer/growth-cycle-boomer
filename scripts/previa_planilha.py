@@ -29,6 +29,13 @@ SOFFICE_MAC = Path("/Applications/LibreOffice.app/Contents/MacOS/soffice")
 
 # Âncora de cada aba no HTML do LibreOffice: "Sheet N: <em>Nome</em>" seguida da tabela.
 ABA = re.compile(r'<a\s+name="table\d+">\s*<h1>.*?<em>(.*?)</em>.*?</h1>\s*</a>\s*(<table.*?</table>)', re.I | re.S)
+PERFIL_PT_BR = """<?xml version="1.0" encoding="UTF-8"?>
+<oor:items xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<item oor:path="/org.openoffice.Setup/L10N"><prop oor:name="ooSetupSystemLocale" oor:op="fuse"><value>pt-BR</value></prop></item>
+<item oor:path="/org.openoffice.Setup/L10N"><prop oor:name="ooLocale" oor:op="fuse"><value>pt-BR</value></prop></item>
+</oor:items>
+"""
+TABELA = re.compile(r"<table.*?</table>", re.I | re.S)
 # Atributos de número que o LibreOffice repete em cada célula e que o navegador ignora.
 ATRIBUTOS_INUTEIS = re.compile(r'\s(?:sdval|sdnum|data-sheets-[a-z]+)="[^"]*"', re.I)
 
@@ -68,6 +75,11 @@ def abas(exportado: str) -> List[Tuple[str, str]]:
     """(nome, tabela em HTML) de cada aba do HTML exportado pelo LibreOffice."""
     achadas = [(html.unescape(nome).strip(), ATRIBUTOS_INUTEIS.sub("", tabela)) for nome, tabela in ABA.findall(exportado)]
     if not achadas:
+        # LibreOffice 7.4 (Debian, imagem da nuvem) só escreve o cabeçalho "Sheet N: Nome" quando a
+        # planilha tem 2 ou mais abas visíveis; com uma só, vem a tabela sem âncora nem nome.
+        tabelas = TABELA.findall(exportado)
+        achadas = [("Planilha" if len(tabelas) == 1 else f"Aba {i}", ATRIBUTOS_INUTEIS.sub("", t)) for i, t in enumerate(tabelas, 1)]
+    if not achadas:
         raise ErroPrevia("A planilha está vazia ou o LibreOffice não exportou nenhuma aba.")
     return achadas
 
@@ -103,6 +115,9 @@ def converter(xlsx: Path, saida: Path, titulo: Optional[str] = None) -> int:
     soffice = _soffice()
     with tempfile.TemporaryDirectory() as tmp:
         perfil = Path(tmp) / "perfil"
+        # Sem isto o LibreOffice da nuvem (LANG=C.UTF-8) formata números à americana (R$ 1,234.56).
+        (perfil / "user").mkdir(parents=True)
+        (perfil / "user" / "registrymodifications.xcu").write_text(PERFIL_PT_BR, encoding="utf-8")
         try:
             subprocess.run(
                 [soffice, f"-env:UserInstallation={perfil.as_uri()}", "--headless", "--convert-to", "html:HTML (StarCalc):EmbedImages",

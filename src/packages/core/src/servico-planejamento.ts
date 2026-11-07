@@ -535,6 +535,7 @@ export class ServicoPlanejamento {
       slug,
       aprovado.etapa,
       mensagemAprovacao(aprovado.titulo, aprovado.nomeFinal, `clientes/${slug}/${aprovado.destino}`, aprovado.editadoEm !== undefined),
+      autor,
     )
   }
 
@@ -563,7 +564,7 @@ export class ServicoPlanejamento {
       await this.arm.gravarBinario(slug, rel, imagem)
       caminhoImagem = `clientes/${slug}/${rel}`
     }
-    await this.enfileirar(slug, alvo.etapa, mensagemAjuste(alvo.titulo, alvo.nomeFinal, texto.trim(), caminhoImagem))
+    await this.enfileirar(slug, alvo.etapa, mensagemAjuste(alvo.titulo, alvo.nomeFinal, texto.trim(), caminhoImagem), autor)
   }
 
   /**
@@ -711,7 +712,7 @@ export class ServicoPlanejamento {
       return { estado: novo, resultado: s === "em_andamento" || s === "pronta" }
     })
     if (resultado.ok && destino && emAndamento) {
-      await this.enfileirar(slug, etapa, mensagemInsumoRecebido(insumo.nome, `clientes/${slug}/${destino}`, resultado.resumo))
+      await this.enfileirar(slug, etapa, mensagemInsumoRecebido(insumo.nome, `clientes/${slug}/${destino}`, resultado.resumo), autor)
     }
   }
 
@@ -747,16 +748,21 @@ export class ServicoPlanejamento {
     return eventos
   }
 
-  async enfileirar(slug: string, etapa: EtapaId, texto: string): Promise<void> {
+  /** `autor`: quem provocou o item (vai para o turno que a fila disparar); só entra no estado quando existe. */
+  async enfileirar(slug: string, etapa: EtapaId, texto: string, autor: string | null = null): Promise<void> {
+    const item: ItemFila = autor ? { etapa, texto, autor } : { etapa, texto }
     await this.mutar(slug, (e) => ({
-      estado: { ...e, filaAutomatica: [...e.filaAutomatica, { etapa, texto }], atualizadoEm: this.agora() },
+      estado: { ...e, filaAutomatica: [...e.filaAutomatica, item], atualizadoEm: this.agora() },
       resultado: undefined,
     }))
     this.turnos.aoEnfileirar(slug)
   }
 
-  /** Tira da fila tudo o que é da primeira etapa com pendência e junta numa mensagem só. */
-  async retirarFila(slug: string): Promise<ItemFila | null> {
+  /**
+   * Tira da fila tudo o que é da primeira etapa com pendência e junta numa mensagem só.
+   * O autor do lote é o primeiro autor não nulo entre esses itens (ou null).
+   */
+  async retirarFila(slug: string): Promise<{ etapa: EtapaId; texto: string; autor: string | null } | null> {
     return this.mutar(slug, (e) => {
       const primeiro = e.filaAutomatica[0]
       if (!primeiro) return { estado: e, resultado: null }
@@ -764,7 +770,11 @@ export class ServicoPlanejamento {
       const resto = e.filaAutomatica.filter((i) => i.etapa !== primeiro.etapa)
       return {
         estado: { ...e, filaAutomatica: resto, atualizadoEm: this.agora() },
-        resultado: { etapa: primeiro.etapa, texto: daEtapa.map((i) => i.texto).join("\n\n") },
+        resultado: {
+          etapa: primeiro.etapa,
+          texto: daEtapa.map((i) => i.texto).join("\n\n"),
+          autor: daEtapa.find((i) => i.autor)?.autor ?? null,
+        },
       }
     })
   }

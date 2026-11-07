@@ -95,7 +95,14 @@ function ehApi(caminho: string): boolean {
   return caminho === "/api" || caminho.startsWith("/api/")
 }
 
+/** Verificação de saúde do provedor: só este caminho exato, comparado sem query e com caixa. */
+const CAMINHO_SAUDE = "/api/saude"
+
 export function decidirAcesso(e: EntradaAcesso): DecisaoAcesso {
+  // A rota de saúde não devolve dado nenhum, então o provedor pode chamá-la de qualquer host, sem sessão e em qualquer
+  // modo. Fica antes da checagem de host de propósito; só GET e HEAD, qualquer outro método nela é recusado.
+  if (soCaminho(e.caminho) === CAMINHO_SAUDE) return e.metodo === "GET" || e.metodo === "HEAD" ? { tipo: "passar" } : { tipo: "recusar" }
+
   const dados = { metodo: e.metodo, host: e.host, origin: e.origin, secFetchSite: e.secFetchSite }
 
   if (e.modo === "off") return requisicaoLocalPermitida(dados) ? { tipo: "passar" } : { tipo: "recusar" }

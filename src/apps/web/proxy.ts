@@ -1,7 +1,7 @@
 // Primeiro de tudo: o .env da raiz precisa valer antes de qualquer decisão de acesso.
 import "@/lib/ambiente"
 import { NextResponse, type NextRequest } from "next/server"
-import { decidirAcesso, dominiosPermitidos, modoDeAutenticacao } from "@workspace/core/autenticacao"
+import { caminhoProximoSeguro, decidirAcesso, dominiosPermitidos, modoDeAutenticacao } from "@workspace/core/autenticacao"
 import { hostPublico, requisicaoEhHttps } from "@/lib/origem-publica"
 import { clienteSupabaseDoServidor, usuarioDeClaims } from "@/lib/sessao"
 
@@ -73,10 +73,28 @@ export async function proxy(request: NextRequest) {
     if (await sessaoValida(request, env, gravados, cabecalhos)) decisao = decidirAcesso({ ...entrada, autenticado: true })
   }
 
+  // Quem já tem sessão válida não precisa da tela de login: segue para o destino. Só a própria página (GET/HEAD).
+  let jaLogado = false
+  if (
+    modo === "google" &&
+    decisao.tipo === "passar" &&
+    request.nextUrl.pathname === "/login" &&
+    (request.method === "GET" || request.method === "HEAD")
+  ) {
+    jaLogado = await sessaoValida(request, env, gravados, cabecalhos)
+  }
+
   let resposta: NextResponse
   switch (decisao.tipo) {
     case "passar":
-      resposta = NextResponse.next({ request })
+      if (jaLogado) {
+        // Mesmo destino seguro do restante do login; /login de volta para /login giraria sem fim.
+        const proximo = caminhoProximoSeguro(request.nextUrl.searchParams.get("proximo"))
+        const seguro = proximo.split(/[?#]/)[0] === "/login" ? "/" : proximo
+        resposta = NextResponse.redirect(new URL(seguro, origemDaRequisicao(request)))
+      } else {
+        resposta = NextResponse.next({ request })
+      }
       break
     case "login": {
       const destino = new URL("/login", origemDaRequisicao(request))

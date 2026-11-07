@@ -2,7 +2,7 @@ import { execFile } from "node:child_process"
 import { readFile } from "node:fs/promises"
 import path from "node:path"
 import { promisify } from "node:util"
-import { tokenApifyConfigurado } from "@workspace/core/sistema"
+import { chaveApiConfigurada, dadosNaNuvem, executorDoAmbiente, tokenApifyConfigurado } from "@workspace/core/sistema"
 import { respostaDeErro } from "@/lib/http"
 import { servidor } from "@/lib/servidor"
 import { exigirUsuario } from "@/lib/sessao"
@@ -10,13 +10,17 @@ import { exigirUsuario } from "@/lib/sessao"
 const exec = promisify(execFile)
 export const dynamic = "force-dynamic"
 
-export async function GET() {
-  try {
-    await exigirUsuario()
-  } catch (e) {
-    return respostaDeErro(e)
-  }
-  const claude = { instalado: false, versao: null as string | null, logado: false, metodo: null as string | null, plano: null as string | null }
+interface EstadoClaude {
+  instalado: boolean
+  versao: string | null
+  logado: boolean
+  metodo: string | null
+  plano: string | null
+}
+
+/** Claude Code instalado e logado nesta máquina (executor cli). */
+async function verificarClaude(): Promise<EstadoClaude> {
+  const claude: EstadoClaude = { instalado: false, versao: null, logado: false, metodo: null, plano: null }
   try {
     const { stdout } = await exec("claude", ["--version"], { timeout: 10_000 })
     claude.instalado = true
@@ -40,6 +44,18 @@ export async function GET() {
       // saída inesperada: tratar como não logado
     }
   }
+  return claude
+}
+
+export async function GET() {
+  try {
+    await exigirUsuario()
+  } catch (e) {
+    return respostaDeErro(e)
+  }
+  const executor = executorDoAmbiente(process.env)
+  // Com o Agent SDK (nuvem) não há Claude Code nem assinatura: o que vale é a chave da API.
+  const claude = executor === "sdk" ? { instalado: false, versao: null, logado: false, metodo: null, plano: null } : await verificarClaude()
   let python = { ok: true, detalhe: null as string | null }
   try {
     await exec("python3", ["-c", "import openpyxl, pandas, matplotlib"], { timeout: 20_000 })
@@ -60,7 +76,9 @@ export async function GET() {
   }
   const apify = tokenApifyConfigurado(process.env, conteudoEnv)
   const soffice = await (async () => {
-    for (const cmd of ["soffice", "/Applications/LibreOffice.app/Contents/MacOS/soffice"]) {
+    // O caminho do aplicativo só existe no macOS; no contêiner Linux vale apenas o soffice do PATH.
+    const comandos = process.platform === "darwin" ? ["soffice", "/Applications/LibreOffice.app/Contents/MacOS/soffice"] : ["soffice"]
+    for (const cmd of comandos) {
       try {
         await exec(cmd, ["--version"], { timeout: 20_000 })
         return true
@@ -76,5 +94,14 @@ export async function GET() {
   } catch {
     poppler = false
   }
-  return Response.json({ claude, python, ffmpeg, apify, previa: soffice && poppler })
+  return Response.json({
+    claude,
+    python,
+    ffmpeg,
+    apify,
+    previa: soffice && poppler,
+    executor,
+    chaveApi: chaveApiConfigurada(process.env),
+    nuvem: dadosNaNuvem(process.env),
+  })
 }

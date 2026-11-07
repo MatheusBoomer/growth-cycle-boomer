@@ -7,6 +7,7 @@ import type { EtapaId, RespostaTeste } from "@workspace/core/tipos"
 import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import { Markdown } from "@/components/markdown"
+import { useAmbiente } from "@/components/marca/conta-contexto"
 import { api, mensagemDeErro } from "@/lib/api"
 
 /** Kit do analista no cliente de teste: arquivos para enviar e roteiro de respostas. Não aparece fora de cliente de teste. */
@@ -22,6 +23,7 @@ export function PainelKit({
   /** Texto mostrado quando a etapa não tem kit; sem ele, o painel some. */
   mensagemVazia?: string
 }) {
+  const { nuvem } = useAmbiente()
   const [kit, setKit] = useState<RespostaTeste | null>(null)
 
   useEffect(() => {
@@ -50,13 +52,15 @@ export function PainelKit({
               <li key={caminho} className="flex items-center gap-2 text-sm">
                 <FileIcon className="text-muted-foreground size-4 shrink-0" />
                 <span className="min-w-0 flex-1 truncate">{caminho.split("/").pop()}</span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => api.mostrarNoFinder(slug, caminho).catch((e) => toast.error(mensagemDeErro(e)))}
-                >
-                  Mostrar no Finder
-                </Button>
+                {!nuvem && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => api.mostrarNoFinder(slug, caminho).catch((e) => toast.error(mensagemDeErro(e)))}
+                  >
+                    Mostrar no Finder
+                  </Button>
+                )}
               </li>
             ))}
           </ul>

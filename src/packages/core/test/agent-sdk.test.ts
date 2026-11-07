@@ -1,6 +1,8 @@
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync } from "node:fs"
 import { tmpdir } from "node:os"
+import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
-import { AgentSdkExecutor, montarOpcoesSdk, type ConsultaSdk } from "../src/executor/agent-sdk"
+import { AgentSdkExecutor, diretoriosExtrasDoAgente, montarOpcoesSdk, type ConsultaSdk } from "../src/executor/agent-sdk"
 import type { EventoExecutor, PedidoTurno } from "../src/executor/tipos"
 
 const pedido = (sessionId: string | null = null): PedidoTurno => ({
@@ -56,6 +58,44 @@ describe("montarOpcoesSdk", () => {
   })
 })
 
+describe("pasta clientes como link (volume da nuvem)", () => {
+  let raiz: string
+  beforeEach(() => {
+    raiz = realpathSync(mkdtempSync(path.join(tmpdir(), "agente-sdk-")))
+  })
+  afterEach(() => {
+    rmSync(raiz, { recursive: true, force: true })
+  })
+
+  it("com clientes apontando para outra pasta, libera o caminho real", () => {
+    mkdirSync(path.join(raiz, "dados"))
+    symlinkSync(path.join(raiz, "dados"), path.join(raiz, "clientes"))
+    const real = realpathSync(path.join(raiz, "dados"))
+    expect(diretoriosExtrasDoAgente(raiz)).toEqual([real])
+    const opcoes = montarOpcoesSdk({ ...pedido(), cwd: raiz }, new AbortController(), {})
+    expect(opcoes.additionalDirectories).toEqual([real])
+    expect(opcoes.cwd).toBe(raiz)
+  })
+
+  it("com clientes como pasta comum, não define a opção", () => {
+    mkdirSync(path.join(raiz, "clientes"))
+    expect(diretoriosExtrasDoAgente(raiz)).toEqual([])
+    const opcoes = montarOpcoesSdk({ ...pedido(), cwd: raiz }, new AbortController(), {})
+    expect("additionalDirectories" in opcoes).toBe(false)
+  })
+
+  it("sem pasta clientes, não define a opção", () => {
+    expect(diretoriosExtrasDoAgente(raiz)).toEqual([])
+    const opcoes = montarOpcoesSdk({ ...pedido(), cwd: raiz }, new AbortController(), {})
+    expect("additionalDirectories" in opcoes).toBe(false)
+  })
+
+  it("com link quebrado, não define a opção", () => {
+    symlinkSync(path.join(raiz, "inexistente"), path.join(raiz, "clientes"))
+    expect(diretoriosExtrasDoAgente(raiz)).toEqual([])
+  })
+})
+
 describe("AgentSdkExecutor", () => {
   it("converte as mensagens do SDK nos mesmos eventos do CLI", async () => {
     const exec = new AgentSdkExecutor({ consulta: consultaCom(mensagens) })
@@ -75,6 +115,34 @@ describe("AgentSdkExecutor", () => {
     await coletar(exec.executar(pedido(), new AbortController().signal))
     expect(recebido?.prompt).toBe("olá")
     expect(recebido?.options.env?.ANTHROPIC_API_KEY).toBe("chave-de-teste")
+  })
+
+  it("o subprocesso do agente não recebe nenhuma chave SUPABASE_* nem segredo fora da lista", async () => {
+    const originais = { ...process.env }
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role"
+    process.env.SUPABASE_URL = "https://x.supabase.co"
+    process.env.PLANEJAMENTO_APP_URL = "https://app.exemplo.com"
+    process.env.DATABASE_URL = "postgres://x"
+    try {
+      let recebido: Parameters<ConsultaSdk>[0] | undefined
+      const exec = new AgentSdkExecutor({
+        consulta: (entrada) => {
+          recebido = entrada
+          return consultaCom(mensagens)(entrada)
+        },
+      })
+      await coletar(exec.executar(pedido(), new AbortController().signal))
+      const chaves = Object.keys(recebido?.options.env ?? {})
+      expect(chaves.filter((c) => c.startsWith("SUPABASE_"))).toEqual([])
+      expect(chaves).not.toContain("PLANEJAMENTO_APP_URL")
+      expect(chaves).not.toContain("DATABASE_URL")
+      expect(recebido?.options.env?.ANTHROPIC_API_KEY).toBe("chave-de-teste")
+    } finally {
+      for (const k of ["SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_URL", "PLANEJAMENTO_APP_URL", "DATABASE_URL"]) {
+        if (originais[k] === undefined) delete process.env[k]
+        else process.env[k] = originais[k]
+      }
+    }
   })
 
   it("sem chave de API, falha antes de chamar o SDK com mensagem legível", async () => {

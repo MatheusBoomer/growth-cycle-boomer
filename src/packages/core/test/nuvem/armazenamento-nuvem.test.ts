@@ -1,9 +1,9 @@
 import { existsSync } from "node:fs"
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { Comentario } from "../../src/comentarios"
-import { ErroNaoEncontrado, ErroProspectExistente } from "../../src/erros"
+import { ErroNaoEncontrado, ErroProspectExistente, ErroSincronizacao } from "../../src/erros"
 import { estadoInicial } from "../../src/maquina-estados"
 import { NuvemArmazenamento } from "../../src/nuvem/armazenamento-nuvem"
 import { MemoriaArmazem, MemoriaRepositorio } from "../../src/nuvem/memoria"
@@ -239,5 +239,91 @@ describe("NuvemArmazenamento", () => {
       inicio: AGORA, fim: AGORA, status: "ok",
     })
     expect(repositorio.usos).toHaveLength(1)
+  })
+})
+
+describe("NuvemArmazenamento.sincronizarTudo (desligamento)", () => {
+  let raiz: string
+  let repositorio: MemoriaRepositorio
+  let armazem: MemoriaArmazem
+  let mesa: Mesa
+  let arm: NuvemArmazenamento
+
+  const manifesto = async (slug: string) => (await armazem.listarManifesto(slug)).map((e) => e.caminho)
+
+  beforeEach(async () => {
+    raiz = await raizTemporaria()
+    repositorio = new MemoriaRepositorio()
+    armazem = new MemoriaArmazem()
+    mesa = new Mesa({ pastaClientes: path.join(raiz, "clientes"), armazem, esperar: async () => {} })
+    // atraso padrão (1 s), como no servidor
+    arm = new NuvemArmazenamento({ raiz, repositorio, armazem, mesa })
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("cancela o temporizador pendente e sincroniza o slug escrito há menos de 1 s", async () => {
+    await arm.criarPasta("acme")
+    await arm.gravarTexto("acme", "contexto/notas.md", "oi")
+    await vi.advanceTimersByTimeAsync(500)
+    const sincronizar = vi.spyOn(mesa, "sincronizar")
+    expect(await manifesto("acme")).not.toContain("contexto/notas.md")
+
+    await arm.sincronizarTudo()
+
+    expect(await manifesto("acme")).toContain("contexto/notas.md")
+    expect(sincronizar).toHaveBeenCalledTimes(1)
+    expect(vi.getTimerCount()).toBe(0)
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(sincronizar).toHaveBeenCalledTimes(1)
+  })
+
+  it("um slug sem escrita não sincroniza", async () => {
+    await arm.criarPasta("acme")
+    await arm.criarPasta("beta")
+    await arm.gravarTexto("acme", "contexto/notas.md", "oi")
+    const sincronizar = vi.spyOn(mesa, "sincronizar")
+
+    await arm.sincronizarTudo()
+
+    expect(sincronizar.mock.calls.map((c) => c[0])).toEqual(["acme"])
+  })
+
+  it("sem nada escrito desde a subida, não sincroniza nada", async () => {
+    await arm.criarPasta("acme")
+    const sincronizar = vi.spyOn(mesa, "sincronizar")
+    await arm.sincronizarTudo()
+    expect(sincronizar).not.toHaveBeenCalled()
+  })
+
+  it("erro de um slug não impede os outros, e o último erro é relançado depois de tentar todos", async () => {
+    for (const slug of ["acme", "beta", "gama"]) await arm.criarPasta(slug)
+    await arm.gravarTexto("acme", "contexto/falha-acme.md", "a")
+    await arm.gravarTexto("beta", "contexto/ok.md", "b")
+    await arm.gravarTexto("gama", "contexto/falha-gama.md", "c")
+    armazem.falharEm = (op, caminho) => op === "enviar" && caminho.startsWith("contexto/falha-")
+    const erro = vi.spyOn(console, "error").mockImplementation(() => {})
+
+    const falha = await arm.sincronizarTudo().catch((e: unknown) => e)
+
+    erro.mockRestore()
+    expect(falha).toBeInstanceOf(ErroSincronizacao)
+    expect((falha as Error).message).toContain("contexto/falha-gama.md")
+    expect(await manifesto("beta")).toContain("contexto/ok.md")
+    expect(repositorio.sincronizacaoPendente("acme")).toBe(true)
+    expect(repositorio.sincronizacaoPendente("gama")).toBe(true)
+    expect(repositorio.sincronizacaoPendente("beta")).toBe(false)
+  })
+
+  it("slug excluído não volta a sincronizar", async () => {
+    await arm.criarPasta("acme")
+    await arm.gravarTexto("acme", "contexto/notas.md", "oi")
+    await arm.excluir("acme")
+    const sincronizar = vi.spyOn(mesa, "sincronizar")
+    await arm.sincronizarTudo()
+    expect(sincronizar).not.toHaveBeenCalled()
   })
 })
