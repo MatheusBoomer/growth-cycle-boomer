@@ -23,6 +23,7 @@ export const BUCKETS = [BUCKET_PROSPECTS, BUCKET_SESSOES]
 /** Tabelas na ordem de restauração (prospects primeiro, por causa das chaves estrangeiras). */
 export const TABELAS = [
   { nome: "prospects", chave: ["slug"] },
+  { nome: "usuarios", chave: ["email"] },
   { nome: "arquivos", chave: ["slug", "caminho"] },
   { nome: "arquivos_lixeira", chave: ["id"], identidade: "id" },
   { nome: "comentarios", chave: ["slug", "entregavel_id"] },
