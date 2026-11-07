@@ -154,7 +154,12 @@ const GENERICOS_UI = new Set([
   "Progress", "ProgressIndicator", "ProgressLabel", "ProgressTrack", "ProgressValue",
   "Question", "QuestionDescription", "QuestionInput", "QuestionOption", "QuestionOptions", "QuestionPrompt",
   "ResizableHandle", "ResizablePanel", "ResizablePanelGroup",
-  "Separator", "Skeleton", "Spinner", "Textarea", "Toaster",
+  "Select", "SelectContent", "SelectGroup", "SelectItem", "SelectLabel", "SelectScrollDownButton",
+  "SelectScrollUpButton", "SelectSeparator", "SelectTrigger", "SelectValue",
+  "Separator", "Skeleton", "Spinner",
+  "Table", "TableBody", "TableCaption", "TableCell", "TableFooter", "TableHead", "TableHeader", "TableRow",
+  "Textarea", "Toaster",
+  "Tooltip", "TooltipContent", "TooltipProvider", "TooltipTrigger",
 ])
 
 /** Internos do React/Next e primitivos de Radix/Base UI. Se aparecer outro no teste manual, acrescente aqui. */

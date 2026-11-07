@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { AlternarTema } from "./alternar-tema"
 import { LogoBoomer } from "./logo-boomer"
+import { LinkAdministracao } from "./link-administracao"
 import { MenuConta } from "./menu-conta"
 
 /** Barra fixa no topo: logo (volta ao início), nome da tela, a conta de quem entrou (só no modo google) e o botão de tema. Sem ações de etapa. */
@@ -16,6 +17,7 @@ export function BarraTopo({ titulo, subtitulo }: { titulo: string; subtitulo?: s
         {subtitulo && <span className="text-muted-foreground font-medium"> · {subtitulo}</span>}
       </p>
       <div className="ml-auto flex items-center gap-2">
+        <LinkAdministracao />
         <MenuConta />
         <AlternarTema />
       </div>
