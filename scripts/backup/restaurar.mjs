@@ -159,7 +159,8 @@ async function lerTabelaDoBackup(pasta, nome) {
   try {
     return JSON.parse(await readFile(path.join(pasta, "tabelas", `${nome}.json`), "utf8"))
   } catch (erro) {
-    if (erro.code === "ENOENT") return []
+    // Só tabela global (ex.: usuarios) pode faltar: backup anterior à tabela. Qualquer outra ausente é backup danificado.
+    if (erro.code === "ENOENT" && TABELAS.find((t) => t.nome === nome)?.global) return []
     throw erro
   }
 }
