@@ -30,3 +30,37 @@ export interface Acumulado {
   custoUsd: number | null
   modelos: Record<string, number> | null
 }
+
+/** Um aviso de presença: o navegador de uma pessoa avisando, a cada 30 s, que a tela está aberta numa etapa. */
+export interface LinhaPresenca {
+  slug: string
+  email: string
+  etapa: EtapaId
+  em: string
+  visivel: boolean
+  segundosSemInteracao: number
+}
+
+/** Limites, em minutos: sem interação por `ociosoMin` vira ocioso; ocioso por `descarteMin` seguidos vira descartado. */
+export interface Limites {
+  ociosoMin: number
+  descarteMin: number
+}
+
+export type Categoria = "agente" | "ativo" | "ocioso" | "descartado"
+
+/** Um bloco de 30 s, alinhado ao relógio, de uma pessoa numa etapa de um projeto. */
+export interface BlocoClassificado {
+  slug: string
+  email: string
+  etapa: EtapaId
+  bloco: number
+  categoria: Categoria
+}
+
+export interface TempoSegundos {
+  agente: number
+  ativo: number
+  ocioso: number
+  descartado: number
+}
