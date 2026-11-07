@@ -44,7 +44,7 @@ function mensagemLimpa(erro: ErroDoCliente): string {
 }
 
 /** Toda falha do cliente vira Error com a mensagem do Supabase, sem a URL nem a chave. */
-function falha(erro: ErroDoCliente): Error {
+export function falha(erro: ErroDoCliente): Error {
   return new Error(mensagemLimpa(erro))
 }
 
@@ -57,7 +57,7 @@ function ehObjetoAusente(erro: ErroDoCliente): boolean {
 }
 
 /** Lê uma tabela de 1000 em 1000 linhas, até a página vir incompleta. */
-async function paginar<T>(
+export async function paginar<T>(
   consulta: (de: number, ate: number) => PromiseLike<{ data: T[] | null; error: ErroDoCliente | null }>,
 ): Promise<T[]> {
   const todas: T[] = []
