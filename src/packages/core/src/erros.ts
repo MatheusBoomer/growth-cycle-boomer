@@ -51,6 +51,18 @@ export class ErroNaoAutenticado extends ErroDominio {
   }
 }
 
+export class ErroSemPermissao extends ErroDominio {
+  constructor() {
+    super("Só administradores podem fazer isso.", "sem_permissao", 403)
+  }
+}
+
+export class ErroUltimoAdmin extends ErroDominio {
+  constructor() {
+    super("É preciso manter pelo menos um administrador.", "ultimo_admin", 409)
+  }
+}
+
 export class ErroFixture extends ErroDominio {
   constructor(message: string) {
     super(message, "fixture_invalido", 409)
