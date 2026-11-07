@@ -1,6 +1,5 @@
 "use client"
 
-import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 import { nomeCurto } from "@workspace/core/autenticacao"
@@ -52,6 +51,14 @@ export function rotuloAcao(pessoa: PessoaComProjetos, ctx: { admins: number; euM
   }
 }
 
+/**
+ * O que fazer depois de trocar o papel de alguém. Rebaixar a si mesmo exige recarregar a página inteira: o papel
+ * vem do layout raiz, que a navegação suave não reconstrói, e a tela ainda mostraria a administração.
+ */
+export function aposTrocarPapel(pessoa: PessoaComProjetos, ctx: { euMesmo: boolean }): "recarregar-inicio" | "recarregar-lista" {
+  return pessoa.papel === "admin" && ctx.euMesmo ? "recarregar-inicio" : "recarregar-lista"
+}
+
 function data(iso: string): string {
   const d = new Date(iso)
   return Number.isNaN(d.getTime()) ? "" : d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
@@ -64,7 +71,6 @@ interface Lista {
 
 /** Aba "Pessoas": quem já entrou no app, com o papel de cada um e a ação de tornar ou retirar admin. */
 export function TabelaPessoas() {
-  const router = useRouter()
   const meuEmail = useEmailDaConta()
   const [lista, setLista] = useState<Lista | null>(null)
   const [erro, setErro] = useState<string | null>(null)
@@ -88,13 +94,13 @@ export function TabelaPessoas() {
 
   async function confirmar() {
     if (!alvo || !lista) return
-    const rebaixandoAMim = alvo.papel === "admin" && euMesmo(alvo)
+    const depois = aposTrocarPapel(alvo, { euMesmo: euMesmo(alvo) })
     setSalvando(true)
     try {
       await api.alterarPapel(alvo.email, alvo.papel === "admin" ? "usuario" : "admin")
       toast.success(alvo.papel === "admin" ? `${nomeCurto(alvo.email)} não é mais admin.` : `${nomeCurto(alvo.email)} agora é admin.`)
       setAlvo(null)
-      if (rebaixandoAMim) router.push("/")
+      if (depois === "recarregar-inicio") window.location.assign("/")
       else await carregar()
     } catch (e) {
       toast.error(mensagemDeErro(e))

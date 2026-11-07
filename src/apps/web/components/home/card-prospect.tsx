@@ -52,7 +52,7 @@ export function CardProspect({ prospect: p }: { prospect: ResumoProspect }) {
                   Abrir pasta no Finder
                 </DropdownMenuItem>
               )}
-              {admin && <DropdownMenuItem onClick={() => setTrocandoDono(true)}>Trocar dono</DropdownMenuItem>}
+              {admin && nuvem && <DropdownMenuItem onClick={() => setTrocandoDono(true)}>Trocar dono</DropdownMenuItem>}
               <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onClick={() => setExcluindo(true)}>
                 Excluir…
@@ -80,7 +80,7 @@ export function CardProspect({ prospect: p }: { prospect: ResumoProspect }) {
         <span>Atualizado em {quando(p.atualizadoEm)}</span>
       </CardFooter>
       <DialogoExcluirProspect prospect={p} aberto={excluindo} aoMudar={setExcluindo} />
-      {admin && <DialogoTrocarDono prospect={p} aberto={trocandoDono} aoMudar={setTrocandoDono} />}
+      {admin && nuvem && <DialogoTrocarDono prospect={p} aberto={trocandoDono} aoMudar={setTrocandoDono} />}
     </Card>
   )
 }

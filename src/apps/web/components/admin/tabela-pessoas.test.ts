@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { PessoaComProjetos } from "@/lib/api"
-import { rotuloAcao } from "./tabela-pessoas"
+import { aposTrocarPapel, rotuloAcao } from "./tabela-pessoas"
 
 const pessoa = (papel: "admin" | "usuario", email = "ana@boomer.com"): PessoaComProjetos => ({
   email,
@@ -34,5 +34,16 @@ describe("rotuloAcao", () => {
     const r = rotuloAcao(pessoa("admin"), { admins: 1, euMesmo: true })
     expect(r.desabilitado).toBe(true)
     expect(r.motivo).toBe("É preciso manter pelo menos um administrador.")
+  })
+})
+
+describe("aposTrocarPapel", () => {
+  it("rebaixar a si mesmo recarrega a página inicial inteira", () => {
+    expect(aposTrocarPapel(pessoa("admin"), { euMesmo: true })).toBe("recarregar-inicio")
+  })
+
+  it("rebaixar outra pessoa ou promover alguém só recarrega a lista", () => {
+    expect(aposTrocarPapel(pessoa("admin"), { euMesmo: false })).toBe("recarregar-lista")
+    expect(aposTrocarPapel(pessoa("usuario"), { euMesmo: false })).toBe("recarregar-lista")
   })
 })
