@@ -546,7 +546,7 @@ describe("autoria dos turnos", () => {
     yield { tipo: "fim", ok: true, erro: null, sessionId: "s1", uso: { custoUsd: 0.1, tokensEntrada: 10, tokensSaida: 2, modelos: null } }
   }
 
-  function montar() {
+  function montar(roteiro: Roteiro = roteiroComUso) {
     const arm = new ArmazenamentoComUso(raiz, async () => {})
     const svc = new ServicoPlanejamento({
       armazenamento: arm,
@@ -554,9 +554,30 @@ describe("autoria dos turnos", () => {
       barramento,
       validar: async () => ({ ok: true, problemas: [], avisos: [], resumo: null }),
     })
-    const t = new ServicoTurnos({ servico: svc, executor: new FakeExecutor(roteiroComUso), barramento, catalogo: catalogoReal(), config })
+    const t = new ServicoTurnos({ servico: svc, executor: new FakeExecutor(roteiro), barramento, catalogo: catalogoReal(), config })
     return { arm, svc, t }
   }
+
+  it("grava a sessão e o acumulado por modelo do turno, com o custo do turno igual ao acumulado na primeira vez", async () => {
+    const modelos = { "claude-opus-5": 0.3, "claude-haiku-5": 0.1 }
+    const { arm, svc, t } = montar(async function* () {
+      yield { tipo: "sessao", sessionId: "s7" }
+      yield { tipo: "fim", ok: true, erro: null, sessionId: "s7", uso: { custoUsd: 0.4, tokensEntrada: 10, tokensSaida: 2, modelos } }
+    })
+    const slug = await svc.criarProspect("Com Modelos", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    expect(arm.usos).toHaveLength(1)
+    expect(arm.usos[0]).toMatchObject({ slug, sessao: "s7", custoUsd: 0.4, modelosAcumulado: modelos, esforco: null })
+  })
+
+  it("sem modelUsage no resultado, o acumulado por modelo fica nulo", async () => {
+    const { arm, svc, t } = montar()
+    const slug = await svc.criarProspect("Sem Modelos", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    expect(arm.usos[0]).toMatchObject({ sessao: "s1", modelosAcumulado: null, modelos: null })
+  })
 
   it("iniciar grava o autor em uso_turnos; sem autor, null", async () => {
     const { arm, svc, t } = montar()

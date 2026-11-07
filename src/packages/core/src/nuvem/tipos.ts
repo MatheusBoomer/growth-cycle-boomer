@@ -1,4 +1,5 @@
 import type { Comentario } from "../comentarios"
+import type { Acumulado, LinhaPresenca, LinhaUso } from "../metricas/tipos"
 import type { Estado, EtapaId, EventoConversa } from "../tipos"
 
 export interface EstadoVersionado {
@@ -16,13 +17,27 @@ export interface RegistroUsoTurno {
   slug: string
   etapa: EtapaId
   autor: string | null
+  /** Conversa (sessão do SDK) do turno; null quando o executor não informou. */
+  sessao: string | null
+  /** Custo acumulado da conversa até o fim do turno, como o SDK reporta. */
   custoUsd: number | null
+  /** Custo do turno em si (acumulado menos o do turno anterior da mesma sessão). */
+  custoTurnoUsd: number | null
+  /** Custo do turno por modelo. */
+  modelos: Record<string, number> | null
+  /** Custo acumulado por modelo, como o SDK reporta. */
+  modelosAcumulado: Record<string, number> | null
+  /** Esforço de raciocínio do turno, quando houver. */
+  esforco: string | null
   tokensEntrada: number | null
   tokensSaida: number | null
   inicio: string
   fim: string
   status: "ok" | "interrompido" | "erro"
 }
+
+/** O que o `ServicoTurnos` informa; o custo do turno e por modelo o `ServicoPlanejamento` calcula antes de gravar. */
+export type EntradaUsoTurno = Omit<RegistroUsoTurno, "custoTurnoUsd" | "modelos">
 
 /** Dados estruturados de cada prospect (estado, conversa, comentários, uso). */
 export interface Repositorio {
@@ -58,6 +73,14 @@ export interface Repositorio {
   /** Apaga toda a conversa e todos os comentários do prospect; o prospect e o uso ficam. */
   limparConversasEComentarios(slug: string): Promise<void>
   registrarUso(r: RegistroUsoTurno): Promise<void>
+  /** Acumulado do turno mais recente (por `fim`) dessa sessão no prospect; null se não há. */
+  ultimoUsoDaSessao(slug: string, sessao: string): Promise<Acumulado | null>
+  /** Todos os turnos, paginado. Sem `slug`, só os de prospects ativos. */
+  listarUsos(slug?: string): Promise<LinhaUso[]>
+  /** `em` vem do banco (ou do relógio do repositório). */
+  registrarPresenca(p: Omit<LinhaPresenca, "em">): Promise<void>
+  /** Ordenado por `em`, paginado. Sem `slug`, só os de prospects ativos. */
+  listarPresencas(slug?: string): Promise<LinhaPresenca[]>
   marcarSincronizacao(slug: string, pendente: boolean): Promise<void>
 }
 

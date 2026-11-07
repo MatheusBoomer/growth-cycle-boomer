@@ -99,7 +99,7 @@ describe.skipIf(!suiteVivaHabilitada(process.env))("Supabase (integração)", ()
     }
 
     for (const slug of slugs) {
-      for (const tabela of ["eventos_conversa", "comentarios", "uso_turnos", "arquivos", "arquivos_lixeira", "prospects"]) {
+      for (const tabela of ["eventos_conversa", "comentarios", "uso_turnos", "presenca", "arquivos", "arquivos_lixeira", "prospects"]) {
         const { error } = await c.from(tabela).delete().eq("slug", slug)
         registrar(`apagar ${tabela}`, error)
       }

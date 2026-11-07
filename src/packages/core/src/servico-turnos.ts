@@ -6,7 +6,7 @@ import { etapaDoCatalogo } from "./catalogo"
 import { ErroReiniciando, ErroTurnoAtivo } from "./erros"
 import type { Executor, PedidoTurno } from "./executor/tipos"
 import type { MemoriaDeSessao } from "./nuvem/memoria-sessao"
-import type { RegistroUsoTurno } from "./nuvem/tipos"
+import type { EntradaUsoTurno } from "./nuvem/tipos"
 import { promptInicialEtapa, promptRetomadaEtapa, systemPromptModoInterface } from "./prompts"
 import type { AjusteEnvio, ServicoPlanejamento } from "./servico-planejamento"
 import type { Catalogo, EtapaId, EventoConversa } from "./tipos"
@@ -373,7 +373,7 @@ export class ServicoTurnos {
   }
 
   /** Guarda o custo do turno. Falha só vai para o console: não pode afetar o turno. */
-  private async registrarUso(r: RegistroUsoTurno): Promise<void> {
+  private async registrarUso(r: EntradaUsoTurno): Promise<void> {
     try {
       await this.servico.registrarUso(r)
     } catch (e) {
@@ -484,7 +484,10 @@ export class ServicoTurnos {
             slug,
             etapa,
             autor,
+            sessao: ev.sessionId ?? sessionId ?? null,
             custoUsd: ev.uso?.custoUsd ?? null,
+            modelosAcumulado: ev.uso?.modelos ?? null,
+            esforco: null,
             tokensEntrada: ev.uso?.tokensEntrada ?? null,
             tokensSaida: ev.uso?.tokensSaida ?? null,
             inicio,

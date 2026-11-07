@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto"
 import type { Comentario } from "../comentarios"
 import { ErroConflitoVersao, ErroNaoEncontrado, ErroProspectExistente, ErroSincronizacao } from "../erros"
+import type { Acumulado, LinhaPresenca, LinhaUso } from "../metricas/tipos"
 import type { Estado, EtapaId, EventoConversa } from "../tipos"
 import type {
   ArmazemArquivos,
@@ -24,6 +25,10 @@ export class MemoriaRepositorio implements Repositorio {
   private readonly prospects = new Map<string, RegistroProspect>()
   /** Registros de uso, abertos para inspeção nos testes. */
   readonly usos: RegistroUsoTurno[] = []
+  /** Avisos de presença, abertos para inspeção nos testes. */
+  readonly presencas: LinhaPresenca[] = []
+
+  constructor(private readonly agora: () => string = () => new Date().toISOString()) {}
 
   async listarSlugs(): Promise<string[]> {
     return [...this.prospects.entries()]
@@ -40,7 +45,11 @@ export class MemoriaRepositorio implements Repositorio {
   async criarProspect(slug: string, criadoPor: string | null = null): Promise<void> {
     const atual = this.prospects.get(slug)
     if (atual && !atual.excluido) throw new ErroProspectExistente(slug)
-    // Slug excluído: o registro antigo é substituído por inteiro, como no banco.
+    // Slug excluído: o registro antigo é substituído por inteiro, como no banco (uso e presença incluídos).
+    if (atual) {
+      this.usos.splice(0, this.usos.length, ...this.usos.filter((u) => u.slug !== slug))
+      this.presencas.splice(0, this.presencas.length, ...this.presencas.filter((p) => p.slug !== slug))
+    }
     this.prospects.set(slug, {
       excluido: false,
       estado: null,
@@ -112,6 +121,43 @@ export class MemoriaRepositorio implements Repositorio {
     this.usos.push({ ...r })
   }
 
+  async ultimoUsoDaSessao(slug: string, sessao: string): Promise<Acumulado | null> {
+    let ultimo: RegistroUsoTurno | null = null
+    for (const u of this.usos) {
+      if (u.slug !== slug || u.sessao !== sessao) continue
+      if (!ultimo || u.fim >= ultimo.fim) ultimo = u
+    }
+    if (!ultimo) return null
+    return { custoUsd: ultimo.custoUsd, modelos: ultimo.modelosAcumulado ? { ...ultimo.modelosAcumulado } : null }
+  }
+
+  async listarUsos(slug?: string): Promise<LinhaUso[]> {
+    return this.usos
+      .filter((u) => (slug ? u.slug === slug : this.estaAtivo(u.slug)))
+      .map((u) => ({
+        slug: u.slug,
+        etapa: u.etapa,
+        autor: u.autor,
+        sessao: u.sessao,
+        custoUsd: u.custoUsd,
+        custoTurnoUsd: u.custoTurnoUsd,
+        modelos: u.modelos ? { ...u.modelos } : null,
+        inicio: u.inicio,
+        fim: u.fim,
+      }))
+  }
+
+  async registrarPresenca(p: Omit<LinhaPresenca, "em">): Promise<void> {
+    this.presencas.push({ ...p, em: this.agora() })
+  }
+
+  async listarPresencas(slug?: string): Promise<LinhaPresenca[]> {
+    return this.presencas
+      .filter((p) => (slug ? p.slug === slug : this.estaAtivo(p.slug)))
+      .map((p) => ({ ...p }))
+      .sort((a, b) => a.em.localeCompare(b.em))
+  }
+
   async marcarSincronizacao(slug: string, pendente: boolean): Promise<void> {
     this.ativo(slug).sincronizacaoPendente = pendente
   }
@@ -124,6 +170,11 @@ export class MemoriaRepositorio implements Repositorio {
   /** Quem criou o prospect (`prospects.criado_por`), para os testes. */
   criadoPor(slug: string): string | null {
     return this.prospects.get(slug)?.criadoPor ?? null
+  }
+
+  private estaAtivo(slug: string): boolean {
+    const p = this.prospects.get(slug)
+    return !!p && !p.excluido
   }
 
   private ativo(slug: string): RegistroProspect {

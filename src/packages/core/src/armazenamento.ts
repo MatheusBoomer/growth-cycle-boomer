@@ -5,6 +5,7 @@ import { ehImagem } from "./biblioteca"
 import type { Comentario } from "./comentarios"
 import { ErroCaminhoForaDoProspect, ErroEntrada, ErroNaoEncontrado, ErroProspectExistente } from "./erros"
 import { etapaVazia } from "./maquina-estados"
+import type { Acumulado, LinhaPresenca, LinhaUso } from "./metricas/tipos"
 import { normalizarSlug } from "./slug"
 import type { RegistroUsoTurno } from "./nuvem/tipos"
 import { ORDEM_ETAPAS, type Estado, type EtapaId, type EventoConversa } from "./tipos"
@@ -302,6 +303,21 @@ export class FsArmazenamento {
   async sincronizarTudo(): Promise<void> {}
 
   async registrarUso(_r: RegistroUsoTurno): Promise<void> {}
+
+  /** No disco não há registro de uso: o custo do turno vale o acumulado. */
+  async ultimoUsoDaSessao(_slug: string, _sessao: string): Promise<Acumulado | null> {
+    return null
+  }
+
+  async listarUsos(_slug?: string): Promise<LinhaUso[]> {
+    return []
+  }
+
+  async registrarPresenca(_p: Omit<LinhaPresenca, "em">): Promise<void> {}
+
+  async listarPresencas(_slug?: string): Promise<LinhaPresenca[]> {
+    return []
+  }
 
   /** No disco, conversas e comentários vivem em .app/, que o reposicionamento do cliente de teste já apaga. */
   async limparConversasEComentarios(_slug: string): Promise<void> {}

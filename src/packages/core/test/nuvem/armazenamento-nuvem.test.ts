@@ -253,10 +253,19 @@ describe("NuvemArmazenamento", () => {
 
   it("registrarUso vai ao repositório", async () => {
     await arm.registrarUso({
-      slug: SLUG, etapa: "03", autor: null, custoUsd: 0.1, tokensEntrada: 1, tokensSaida: 2,
+      slug: SLUG, etapa: "03", autor: null, sessao: "s1", custoUsd: 0.1, custoTurnoUsd: 0.1, modelos: null,
+      modelosAcumulado: null, esforco: null, tokensEntrada: 1, tokensSaida: 2,
       inicio: AGORA, fim: AGORA, status: "ok",
     })
     expect(repositorio.usos).toHaveLength(1)
+    expect(await arm.ultimoUsoDaSessao(SLUG, "s1")).toEqual({ custoUsd: 0.1, modelos: null })
+    expect(await arm.listarUsos(SLUG)).toHaveLength(1)
+  })
+
+  it("registrarPresenca e listarPresencas vão ao repositório", async () => {
+    await arm.registrarPresenca({ slug: SLUG, email: "ana@x.com", etapa: "03", visivel: true, segundosSemInteracao: 4 })
+    expect(repositorio.presencas).toHaveLength(1)
+    expect(await arm.listarPresencas(SLUG)).toMatchObject([{ slug: SLUG, email: "ana@x.com", etapa: "03" }])
   })
 })
 

@@ -22,7 +22,7 @@ export function criarFake(responder: (c: Consulta) => Resposta) {
     consultas.push(consulta)
     const b: Record<string, unknown> = {}
     for (const m of [
-      "select", "insert", "update", "upsert", "delete", "eq", "is", "not", "like", "order", "range", "maybeSingle", "single",
+      "select", "insert", "update", "upsert", "delete", "eq", "is", "not", "like", "order", "limit", "range", "maybeSingle", "single",
     ]) {
       b[m] = (...args: unknown[]) => {
         consulta.ops.push([m, ...args])

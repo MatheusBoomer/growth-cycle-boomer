@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import type { Repositorio } from "../../src/nuvem/tipos"
+import type { RegistroUsoTurno, Repositorio } from "../../src/nuvem/tipos"
 import { ErroConflitoVersao, ErroNaoEncontrado, ErroProspectExistente } from "../../src/erros"
 import { estadoInicial } from "../../src/maquina-estados"
 import type { Comentario } from "../../src/comentarios"
@@ -214,7 +214,12 @@ export function contratoRepositorio(
           slug,
           etapa: "01",
           autor: null,
+          sessao: null,
           custoUsd: 0.12,
+          custoTurnoUsd: 0.12,
+          modelos: null,
+          modelosAcumulado: null,
+          esforco: null,
           tokensEntrada: 1000,
           tokensSaida: 200,
           inicio: EM,
@@ -224,6 +229,114 @@ export function contratoRepositorio(
       ).resolves.toBeUndefined()
       await expect(repo.marcarSincronizacao(slug, true)).resolves.toBeUndefined()
       await expect(repo.marcarSincronizacao(slug, false)).resolves.toBeUndefined()
+    })
+
+    describe("custo por turno e presença", () => {
+      const T1 = "2026-10-27T12:00:00.000Z"
+      const T2 = "2026-10-27T12:05:00.000Z"
+
+      function turno(slug: string, parcial: Partial<RegistroUsoTurno>): RegistroUsoTurno {
+        return {
+          slug,
+          etapa: "03",
+          autor: "ana@x.com",
+          sessao: "s1",
+          custoUsd: 0.3,
+          custoTurnoUsd: 0.3,
+          modelos: { opus: 0.3 },
+          modelosAcumulado: { opus: 0.3 },
+          esforco: null,
+          tokensEntrada: 10,
+          tokensSaida: 2,
+          inicio: T1,
+          fim: T1,
+          status: "ok",
+          ...parcial,
+        }
+      }
+
+      it("ultimoUsoDaSessao devolve o último acumulado da sessão, por fim", async () => {
+        const repo = await criar()
+        const slug = novoSlug()
+        await repo.criarProspect(slug)
+        expect(await repo.ultimoUsoDaSessao(slug, "s1")).toBeNull()
+        // Gravado fora de ordem: vale o de maior `fim`, não o último inserido.
+        await repo.registrarUso(
+          turno(slug, { custoUsd: 0.5, custoTurnoUsd: 0.2, modelos: { opus: 0.2 }, modelosAcumulado: { opus: 0.5 }, fim: T2 }),
+        )
+        await repo.registrarUso(turno(slug, { fim: T1 }))
+        await repo.registrarUso(turno(slug, { sessao: "s2", custoUsd: 9, custoTurnoUsd: 9, fim: T2 }))
+        expect(await repo.ultimoUsoDaSessao(slug, "s1")).toEqual({ custoUsd: 0.5, modelos: { opus: 0.5 } })
+        expect(await repo.ultimoUsoDaSessao(slug, "inexistente")).toBeNull()
+      })
+
+      it("listarUsos traz as colunas novas, por slug", async () => {
+        const repo = await criar()
+        const slug = novoSlug()
+        await repo.criarProspect(slug)
+        await repo.registrarUso(turno(slug, { custoUsd: 0.5, custoTurnoUsd: 0.2, modelos: { opus: 0.2 }, fim: T2 }))
+        await repo.registrarUso(turno(slug, { sessao: null, custoUsd: null, custoTurnoUsd: null, modelos: null }))
+        const usos = await repo.listarUsos(slug)
+        expect(usos).toHaveLength(2)
+        expect(usos).toContainEqual({
+          slug,
+          etapa: "03",
+          autor: "ana@x.com",
+          sessao: "s1",
+          custoUsd: 0.5,
+          custoTurnoUsd: 0.2,
+          modelos: { opus: 0.2 },
+          inicio: T1,
+          fim: T2,
+        })
+        expect(usos).toContainEqual(expect.objectContaining({ sessao: null, custoUsd: null, custoTurnoUsd: null, modelos: null }))
+      })
+
+      it("registrarPresenca seguido de listarPresencas(slug) devolve em ordem", async () => {
+        const repo = await criar()
+        const slug = novoSlug()
+        await repo.criarProspect(slug)
+        await repo.registrarPresenca({ slug, email: "ana@x.com", etapa: "03", visivel: true, segundosSemInteracao: 3 })
+        await repo.registrarPresenca({ slug, email: "bia@x.com", etapa: "04", visivel: false, segundosSemInteracao: 70 })
+        const lista = await repo.listarPresencas(slug)
+        expect(lista.map((p) => [p.email, p.etapa, p.visivel, p.segundosSemInteracao])).toEqual([
+          ["ana@x.com", "03", true, 3],
+          ["bia@x.com", "04", false, 70],
+        ])
+        expect(lista.every((p) => typeof p.em === "string" && !Number.isNaN(Date.parse(p.em)))).toBe(true)
+        expect([...lista].sort((a, b) => Date.parse(a.em) - Date.parse(b.em))).toEqual(lista)
+      })
+
+      it("prospect excluído não aparece nas listas gerais de uso e presença", async () => {
+        const repo = await criar()
+        const ativo = novoSlug()
+        const excluido = novoSlug()
+        await repo.criarProspect(ativo)
+        await repo.criarProspect(excluido)
+        for (const slug of [ativo, excluido]) {
+          await repo.registrarUso(turno(slug, {}))
+          await repo.registrarPresenca({ slug, email: "ana@x.com", etapa: "03", visivel: true, segundosSemInteracao: 0 })
+        }
+        await repo.excluirProspect(excluido)
+        const usos = (await repo.listarUsos()).map((u) => u.slug)
+        const presencas = (await repo.listarPresencas()).map((p) => p.slug)
+        expect(usos).toContain(ativo)
+        expect(usos).not.toContain(excluido)
+        expect(presencas).toContain(ativo)
+        expect(presencas).not.toContain(excluido)
+      })
+
+      it("recriar um prospect excluído apaga o uso e a presença do antigo", async () => {
+        const repo = await criar()
+        const slug = novoSlug()
+        await repo.criarProspect(slug)
+        await repo.registrarUso(turno(slug, {}))
+        await repo.registrarPresenca({ slug, email: "ana@x.com", etapa: "03", visivel: true, segundosSemInteracao: 0 })
+        await repo.excluirProspect(slug)
+        await repo.criarProspect(slug)
+        expect(await repo.listarUsos(slug)).toEqual([])
+        expect(await repo.listarPresencas(slug)).toEqual([])
+      })
     })
   })
 }

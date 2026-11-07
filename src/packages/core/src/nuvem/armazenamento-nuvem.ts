@@ -2,6 +2,7 @@ import { rm } from "node:fs/promises"
 import { FsArmazenamento, normalizarEstado } from "../armazenamento"
 import type { Comentario } from "../comentarios"
 import { ErroProspectExistente, ErroSincronizacao } from "../erros"
+import type { Acumulado, LinhaPresenca, LinhaUso } from "../metricas/tipos"
 import type { Estado, EtapaId, EventoConversa } from "../tipos"
 import type { Mesa } from "./mesa"
 import type { ArmazemArquivos, RegistroUsoTurno, Repositorio } from "./tipos"
@@ -208,6 +209,22 @@ export class NuvemArmazenamento extends FsArmazenamento {
 
   override registrarUso(r: RegistroUsoTurno): Promise<void> {
     return this.repositorio.registrarUso(r)
+  }
+
+  override ultimoUsoDaSessao(slug: string, sessao: string): Promise<Acumulado | null> {
+    return this.repositorio.ultimoUsoDaSessao(slug, sessao)
+  }
+
+  override listarUsos(slug?: string): Promise<LinhaUso[]> {
+    return this.repositorio.listarUsos(slug)
+  }
+
+  override registrarPresenca(p: Omit<LinhaPresenca, "em">): Promise<void> {
+    return this.repositorio.registrarPresenca(p)
+  }
+
+  override listarPresencas(slug?: string): Promise<LinhaPresenca[]> {
+    return this.repositorio.listarPresencas(slug)
   }
 
   private cancelarAgendamento(slug: string): void {
