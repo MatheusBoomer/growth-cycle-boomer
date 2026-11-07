@@ -2,12 +2,12 @@ import "@/lib/ambiente"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { dominiosPermitidos, emailPermitido, modoDeAutenticacao } from "@workspace/core/autenticacao"
-import { ErroNaoAutenticado } from "@workspace/core/erros"
+import { ErroEntrada, ErroNaoAutenticado, ErroNaoEncontrado, ErroSemPermissao } from "@workspace/core/erros"
+import { ehAdmin, type UsuarioComPapel } from "@workspace/core/papeis"
+import { servidor } from "@/lib/servidor"
 
-/** Quem está usando o app. `email` é null só no modo off (sem login, ninguém para identificar). */
-export interface Usuario {
-  email: string | null
-}
+/** Quem está usando o app, com o papel. `email` é null só no modo off (sem login, ninguém para identificar), e só para admin. */
+export type Usuario = UsuarioComPapel
 
 export interface ConfiguracaoSupabase {
   url: string
@@ -70,7 +70,7 @@ function veioDoGoogle(appMetadata: unknown): boolean {
  * login, então `email_verified` ausente é aceito; presente (no topo ou em `user_metadata`) precisa ser o
  * booleano true, e qualquer outro valor (false, "true", 1) recusa. Qualquer outra forma vira null.
  */
-export function usuarioDeClaims(claims: unknown, dominios: readonly string[]): Usuario | null {
+export function usuarioDeClaims(claims: unknown, dominios: readonly string[]): { email: string } | null {
   if (!ehObjeto(claims)) return null
   const { email } = claims
   if (typeof email !== "string" || !emailPermitido(email, dominios)) return null
@@ -84,10 +84,14 @@ export function usuarioDeClaims(claims: unknown, dominios: readonly string[]): U
   return { email: email.toLowerCase() }
 }
 
-/** Usuário da sessão atual (cookies de `next/headers`, só leitura), ou null sem sessão válida. No modo off devolve { email: null }. */
+/**
+ * Usuário da sessão atual (cookies de `next/headers`, só leitura), ou null sem sessão válida. No modo off devolve
+ * admin sem e-mail. Com sessão válida, o papel vem de `registrarAcesso` (que também cadastra quem entra pela primeira
+ * vez como "usuario"); sem repositório de usuários (modo fs) a sessão válida vale como admin.
+ */
 export async function usuarioDaRequisicao(): Promise<Usuario | null> {
   const env = process.env
-  if (modoDeAutenticacao(env) === "off") return { email: null }
+  if (modoDeAutenticacao(env) === "off") return { email: null, papel: "admin" }
 
   const armazem = await cookies()
   const supabase = clienteSupabaseDoServidor(
@@ -99,18 +103,50 @@ export async function usuarioDaRequisicao(): Promise<Usuario | null> {
     false,
     env,
   )
+  let identidade: { email: string } | null
   try {
     const { data, error } = await supabase.auth.getClaims()
     if (error || !data) return null
-    return usuarioDeClaims(data.claims, dominiosPermitidos(env.PLANEJAMENTO_DOMINIOS_PERMITIDOS))
+    identidade = usuarioDeClaims(data.claims, dominiosPermitidos(env.PLANEJAMENTO_DOMINIOS_PERMITIDOS))
   } catch {
     return null
   }
+  if (!identidade) return null
+  // Fora do try: se o banco falhar, o erro sobe. Nunca vira "sem sessão" nem admin por engano.
+  const { usuarios } = servidor()
+  if (usuarios === null) return { email: identidade.email, papel: "admin" }
+  return { email: identidade.email, papel: await usuarios.registrarAcesso(identidade.email) }
 }
 
 /** Como `usuarioDaRequisicao`, mas lança ErroNaoAutenticado (401) quando não há usuário. */
 export async function exigirUsuario(): Promise<Usuario> {
   const usuario = await usuarioDaRequisicao()
   if (!usuario) throw new ErroNaoAutenticado()
+  return usuario
+}
+
+/** Como `exigirUsuario`, mas só deixa passar admin: usuário comum recebe ErroSemPermissao (403). */
+export async function exigirAdmin(): Promise<Usuario> {
+  const usuario = await exigirUsuario()
+  if (!ehAdmin(usuario)) throw new ErroSemPermissao()
+  return usuario
+}
+
+/**
+ * Exige sessão e que o prospect da rota exista e seja visível para o usuário. Recebe o `ctx.params` da rota para
+ * poder ser a primeira instrução do handler. Prospect inexistente, excluído, de outro dono ou com slug malformado
+ * dão o mesmo 404, para a resposta não revelar se o projeto existe.
+ */
+export async function exigirAcessoAoProspect(params: Promise<{ slug: string }>): Promise<Usuario> {
+  const usuario = await exigirUsuario()
+  const { slug } = await params
+  let visivel: boolean
+  try {
+    visivel = await servidor().servico.prospectVisivel(usuario, slug)
+  } catch (e) {
+    if (!(e instanceof ErroEntrada)) throw e
+    visivel = false
+  }
+  if (!visivel) throw new ErroNaoEncontrado("Projeto não encontrado.")
   return usuario
 }

@@ -11,6 +11,8 @@ import { NuvemArmazenamento } from "@workspace/core/nuvem/armazenamento-nuvem"
 import { MemoriaSessao, type MemoriaDeSessao } from "@workspace/core/nuvem/memoria-sessao"
 import { Mesa } from "@workspace/core/nuvem/mesa"
 import { SupabaseArmazem, SupabaseRepositorio, criarClienteSupabase } from "@workspace/core/nuvem/supabase"
+import type { RepositorioUsuarios } from "@workspace/core/nuvem/usuarios"
+import { SupabaseUsuarios } from "@workspace/core/nuvem/usuarios-supabase"
 import { criarPreviaPython } from "@workspace/core/previa"
 import { ServicoComentarios } from "@workspace/core/servico-comentarios"
 import { ServicoPlanejamento } from "@workspace/core/servico-planejamento"
@@ -27,6 +29,8 @@ interface Servidor {
   servico: ServicoPlanejamento
   turnos: ServicoTurnos
   comentarios: ServicoComentarios
+  /** Quem já entrou e com qual papel. Null no modo fs (sem banco): toda sessão válida vale como admin. */
+  usuarios: RepositorioUsuarios | null
 }
 
 // Um só conjunto de serviços por processo, mesmo que o Next carregue este módulo em mais de uma rota.
@@ -35,6 +39,7 @@ interface Servidor {
 interface Nuvem {
   armazenamento: NuvemArmazenamento
   memoria: MemoriaDeSessao
+  usuarios: RepositorioUsuarios
 }
 const registro = globalThis as unknown as { __planejamento?: Servidor; __planejamentoNuvem?: Nuvem }
 
@@ -65,7 +70,7 @@ function montarNuvem(raiz: string): Nuvem {
     configDir: pastaConfigClaude(process.env.CLAUDE_CONFIG_DIR),
     cwd: raiz,
   })
-  registro.__planejamentoNuvem = { armazenamento, memoria }
+  registro.__planejamentoNuvem = { armazenamento, memoria, usuarios: new SupabaseUsuarios(cliente) }
   return registro.__planejamentoNuvem
 }
 
@@ -132,6 +137,6 @@ export function servidor(): Servidor {
       firecrawlNoMcp: modoExecutor === "sdk",
     },
   })
-  registro.__planejamento = { raiz, catalogo, armazenamento, barramento, servico, turnos, comentarios }
+  registro.__planejamento = { raiz, catalogo, armazenamento, barramento, servico, turnos, comentarios, usuarios: nuvem?.usuarios ?? null }
   return registro.__planejamento
 }
