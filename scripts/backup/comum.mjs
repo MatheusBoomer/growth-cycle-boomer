@@ -20,9 +20,13 @@ export const BUCKET_PROSPECTS = "planejamento-prospects"
 export const BUCKET_SESSOES = "planejamento-sessoes"
 export const BUCKETS = [BUCKET_PROSPECTS, BUCKET_SESSOES]
 
-/** Tabelas na ordem de restauração (prospects primeiro, por causa das chaves estrangeiras). */
+/**
+ * Tabelas na ordem de restauração (prospects primeiro, por causa das chaves estrangeiras).
+ * `global: true` marca tabelas que não pertencem a um prospect: a restauração as trata à parte.
+ */
 export const TABELAS = [
   { nome: "prospects", chave: ["slug"] },
+  { nome: "usuarios", chave: ["email"], global: true },
   { nome: "arquivos", chave: ["slug", "caminho"] },
   { nome: "arquivos_lixeira", chave: ["id"], identidade: "id" },
   { nome: "comentarios", chave: ["slug", "entregavel_id"] },

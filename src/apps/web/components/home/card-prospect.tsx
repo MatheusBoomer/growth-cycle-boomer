@@ -5,15 +5,17 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
+import { nomeCurto } from "@workspace/core/autenticacao"
 import type { ResumoProspect } from "@workspace/core/tipos"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@workspace/ui/components/dropdown-menu"
 import { Progress } from "@workspace/ui/components/progress"
-import { useAmbiente } from "@/components/marca/conta-contexto"
+import { useAmbiente, usePapel } from "@/components/marca/conta-contexto"
 import { api, mensagemDeErro } from "@/lib/api"
 import { DialogoExcluirProspect } from "./dialogo-excluir-prospect"
+import { DialogoTrocarDono } from "./dialogo-trocar-dono"
 
 function quando(iso: string): string {
   const d = new Date(iso)
@@ -23,7 +25,9 @@ function quando(iso: string): string {
 export function CardProspect({ prospect: p }: { prospect: ResumoProspect }) {
   const router = useRouter()
   const { nuvem } = useAmbiente()
+  const admin = usePapel() === "admin"
   const [excluindo, setExcluindo] = useState(false)
+  const [trocandoDono, setTrocandoDono] = useState(false)
   const concluido = p.etapaAtual === null
 
   return (
@@ -48,6 +52,7 @@ export function CardProspect({ prospect: p }: { prospect: ResumoProspect }) {
                   Abrir pasta no Finder
                 </DropdownMenuItem>
               )}
+              {admin && nuvem && <DropdownMenuItem onClick={() => setTrocandoDono(true)}>Trocar dono</DropdownMenuItem>}
               <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onClick={() => setExcluindo(true)}>
                 Excluir…
@@ -70,8 +75,12 @@ export function CardProspect({ prospect: p }: { prospect: ResumoProspect }) {
           )}
         </div>
       </CardContent>
-      <CardFooter className="text-muted-foreground text-[11px]">Atualizado em {quando(p.atualizadoEm)}</CardFooter>
+      <CardFooter className="text-muted-foreground flex-wrap gap-x-2 text-[11px]">
+        {admin && <span>{p.dono ? nomeCurto(p.dono) : "Sem dono"} ·</span>}
+        <span>Atualizado em {quando(p.atualizadoEm)}</span>
+      </CardFooter>
       <DialogoExcluirProspect prospect={p} aberto={excluindo} aoMudar={setExcluindo} />
+      {admin && nuvem && <DialogoTrocarDono prospect={p} aberto={trocandoDono} aoMudar={setTrocandoDono} />}
     </Card>
   )
 }

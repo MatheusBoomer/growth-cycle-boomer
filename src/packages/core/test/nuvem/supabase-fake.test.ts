@@ -1,73 +1,12 @@
 import { createHash } from "node:crypto"
-import type { SupabaseClient } from "@supabase/supabase-js"
 import { describe, expect, it } from "vitest"
 import { ErroConflitoVersao, ErroNaoEncontrado, ErroProspectExistente } from "../../src/erros"
 import { estadoInicial } from "../../src/maquina-estados"
 import { SupabaseArmazem, SupabaseRepositorio } from "../../src/nuvem/supabase"
 import type { EventoConversa } from "../../src/tipos"
+import { criarFake, ok, op } from "./supabase-fake"
 
 const EM = "2026-10-27T12:00:00.000Z"
-
-type Resposta = { data: unknown; error: { message: string; code?: string; status?: number } | null }
-
-interface Consulta {
-  tabela: string
-  /** Operações encadeadas, na ordem: [metodo, ...argumentos]. */
-  ops: Array<[string, ...unknown[]]>
-}
-
-const op = (c: Consulta, metodo: string) => c.ops.find(([m]) => m === metodo)
-
-/** Query builder mínimo, com as mesmas formas de chamada do supabase-js usadas pelo código. */
-function criarFake(responder: (c: Consulta) => Resposta) {
-  const consultas: Consulta[] = []
-  const armazenamento: Array<{ bucket: string; metodo: string; args: unknown[] }> = []
-  const respostasStorage: Record<string, (args: unknown[], bucket: string) => Resposta> = {}
-
-  function builder(tabela: string) {
-    const consulta: Consulta = { tabela, ops: [] }
-    consultas.push(consulta)
-    const b: Record<string, unknown> = {}
-    for (const m of [
-      "select", "insert", "update", "upsert", "delete", "eq", "is", "not", "like", "order", "range", "maybeSingle", "single",
-    ]) {
-      b[m] = (...args: unknown[]) => {
-        consulta.ops.push([m, ...args])
-        return b
-      }
-    }
-    b.then = (ok: (r: Resposta) => unknown, falha?: (e: unknown) => unknown) =>
-      Promise.resolve(responder(consulta)).then(ok, falha)
-    return b
-  }
-
-  const cliente = {
-    from: builder,
-    storage: {
-      from: (bucket: string) => ({
-        upload: async (...args: unknown[]) => {
-          armazenamento.push({ bucket, metodo: "upload", args })
-          return respostasStorage.upload?.(args, bucket) ?? { data: {}, error: null }
-        },
-        download: async (...args: unknown[]) => {
-          armazenamento.push({ bucket, metodo: "download", args })
-          return respostasStorage.download?.(args, bucket) ?? { data: null, error: { message: "Object not found" } }
-        },
-        list: async (...args: unknown[]) => {
-          armazenamento.push({ bucket, metodo: "list", args })
-          return respostasStorage.list?.(args, bucket) ?? { data: [], error: null }
-        },
-        remove: async (...args: unknown[]) => {
-          armazenamento.push({ bucket, metodo: "remove", args })
-          return respostasStorage.remove?.(args, bucket) ?? { data: [], error: null }
-        },
-      }),
-    },
-  }
-  return { cliente: cliente as unknown as SupabaseClient, consultas, armazenamento, respostasStorage }
-}
-
-const ok = (data: unknown): Resposta => ({ data, error: null })
 
 describe("SupabaseRepositorio (cliente falso)", () => {
   it("gravarEstado: atualiza só com a versão lida e devolve a nova", async () => {
@@ -322,6 +261,55 @@ describe("SupabaseRepositorio (cliente falso)", () => {
     }
     expect(await recriar("bia@gestaoboomer.com")).toBe("bia@gestaoboomer.com")
     expect(await recriar()).toBeNull()
+  })
+
+  it("lerDono: lê criado_por do prospect ativo; sem linha ativa vira ErroNaoEncontrado", async () => {
+    const fake = criarFake(() => ok({ criado_por: "ana.souza@boomer.com.br" }))
+    const repo = new SupabaseRepositorio(fake.cliente, () => EM)
+    expect(await repo.lerDono("p")).toBe("ana.souza@boomer.com.br")
+    const c = fake.consultas[0]!
+    expect(op(c, "select")).toEqual(["select", "criado_por"])
+    expect(op(c, "eq")).toEqual(["eq", "slug", "p"])
+    expect(op(c, "is")).toEqual(["is", "excluido_em", null])
+
+    const semDono = new SupabaseRepositorio(criarFake(() => ok({ criado_por: null })).cliente, () => EM)
+    expect(await semDono.lerDono("p")).toBeNull()
+    const ausente = new SupabaseRepositorio(criarFake(() => ok(null)).cliente, () => EM)
+    await expect(ausente.lerDono("p")).rejects.toBeInstanceOf(ErroNaoEncontrado)
+  })
+
+  it("listarDonos: só ativos, em páginas, com null para quem não tem dono", async () => {
+    const fake = criarFake((c) => {
+      const [, de] = op(c, "range") as [string, number, number]
+      return ok(
+        de === 0
+          ? [
+              ...Array.from({ length: 999 }, (_, i) => ({ slug: `p${i}`, criado_por: "ana@boomer.com.br" })),
+              { slug: "sem-dono", criado_por: null },
+            ]
+          : [{ slug: "ultimo", criado_por: "bia@gestaoboomer.com" }],
+      )
+    })
+    const donos = await new SupabaseRepositorio(fake.cliente, () => EM).listarDonos()
+    expect(donos.size).toBe(1001)
+    expect(donos.get("sem-dono")).toBeNull()
+    expect(donos.get("ultimo")).toBe("bia@gestaoboomer.com")
+    expect(fake.consultas).toHaveLength(2)
+    expect(op(fake.consultas[0]!, "select")).toEqual(["select", "slug, criado_por"])
+    expect(op(fake.consultas[0]!, "is")).toEqual(["is", "excluido_em", null])
+  })
+
+  it("trocarDono: atualiza criado_por só de prospect ativo; zero linhas vira ErroNaoEncontrado", async () => {
+    const fake = criarFake(() => ok([{ slug: "p" }]))
+    await new SupabaseRepositorio(fake.cliente, () => EM).trocarDono("p", "carla@boomer.com.br")
+    const c = fake.consultas[0]!
+    expect(op(c, "update")![1]).toEqual({ criado_por: "carla@boomer.com.br" })
+    expect(op(c, "eq")).toEqual(["eq", "slug", "p"])
+    expect(op(c, "is")).toEqual(["is", "excluido_em", null])
+    expect(op(c, "select")).toEqual(["select", "slug"])
+
+    const vazio = new SupabaseRepositorio(criarFake(() => ok([])).cliente, () => EM)
+    await expect(vazio.trocarDono("p", "carla@boomer.com.br")).rejects.toBeInstanceOf(ErroNaoEncontrado)
   })
 
   it("anexarConversa: a coluna autor vem da mensagem do analista; outros eventos gravam null", async () => {

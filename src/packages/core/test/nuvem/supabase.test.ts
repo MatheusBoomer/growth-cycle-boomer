@@ -2,9 +2,11 @@ import { afterAll, describe } from "vitest"
 import { ErroProspectExistente } from "../../src/erros"
 import { criarClienteSupabase, SupabaseArmazem, SupabaseRepositorio } from "../../src/nuvem/supabase"
 import type { ArmazemArquivos, EntradaManifesto } from "../../src/nuvem/tipos"
+import { SupabaseUsuarios } from "../../src/nuvem/usuarios-supabase"
 import { contratoArmazem } from "./contrato-armazem"
 import { contratoRepositorio } from "./contrato-repositorio"
-import { ehSlugDeContrato, PREFIXO_CONTRATO, suiteVivaHabilitada } from "./suite-viva"
+import { contratoUsuarios } from "./contrato-usuarios"
+import { ehEmailDeContrato, ehSlugDeContrato, PREFIXO_CONTRATO, suiteVivaHabilitada } from "./suite-viva"
 
 const BUCKETS = ["planejamento-prospects", "planejamento-sessoes"]
 
@@ -70,6 +72,14 @@ describe.skipIf(!suiteVivaHabilitada(process.env))("Supabase (integração)", ()
     async () => new ArmazemComProspect(new SupabaseArmazem(cliente()), new SupabaseRepositorio(cliente())),
   )
 
+  contratoUsuarios("supabase", async (agora) => ({
+    repo: new SupabaseUsuarios(cliente(), agora),
+    semearAdmin: async (email) => {
+      const { error } = await cliente().from("usuarios").upsert({ email, papel: "admin" }, { onConflict: "email" })
+      if (error) throw new Error(error.message)
+    },
+  }))
+
   /**
    * Apaga linhas e objetos dos slugs gerados pelos contratos (formato exato de novoSlug, nunca só o prefixo:
    * um prospect real "Contrato X" vira contrato-x), só no schema planejamento e nos buckets planejamento-*.
@@ -93,6 +103,18 @@ describe.skipIf(!suiteVivaHabilitada(process.env))("Supabase (integração)", ()
         const { error } = await c.from(tabela).delete().eq("slug", slug)
         registrar(`apagar ${tabela}`, error)
       }
+    }
+
+    // Usuários criados pelos contratos: só o formato exato de novoEmail, nunca o admin real nem outra pessoa.
+    const { data: usuarios, error: erroUsuarios } = await c
+      .from("usuarios")
+      .select("email")
+      .like("email", `${PREFIXO_CONTRATO}%@teste.invalid`)
+    registrar("ler usuarios", erroUsuarios)
+    for (const linha of usuarios ?? []) {
+      if (!ehEmailDeContrato(String(linha.email))) continue
+      const { error } = await c.from("usuarios").delete().eq("email", linha.email)
+      registrar("apagar usuarios", error)
     }
 
     // Objetos sem linha no banco também vazam: a busca parte da raiz de cada bucket.

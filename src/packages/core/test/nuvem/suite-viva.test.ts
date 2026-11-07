@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { ehSlugDeContrato, novoSlug, suiteVivaHabilitada } from "./suite-viva"
+import { ehEmailDeContrato, ehSlugDeContrato, novoEmail, novoSlug, suiteVivaHabilitada } from "./suite-viva"
 
 describe("slugs da suíte de contrato", () => {
   it("a limpeza da suíte viva só reconhece o formato gerado por novoSlug", () => {
@@ -18,5 +18,20 @@ describe("suiteVivaHabilitada", () => {
     expect(suiteVivaHabilitada({ SUPABASE_TESTE_SERVICE_ROLE_KEY: "k" })).toBe(false)
     expect(suiteVivaHabilitada({ SUPABASE_TESTE_URL: "u", SUPABASE_TESTE_SERVICE_ROLE_KEY: "" })).toBe(false)
     expect(suiteVivaHabilitada({ SUPABASE_TESTE_URL: "u", SUPABASE_TESTE_SERVICE_ROLE_KEY: "k" })).toBe(true)
+  })
+})
+
+describe("e-mails da suíte de contrato", () => {
+  it("a limpeza só reconhece o formato gerado por novoEmail", () => {
+    for (let i = 0; i < 20; i++) expect(ehEmailDeContrato(novoEmail())).toBe(true)
+    for (const real of [
+      "matheus.moreira@boomer.com.br",
+      "contrato-x@teste.invalid",
+      "contrato-0123456789ab@boomer.com.br",
+      "contrato-0123456789ab@testeXinvalid",
+      "contrato-0123456789ab@teste.invalid.com",
+    ]) {
+      expect(ehEmailDeContrato(real)).toBe(false)
+    }
   })
 })

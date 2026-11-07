@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { ErroProspectExistente } from "@workspace/core/erros"
 
-const exigirUsuario = vi.hoisted(() => vi.fn())
-vi.mock("@/lib/sessao", () => ({ exigirUsuario }))
+const exigirAdmin = vi.hoisted(() => vi.fn())
+vi.mock("@/lib/sessao", () => ({ exigirAdmin }))
 
 const servico = vi.hoisted(() => ({ criarClienteTeste: vi.fn() }))
 vi.mock("@/lib/servidor", () => ({ servidor: () => ({ servico }) }))
@@ -13,9 +13,9 @@ const chamar = (corpo: unknown) =>
   POST(new Request("http://127.0.0.1:3000/api/cliente-teste", { method: "POST", body: JSON.stringify(corpo), headers: { "content-type": "application/json" } }))
 
 beforeEach(() => {
-  exigirUsuario.mockReset()
+  exigirAdmin.mockReset()
   servico.criarClienteTeste.mockReset()
-  exigirUsuario.mockResolvedValue({ email: "bia.lima@boomer.com.br" })
+  exigirAdmin.mockResolvedValue({ email: "bia.lima@boomer.com.br" })
   servico.criarClienteTeste.mockResolvedValue("verdeluz-teste")
 })
 

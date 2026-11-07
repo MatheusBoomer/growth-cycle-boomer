@@ -55,6 +55,20 @@ export class MemoriaRepositorio implements Repositorio {
     this.ativo(slug).excluido = true
   }
 
+  async lerDono(slug: string): Promise<string | null> {
+    return this.ativo(slug).criadoPor
+  }
+
+  async listarDonos(): Promise<Map<string, string | null>> {
+    const donos = new Map<string, string | null>()
+    for (const [slug, p] of this.prospects) if (!p.excluido) donos.set(slug, p.criadoPor)
+    return donos
+  }
+
+  async trocarDono(slug: string, email: string): Promise<void> {
+    this.ativo(slug).criadoPor = email
+  }
+
   async lerEstado(slug: string): Promise<EstadoVersionado | null> {
     const p = this.prospects.get(slug)
     if (!p?.estado) return null

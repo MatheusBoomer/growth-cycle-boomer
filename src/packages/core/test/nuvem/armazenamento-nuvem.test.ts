@@ -49,6 +49,24 @@ describe("NuvemArmazenamento", () => {
     expect(repositorio.criadoPor(SLUG)).toBeNull()
   })
 
+  it("dono: lê, lista e troca pelo repositório; excluído some da lista e não tem dono", async () => {
+    await arm.criarPasta(SLUG, "ana.souza@boomer.com.br")
+    await arm.criarPasta("beta")
+    expect(await arm.lerDono(SLUG)).toBe("ana.souza@boomer.com.br")
+    expect(await arm.listarDonos()).toEqual(
+      new Map([
+        [SLUG, "ana.souza@boomer.com.br"],
+        ["beta", null],
+      ]),
+    )
+    await arm.trocarDono(SLUG, "bia@gestaoboomer.com")
+    expect(repositorio.criadoPor(SLUG)).toBe("bia@gestaoboomer.com")
+    await arm.excluir(SLUG)
+    expect((await arm.listarDonos()).has(SLUG)).toBe(false)
+    await expect(arm.lerDono(SLUG)).rejects.toBeInstanceOf(ErroNaoEncontrado)
+    await expect(arm.trocarDono(SLUG, "x@boomer.com.br")).rejects.toBeInstanceOf(ErroNaoEncontrado)
+  })
+
   it("recriar um prospect excluído começa do zero: sem manifesto antigo, sem conversa, template de novo", async () => {
     await arm.criarPasta(SLUG)
     await arm.gravarTexto(SLUG, "contexto/velho.md", "velho")

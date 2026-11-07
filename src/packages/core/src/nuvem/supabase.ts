@@ -44,7 +44,7 @@ function mensagemLimpa(erro: ErroDoCliente): string {
 }
 
 /** Toda falha do cliente vira Error com a mensagem do Supabase, sem a URL nem a chave. */
-function falha(erro: ErroDoCliente): Error {
+export function falha(erro: ErroDoCliente): Error {
   return new Error(mensagemLimpa(erro))
 }
 
@@ -57,7 +57,7 @@ function ehObjetoAusente(erro: ErroDoCliente): boolean {
 }
 
 /** Lê uma tabela de 1000 em 1000 linhas, até a página vir incompleta. */
-async function paginar<T>(
+export async function paginar<T>(
   consulta: (de: number, ate: number) => PromiseLike<{ data: T[] | null; error: ErroDoCliente | null }>,
 ): Promise<T[]> {
   const todas: T[] = []
@@ -154,6 +154,36 @@ export class SupabaseRepositorio implements Repositorio {
     const { data, error } = await this.cliente
       .from("prospects")
       .update({ excluido_em: this.agora() })
+      .eq("slug", slug)
+      .is("excluido_em", null)
+      .select("slug")
+    if (error) throw falha(error)
+    if (!data || data.length === 0) throw new ErroNaoEncontrado(`Prospect "${slug}" não encontrado.`)
+  }
+
+  async lerDono(slug: string): Promise<string | null> {
+    const { data, error } = await this.cliente
+      .from("prospects")
+      .select("criado_por")
+      .eq("slug", slug)
+      .is("excluido_em", null)
+      .maybeSingle()
+    if (error) throw falha(error)
+    if (!data) throw new ErroNaoEncontrado(`Prospect "${slug}" não encontrado.`)
+    return (data.criado_por as string | null) ?? null
+  }
+
+  async listarDonos(): Promise<Map<string, string | null>> {
+    const linhas = await paginar<{ slug: string; criado_por: string | null }>((de, ate) =>
+      this.cliente.from("prospects").select("slug, criado_por").is("excluido_em", null).order("slug").range(de, ate),
+    )
+    return new Map(linhas.map((l) => [l.slug, l.criado_por ?? null]))
+  }
+
+  async trocarDono(slug: string, email: string): Promise<void> {
+    const { data, error } = await this.cliente
+      .from("prospects")
+      .update({ criado_por: email })
       .eq("slug", slug)
       .is("excluido_em", null)
       .select("slug")

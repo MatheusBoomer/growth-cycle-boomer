@@ -24,10 +24,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // Modo dev de comentários: só no next dev. Em produção a condição vira false no build e o import some.
   const ModoDev =
     process.env.NODE_ENV === "development" ? (await import("@/components/modo-dev/carregador")).CarregadorModoDev : null
-  // Quem entrou, para o menu da conta. No modo off é null e a barra não mostra conta; qualquer falha também.
-  const email = await usuarioDaRequisicao()
-    .then((u) => u?.email ?? null)
-    .catch(() => null)
+  // Quem entrou e com que papel, para o menu da conta e para o que cada tela mostra. No modo off o e-mail é null
+  // (a barra não mostra conta) e o papel é admin; qualquer falha vira "sem conta" e o papel mais restrito.
+  const usuario = await usuarioDaRequisicao().catch(() => null)
+  const email = usuario?.email ?? null
+  const papel = usuario?.papel ?? "usuario"
   // Só o modo (nunca segredo): esconde na nuvem o que só faz sentido na máquina do analista.
   const ambiente = { executor: executorDoAmbiente(process.env), nuvem: dadosNaNuvem(process.env) }
   return (
@@ -35,7 +36,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body>
         <ThemeProvider>
           <FundoBoomer />
-          <ProvedorConta email={email} ambiente={ambiente}>{children}</ProvedorConta>
+          <ProvedorConta email={email} papel={papel} ambiente={ambiente}>{children}</ProvedorConta>
           <VerificacaoSistema />
           <Toaster />
           {ModoDev && <ModoDev />}

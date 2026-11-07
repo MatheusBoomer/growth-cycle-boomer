@@ -10,6 +10,8 @@
 //   - Prospect que existe: só voltam as linhas de `arquivos` e os objetos que sumiram.
 //   - --como <novo-slug>: recria o prospect do backup com outro slug, ao lado do original (para
 //     conferir um backup sem mexer no prospect de verdade). O novo slug não pode existir.
+//   - Usuários (tabela global): só na restauração completa (sem --prospect e sem --como). Entram
+//     só os e-mails que ainda não existem; papéis já cadastrados nunca são alterados.
 import { readFile } from "node:fs/promises"
 import path from "node:path"
 import {
@@ -54,7 +56,7 @@ async function principal() {
   const pasta = path.resolve(op.pasta)
   const manifesto = JSON.parse(await readFile(path.join(pasta, "manifesto.json"), "utf8"))
   const backup = {}
-  for (const t of TABELAS) backup[t.nome] = JSON.parse(await readFile(path.join(pasta, "tabelas", `${t.nome}.json`), "utf8"))
+  for (const t of TABELAS) backup[t.nome] = await lerTabelaDoBackup(pasta, t.nome)
 
   const cliente = criarCliente()
   console.log(`Backup de ${manifesto.criado_em} · ${op.aplicar ? "APLICANDO" : "simulação (nada é escrito; use --aplicar)"}`)
@@ -72,6 +74,7 @@ async function principal() {
 
   let pendencias = 0
   for (const origem of slugs) {
+    // (o laço por prospect cuida só das tabelas com slug; as globais vêm depois)
     const destino = op.como ?? origem
     const recriar = !noSupabase.has(destino)
     const doProspect = (nome) => backup[nome].filter((l) => l.slug === origem)
@@ -79,7 +82,7 @@ async function principal() {
     // Linhas a inserir
     const linhas = {}
     if (recriar) {
-      for (const t of TABELAS) {
+      for (const t of TABELAS.filter((t) => !t.global)) {
         linhas[t.nome] = doProspect(t.nome).map((l) => {
           const nova = { ...l, slug: destino }
           if (t.identidade) delete nova[t.identidade] // o banco gera um id novo (coluna GENERATED ALWAYS)
@@ -127,8 +130,39 @@ async function principal() {
     console.log(`  ✓ restaurado`)
   }
 
+  // Tabelas globais (usuários): só na restauração completa, e só insere o que falta
+  if (!op.prospect && !op.como) {
+    for (const t of TABELAS.filter((t) => t.global)) {
+      const { data: existentes, error } = await cliente.from(t.nome).select(t.chave.join(","))
+      if (error) throw new Error(limpar(error))
+      const chaveDe = (l) => t.chave.map((c) => l[c]).join("|")
+      const jaTem = new Set((existentes ?? []).map(chaveDe))
+      const faltam = backup[t.nome].filter((l) => !jaTem.has(chaveDe(l)))
+      pendencias += faltam.length
+      if (faltam.length === 0) {
+        console.log(`· ${t.nome}: nada faltando`)
+        continue
+      }
+      console.log(`· ${t.nome}: repor o que falta · linhas: ${faltam.length}`)
+      if (!op.aplicar) continue
+      await inserir(cliente, t.nome, faltam)
+      console.log(`  ✓ ${faltam.length} restaurado(s)`)
+    }
+  }
+
   if (pendencias === 0) console.log("Nada a restaurar: o Supabase já tem tudo o que está neste backup.")
   else if (!op.aplicar) console.log("Simulação concluída. Para executar, rode de novo com --aplicar.")
+}
+
+/** Linhas de uma tabela do backup. Backup feito antes da tabela existir não tem o arquivo: conta como vazio. */
+async function lerTabelaDoBackup(pasta, nome) {
+  try {
+    return JSON.parse(await readFile(path.join(pasta, "tabelas", `${nome}.json`), "utf8"))
+  } catch (erro) {
+    // Só tabela global (ex.: usuarios) pode faltar: backup anterior à tabela. Qualquer outra ausente é backup danificado.
+    if (erro.code === "ENOENT" && TABELAS.find((t) => t.nome === nome)?.global) return []
+    throw erro
+  }
 }
 
 /** Nomes dos objetos de um prospect no backup (relativos à pasta do slug). */

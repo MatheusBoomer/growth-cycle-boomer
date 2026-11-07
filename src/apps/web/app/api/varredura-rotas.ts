@@ -1,6 +1,7 @@
 /**
  * Varredura estática das rotas e páginas do app: confere, olhando só o código-fonte, que nenhuma leitura ou
- * escrita de dados acontece antes de `exigirUsuario()`. Só funções puras (o teste faz a leitura dos arquivos).
+ * escrita de dados acontece antes da checagem de acesso (`exigirUsuario()`, `exigirAdmin()` ou
+ * `exigirAcessoAoProspect()`). Só funções puras (o teste faz a leitura dos arquivos).
  * Este arquivo não se chama `route.ts`, então o Next não o trata como rota e a varredura também o ignora.
  *
  * Limite conhecido: literais de expressão regular com aspas ou chaves dentro enganam o leitor de literais; as
@@ -90,7 +91,20 @@ function fechamento(f: string, i: number): number {
   return -1
 }
 
-const IMPORTA_EXIGIR = /import\s*\{[^}]*\bexigirUsuario\b[^}]*\}\s*from\s*"@\/lib\/sessao"/
+/** Quem a rota exige: qualquer usuário logado, só admin, ou acesso ao prospect da URL (dono ou admin). */
+export type Exigencia = "usuario" | "admin" | "prospect"
+
+const FUNCAO_DA_EXIGENCIA: Record<Exigencia, string> = {
+  usuario: "exigirUsuario",
+  admin: "exigirAdmin",
+  prospect: "exigirAcessoAoProspect",
+}
+const TODAS_AS_FUNCOES = Object.values(FUNCAO_DA_EXIGENCIA)
+
+/** Funções aceitas para a exigência dada; sem exigência, qualquer uma das três. */
+const funcoesAceitas = (exigida?: Exigencia): string[] => (exigida ? [FUNCAO_DA_EXIGENCIA[exigida]] : TODAS_AS_FUNCOES)
+
+const importaExigir = (funcoes: string[]) => new RegExp(`import\\s*\\{[^}]*\\b(?:${funcoes.join("|")})\\b[^}]*\\}\\s*from\\s*"@\\/lib\\/sessao"`)
 const CONTINUA_A_EXPRESSAO = /^\s*[.?&|,)+\-*/=<>]/
 
 /** Corpo (entre as chaves, sem elas) de cada handler exportado, no fonte já limpo; `null` no corpo = não fechou. */
@@ -107,36 +121,44 @@ function handlers(limpo: string): { metodo: string; corpo: string | null }[] {
 }
 
 /**
- * Regra positiva: a PRIMEIRA instrução do handler é um `try {` cuja primeira instrução é `await exigirUsuario()`
- * (com ou sem `const|let usuario =`), e o `catch` desse try devolve `respostaDeErro(e)` ou relança (nunca vazio).
+ * Regra positiva: a PRIMEIRA instrução do handler é um `try {` cuja primeira instrução é `await exigirUsuario()`,
+ * `await exigirAdmin()` ou `await exigirAcessoAoProspect(<contexto>.params)` (com ou sem `const|let usuario =`; só as
+ * funções aceitas para a exigência dada), e o `catch` desse try devolve `respostaDeErro(e)` ou relança (nunca vazio).
  * Nada antes dela (nem comentário, nem `if`, nem leitura de corpo ou de arquivo) é aceito.
  */
-function problemaDoHandler(metodo: string, corpo: string | null): string | null {
+function problemaDoHandler(metodo: string, corpo: string | null, exigida?: Exigencia): string | null {
   if (corpo === null) return `${metodo}: não consegui achar o fim do handler`
-  const nao = `${metodo}: a primeira instrução não é try { await exigirUsuario() ... }`
-  const t = /^\s*try\s*\{\s*(?:(?:const|let)\s+usuario\s*=\s*)?await\s+exigirUsuario\(\)/.exec(corpo)
+  const funcoes = funcoesAceitas(exigida)
+  const chamadas = funcoes.map((f) => (f === FUNCAO_DA_EXIGENCIA.prospect ? `${f}\\(\\s*[A-Za-z_$][\\w$]*\\.params\\s*\\)` : `${f}\\(\\)`)).join("|")
+  const nao = `${metodo}: a primeira instrução não é try { await ${funcoes.join(" ou ")}(...) ... }`
+  const t = new RegExp(`^\\s*try\\s*\\{\\s*(?:(?:const|let)\\s+usuario\\s*=\\s*)?await\\s+(?:${chamadas})`).exec(corpo)
   if (!t) return nao
   const resto = corpo.slice(t[0].length)
-  if (CONTINUA_A_EXPRESSAO.test(resto)) return `${metodo}: o resultado de exigirUsuario() é encadeado ou combinado, o erro pode se perder`
+  if (CONTINUA_A_EXPRESSAO.test(resto)) return `${metodo}: o resultado da checagem de acesso é encadeado ou combinado, o erro pode se perder`
   // O `{` do try é o último de t[0] antes do await; acha o fechamento dele.
   const abreTry = corpo.indexOf("{", corpo.indexOf("try"))
   const fechaTry = fechamento(corpo, abreTry)
   if (fechaTry === -1) return nao
   const c = /^\s*catch\s*(?:\(\s*([A-Za-z_$][\w$]*)\s*\))?\s*\{/.exec(corpo.slice(fechaTry + 1))
-  if (!c) return `${metodo}: o try de exigirUsuario não tem catch`
+  if (!c) return `${metodo}: o try da checagem de acesso não tem catch`
   const abreCatch = fechaTry + 1 + c[0].length - 1
   const fechaCatch = fechamento(corpo, abreCatch)
   const dentro = fechaCatch === -1 ? "" : corpo.slice(abreCatch + 1, fechaCatch)
   const e = c[1]
   const trata = e !== undefined && (new RegExp(`\\breturn\\s+respostaDeErro\\(\\s*${e.replace(/\$/g, "\\$")}\\s*\\)`).test(dentro) || new RegExp(`\\bthrow\\s+${e.replace(/\$/g, "\\$")}\\b`).test(dentro))
-  if (!trata) return `${metodo}: o catch do exigirUsuario não devolve respostaDeErro(e) nem relança`
+  if (!trata) return `${metodo}: o catch da checagem de acesso não devolve respostaDeErro(e) nem relança`
   return null
 }
 
-/** Motivos pelos quais o fonte de uma `route.ts` não passa. Lista vazia = ok. */
-export function problemasDeRota(fonte: string): string[] {
+/**
+ * Motivos pelos quais o fonte de uma `route.ts` não passa. Lista vazia = ok. Com `exigida`, só vale a checagem
+ * correspondente; sem ela, vale qualquer uma das três.
+ */
+export function problemasDeRota(fonte: string, exigida?: Exigencia): string[] {
   const problemas: string[] = []
-  if (!IMPORTA_EXIGIR.test(limparFonte(fonte, false))) problemas.push("não importa exigirUsuario de @/lib/sessao")
+  if (!importaExigir(funcoesAceitas(exigida)).test(limparFonte(fonte, false))) {
+    problemas.push(`não importa ${exigida ? FUNCAO_DA_EXIGENCIA[exigida] : "exigirUsuario"} de @/lib/sessao`)
+  }
   const limpo = limparFonte(fonte, true)
   if (new RegExp(`export\\s+(?:const|let|var)\\s+(?:${METODOS})\\b|export\\s*\\{|export\\s+default\\b`).test(limpo)) {
     problemas.push("handler declarado de um jeito que a varredura não entende")
@@ -144,7 +166,7 @@ export function problemasDeRota(fonte: string): string[] {
   const lista = handlers(limpo)
   if (lista.length === 0) problemas.push("nenhum handler HTTP encontrado")
   for (const h of lista) {
-    const p = problemaDoHandler(h.metodo, h.corpo)
+    const p = problemaDoHandler(h.metodo, h.corpo, exigida)
     if (p) problemas.push(p)
   }
   return problemas

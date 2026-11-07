@@ -4,15 +4,22 @@ import { FolderOpenIcon } from "lucide-react"
 import { useState } from "react"
 import type { EtapaId, ResumoProspect } from "@workspace/core/tipos"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@workspace/ui/components/empty"
+import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { BarraTopo } from "@/components/marca/barra-topo"
+import { useEmailDaConta, usePapel } from "@/components/marca/conta-contexto"
+import { filtrarProspects } from "@/lib/filtro-prospects"
 import { CardProspect } from "./card-prospect"
 import { DialogoClienteTeste } from "./dialogo-cliente-teste"
 import { DialogoNovoProspect } from "./dialogo-novo-prospect"
 
 export function GradeProspects({ prospects, etapas }: { prospects: ResumoProspect[]; etapas: { id: EtapaId; rotulo: string }[] }) {
   const [busca, setBusca] = useState("")
-  const filtrados = prospects.filter((p) => p.nome.toLowerCase().includes(busca.trim().toLowerCase()))
+  const admin = usePapel() === "admin"
+  const email = useEmailDaConta()
+  // Só o admin vê o alternador: para os outros a lista já vem filtrada pelo servidor.
+  const [apenasMeus, setApenasMeus] = useState(false)
+  const filtrados = filtrarProspects(prospects, { busca, apenasMeus: admin && apenasMeus, email })
 
   return (
     <>
@@ -25,7 +32,17 @@ export function GradeProspects({ prospects, etapas }: { prospects: ResumoProspec
           </div>
           <div className="ml-auto flex items-center gap-2">
             <Input className="w-64" placeholder="Buscar prospect…" value={busca} onChange={(e) => setBusca(e.target.value)} />
-            <DialogoClienteTeste etapas={etapas} />
+            {admin && (
+              <div role="group" aria-label="Quais prospects mostrar" className="flex gap-1">
+                <Button variant={apenasMeus ? "secondary" : "outline"} size="sm" aria-pressed={apenasMeus} onClick={() => setApenasMeus(true)}>
+                  Meus
+                </Button>
+                <Button variant={apenasMeus ? "outline" : "secondary"} size="sm" aria-pressed={!apenasMeus} onClick={() => setApenasMeus(false)}>
+                  Todos
+                </Button>
+              </div>
+            )}
+            {admin && <DialogoClienteTeste etapas={etapas} />}
             <DialogoNovoProspect />
           </div>
         </header>
@@ -43,7 +60,9 @@ export function GradeProspects({ prospects, etapas }: { prospects: ResumoProspec
             </EmptyContent>
           </Empty>
         ) : filtrados.length === 0 ? (
-          <p className="text-muted-foreground text-sm">Nenhum prospect com “{busca}”.</p>
+          <p className="text-muted-foreground text-sm">
+            {busca.trim() === "" ? "Nenhum prospect seu por aqui." : `Nenhum prospect com “${busca}”.`}
+          </p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filtrados.map((p) => (

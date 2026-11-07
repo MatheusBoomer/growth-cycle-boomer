@@ -11,6 +11,8 @@ import { NuvemArmazenamento } from "@workspace/core/nuvem/armazenamento-nuvem"
 import { MemoriaSessao, type MemoriaDeSessao } from "@workspace/core/nuvem/memoria-sessao"
 import { Mesa } from "@workspace/core/nuvem/mesa"
 import { SupabaseArmazem, SupabaseRepositorio, criarClienteSupabase } from "@workspace/core/nuvem/supabase"
+import type { RepositorioUsuarios } from "@workspace/core/nuvem/usuarios"
+import { SupabaseUsuarios } from "@workspace/core/nuvem/usuarios-supabase"
 import { criarPreviaPython } from "@workspace/core/previa"
 import { ServicoComentarios } from "@workspace/core/servico-comentarios"
 import { ServicoPlanejamento } from "@workspace/core/servico-planejamento"
@@ -27,6 +29,8 @@ interface Servidor {
   servico: ServicoPlanejamento
   turnos: ServicoTurnos
   comentarios: ServicoComentarios
+  /** Quem já entrou e com qual papel. Null no modo fs (sem banco): toda sessão válida vale como admin. */
+  usuarios: RepositorioUsuarios | null
 }
 
 // Um só conjunto de serviços por processo, mesmo que o Next carregue este módulo em mais de uma rota.
@@ -35,6 +39,7 @@ interface Servidor {
 interface Nuvem {
   armazenamento: NuvemArmazenamento
   memoria: MemoriaDeSessao
+  usuarios: RepositorioUsuarios
 }
 const registro = globalThis as unknown as { __planejamento?: Servidor; __planejamentoNuvem?: Nuvem }
 
@@ -55,7 +60,15 @@ export function pastaConfigClaude(valor: string | undefined): string {
 }
 
 function montarNuvem(raiz: string): Nuvem {
-  if (registro.__planejamentoNuvem) return registro.__planejamentoNuvem
+  const existente = registro.__planejamentoNuvem
+  if (existente) {
+    // Instância criada por uma versão anterior do código (next dev de longa duração) não tem `usuarios`. Sem completar,
+    // o servidor trataria a falta como "sem banco" e daria admin a todos. O cliente novo só serve ao repositório de usuários.
+    if (!existente.usuarios) {
+      existente.usuarios = new SupabaseUsuarios(criarClienteSupabase(process.env.SUPABASE_URL as string, process.env.SUPABASE_SERVICE_ROLE_KEY as string))
+    }
+    return existente
+  }
   const cliente = criarClienteSupabase(process.env.SUPABASE_URL as string, process.env.SUPABASE_SERVICE_ROLE_KEY as string)
   const armazem = new SupabaseArmazem(cliente)
   const mesa = new Mesa({ pastaClientes: path.join(raiz, "clientes"), armazem })
@@ -65,7 +78,7 @@ function montarNuvem(raiz: string): Nuvem {
     configDir: pastaConfigClaude(process.env.CLAUDE_CONFIG_DIR),
     cwd: raiz,
   })
-  registro.__planejamentoNuvem = { armazenamento, memoria }
+  registro.__planejamentoNuvem = { armazenamento, memoria, usuarios: new SupabaseUsuarios(cliente) }
   return registro.__planejamentoNuvem
 }
 
@@ -93,6 +106,8 @@ export function servidor(): Servidor {
     // Processo do next dev que já rodava antes do serviço de comentários existir (ou antes de um método novo dele,
     // como a prévia de planilha): completa sem recriar os demais.
     if (typeof atual.comentarios?.previaPlanilha !== "function") atual.comentarios = new ServicoComentarios({ armazenamento: atual.armazenamento, planejamento: atual.servico, previa: criarPreviaPython(atual.raiz) })
+    // Idem para o repositório de usuários: null só no modo fs; no supabase ele sempre existe (ver montarNuvem).
+    if (atual.usuarios === undefined) atual.usuarios = modoDeDados() === "fs" ? null : montarNuvem(atual.raiz).usuarios
     return atual
   }
   // `next dev` roda em src/apps/web → a raiz do projeto de planejamento fica três níveis acima.
@@ -132,6 +147,6 @@ export function servidor(): Servidor {
       firecrawlNoMcp: modoExecutor === "sdk",
     },
   })
-  registro.__planejamento = { raiz, catalogo, armazenamento, barramento, servico, turnos, comentarios }
+  registro.__planejamento = { raiz, catalogo, armazenamento, barramento, servico, turnos, comentarios, usuarios: nuvem ? nuvem.usuarios : null }
   return registro.__planejamento
 }

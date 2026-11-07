@@ -89,7 +89,7 @@ export function EtapaLiberada({
             ))}
           </div>
         )}
-        <PainelKit slug={slug} etapa={etapa} />
+        {dados.estado.teste && <PainelKit slug={slug} etapa={etapa} />}
         <p className="text-muted-foreground text-sm">O agente começa já com o dossiê das etapas anteriores (decisões e entregáveis aprovados).</p>
         <div className="flex items-center gap-3">
           <Button size="lg" onClick={iniciar} disabled={iniciando || dados.turnoAtivo !== null}>

@@ -1,11 +1,11 @@
 import { ErroEntrada } from "@workspace/core/erros"
 import { json, lerJson, respostaDeErro, validarEtapa } from "@/lib/http"
 import { servidor } from "@/lib/servidor"
-import { exigirUsuario } from "@/lib/sessao"
+import { exigirAcessoAoProspect } from "@/lib/sessao"
 
 export async function POST(req: Request, ctx: RouteContext<"/api/prospects/[slug]/etapas/[etapa]/acoes">) {
   try {
-    const usuario = await exigirUsuario()
+    const usuario = await exigirAcessoAoProspect(ctx.params)
     const { slug, etapa: bruta } = await ctx.params
     const etapa = validarEtapa(bruta)
     const { acao } = await lerJson<{ acao?: string }>(req)

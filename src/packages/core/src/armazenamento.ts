@@ -107,6 +107,19 @@ export class FsArmazenamento {
     await this.moverParaLixeira(pasta)
   }
 
+  /** Em disco não há dono gravado; só os dados na nuvem têm. */
+  async lerDono(_slug: string): Promise<string | null> {
+    return null
+  }
+
+  async listarDonos(): Promise<Map<string, string | null>> {
+    return new Map()
+  }
+
+  async trocarDono(_slug: string, _email: string): Promise<void> {
+    throw new ErroEntrada("Trocar o dono só existe com os dados na nuvem.")
+  }
+
   /** Arquivo ou pasta do prospect para a lixeira do sistema (recuperável); ausente é ignorado. */
   async moverParaLixeiraNoProspect(slug: string, relativo: string): Promise<void> {
     const abs = this.caminhoAbsoluto(slug, relativo)
