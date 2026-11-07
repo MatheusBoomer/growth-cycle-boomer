@@ -171,11 +171,29 @@ de usuários), mesmo com login: essa combinação não é usada em produção.
 
 ### Deploy
 
-1. Aplicar a migração no projeto Supabase compartilhado (só o schema `planejamento`).
+1. Aplicar a migração no projeto Supabase compartilhado (só o schema `planejamento`), ANTES de
+   reconstruir ou reiniciar a imagem do app.
 2. Seguir o deploy de sempre na VPS: `git pull`, `docker build -t planejamento:vps .`,
    `docker compose up -d app`.
 3. Acrescentar `usuarios` à lista `TABELAS` em `scripts/backup/comum.mjs`. A restauração só repõe o
    que falta, então ela não sobrescreve papéis já existentes.
+
+## Limitações conhecidas e notas de operação
+
+- **Leitura pelo agente.** O agente de IA de uma etapa roda na raiz do projeto com ferramentas de
+  leitura (Read, Glob, Grep, `cat`, `python3`) e, a pedido do analista, consegue ler arquivos de
+  outros prospects em `clientes/`. A regra "cada um vê só o seu" vale para a interface e a API, não
+  para o que o agente lê do disco. Fechar isso exige restringir as ferramentas do agente à pasta do
+  prospect; fica para uma melhoria futura.
+- **Ordem do deploy.** Aplicar a migração `20261107120000_usuarios.sql` ANTES de subir a imagem
+  nova. Sem a tabela, toda requisição autenticada dá erro 500 e o backup diário falha.
+- **Restauração.** A restauração completa repõe as pessoas que faltam com o papel que tinham no
+  backup (pode trazer de volta um admin removido). Restaurar um backup anterior à tabela de
+  usuários não recria nenhum admin, e é preciso inserir o admin por SQL.
+- **Troca de dono ou de papel.** Não interrompe um turno do agente nem a conexão de eventos já
+  aberta; vale a partir da próxima requisição.
+- **Avisos de configuração.** Usuários comuns não veem os avisos de configuração do sistema (a
+  rota é só de admin).
 
 ## Fora do escopo
 
