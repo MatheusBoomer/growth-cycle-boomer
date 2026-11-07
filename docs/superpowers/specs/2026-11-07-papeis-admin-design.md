@@ -77,7 +77,8 @@ A migração insere `matheus.moreira@boomer.com.br` como `admin` (`on conflict d
 ### Modo sem login
 
 Com `PLANEJAMENTO_AUTH=off` (uso local no Mac), todos são tratados como admin e nenhuma consulta de
-papel é feita. O comportamento local não muda.
+papel é feita. O comportamento local não muda. O mesmo vale para `PLANEJAMENTO_DADOS=fs` (sem tabela
+de usuários), mesmo com login: essa combinação não é usada em produção.
 
 ## 2. Telas
 
@@ -152,10 +153,14 @@ papel é feita. O comportamento local não muda.
   - 403 em rota de admin;
   - troca de dono;
   - listagem filtrada.
-- **Supabase real (opt-in, `npm run test:supabase`):**
-  - registro no primeiro acesso;
+- **Função SQL em um Postgres descartável (Docker, no Mac).** A tabela real já tem o admin de
+  produção, então nela o caso "um admin só" não pode ser criado.
   - `alterar_papel` bloqueia o último admin;
   - dois rebaixamentos simultâneos deixam exatamente um admin;
+  - um autor que não é admin é recusado.
+- **Supabase real (opt-in, `npm run test:supabase`), com e-mails de teste apagados no fim:**
+  - registro no primeiro acesso;
+  - promover e rebaixar entre dois admins de teste;
   - um autor que não é admin é recusado.
 - **Aceitação manual na VPS** (Matheus e uma segunda conta):
   1. A segunda conta entra e vê só o que ela mesma criou, sem o cliente de teste.
