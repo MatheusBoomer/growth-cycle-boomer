@@ -1,8 +1,16 @@
 // Partes comuns do backup e da restauração do planejamento (schema `planejamento` e buckets
 // `planejamento-*` do Supabase). Só toca nesses dois: o projeto Supabase é compartilhado com o `pit`.
 import { createHash } from "node:crypto"
+import { existsSync, readFileSync } from "node:fs"
 import { createRequire } from "node:module"
 import path from "node:path"
+import { fileURLToPath } from "node:url"
+import { parseEnv } from "node:util"
+
+// No Mac, o .env da raiz vence o que vier do terminal (como no app: ver src/apps/web/lib/ambiente.ts).
+// Na VPS o contêiner não tem .env na raiz; as variáveis chegam pelo docker compose.
+const envDaRaiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../.env")
+if (existsSync(envDaRaiz)) Object.assign(process.env, parseEnv(readFileSync(envDaRaiz, "utf8")))
 
 // O supabase-js vem do node_modules do app (em `src/`), tanto no Mac quanto na imagem (/app/src).
 const exigir = createRequire(new URL("../../src/package.json", import.meta.url))

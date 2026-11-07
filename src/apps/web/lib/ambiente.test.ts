@@ -33,6 +33,19 @@ describe("lib/ambiente", () => {
     expect(raizDoProjeto()).toBe("/raiz/do/projeto")
   })
 
+  it("o valor do .env vence o que já veio do terminal (ex.: uma chave antiga exportada no ~/.zshrc)", async () => {
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "chave-antiga-do-terminal")
+    vi.stubEnv("SO_DO_TERMINAL", "fica")
+    carregar.mockReturnValueOnce({
+      combinedEnv: {},
+      parsedEnv: undefined,
+      loadedEnvFiles: [{ path: ".env", contents: "", env: { SUPABASE_SERVICE_ROLE_KEY: "chave-do-env" } }],
+    })
+    await import("./ambiente")
+    expect(process.env.SUPABASE_SERVICE_ROLE_KEY).toBe("chave-do-env")
+    expect(process.env.SO_DO_TERMINAL).toBe("fica")
+  })
+
   it("é idempotente: importar de novo (outro pacote do Next) ou chamar carregarAmbiente não carrega outra vez", async () => {
     const { carregarAmbiente } = await import("./ambiente")
     carregarAmbiente()

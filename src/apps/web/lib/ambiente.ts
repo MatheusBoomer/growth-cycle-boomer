@@ -17,10 +17,21 @@ export function raizDoProjeto(env: Record<string, string | undefined> = process.
   return env.PLANEJAMENTO_ROOT ?? path.resolve(process.cwd(), "../../..")
 }
 
-/** Carrega o .env da raiz em process.env (sem sobrescrever o que o processo já tem). Idempotente. */
+/**
+ * Carrega o .env da raiz em process.env. Idempotente. O valor do arquivo vence o que já veio do terminal:
+ * uma variável antiga exportada no perfil do shell (ex.: uma chave do Supabase no ~/.zshrc) não pode
+ * esconder a do .env do projeto. Na imagem da nuvem não há .env na raiz, então nada muda lá.
+ */
 export function carregarAmbiente(): void {
   if (registro.__planejamentoAmbiente) return
-  loadEnvConfig(raizDoProjeto(), process.env.NODE_ENV !== "production", undefined, true)
+  const carregado = loadEnvConfig(raizDoProjeto(), process.env.NODE_ENV !== "production", undefined, true)
+  // O @next/env lista os arquivos do mais prioritário (.env.*.local) ao menos (.env) e não sobrescreve o
+  // processo; aplicamos do menos ao mais prioritário para o arquivo certo ficar com a última palavra.
+  for (const arquivo of [...(carregado?.loadedEnvFiles ?? [])].reverse()) {
+    for (const [nome, valor] of Object.entries(arquivo.env)) {
+      if (valor !== undefined) process.env[nome] = valor
+    }
+  }
   registro.__planejamentoAmbiente = true
 }
 
