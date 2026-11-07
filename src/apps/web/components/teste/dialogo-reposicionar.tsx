@@ -40,7 +40,8 @@ export function DialogoReposicionar({
       toast.success("Cliente de teste reposicionado.")
       aoMudar(false)
       // As conversas ficam em cache na tela; recarregar garante que nada da versão anterior sobra.
-      window.location.reload()
+      // O ?kit=1 abre o kit da nova etapa assim que a página volta (ver FaixaTeste).
+      window.location.assign(`${window.location.pathname}?kit=1`)
     } catch (e) {
       toast.error(mensagemDeErro(e))
       setReposicionando(false)

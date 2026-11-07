@@ -17,7 +17,7 @@ class Redirecionou extends Error {}
 
 beforeEach(() => {
   for (const m of [usuarioDaRequisicao, listarProspects, servidor, redirect]) m.mockReset()
-  servidor.mockReturnValue({ servico: { listarProspects } })
+  servidor.mockReturnValue({ servico: { listarProspects }, catalogo: { etapas: [{ id: "01", rotuloStatus: "01 · Preparação" }] } })
   redirect.mockImplementation((destino: string) => {
     throw Object.assign(new Redirecionou(destino), { destino })
   })

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type { EtapaId, RespostaEstado } from "@workspace/core/tipos"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
@@ -13,6 +13,17 @@ export function FaixaTeste({ slug, dados, etapa }: { slug: string; dados: Respos
   const [reposicionando, setReposicionando] = useState(false)
   const [kitAberto, setKitAberto] = useState(false)
   const teste = dados.estado.teste
+
+  // Logo depois de criar ou reposicionar (endereço com ?kit=1), o kit da etapa abre sozinho uma vez.
+  useEffect(() => {
+    if (!teste) return
+    const url = new URL(window.location.href)
+    if (url.searchParams.get("kit") !== "1") return
+    setKitAberto(true)
+    url.searchParams.delete("kit")
+    window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash)
+  }, [teste])
+
   if (!teste) return null
   const rotulo = dados.catalogo.etapas.find((e) => e.id === etapa)?.rotuloStatus ?? etapa
 
@@ -34,7 +45,7 @@ export function FaixaTeste({ slug, dados, etapa }: { slug: string; dados: Respos
             <DialogTitle>Kit da etapa</DialogTitle>
             <DialogDescription>{rotulo}</DialogDescription>
           </DialogHeader>
-          <PainelKit slug={slug} etapa={etapa} semMoldura mensagemVazia="Esta etapa não tem arquivos nem roteiro." />
+          <PainelKit slug={slug} etapa={etapa} semMoldura mensagemVazia="Esta etapa não pede arquivo novo: o agente trabalha com o que as etapas anteriores deixaram pronto." />
         </DialogContent>
       </Dialog>
       <DialogoReposicionar

@@ -50,6 +50,8 @@ export type AcaoEtapa = "iniciar" | "concluir" | "reabrir" | "confirmar" | "revi
 
 export const api = {
   criarProspect: (nome: string, site: string) => chamar<{ slug: string }>("/api/prospects", comJson("POST", { nome, site })),
+  /** Cria o cliente de teste (modelo Verdeluz) já no início de `etapa`. */
+  criarClienteTeste: (etapa: EtapaId) => chamar<{ slug: string }>("/api/cliente-teste", comJson("POST", { etapa })),
   excluirProspect: (slug: string, confirmacao: string) => chamar(base(slug), comJson("DELETE", { confirmacao })),
   abrirPasta: (slug: string) => chamar(`${base(slug)}/abrir-pasta`, { method: "POST" }),
   mostrarNoFinder: (slug: string, caminho: string) => chamar(`${base(slug)}/abrir-pasta`, comJson("POST", { caminho })),
