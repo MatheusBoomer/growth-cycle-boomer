@@ -37,6 +37,7 @@ vale para todos.
 | `sessao` | `text` | `session_id` da conversa |
 | `custo_turno_usd` | `numeric(10,4)` | custo só deste turno |
 | `modelos` | `jsonb` | custo deste turno por modelo, ex. `{"claude-sonnet-5-5": 0.42, "claude-haiku-5-5": 0.03}` |
+| `modelos_acumulado` | `jsonb` | `costUSD` acumulado por modelo, como veio do SDK (base do cálculo do próximo turno) |
 | `esforco` | `text` | nível de esforço configurado; `null` = padrão (preenchido na peça 3) |
 
 **Como calcular o custo do turno.** Seja `A` o `total_cost_usd` deste turno e `B` o do turno anterior com a
