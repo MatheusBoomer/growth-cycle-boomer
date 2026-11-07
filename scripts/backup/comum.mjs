@@ -23,6 +23,8 @@ export const BUCKETS = [BUCKET_PROSPECTS, BUCKET_SESSOES]
 /**
  * Tabelas na ordem de restauração (prospects primeiro, por causa das chaves estrangeiras).
  * `global: true` marca tabelas que não pertencem a um prospect: a restauração as trata à parte.
+ * `opcional: true` marca tabelas criadas depois dos primeiros backups: se o arquivo não existir
+ * no backup, a restauração conta a tabela como vazia.
  */
 export const TABELAS = [
   { nome: "prospects", chave: ["slug"] },
@@ -32,6 +34,7 @@ export const TABELAS = [
   { nome: "comentarios", chave: ["slug", "entregavel_id"] },
   { nome: "eventos_conversa", chave: ["id"], identidade: "id" },
   { nome: "uso_turnos", chave: ["id"], identidade: "id" },
+  { nome: "presenca", chave: ["id"], identidade: "id", opcional: true },
 ]
 
 const PAGINA = 1000
