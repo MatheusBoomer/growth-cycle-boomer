@@ -4,9 +4,12 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@workspace/ui/lib/utils"
 
-const ABAS = [{ href: "/admin/pessoas", rotulo: "Pessoas" }]
+const ABAS = [
+  { href: "/admin/pessoas", rotulo: "Pessoas" },
+  { href: "/admin/projetos", rotulo: "Projetos" },
+]
 
-/** Abas da administração. São links (cada aba é uma rota); por enquanto só "Pessoas". */
+/** Abas da administração. São links (cada aba é uma rota). */
 export function AbasAdmin() {
   const caminho = usePathname()
   return (

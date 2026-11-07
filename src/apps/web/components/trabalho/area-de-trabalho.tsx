@@ -20,6 +20,7 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
 import { Biblioteca } from "@/components/biblioteca/biblioteca"
 import { BarraTopo } from "@/components/marca/barra-topo"
+import { usePapel } from "@/components/marca/conta-contexto"
 import { FaixaTeste } from "@/components/teste/faixa-teste"
 import { ChatEtapa } from "@/components/chat/chat-etapa"
 import { ProvedorReferencias } from "@/components/chat/contexto-referencias"
@@ -27,10 +28,12 @@ import { useAreaDeTrabalho } from "@/hooks/use-area-de-trabalho"
 import { useBiblioteca } from "@/hooks/use-biblioteca"
 import { totalVisivel } from "@/lib/biblioteca"
 import { CHAVE_COLUNA_DIREITA, chaveColunas, layoutParaPainel, layoutParaVisualizador, lerLayout, salvarLayout, type Layout } from "@/lib/layout-colunas"
+import { AvisoPresenca } from "./aviso-presenca"
 import { ContextoVisualizador } from "./contexto-visualizador"
 import { EtapaLiberada } from "./etapa-liberada"
 import { ROTULO_STATUS } from "./icone-status"
 import { PainelEtapa } from "./painel-etapa"
+import { SeloCusto } from "./selo-custo"
 import { TrilhaEtapas } from "./trilha-etapas"
 import { VisualizadorArquivo } from "./visualizador-arquivo"
 import { VisualizadorApresentacao } from "./visualizador-apresentacao"
@@ -51,6 +54,7 @@ const IDS_COLUNAS = ["chat", "painel", "trilha", "visualizador"]
 
 export function AreaDeTrabalho({ slug }: { slug: string }) {
   const { dados, erro, conversas, deltas, carregarConversa } = useAreaDeTrabalho(slug)
+  const admin = usePapel() === "admin"
   const [selecionada, setSelecionada] = useState<EtapaId | null>(null)
   const [trilhaRecolhida, setTrilhaRecolhida] = useState(false)
   const [painelRecolhido, setPainelRecolhido] = useState(false)
@@ -257,7 +261,12 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
     <ContextoVisualizador.Provider value={controle}>
       <ProvedorReferencias>
       <div className="flex h-svh flex-col">
-        <BarraTopo titulo="Planejamento estratégico" subtitulo={dados.estado.prospect.nome} />
+        <AvisoPresenca slug={slug} etapa={etapa} />
+        <BarraTopo
+          titulo="Planejamento estratégico"
+          subtitulo={dados.estado.prospect.nome}
+          extra={admin ? <SeloCusto slug={slug} etapa={etapa} /> : undefined}
+        />
         <FaixaTeste slug={slug} dados={dados} etapa={etapa} />
         <div className={cn("relative min-h-0 flex-1 p-3", arrastando && "[&_iframe]:pointer-events-none")} onPointerDownCapture={aoApertar}>
           <ResizablePanelGroup groupRef={grupoRef} orientation="horizontal" defaultLayout={layoutInicial} onLayoutChanged={aoMudarLayout}>

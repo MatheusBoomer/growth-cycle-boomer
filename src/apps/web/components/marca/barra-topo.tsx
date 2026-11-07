@@ -1,11 +1,12 @@
 import Link from "next/link"
+import type { ReactNode } from "react"
 import { AlternarTema } from "./alternar-tema"
 import { LogoBoomer } from "./logo-boomer"
 import { LinkAdministracao } from "./link-administracao"
 import { MenuConta } from "./menu-conta"
 
-/** Barra fixa no topo: logo (volta ao início), nome da tela, a conta de quem entrou (só no modo google) e o botão de tema. Sem ações de etapa. */
-export function BarraTopo({ titulo, subtitulo }: { titulo: string; subtitulo?: string }) {
+/** Barra fixa no topo: logo (volta ao início), nome da tela, `extra` (o que a tela quiser ter à direita, como o selo de custo), a conta de quem entrou (só no modo google) e o botão de tema. Sem ações de etapa. */
+export function BarraTopo({ titulo, subtitulo, extra }: { titulo: string; subtitulo?: string; extra?: ReactNode }) {
   return (
     <header className="bg-background/70 sticky top-0 z-40 flex h-13 shrink-0 items-center gap-3.5 border-b px-4 backdrop-blur-xl">
       <Link href="/" aria-label="Boomer · voltar aos prospects" className="rounded-md focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
@@ -18,6 +19,7 @@ export function BarraTopo({ titulo, subtitulo }: { titulo: string; subtitulo?: s
       </p>
       <div className="ml-auto flex items-center gap-2">
         <LinkAdministracao />
+        {extra}
         <MenuConta />
         <AlternarTema />
       </div>
