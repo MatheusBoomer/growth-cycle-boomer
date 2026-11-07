@@ -5,11 +5,11 @@ import path from "node:path"
 import { ErroEntrada } from "@workspace/core/erros"
 import { json, lerJson, respostaDeErro, validarEtapa } from "@/lib/http"
 import { servidor } from "@/lib/servidor"
-import { exigirUsuario } from "@/lib/sessao"
+import { exigirAcessoAoProspect } from "@/lib/sessao"
 
 export async function POST(req: Request, ctx: RouteContext<"/api/prospects/[slug]/etapas/[etapa]/insumos/[insumoId]">) {
   try {
-    const usuario = await exigirUsuario()
+    const usuario = await exigirAcessoAoProspect(ctx.params)
     const { slug, etapa: bruta, insumoId } = await ctx.params
     const etapa = validarEtapa(bruta)
     const { servico } = servidor()
@@ -29,7 +29,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/prospects/[slug
 
 export async function DELETE(_req: Request, ctx: RouteContext<"/api/prospects/[slug]/etapas/[etapa]/insumos/[insumoId]">) {
   try {
-    await exigirUsuario()
+    await exigirAcessoAoProspect(ctx.params)
     const { slug, etapa: bruta, insumoId } = await ctx.params
     await servidor().servico.removerInsumo(slug, validarEtapa(bruta), insumoId)
     return json({ ok: true })

@@ -2,10 +2,12 @@ import { readdirSync, readFileSync } from "node:fs"
 import path from "node:path"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { ErroNaoAutenticado } from "@workspace/core/erros"
-import { problemasDePagina, problemasDeRota } from "./varredura-rotas"
+import { problemasDePagina, problemasDeRota, type Exigencia } from "./varredura-rotas"
 
 const exigirUsuario = vi.hoisted(() => vi.fn())
-vi.mock("@/lib/sessao", () => ({ exigirUsuario }))
+const exigirAdmin = vi.hoisted(() => vi.fn())
+const exigirAcessoAoProspect = vi.hoisted(() => vi.fn())
+vi.mock("@/lib/sessao", () => ({ exigirUsuario, exigirAdmin, exigirAcessoAoProspect }))
 
 const servico = vi.hoisted(() => ({
   listarProspects: vi.fn(),
@@ -63,9 +65,21 @@ function listar(pasta: string, nomes: readonly string[], base = pasta): string[]
 }
 
 const ehIsenta = (r: string) => (ISENTAS as readonly string[]).includes(r)
+
+/**
+ * O que cada rota (fora as isentas) precisa exigir, por caminho relativo a `app`. Operação e administração são só de
+ * admin (inclusive `api/prospects/[slug]/teste/**`, onde a regra de admin vale mais que a do prospect); o resto de
+ * `api/prospects/[slug]/` exige acesso ao prospect da URL. As demais (`api/prospects/route.ts`, `api/modelos/...`)
+ * aceitam qualquer uma das três checagens.
+ */
+function exigenciaDaRota(r: string): Exigencia | undefined {
+  if (/^api\/(admin|cliente-teste|sistema|uso)\//.test(r) || /^api\/prospects\/\[slug\]\/teste\//.test(r)) return "admin"
+  if (/^api\/prospects\/\[slug\]\//.test(r)) return "prospect"
+  return undefined
+}
 const ler = (r: string) => readFileSync(path.join(PASTA_APP, r), "utf-8")
 
-describe("varredura de app: toda rota exige usuário", () => {
+describe("varredura de app: toda rota confere o acesso", () => {
   const rotas = listar(PASTA_APP, ["route.ts"])
 
   it("encontra as rotas (a varredura não é vazia)", () => {
@@ -82,18 +96,26 @@ describe("varredura de app: toda rota exige usuário", () => {
     expect(naoDeclaradas).toEqual([])
   })
 
-  it("nenhuma rota fora da lista de isentas esquece exigirUsuario", () => {
-    const ofensoras = rotas.filter((r) => !ehIsenta(r)).flatMap((r) => problemasDeRota(ler(r)).map((p) => `${r}: ${p}`))
-    expect(ofensoras, `rotas sem exigirUsuario:\n${ofensoras.join("\n")}`).toEqual([])
+  it("nenhuma rota fora da lista de isentas esquece a checagem de acesso", () => {
+    const ofensoras = rotas.filter((r) => !ehIsenta(r)).flatMap((r) => problemasDeRota(ler(r), exigenciaDaRota(r)).map((p) => `${r}: ${p}`))
+    expect(ofensoras, `rotas sem a checagem de acesso certa:\n${ofensoras.join("\n")}`).toEqual([])
+  })
+
+  it("a regra de quem exige o quê alcança as rotas esperadas (não ficou vazia por erro de caminho)", () => {
+    const por = (e: Exigencia | undefined) => rotas.filter((r) => !ehIsenta(r) && exigenciaDaRota(r) === e)
+    expect(por("admin")).toEqual(expect.arrayContaining(["api/cliente-teste/route.ts", "api/sistema/route.ts", "api/uso/route.ts", "api/prospects/[slug]/teste/route.ts", "api/prospects/[slug]/teste/reposicionar/route.ts"]))
+    expect(por("prospect")).toHaveLength(18)
+    expect(por("prospect")).not.toContain("api/prospects/[slug]/teste/route.ts")
+    expect(por(undefined)).toEqual(["api/modelos/[insumoId]/route.ts", "api/prospects/route.ts"])
   })
 
   it("as isentas não chamam exigirUsuario (a lista não esconde rota que já autentica)", () => {
-    expect(ISENTAS.filter((r) => ler(r).includes("exigirUsuario"))).toEqual([])
+    expect(ISENTAS.filter((r) => /exigirUsuario|exigirAdmin|exigirAcessoAoProspect/.test(ler(r)))).toEqual([])
   })
 
   it("a rota de saúde não toca em sessão nem em dados (nem importa servidor ou sessao)", () => {
     const fonte = ler("api/saude/route.ts")
-    expect(fonte).not.toMatch(/exigirUsuario|servidor|@\/lib\/sessao/)
+    expect(fonte).not.toMatch(/exigirUsuario|exigirAdmin|exigirAcessoAoProspect|servidor|@\/lib\/sessao/)
   })
 })
 
@@ -225,6 +247,56 @@ describe("problemasDeRota (sondas: a varredura pega ofensoras de verdade)", () =
     expect(problemasDeRota(fonte)).toHaveLength(1)
   })
 
+  describe("com a exigência declarada", () => {
+    const importeTodas = `import { exigirUsuario, exigirAdmin, exigirAcessoAoProspect } from "@/lib/sessao"\nimport { json, respostaDeErro } from "@/lib/http"\n`
+    const com = (dentro: string) => `${importeTodas}export async function GET(_req: Request, ctx: Ctx) {\n${padrao(dentro)}\n}\n`
+    const usuario = com("    await exigirUsuario()\n    return json({})")
+    const admin = com("    await exigirAdmin()\n    return json({})")
+    const prospect = com("    await exigirAcessoAoProspect(ctx.params)\n    return json({})")
+
+    it("sem exigência, aceita qualquer uma das três", () => {
+      for (const f of [usuario, admin, prospect]) expect(problemasDeRota(f)).toEqual([])
+      expect(problemasDeRota(com("    const usuario = await exigirAcessoAoProspect(ctx.params)\n    return json(usuario)"))).toEqual([])
+      expect(problemasDeRota(com("    let usuario = await exigirAdmin()\n    return json(usuario)"))).toEqual([])
+    })
+
+    it("prospect: aceita exigirAcessoAoProspect(ctx.params), com e sem usuario", () => {
+      expect(problemasDeRota(prospect, "prospect")).toEqual([])
+      expect(problemasDeRota(com("    const usuario = await exigirAcessoAoProspect(ctx.params)\n    return json(usuario)"), "prospect")).toEqual([])
+    })
+
+    it("prospect: reprova rota de [slug] que chama só exigirUsuario() (ou só exigirAdmin())", () => {
+      expect(problemasDeRota(usuario, "prospect")).toHaveLength(1)
+      expect(problemasDeRota(admin, "prospect")).toHaveLength(1)
+      const soUsuario = arquivo(padrao("    await exigirUsuario()\n    return json({})"))
+      expect(problemasDeRota(soUsuario, "prospect")).toContain("não importa exigirAcessoAoProspect de @/lib/sessao")
+    })
+
+    it("prospect: o argumento tem de ser o params de um contexto, e a chamada tem de vir primeiro", () => {
+      expect(problemasDeRota(com("    await exigirAcessoAoProspect()\n    return json({})"), "prospect")).toHaveLength(1)
+      expect(problemasDeRota(com("    await exigirAcessoAoProspect({ slug: 'x' })\n    return json({})"), "prospect")).toHaveLength(1)
+      expect(problemasDeRota(com("    const { slug } = await ctx.params\n    await exigirAcessoAoProspect(ctx.params)"), "prospect")).toHaveLength(1)
+      expect(problemasDeRota(com("    await exigirAcessoAoProspect(ctx.params).catch(() => null)\n    return json({})"), "prospect")).toHaveLength(1)
+    })
+
+    it("admin: só exigirAdmin() vale", () => {
+      expect(problemasDeRota(admin, "admin")).toEqual([])
+      expect(problemasDeRota(usuario, "admin")).toHaveLength(1)
+      expect(problemasDeRota(prospect, "admin")).toHaveLength(1)
+      expect(problemasDeRota(arquivo(padrao("    await exigirUsuario()")), "admin")).toContain("não importa exigirAdmin de @/lib/sessao")
+    })
+
+    it("usuario: só exigirUsuario() vale", () => {
+      expect(problemasDeRota(usuario, "usuario")).toEqual([])
+      expect(problemasDeRota(admin, "usuario")).toHaveLength(1)
+    })
+
+    it("a checagem em comentário ou em texto não vale, com qualquer exigência", () => {
+      expect(problemasDeRota(com("    // await exigirAcessoAoProspect(ctx.params)\n    return json({})"), "prospect")).toHaveLength(1)
+      expect(problemasDeRota(com('    const t = "await exigirAdmin()"\n    return json({ t })'), "admin")).toHaveLength(1)
+    })
+  })
+
   it("exigirUsuario encadeado ou combinado não vale", () => {
     expect(problemasDeRota(arquivo(padrao("    await exigirUsuario().catch(() => null)\n    return json({})")))).toHaveLength(1)
     expect(problemasDeRota(arquivo(padrao("    await exigirUsuario() || null\n    return json({})")))).toHaveLength(1)
@@ -241,15 +313,15 @@ const requisicao = (corpo?: unknown, metodo = "POST") =>
 const params = <T extends Record<string, string>>(p: T) => ({ params: Promise.resolve(p) })
 
 beforeEach(() => {
-  exigirUsuario.mockReset()
+  for (const m of [exigirUsuario, exigirAdmin, exigirAcessoAoProspect]) m.mockReset()
   for (const m of [...Object.values(servico), ...Object.values(turnos), ...Object.values(comentarios)]) m.mockReset()
 })
 
 function semSessao() {
-  exigirUsuario.mockRejectedValue(new ErroNaoAutenticado())
+  for (const m of [exigirUsuario, exigirAdmin, exigirAcessoAoProspect]) m.mockRejectedValue(new ErroNaoAutenticado())
 }
 function comSessao(email: string | null = EMAIL) {
-  exigirUsuario.mockResolvedValue({ email })
+  for (const m of [exigirUsuario, exigirAdmin, exigirAcessoAoProspect]) m.mockResolvedValue({ email, papel: "admin" })
 }
 async function esperar401(r: Response) {
   expect(r.status).toBe(401)

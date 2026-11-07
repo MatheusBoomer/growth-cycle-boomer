@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { ErroNaoAutenticado } from "@workspace/core/erros"
 
-const exigirUsuario = vi.hoisted(() => vi.fn())
-vi.mock("@/lib/sessao", () => ({ exigirUsuario }))
+const exigirAdmin = vi.hoisted(() => vi.fn())
+vi.mock("@/lib/sessao", () => ({ exigirAdmin }))
 vi.mock("@/lib/servidor", () => ({ servidor: () => ({ raiz: "/nao/existe/mesmo" }) }))
 
 // Registra cada comando chamado; `falham` lista os comandos que "não existem" na máquina do teste.
@@ -34,8 +34,8 @@ beforeEach(() => {
   }
   chamadas.length = 0
   falham.clear()
-  exigirUsuario.mockReset()
-  exigirUsuario.mockResolvedValue({ email: "ana.silva@boomer.com.br" })
+  exigirAdmin.mockReset()
+  exigirAdmin.mockResolvedValue({ email: "ana.silva@boomer.com.br" })
 })
 
 afterEach(() => {
@@ -89,7 +89,7 @@ describe("GET /api/sistema com o executor cli (local)", () => {
   })
 
   it("exige usuário", async () => {
-    exigirUsuario.mockRejectedValue(new ErroNaoAutenticado())
+    exigirAdmin.mockRejectedValue(new ErroNaoAutenticado())
     const resposta = await GET()
     expect(resposta.status).toBe(401)
     expect(chamadas).toEqual([])

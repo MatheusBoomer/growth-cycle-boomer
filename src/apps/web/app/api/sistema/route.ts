@@ -5,7 +5,7 @@ import { promisify } from "node:util"
 import { chaveApiConfigurada, dadosNaNuvem, executorDoAmbiente, tokenApifyConfigurado } from "@workspace/core/sistema"
 import { respostaDeErro } from "@/lib/http"
 import { servidor } from "@/lib/servidor"
-import { exigirUsuario } from "@/lib/sessao"
+import { exigirAdmin } from "@/lib/sessao"
 
 const exec = promisify(execFile)
 export const dynamic = "force-dynamic"
@@ -49,7 +49,7 @@ async function verificarClaude(): Promise<EstadoClaude> {
 
 export async function GET() {
   try {
-    await exigirUsuario()
+    await exigirAdmin()
   } catch (e) {
     return respostaDeErro(e)
   }

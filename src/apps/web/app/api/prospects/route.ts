@@ -4,8 +4,8 @@ import { exigirUsuario } from "@/lib/sessao"
 
 export async function GET() {
   try {
-    await exigirUsuario()
-    return json(await servidor().servico.listarProspects({ email: null, papel: "admin" }))
+    const usuario = await exigirUsuario()
+    return json(await servidor().servico.listarProspects(usuario))
   } catch (e) {
     return respostaDeErro(e)
   }

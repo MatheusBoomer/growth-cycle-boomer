@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { ErroNaoAutenticado } from "@workspace/core/erros"
 
-const exigirUsuario = vi.hoisted(() => vi.fn())
-vi.mock("@/lib/sessao", () => ({ exigirUsuario }))
+const exigirAcessoAoProspect = vi.hoisted(() => vi.fn())
+vi.mock("@/lib/sessao", () => ({ exigirAcessoAoProspect }))
 
 const armazenamento = vi.hoisted(() => ({ existe: vi.fn(), pastaProspect: vi.fn(), caminhoAbsoluto: vi.fn() }))
 vi.mock("@/lib/servidor", () => ({ servidor: () => ({ armazenamento }) }))
@@ -20,8 +20,8 @@ const chamar = (corpo?: unknown) =>
 let dadosAntes: string | undefined
 beforeEach(() => {
   dadosAntes = process.env.PLANEJAMENTO_DADOS
-  for (const m of [exigirUsuario, execFile, armazenamento.existe, armazenamento.pastaProspect, armazenamento.caminhoAbsoluto]) m.mockReset()
-  exigirUsuario.mockResolvedValue({ email: "ana.silva@boomer.com.br" })
+  for (const m of [exigirAcessoAoProspect, execFile, armazenamento.existe, armazenamento.pastaProspect, armazenamento.caminhoAbsoluto]) m.mockReset()
+  exigirAcessoAoProspect.mockResolvedValue({ email: "ana.silva@boomer.com.br" })
   armazenamento.existe.mockResolvedValue(true)
   armazenamento.pastaProspect.mockReturnValue("/clientes/iszi")
   armazenamento.caminhoAbsoluto.mockImplementation((_s: string, c: string) => `/clientes/iszi/${c}`)
@@ -55,7 +55,7 @@ describe("POST /api/prospects/[slug]/abrir-pasta", () => {
 
   it("exige usuário antes de qualquer coisa, também na nuvem", async () => {
     process.env.PLANEJAMENTO_DADOS = "supabase"
-    exigirUsuario.mockRejectedValue(new ErroNaoAutenticado())
+    exigirAcessoAoProspect.mockRejectedValue(new ErroNaoAutenticado())
     const resposta = await chamar()
     expect(resposta.status).toBe(401)
     expect(execFile).not.toHaveBeenCalled()

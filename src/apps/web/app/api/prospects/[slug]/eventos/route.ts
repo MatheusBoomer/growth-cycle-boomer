@@ -1,14 +1,14 @@
 import type { EventoTempoReal } from "@workspace/core/tipos"
 import { respostaDeErro } from "@/lib/http"
 import { servidor } from "@/lib/servidor"
-import { exigirUsuario } from "@/lib/sessao"
+import { exigirAcessoAoProspect } from "@/lib/sessao"
 
 export const dynamic = "force-dynamic"
 
 export async function GET(req: Request, ctx: RouteContext<"/api/prospects/[slug]/eventos">) {
   // Antes de abrir o fluxo: sem usuário verificado nada é assinado nem transmitido.
   try {
-    await exigirUsuario()
+    await exigirAcessoAoProspect(ctx.params)
   } catch (e) {
     return respostaDeErro(e)
   }
