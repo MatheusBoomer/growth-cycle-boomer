@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest"
-import { classificarTempo, limitesDoAmbiente, somarTempo, tempoUtil } from "../src/metricas/tempo"
+import { LACUNA_MAXIMA_BLOCOS, classificarTempo, limitesDoAmbiente, somarTempo, tempoUtil } from "../src/metricas/tempo"
 import type { LinhaPresenca, LinhaUso } from "../src/metricas/tipos"
 
 const LIMITES = { ociosoMin: 5, descarteMin: 15 }
 const BLOCO_MS = 30_000
 /** Início de um bloco de 30 s: 2026-11-07 10:00:00 UTC. */
 const T0 = Date.parse("2026-11-07T10:00:00Z")
+const T0_BLOCO = T0 / BLOCO_MS
 
 function aviso(parcial: Partial<LinhaPresenca> & { bloco?: number }): LinhaPresenca {
   const { bloco = 0, ...resto } = parcial
@@ -142,9 +143,49 @@ describe("classificarTempo: descarte", () => {
     expect(contar(r)).toEqual({ agente: 0, ativo: 0, ocioso: 40, descartado: 0 })
   })
 
-  it("um buraco de um só bloco também zera a contagem", () => {
-    const r = classificarTempo([...avisos(0, 25, OCIOSO), ...avisos(26, 51, OCIOSO)], [], LIMITES)
+  it("um buraco de até 4 blocos (2 min) entre ociosos não zera a contagem", () => {
+    expect(LACUNA_MAXIMA_BLOCOS).toBe(4)
+    // 25 blocos ociosos, 4 vazios, 25 ociosos: o 31º bloco de tempo decorrido já é descartado.
+    const r = classificarTempo([...avisos(0, 25, OCIOSO), ...avisos(29, 54, OCIOSO)], [], LIMITES)
+    expect(r).toHaveLength(50)
+    expect(r.filter((b) => b.bloco - T0_BLOCO < 30).every((b) => b.categoria === "ocioso")).toBe(true)
+    expect(r.filter((b) => b.bloco - T0_BLOCO >= 30).every((b) => b.categoria === "descartado")).toBe(true)
+    expect(contar(r)).toEqual({ agente: 0, ativo: 0, ocioso: 25 + 1, descartado: 24 })
+  })
+
+  it("um buraco de 5 blocos (mais de 2 min) entre ociosos zera a contagem", () => {
+    const r = classificarTempo([...avisos(0, 25, OCIOSO), ...avisos(30, 55, OCIOSO)], [], LIMITES)
     expect(contar(r)).toEqual({ agente: 0, ativo: 0, ocioso: 50, descartado: 0 })
+  })
+
+  it("aba escondida com um aviso por minuto: o que passa de 15 min decorridos é descartado", () => {
+    const escondidos: LinhaPresenca[] = []
+    for (let b = 0; b < 80; b += 2) escondidos.push(aviso({ bloco: b, visivel: false }))
+    const r = classificarTempo(escondidos, [], LIMITES)
+    expect(r).toHaveLength(40)
+    expect(r.filter((b) => b.bloco - T0_BLOCO < 30).every((b) => b.categoria === "ocioso")).toBe(true)
+    expect(r.filter((b) => b.bloco - T0_BLOCO >= 30).every((b) => b.categoria === "descartado")).toBe(true)
+    expect(contar(r)).toEqual({ agente: 0, ativo: 0, ocioso: 15, descartado: 25 })
+  })
+
+  it("buraco de 3 min (6 blocos) com avisos escondidos de minuto em minuto zera a contagem", () => {
+    const lista: LinhaPresenca[] = []
+    for (let b = 0; b < 40; b += 2) lista.push(aviso({ bloco: b, visivel: false }))
+    // Último aviso no bloco 38; o próximo, 6 blocos vazios depois (bloco 45).
+    for (let b = 45; b < 85; b += 2) lista.push(aviso({ bloco: b, visivel: false }))
+    const r = classificarTempo(lista, [], LIMITES)
+    const depois = r.filter((b) => b.bloco - T0_BLOCO >= 45)
+    expect(depois[0]?.categoria).toBe("ocioso")
+    expect(depois.filter((b) => b.bloco - T0_BLOCO < 45 + 30).every((b) => b.categoria === "ocioso")).toBe(true)
+    expect(depois.filter((b) => b.bloco - T0_BLOCO >= 45 + 30).every((b) => b.categoria === "descartado")).toBe(true)
+    expect(r.filter((b) => b.bloco - T0_BLOCO < 40).every((b) => b.categoria === "ocioso")).toBe(false)
+  })
+
+  it("buraco de 2 min (4 blocos) com avisos escondidos não zera a contagem", () => {
+    const lista = [...avisos(0, 20, OCIOSO), ...avisos(24, 44, OCIOSO)]
+    const r = classificarTempo(lista, [], LIMITES)
+    // 40 blocos ociosos; o bloco 30 em diante (tempo decorrido >= 30) é descartado.
+    expect(contar(r)).toEqual({ agente: 0, ativo: 0, ocioso: 26, descartado: 14 })
   })
 
   it("a contagem é por pessoa e por projeto", () => {
@@ -210,6 +251,31 @@ describe("classificarTempo: agente", () => {
     expect(contar(r)).toEqual({ agente: 1, ativo: 0, ocioso: 40, descartado: 0 })
   })
 
+  it("o fim do turno é exclusivo: 10 min exatos na fronteira de um bloco dão 20 blocos", () => {
+    const r = classificarTempo(
+      [],
+      [uso({ inicio: new Date(T0).toISOString(), fim: new Date(T0 + 10 * 60_000).toISOString() })],
+      LIMITES,
+    )
+    expect(r).toHaveLength(20)
+    expect(r[19]?.bloco).toBe(T0_BLOCO + 19)
+  })
+
+  it("turno de duração zero na fronteira ainda dá 1 bloco", () => {
+    const r = classificarTempo([], [uso({ inicio: new Date(T0).toISOString(), fim: new Date(T0).toISOString() })], LIMITES)
+    expect(r.map((b) => b.bloco)).toEqual([T0_BLOCO])
+  })
+
+  it("ignora datas inválidas, sem gerar bloco NaN", () => {
+    const r = classificarTempo(
+      [aviso({ em: "ontem" }), aviso({ bloco: 1 })],
+      [uso({ inicio: "x" }), uso({ fim: "" }), uso({ inicio: new Date(T0 + 5 * BLOCO_MS).toISOString(), fim: new Date(T0 + 5 * BLOCO_MS + 1_000).toISOString() })],
+      LIMITES,
+    )
+    expect(r.map((b) => b.bloco)).toEqual([T0_BLOCO + 1, T0_BLOCO + 5])
+    expect(r.every((b) => Number.isFinite(b.bloco))).toBe(true)
+  })
+
   it("turno sem autor não gera bloco", () => {
     expect(classificarTempo([], [uso({ autor: null })], LIMITES)).toEqual([])
   })
@@ -225,7 +291,7 @@ describe("somarTempo e tempoUtil", () => {
   it("soma 30 s por bloco, agrupando pela chave", () => {
     const blocos = classificarTempo(
       [...avisos(0, 4), ...avisos(4, 6, OCIOSO)],
-      [uso({ inicio: new Date(T0 + 10 * BLOCO_MS).toISOString(), fim: new Date(T0 + 11 * BLOCO_MS).toISOString() })],
+      [uso({ inicio: new Date(T0 + 10 * BLOCO_MS).toISOString(), fim: new Date(T0 + 12 * BLOCO_MS - 1).toISOString() })],
       LIMITES,
     )
     const porEtapa = somarTempo(blocos, (b) => b.etapa)
@@ -246,6 +312,13 @@ describe("limitesDoAmbiente", () => {
 
   it("ignora valor inválido ou zero", () => {
     expect(limitesDoAmbiente({ PLANEJAMENTO_OCIOSO_MIN: "abc", PLANEJAMENTO_DESCARTE_MIN: "0" })).toEqual({
+      ociosoMin: 5,
+      descarteMin: 15,
+    })
+  })
+
+  it("ignora string vazia e valor negativo", () => {
+    expect(limitesDoAmbiente({ PLANEJAMENTO_OCIOSO_MIN: "", PLANEJAMENTO_DESCARTE_MIN: "-1" })).toEqual({
       ociosoMin: 5,
       descarteMin: 15,
     })

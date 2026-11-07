@@ -7,9 +7,15 @@ const BLOCO_MS = 30_000
 const BLOCO_SEGUNDOS = 30
 const OCIOSO_PADRAO_MIN = 5
 const DESCARTE_PADRAO_MIN = 15
+/**
+ * Buraco máximo, em blocos sem aviso, que ainda mantém a sequência de ociosidade (2 min). O navegador
+ * atrasa os temporizadores de uma aba escondida (cerca de um aviso por minuto), então avisos legítimos
+ * deixam blocos vazios entre si.
+ */
+export const LACUNA_MAXIMA_BLOCOS = 4
 
-function numeroDoBloco(iso: string): number {
-  return Math.floor(Date.parse(iso) / BLOCO_MS)
+function numeroDoBloco(epochMs: number): number {
+  return Math.floor(epochMs / BLOCO_MS)
 }
 
 function minutosPositivos(valor: string | undefined, padrao: number): number {
@@ -36,8 +42,9 @@ interface Marca {
 /**
  * Cada bloco de 30 s (alinhado ao relógio) de cada pessoa em cada projeto recebe uma categoria.
  * Prioridade: agente, depois ativo, depois ocioso. Uma sequência de blocos ociosos consecutivos
- * passa a descartado depois de `descarteMin * 2` blocos. Bloco ausente, ativo ou de agente zera a contagem.
- * O resultado não depende da ordem da entrada.
+ * passa a descartado depois de `descarteMin * 2` blocos de tempo decorrido desde o início dela. A sequência
+ * atravessa buracos de até `LACUNA_MAXIMA_BLOCOS` blocos sem aviso; um buraco maior, um bloco ativo ou de
+ * agente a encerra. Datas inválidas são ignoradas. O resultado não depende da ordem da entrada.
  */
 export function classificarTempo(
   presencas: LinhaPresenca[],
@@ -62,9 +69,12 @@ export function classificarTempo(
   for (const uso of usos) {
     if (uso.autor === null) continue
     const p = pessoa(uso.slug, normalizarEmail(uso.autor))
+    const inicioMs = Date.parse(uso.inicio)
     const ordem = Date.parse(uso.fim)
-    const de = numeroDoBloco(uso.inicio)
-    const ate = Math.max(de, numeroDoBloco(uso.fim))
+    if (Number.isNaN(inicioMs) || Number.isNaN(ordem)) continue
+    // O fim do turno é exclusivo: um turno que termina na fronteira de um bloco não entra no seguinte.
+    const de = numeroDoBloco(inicioMs)
+    const ate = Math.max(de, numeroDoBloco(ordem - 1))
     for (let bloco = de; bloco <= ate; bloco++) {
       const atual = p.agente.get(bloco)
       if (!atual || ordem > atual.ordem || (ordem === atual.ordem && uso.etapa > atual.etapa)) {
@@ -74,9 +84,10 @@ export function classificarTempo(
   }
 
   for (const aviso of presencas) {
-    const p = pessoa(aviso.slug, normalizarEmail(aviso.email))
-    const bloco = numeroDoBloco(aviso.em)
     const ordem = Date.parse(aviso.em)
+    if (Number.isNaN(ordem)) continue
+    const p = pessoa(aviso.slug, normalizarEmail(aviso.email))
+    const bloco = numeroDoBloco(ordem)
     const ativo = aviso.visivel && aviso.segundosSemInteracao < limiteOciosoS
     const atual = p.aviso.get(bloco)
     const etapaMaisRecente =
@@ -95,19 +106,20 @@ export function classificarTempo(
 
   for (const p of ordenadas) {
     const numeros = [...new Set([...p.agente.keys(), ...p.aviso.keys()])].sort((a, b) => a - b)
-    let sequencia = 0
-    let anterior: number | null = null
+    // Primeiro bloco da sequência de ociosidade em curso e o último bloco ocioso visto nela.
+    let inicioSequencia: number | null = null
+    let ultimoOcioso = 0
     for (const bloco of numeros) {
       const marca = p.agente.get(bloco) ?? p.aviso.get(bloco)!
-      if (anterior === null || bloco !== anterior + 1) sequencia = 0
-      anterior = bloco
 
       let categoria: Categoria = marca.categoria
       if (marca.categoria === "ocioso") {
-        if (sequencia >= blocosParaDescarte) categoria = "descartado"
-        sequencia++
+        const buraco = bloco - ultimoOcioso - 1
+        if (inicioSequencia === null || buraco > LACUNA_MAXIMA_BLOCOS) inicioSequencia = bloco
+        ultimoOcioso = bloco
+        if (bloco - inicioSequencia >= blocosParaDescarte) categoria = "descartado"
       } else {
-        sequencia = 0
+        inicioSequencia = null
       }
       resultado.push({ slug: p.slug, email: p.email, etapa: marca.etapa, bloco, categoria })
     }

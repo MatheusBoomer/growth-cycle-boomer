@@ -99,14 +99,21 @@ categoria, nesta ordem de prioridade:
    Conta mesmo sem aviso de presença, porque o agente roda no servidor. A etapa é a do turno.
 2. **Analista ativo:** há aviso no bloco com `visivel = true` e `segundos_sem_interacao < OCIOSO`.
 3. **Aberto ocioso:** há aviso no bloco, mas sem interação recente ou com a aba escondida.
-4. **Descartado:** bloco ocioso numa sequência de blocos ociosos seguidos que já passou de `DESCARTE`.
-   Os primeiros `DESCARTE` minutos da sequência contam como ocioso; o resto é descartado. Um bloco ativo ou
-   de agente encerra a sequência.
+4. **Descartado:** bloco ocioso numa sequência de ociosidade que já passou de `DESCARTE`. A sequência
+   conta pelo tempo decorrido desde o primeiro bloco ocioso dela: os primeiros `DESCARTE` minutos contam
+   como ocioso; o resto é descartado. Um bloco ativo ou de agente encerra a sequência, e um buraco de mais
+   de 2 minutos sem aviso também (ver as regras abaixo).
 
 Regras:
 - Vários avisos no mesmo bloco (duas abas, por exemplo) contam uma vez. Vale o mais favorável: ativo vence
   ocioso.
 - Bloco sem aviso e sem turno não conta nada (aba fechada, computador dormindo).
+- O navegador atrasa os avisos de uma aba escondida (cerca de um por minuto), o que deixa blocos vazios
+  entre blocos ociosos. Por isso a sequência de ociosidade continua através de um buraco de até 2 minutos
+  (4 blocos sem aviso) entre dois blocos ociosos; os blocos vazios continuam sem contar tempo. Um buraco
+  maior encerra a sequência, e a contagem recomeça do zero no próximo bloco ocioso.
+- O fim do turno não entra no bloco: um turno de exatamente 10 min que começa na fronteira de um bloco
+  cobre 20 blocos.
 - A etapa do bloco é a do aviso; quando há avisos de etapas diferentes no mesmo bloco, vale o mais recente.
 
 ### Totais
@@ -206,6 +213,7 @@ a extrair `modelUsage` do `result` (no SDK e no CLI de stream-json).
   - fronteira de 5 min;
   - sequência ociosa de 15 min (até 15 conta, o resto é descartado);
   - interação no meio zera a sequência;
+  - aba escondida com um aviso por minuto (buracos de até 2 min não zeram a sequência, de mais de 2 min zeram);
   - aba escondida;
   - duas abas valem uma;
   - agente com a aba fechada;
