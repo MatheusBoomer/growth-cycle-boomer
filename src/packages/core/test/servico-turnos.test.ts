@@ -493,7 +493,7 @@ describe("custo de cada turno", () => {
 
   const roteiroComUso: Roteiro = async function* () {
     yield { tipo: "sessao", sessionId: "s1" }
-    yield { tipo: "fim", ok: true, erro: null, sessionId: "s1", uso: { custoUsd: 0.42, tokensEntrada: 1000, tokensSaida: 200 } }
+    yield { tipo: "fim", ok: true, erro: null, sessionId: "s1", uso: { custoUsd: 0.42, tokensEntrada: 1000, tokensSaida: 200, modelos: null } }
   }
 
   it("registra o uso do turno com início, fim, status e autor nulo", async () => {
@@ -515,6 +515,42 @@ describe("custo de cada turno", () => {
       status: "ok",
     })
     expect(uso.inicio < uso.fim).toBe(true)
+  })
+
+  it("marca como retomada só o turno que continua uma sessão que já existia", async () => {
+    const arm = new ArmazenamentoComUso(raiz, async () => {})
+    const { svc, t } = comArmazenamento(arm, roteiroComUso)
+    const espiao = vi.spyOn(svc, "registrarUso")
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    await t.enviarMensagem(slug, "01", "Continue")
+    await t.aguardarOcioso(slug)
+    expect(espiao.mock.calls.map(([e]) => [e.sessao, e.retomada])).toEqual([
+      ["s1", false],
+      ["s1", true],
+    ])
+  })
+
+  it("sessão nova no lugar da que existia não é retomada", async () => {
+    const arm = new ArmazenamentoComUso(raiz, async () => {})
+    let n = 0
+    const roteiro: Roteiro = async function* () {
+      const id = `s${++n}`
+      yield { tipo: "sessao", sessionId: id }
+      yield { tipo: "fim", ok: true, erro: null, sessionId: id, uso: { custoUsd: 0.1, tokensEntrada: 1, tokensSaida: 1, modelos: null } }
+    }
+    const { svc, t } = comArmazenamento(arm, roteiro)
+    const espiao = vi.spyOn(svc, "registrarUso")
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    await t.enviarMensagem(slug, "01", "Continue")
+    await t.aguardarOcioso(slug)
+    expect(espiao.mock.calls.map(([e]) => [e.sessao, e.retomada])).toEqual([
+      ["s1", false],
+      ["s2", false],
+    ])
   })
 
   it("falha ao registrar o uso não afeta o turno", async () => {
@@ -543,10 +579,10 @@ describe("autoria dos turnos", () => {
 
   const roteiroComUso: Roteiro = async function* () {
     yield { tipo: "sessao", sessionId: "s1" }
-    yield { tipo: "fim", ok: true, erro: null, sessionId: "s1", uso: { custoUsd: 0.1, tokensEntrada: 10, tokensSaida: 2 } }
+    yield { tipo: "fim", ok: true, erro: null, sessionId: "s1", uso: { custoUsd: 0.1, tokensEntrada: 10, tokensSaida: 2, modelos: null } }
   }
 
-  function montar() {
+  function montar(roteiro: Roteiro = roteiroComUso) {
     const arm = new ArmazenamentoComUso(raiz, async () => {})
     const svc = new ServicoPlanejamento({
       armazenamento: arm,
@@ -554,9 +590,30 @@ describe("autoria dos turnos", () => {
       barramento,
       validar: async () => ({ ok: true, problemas: [], avisos: [], resumo: null }),
     })
-    const t = new ServicoTurnos({ servico: svc, executor: new FakeExecutor(roteiroComUso), barramento, catalogo: catalogoReal(), config })
+    const t = new ServicoTurnos({ servico: svc, executor: new FakeExecutor(roteiro), barramento, catalogo: catalogoReal(), config })
     return { arm, svc, t }
   }
+
+  it("grava a sessão e o acumulado por modelo do turno, com o custo do turno igual ao acumulado na primeira vez", async () => {
+    const modelos = { "claude-opus-5": 0.3, "claude-haiku-5": 0.1 }
+    const { arm, svc, t } = montar(async function* () {
+      yield { tipo: "sessao", sessionId: "s7" }
+      yield { tipo: "fim", ok: true, erro: null, sessionId: "s7", uso: { custoUsd: 0.4, tokensEntrada: 10, tokensSaida: 2, modelos } }
+    })
+    const slug = await svc.criarProspect("Com Modelos", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    expect(arm.usos).toHaveLength(1)
+    expect(arm.usos[0]).toMatchObject({ slug, sessao: "s7", custoUsd: 0.4, modelosAcumulado: modelos, esforco: null })
+  })
+
+  it("sem modelUsage no resultado, o acumulado por modelo fica nulo", async () => {
+    const { arm, svc, t } = montar()
+    const slug = await svc.criarProspect("Sem Modelos", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    expect(arm.usos[0]).toMatchObject({ sessao: "s1", modelosAcumulado: null, modelos: null })
+  })
 
   it("iniciar grava o autor em uso_turnos; sem autor, null", async () => {
     const { arm, svc, t } = montar()

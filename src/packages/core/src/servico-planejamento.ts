@@ -31,7 +31,10 @@ import { destinoInsumo, extensao, extensaoAceita, nomeSeguro, registrarInsumo } 
 import * as me from "./maquina-estados"
 import { descreverMarcacoes, type MarcaAjuste } from "./marcacoes"
 import { mensagemAjuste, mensagemAjustes, mensagemAprovacao, mensagemEtapaAnteriorAlterada, mensagemInsumoRecebido } from "./prompts"
-import type { RegistroUsoTurno } from "./nuvem/tipos"
+import { custoDoTurno } from "./metricas/custo"
+import { mediasPorEtapa, resumirProjeto, type MediaEtapa, type MetricasProjeto } from "./metricas/resumo"
+import type { Acumulado, Limites } from "./metricas/tipos"
+import type { EntradaUsoTurno, RegistroUsoTurno } from "./nuvem/tipos"
 import { aplicarOverrides, lerKit, reposicionarNoFixture } from "./servico-teste"
 import { ehAdmin, normalizarEmail, podeVerProspect, type UsuarioComPapel } from "./papeis"
 import { normalizarSlug } from "./slug"
@@ -107,6 +110,16 @@ function validarUrl(url: string): string {
   return u.toString()
 }
 
+function agruparPorSlug<T extends { slug: string }>(linhas: T[]): Map<string, T[]> {
+  const porSlug = new Map<string, T[]>()
+  for (const l of linhas) {
+    const lista = porSlug.get(l.slug)
+    if (lista) lista.push(l)
+    else porSlug.set(l.slug, [l])
+  }
+  return porSlug
+}
+
 function ultimoIndice<T>(lista: T[], teste: (x: T) => boolean): number {
   for (let i = lista.length - 1; i >= 0; i--) if (teste(lista[i]!)) return i
   return -1
@@ -146,9 +159,96 @@ export class ServicoPlanejamento {
     this.gerarId = d.gerarId ?? (() => randomUUID())
   }
 
-  /** Guarda o custo e os tokens de um turno (no disco local não faz nada). */
-  registrarUso(r: RegistroUsoTurno): Promise<void> {
-    return this.arm.registrarUso(r)
+  /**
+   * Guarda o custo e os tokens de um turno (no disco local não faz nada). O custo do turno é a diferença para o
+   * acumulado do turno anterior da mesma sessão; se a consulta ao anterior falhar, o turno vale o acumulado e a
+   * linha é gravada do mesmo jeito. Numa conversa retomada que começou antes do custo por turno (as linhas antigas
+   * não têm sessão), o primeiro turno novo parte do acumulado da linha antiga mais recente da etapa, que a estimativa
+   * de `custoPorEtapa` já conta.
+   */
+  async registrarUso(entrada: EntradaUsoTurno): Promise<void> {
+    const { retomada, ...r } = entrada
+    let anterior: Acumulado | null = null
+    if (r.sessao) {
+      try {
+        anterior = await this.arm.ultimoUsoDaSessao(r.slug, r.sessao)
+        if (!anterior && retomada) anterior = await this.arm.ultimoUsoAntigo(r.slug, r.etapa)
+      } catch (e) {
+        console.error(`Não consegui ler o turno anterior da sessão de "${r.slug}":`, e)
+      }
+    }
+    const { custoTurnoUsd, modelos } = custoDoTurno({ custoUsd: r.custoUsd, modelos: r.modelosAcumulado }, anterior)
+    const registro: RegistroUsoTurno = { ...r, custoTurnoUsd, modelos }
+    return this.arm.registrarUso(registro)
+  }
+
+  /** Aviso de que a tela de `email` está aberta na etapa (a cada 30 s); só o tempo de presença usa isso. */
+  registrarPresenca(slug: string, email: string, etapa: EtapaId, visivel: boolean, segundosSemInteracao: number): Promise<void> {
+    return this.arm.registrarPresenca({ slug, email, etapa, visivel, segundosSemInteracao })
+  }
+
+  async metricasDoProjeto(slug: string, limites: Limites): Promise<MetricasProjeto> {
+    const [usos, presencas] = await Promise.all([this.arm.listarUsos(slug), this.arm.listarPresencas(slug)])
+    return resumirProjeto(usos, presencas, limites)
+  }
+
+  /**
+   * Resumo e métricas de um prospect ativo, lendo só os dados dele (a tela de detalhe consulta isso de tempos em tempos).
+   * Inexistente, excluído ou com slug malformado dá ErroNaoEncontrado; um estado ilegível propaga o erro.
+   */
+  async detalheDoProjeto(slug: string, limites: Limites): Promise<{ projeto: ResumoProspect; metricas: MetricasProjeto }> {
+    const naoEncontrado = () => new ErroNaoEncontrado("Projeto não encontrado.")
+    try {
+      if (!(await this.arm.existe(slug))) throw naoEncontrado()
+    } catch (e) {
+      if (e instanceof ErroEntrada) throw naoEncontrado()
+      throw e
+    }
+    let dono: string | null
+    try {
+      dono = await this.arm.lerDono(slug)
+    } catch (e) {
+      if (e instanceof ErroNaoEncontrado) throw naoEncontrado()
+      throw e
+    }
+    const projeto = this.resumir(await this.estado(slug), dono)
+    return { projeto, metricas: await this.metricasDoProjeto(slug, limites) }
+  }
+
+  /**
+   * Métricas de todos os prospects ativos (os de teste vêm marcados) e a média por etapa. Uso e presença são lidos
+   * uma vez e agrupados por slug. Um prospect ilegível é pulado, como em `listarProspects`.
+   */
+  async metricasGerais(
+    limites: Limites,
+  ): Promise<{ projetos: Array<ResumoProspect & { metricas: MetricasProjeto }>; medias: Partial<Record<EtapaId, MediaEtapa>> }> {
+    const slugs = await this.arm.listarSlugs()
+    const ativos = new Set(slugs)
+    const [donos, usos, presencas] = await Promise.all([
+      this.arm.listarDonos(),
+      this.arm.listarUsos(undefined, ativos),
+      this.arm.listarPresencas(undefined, ativos),
+    ])
+    const usosPorSlug = agruparPorSlug(usos)
+    const presencasPorSlug = agruparPorSlug(presencas)
+    const projetos: Array<ResumoProspect & { metricas: MetricasProjeto }> = []
+    const paraMedia: Array<{ metricas: MetricasProjeto; concluidas: EtapaId[]; teste: boolean }> = []
+    for (const slug of slugs) {
+      try {
+        const estado = await this.estado(slug)
+        const metricas = resumirProjeto(usosPorSlug.get(slug) ?? [], presencasPorSlug.get(slug) ?? [], limites)
+        projetos.push({ ...this.resumir(estado, donos.get(slug) ?? null), metricas })
+        paraMedia.push({
+          metricas,
+          concluidas: ORDEM_ETAPAS.filter((id) => estado.etapas[id].status === "concluida"),
+          teste: estado.teste !== undefined,
+        })
+      } catch (e) {
+        console.error(`Não consegui ler o prospect ${slug}:`, e)
+      }
+    }
+    projetos.sort((a, b) => b.atualizadoEm.localeCompare(a.atualizadoEm))
+    return { projetos, medias: mediasPorEtapa(paraMedia) }
   }
 
   /** Sincroniza os arquivos do prospect com a nuvem (no disco local não faz nada). Falha com ErroSincronizacao. */

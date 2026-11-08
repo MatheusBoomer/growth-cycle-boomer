@@ -11,7 +11,7 @@ describe("parseLinhaStreamJson", () => {
       { tipo: "sessao", sessionId: SID },
       { tipo: "texto_delta", texto: "oi" },
       { tipo: "texto", texto: "oi" },
-      { tipo: "fim", ok: true, erro: null, sessionId: SID, uso: { custoUsd: 0.07, tokensEntrada: null, tokensSaida: null } },
+      { tipo: "fim", ok: true, erro: null, sessionId: SID, uso: { custoUsd: 0.07, tokensEntrada: null, tokensSaida: null, modelos: null } },
     ])
   })
 
@@ -78,20 +78,58 @@ describe("parseLinhaStreamJson", () => {
       usage: { input_tokens: 1000, output_tokens: 200 },
     })
     expect(parseLinhaStreamJson(linha)).toEqual([
-      { tipo: "fim", ok: true, erro: null, sessionId: SID, uso: { custoUsd: 0.42, tokensEntrada: 1000, tokensSaida: 200 } },
+      { tipo: "fim", ok: true, erro: null, sessionId: SID, uso: { custoUsd: 0.42, tokensEntrada: 1000, tokensSaida: 200, modelos: null } },
     ])
   })
 
   it("result sem custo traz uso com nulos", () => {
     const linha = JSON.stringify({ type: "result", subtype: "success", is_error: false, session_id: SID, usage: {} })
     expect(parseLinhaStreamJson(linha)).toEqual([
-      { tipo: "fim", ok: true, erro: null, sessionId: SID, uso: { custoUsd: null, tokensEntrada: null, tokensSaida: null } },
+      { tipo: "fim", ok: true, erro: null, sessionId: SID, uso: { custoUsd: null, tokensEntrada: null, tokensSaida: null, modelos: null } },
     ])
   })
 
   it("result sem custo nem usage não leva uso", () => {
     const linha = JSON.stringify({ type: "result", subtype: "success", is_error: false, session_id: SID })
     expect(parseLinhaStreamJson(linha)).toEqual([{ tipo: "fim", ok: true, erro: null, sessionId: SID }])
+  })
+
+  it("result leva o custo acumulado por modelo de modelUsage", () => {
+    const linha = JSON.stringify({
+      type: "result",
+      subtype: "success",
+      is_error: false,
+      session_id: SID,
+      total_cost_usd: 0.5,
+      usage: { input_tokens: 10, output_tokens: 5 },
+      modelUsage: {
+        "claude-sonnet-5-5": { costUSD: 0.45 },
+        "claude-haiku-5-5": { costUSD: 0.05 },
+        x: { inputTokens: 1 },
+      },
+    })
+    expect(parseLinhaStreamJson(linha)).toEqual([
+      {
+        tipo: "fim",
+        ok: true,
+        erro: null,
+        sessionId: SID,
+        uso: { custoUsd: 0.5, tokensEntrada: 10, tokensSaida: 5, modelos: { "claude-sonnet-5-5": 0.45, "claude-haiku-5-5": 0.05 } },
+      },
+    ])
+  })
+
+  it("sem modelUsage, modelos é null", () => {
+    const linha = JSON.stringify({
+      type: "result",
+      subtype: "success",
+      is_error: false,
+      session_id: SID,
+      total_cost_usd: 0.5,
+      usage: { input_tokens: 10, output_tokens: 5 },
+    })
+    const [fim] = parseLinhaStreamJson(linha)
+    expect(fim).toMatchObject({ tipo: "fim", uso: { custoUsd: 0.5, modelos: null } })
   })
 
   it("linha que não é JSON é ignorada", () => {

@@ -10,6 +10,7 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { ROTULO_STATUS_ENTREGAVEL } from "@/components/cards/card-entregavel"
 import { api, mensagemDeErro, urlArquivo } from "@/lib/api"
 import { alvoDeDigitacao } from "@/lib/layout-colunas"
+import { comScriptDeInteracao } from "@/lib/presenca"
 
 type Carga = { id: string; html: string | null; erro: string | null }
 
@@ -92,7 +93,7 @@ export function VisualizadorPlanilha({
         </div>
       ) : entregavel && atual?.html ? (
         // Sem allow-same-origin: a página da planilha roda isolada, só para trocar de aba.
-        <iframe key={entregavel.id} srcDoc={atual.html} title={entregavel.titulo} sandbox="allow-scripts" className="min-h-0 w-full flex-1 bg-papel" />
+        <iframe key={entregavel.id} srcDoc={comScriptDeInteracao(atual.html)} title={entregavel.titulo} sandbox="allow-scripts" className="min-h-0 w-full flex-1 bg-papel" />
       ) : (
         <Empty className="flex-1">
           <EmptyHeader>

@@ -7,6 +7,7 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { Markdown } from "@/components/markdown"
 import { urlArquivo } from "@/lib/api"
 import { alvoDeDigitacao } from "@/lib/layout-colunas"
+import { comScriptDeInteracao } from "@/lib/presenca"
 
 const IMAGEM = /\.(png|jpe?g|gif|webp)$/i
 const TEXTO = /\.(md|txt)$/i
@@ -62,7 +63,7 @@ export function VisualizadorArquivo({
   } else if (HTML.test(caminho) && texto) {
     conteudo = (
       <iframe
-        srcDoc={texto}
+        srcDoc={comScriptDeInteracao(texto)}
         title={nome}
         sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
         className="h-full w-full rounded-md border bg-papel"

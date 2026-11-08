@@ -2,6 +2,7 @@ import { createHash } from "node:crypto"
 import { createClient, type SupabaseClient } from "@supabase/supabase-js"
 import type { Comentario } from "../comentarios"
 import { ErroConflitoVersao, ErroNaoEncontrado, ErroProspectExistente } from "../erros"
+import type { Acumulado, LinhaPresenca, LinhaUso } from "../metricas/tipos"
 import { ORDEM_ETAPAS, type Estado, type EtapaId, type EventoConversa } from "../tipos"
 import type {
   ArmazemArquivos,
@@ -70,6 +71,32 @@ export async function paginar<T>(
   }
 }
 
+interface LinhaUsoBanco {
+  slug: string
+  etapa: EtapaId
+  autor: string | null
+  sessao: string | null
+  custo_usd: number | string | null
+  custo_turno_usd: number | string | null
+  modelos: Record<string, number> | null
+  inicio: string
+  fim: string
+}
+
+interface LinhaPresencaBanco {
+  slug: string
+  email: string
+  etapa: EtapaId
+  em: string
+  visivel: boolean
+  segundos_sem_interacao: number
+}
+
+/** O PostgREST pode devolver `numeric` como texto; nulo continua nulo. */
+function numeroOuNulo(v: number | string | null | undefined): number | null {
+  return v == null ? null : Number(v)
+}
+
 /** Primeira etapa que ainda não foi concluída, ou null quando todas foram. */
 function etapaAtualDe(estado: Estado): EtapaId | null {
   return ORDEM_ETAPAS.find((id) => estado.etapas[id].status !== "concluida") ?? null
@@ -124,7 +151,7 @@ export class SupabaseRepositorio implements Repositorio {
     if (error) throw falha(error)
     if (!data || data.excluido_em == null) throw new ErroProspectExistente(slug)
 
-    for (const tabela of ["eventos_conversa", "comentarios", "uso_turnos", "arquivos", "arquivos_lixeira"]) {
+    for (const tabela of ["eventos_conversa", "comentarios", "uso_turnos", "presenca", "arquivos", "arquivos_lixeira"]) {
       const { error: erroApagar } = await this.cliente.from(tabela).delete().eq("slug", slug)
       if (erroApagar) throw falha(erroApagar)
     }
@@ -282,7 +309,12 @@ export class SupabaseRepositorio implements Repositorio {
       slug: r.slug,
       etapa: r.etapa,
       autor: r.autor,
+      sessao: r.sessao,
       custo_usd: r.custoUsd,
+      custo_turno_usd: r.custoTurnoUsd,
+      modelos: r.modelos,
+      modelos_acumulado: r.modelosAcumulado,
+      esforco: r.esforco,
       tokens_entrada: r.tokensEntrada,
       tokens_saida: r.tokensSaida,
       inicio: r.inicio,
@@ -290,6 +322,97 @@ export class SupabaseRepositorio implements Repositorio {
       status: r.status,
     })
     if (error) throw falha(error)
+  }
+
+  async ultimoUsoDaSessao(slug: string, sessao: string): Promise<Acumulado | null> {
+    const { data, error } = await this.cliente
+      .from("uso_turnos")
+      .select("custo_usd, modelos_acumulado")
+      .eq("slug", slug)
+      .eq("sessao", sessao)
+      .order("fim", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (error) throw falha(error)
+    if (!data) return null
+    return {
+      custoUsd: numeroOuNulo(data.custo_usd),
+      modelos: (data.modelos_acumulado as Record<string, number> | null) ?? null,
+    }
+  }
+
+  async ultimoUsoAntigo(slug: string, etapa: EtapaId): Promise<Acumulado | null> {
+    const { data, error } = await this.cliente
+      .from("uso_turnos")
+      .select("custo_usd")
+      .eq("slug", slug)
+      .eq("etapa", etapa)
+      .is("sessao", null)
+      .is("custo_turno_usd", null)
+      .order("fim", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (error) throw falha(error)
+    if (!data) return null
+    return { custoUsd: numeroOuNulo(data.custo_usd), modelos: null }
+  }
+
+  async listarUsos(slug?: string, ativosLidos?: ReadonlySet<string>): Promise<LinhaUso[]> {
+    const ativos = slug ? null : (ativosLidos ?? new Set(await this.listarSlugs()))
+    const linhas = await paginar<LinhaUsoBanco>((de, ate) => {
+      let consulta = this.cliente
+        .from("uso_turnos")
+        .select("slug, etapa, autor, sessao, custo_usd, custo_turno_usd, modelos, inicio, fim")
+      if (slug) consulta = consulta.eq("slug", slug)
+      return consulta.order("id").range(de, ate)
+    })
+    return linhas
+      .filter((l) => !ativos || ativos.has(l.slug))
+      .map((l) => ({
+        slug: l.slug,
+        etapa: l.etapa,
+        autor: l.autor,
+        sessao: l.sessao,
+        custoUsd: numeroOuNulo(l.custo_usd),
+        custoTurnoUsd: numeroOuNulo(l.custo_turno_usd),
+        modelos: l.modelos,
+        inicio: new Date(l.inicio).toISOString(),
+        fim: new Date(l.fim).toISOString(),
+      }))
+  }
+
+  async registrarPresenca(p: Omit<LinhaPresenca, "em">): Promise<void> {
+    const { error } = await this.cliente.from("presenca").insert({
+      slug: p.slug,
+      email: p.email,
+      etapa: p.etapa,
+      visivel: p.visivel,
+      segundos_sem_interacao: p.segundosSemInteracao,
+    })
+    if (error) throw falha(error)
+  }
+
+  async listarPresencas(slug?: string, ativosLidos?: ReadonlySet<string>): Promise<LinhaPresenca[]> {
+    const ativos = slug ? null : (ativosLidos ?? new Set(await this.listarSlugs()))
+    const linhas = await paginar<LinhaPresencaBanco>((de, ate) => {
+      let consulta = this.cliente
+        .from("presenca")
+        .select("slug, email, etapa, em, visivel, segundos_sem_interacao")
+      if (slug) consulta = consulta.eq("slug", slug)
+      return consulta.order("em").order("id").range(de, ate)
+    })
+    return linhas
+      .filter((l) => !ativos || ativos.has(l.slug))
+      .map((l) => ({
+        slug: l.slug,
+        email: l.email,
+        etapa: l.etapa,
+        em: new Date(l.em).toISOString(),
+        visivel: l.visivel,
+        segundosSemInteracao: l.segundos_sem_interacao,
+      }))
   }
 
   async marcarSincronizacao(slug: string, pendente: boolean): Promise<void> {

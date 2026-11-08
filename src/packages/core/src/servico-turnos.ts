@@ -6,7 +6,7 @@ import { etapaDoCatalogo } from "./catalogo"
 import { ErroReiniciando, ErroTurnoAtivo } from "./erros"
 import type { Executor, PedidoTurno } from "./executor/tipos"
 import type { MemoriaDeSessao } from "./nuvem/memoria-sessao"
-import type { RegistroUsoTurno } from "./nuvem/tipos"
+import type { EntradaUsoTurno } from "./nuvem/tipos"
 import { promptInicialEtapa, promptRetomadaEtapa, systemPromptModoInterface } from "./prompts"
 import type { AjusteEnvio, ServicoPlanejamento } from "./servico-planejamento"
 import type { Catalogo, EtapaId, EventoConversa } from "./tipos"
@@ -373,7 +373,7 @@ export class ServicoTurnos {
   }
 
   /** Guarda o custo do turno. Falha só vai para o console: não pode afetar o turno. */
-  private async registrarUso(r: RegistroUsoTurno): Promise<void> {
+  private async registrarUso(r: EntradaUsoTurno): Promise<void> {
     try {
       await this.servico.registrarUso(r)
     } catch (e) {
@@ -442,6 +442,8 @@ export class ServicoTurnos {
       allowedTools: FERRAMENTAS_PERMITIDAS,
     }
 
+    // Conversa que já existia antes deste turno (e que o SDK continua): o custo dela já tem linhas anteriores.
+    const sessaoAnterior = sessionId
     const inicio = this.agora()
     await this.registrar(slug, etapa, { tipo: "turno_inicio", em: inicio })
     if (retomada) await this.registrar(slug, etapa, { tipo: "aviso", nivel: "info", texto: AVISO_RETOMADA, em: this.agora() })
@@ -480,11 +482,16 @@ export class ServicoTurnos {
           const status = sinal.aborted ? "interrompido" : ev.ok ? "ok" : "erro"
           const fim = this.agora()
           await this.registrar(slug, etapa, { tipo: "turno_fim", status, detalhe: ev.ok ? null : ev.erro, em: fim })
+          const sessao = ev.sessionId ?? sessionId ?? null
           await this.registrarUso({
             slug,
             etapa,
             autor,
+            sessao,
+            retomada: sessaoAnterior != null && sessaoAnterior === sessao,
             custoUsd: ev.uso?.custoUsd ?? null,
+            modelosAcumulado: ev.uso?.modelos ?? null,
+            esforco: null,
             tokensEntrada: ev.uso?.tokensEntrada ?? null,
             tokensSaida: ev.uso?.tokensSaida ?? null,
             inicio,

@@ -1,8 +1,9 @@
 import type { AjusteBiblioteca, ItemBiblioteca } from "@workspace/core/biblioteca"
 import type { Comentario, MapaPrevia, Regiao } from "@workspace/core/comentarios"
+import type { MediaEtapa, MetricasProjeto } from "@workspace/core/metricas/resumo"
 import type { PessoaRegistrada } from "@workspace/core/nuvem/usuarios"
 import type { Papel } from "@workspace/core/papeis"
-import type { EtapaId, ResultadoValidacao, RespostaTeste } from "@workspace/core/tipos"
+import type { EtapaId, ResultadoValidacao, ResumoProspect, RespostaTeste } from "@workspace/core/tipos"
 import { tratarNaoAutenticado } from "@/lib/login"
 
 export interface AjusteMensagem {
@@ -49,6 +50,19 @@ function multipart(arquivo: File): RequestInit {
 
 const base = (slug: string) => `/api/prospects/${encodeURIComponent(slug)}`
 export type PessoaComProjetos = PessoaRegistrada & { projetos: number }
+export type ProjetoComMetricas = ResumoProspect & { metricas: MetricasProjeto }
+export type MediasPorEtapa = Partial<Record<EtapaId, MediaEtapa>>
+/** Resposta do detalhe de um projeto; `medias` só vem quando pedidas (`medias: true`), senão é null. */
+export interface DetalheProjeto {
+  projeto: ResumoProspect
+  metricas: MetricasProjeto
+  medias: MediasPorEtapa | null
+}
+export interface CorpoPresenca {
+  etapa: EtapaId
+  visivel: boolean
+  segundosSemInteracao: number
+}
 export type AcaoEtapa = "iniciar" | "concluir" | "reabrir" | "confirmar" | "revisar" | "parar"
 
 export const api = {
@@ -94,6 +108,19 @@ export const api = {
   /** Só admin: quem já entrou no app, com o papel e quantos projetos ativos cada um tem. */
   listarPessoas: () => chamar<{ pessoas: PessoaComProjetos[]; admins: number }>("/api/admin/pessoas", { cache: "no-store" }),
   alterarPapel: (email: string, papel: Papel) => chamar<{ ok: true }>("/api/admin/pessoas/papel", comJson("POST", { email, papel })),
+  /** Só admin: custo e tempo de cada projeto ativo e a média por etapa concluída. */
+  metricasGerais: () => chamar<{ projetos: ProjetoComMetricas[]; medias: MediasPorEtapa }>("/api/admin/projetos", { cache: "no-store" }),
+  /** Só admin: o resumo e as métricas de um projeto. As médias por etapa (mais caras) só vêm com `{ medias: true }`. */
+  metricasDoProjeto: (slug: string, { medias }: { medias?: boolean } = {}) =>
+    chamar<DetalheProjeto>(`/api/admin/projetos/${encodeURIComponent(slug)}${medias ? "?medias=1" : ""}`, { cache: "no-store" }),
+  /** Aviso de presença: nunca lança (falha é ignorada em silêncio) e `keepalive` deixa o último sair ao fechar a aba. */
+  enviarPresenca: async (slug: string, corpo: CorpoPresenca): Promise<void> => {
+    try {
+      await fetch(`${base(slug)}/presenca`, { ...comJson("POST", corpo), keepalive: true })
+    } catch {
+      // Sem rede ou aba fechando: o próximo aviso cobre.
+    }
+  },
   trocarDono: (slug: string, email: string) => chamar<{ ok: true }>(`/api/admin/prospects/${encodeURIComponent(slug)}/dono`, comJson("POST", { email })),
 }
 

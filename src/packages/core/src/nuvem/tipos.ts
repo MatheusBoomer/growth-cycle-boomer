@@ -1,4 +1,5 @@
 import type { Comentario } from "../comentarios"
+import type { Acumulado, LinhaPresenca, LinhaUso } from "../metricas/tipos"
 import type { Estado, EtapaId, EventoConversa } from "../tipos"
 
 export interface EstadoVersionado {
@@ -16,12 +17,32 @@ export interface RegistroUsoTurno {
   slug: string
   etapa: EtapaId
   autor: string | null
+  /** Conversa (sessão do SDK) do turno; null quando o executor não informou. */
+  sessao: string | null
+  /** Custo acumulado da conversa até o fim do turno, como o SDK reporta. */
   custoUsd: number | null
+  /** Custo do turno em si (acumulado menos o do turno anterior da mesma sessão). */
+  custoTurnoUsd: number | null
+  /** Custo do turno por modelo. */
+  modelos: Record<string, number> | null
+  /** Custo acumulado por modelo, como o SDK reporta. */
+  modelosAcumulado: Record<string, number> | null
+  /** Esforço de raciocínio do turno, quando houver. */
+  esforco: string | null
   tokensEntrada: number | null
   tokensSaida: number | null
   inicio: string
   fim: string
   status: "ok" | "interrompido" | "erro"
+}
+
+/** O que o `ServicoTurnos` informa; o custo do turno e por modelo o `ServicoPlanejamento` calcula antes de gravar. */
+export type EntradaUsoTurno = Omit<RegistroUsoTurno, "custoTurnoUsd" | "modelos"> & {
+  /**
+   * Verdadeiro quando o turno rodou numa sessão que já existia (a mesma que o SDK devolveu), isto é, a conversa
+   * continuou. Sem linha anterior da sessão, serve para abater o custo das linhas antigas da etapa.
+   */
+  retomada: boolean
 }
 
 /** Dados estruturados de cada prospect (estado, conversa, comentários, uso). */
@@ -58,6 +79,22 @@ export interface Repositorio {
   /** Apaga toda a conversa e todos os comentários do prospect; o prospect e o uso ficam. */
   limparConversasEComentarios(slug: string): Promise<void>
   registrarUso(r: RegistroUsoTurno): Promise<void>
+  /** Acumulado do turno mais recente (por `fim`) dessa sessão no prospect; null se não há. */
+  ultimoUsoDaSessao(slug: string, sessao: string): Promise<Acumulado | null>
+  /**
+   * Acumulado da linha antiga mais recente (por `fim`) da etapa no prospect: sem sessão e sem custo do turno, de
+   * antes do custo por turno. `modelos` é sempre null; null se não há linha antiga.
+   */
+  ultimoUsoAntigo(slug: string, etapa: EtapaId): Promise<Acumulado | null>
+  /**
+   * Todos os turnos, paginado. Sem `slug`, só os de prospects ativos; `ativos` dá esses slugs a quem já os leu
+   * (sem ele o repositório os consulta).
+   */
+  listarUsos(slug?: string, ativos?: ReadonlySet<string>): Promise<LinhaUso[]>
+  /** `em` vem do banco (ou do relógio do repositório). */
+  registrarPresenca(p: Omit<LinhaPresenca, "em">): Promise<void>
+  /** Ordenado por `em`, paginado. Sem `slug`, só os de prospects ativos (`ativos` como em `listarUsos`). */
+  listarPresencas(slug?: string, ativos?: ReadonlySet<string>): Promise<LinhaPresenca[]>
   marcarSincronizacao(slug: string, pendente: boolean): Promise<void>
 }
 

@@ -6,6 +6,14 @@ type Json = Record<string, unknown>
 const obj = (v: unknown): Json | null => (v && typeof v === "object" && !Array.isArray(v) ? (v as Json) : null)
 const str = (v: unknown): string | null => (typeof v === "string" ? v : null)
 const num = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null)
+// modelUsage: { [modelo]: { costUSD, ... } }. Entradas sem custo numérico ficam de fora.
+const modelos = (v: unknown): Record<string, number> | null => {
+  const custos = Object.entries(obj(v) ?? {}).flatMap(([modelo, m]): [string, number][] => {
+    const custo = num(obj(m)?.costUSD)
+    return custo === null ? [] : [[modelo, custo]]
+  })
+  return custos.length > 0 ? Object.fromEntries(custos) : null
+}
 
 export function parseLinhaStreamJson(linha: string): EventoExecutor[] {
   let bruto: unknown
@@ -88,6 +96,7 @@ export function eventosDaMensagem(bruto: unknown): EventoExecutor[] {
                   custoUsd: num(o.total_cost_usd),
                   tokensEntrada: num(usage?.input_tokens),
                   tokensSaida: num(usage?.output_tokens),
+                  modelos: modelos(o.modelUsage),
                 },
               }
             : {}),

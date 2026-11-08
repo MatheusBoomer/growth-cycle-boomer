@@ -10,6 +10,7 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { ROTULO_STATUS_ENTREGAVEL } from "@/components/cards/card-entregavel"
 import { urlArquivo } from "@/lib/api"
 import { alvoDeDigitacao } from "@/lib/layout-colunas"
+import { comScriptDeInteracao } from "@/lib/presenca"
 
 export function VisualizadorHtml({
   slug,
@@ -88,7 +89,7 @@ export function VisualizadorHtml({
       ) : entregavel && html !== null ? (
         <iframe
           key={entregavel.id}
-          srcDoc={html}
+          srcDoc={comScriptDeInteracao(html!)}
           title={entregavel.titulo}
           sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
           className="min-h-0 w-full flex-1 bg-papel"
