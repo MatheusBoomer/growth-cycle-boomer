@@ -141,6 +141,20 @@ describe("PUT /api/admin/modelos/[etapa]/[alvo]", () => {
     expect(await linhas()).toEqual([])
   })
 
+  it("sem modelo, não consulta o SDK: voltar ao padrão e salvar só o esforço", async () => {
+    const modelosDisponiveis = vi.fn(async () => LISTA)
+    mundo.servidor = { raiz: RAIZ_DO_PROJETO, catalogo, servico, armazenamento, usuarios, modelosDisponiveis }
+    entrarComo(CHEFE)
+    expect((await gravarModelo(pedido({ modelo: null, esforco: null }), contexto("03", "principal"))).status).toBe(200)
+    expect((await gravarModelo(pedido({ modelo: null, esforco: "low" }), contexto("03", "principal"))).status).toBe(200)
+    expect(modelosDisponiveis).not.toHaveBeenCalled()
+    expect(await linhas()).toMatchObject([{ etapa: "03", alvo: "principal", modelo: null, esforco: "low" }])
+    expect((await gravarModelo(pedido({ modelo: null, esforco: "enorme" }), contexto("03", "principal"))).status).toBe(400)
+    expect(modelosDisponiveis).not.toHaveBeenCalled()
+    expect((await gravarModelo(pedido({ modelo: "claude-sonnet-x", esforco: null }), contexto("03", "principal"))).status).toBe(200)
+    expect(modelosDisponiveis).toHaveBeenCalledTimes(1)
+  })
+
   it("subagente que a etapa não aciona dá 404", async () => {
     entrarComo(CHEFE)
     const r = await gravarModelo(pedido({ modelo: "sonnet", esforco: null }), contexto("01", "analista-dados"))
