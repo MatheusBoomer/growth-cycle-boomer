@@ -1,4 +1,5 @@
-import { alvosDaEtapa, carregarSugestoes } from "@workspace/core/modelos"
+import { alvosDaEtapa } from "@workspace/core/modelos"
+import { carregarSugestoes } from "@workspace/core/sugestoes-modelos"
 import { json, respostaDeErro } from "@/lib/http"
 import { servidor } from "@/lib/servidor"
 import { exigirAdmin } from "@/lib/sessao"
