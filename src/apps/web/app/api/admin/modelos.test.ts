@@ -132,6 +132,23 @@ describe("GET /api/admin/modelos", () => {
   })
 })
 
+describe("GET /api/admin/modelos: resumo de uso com falha", () => {
+  it("não derruba a aba: responde 200 com uso vazio", async () => {
+    vi.spyOn(servico, "resumoDeUsoPorEtapa").mockRejectedValue(new Error("banco fora do ar"))
+    const erro = vi.spyOn(console, "error").mockImplementation(() => {})
+    entrarComo(CHEFE)
+
+    const r = await lerModelos()
+
+    expect(r.status).toBe(200)
+    const corpo = (await r.json()) as { uso: Record<string, UsoDaEtapa>; etapas: unknown[] }
+    expect(corpo.uso).toEqual({})
+    expect(corpo.etapas).toHaveLength(10)
+    expect(erro).toHaveBeenCalledWith(expect.stringContaining("banco fora do ar"))
+    erro.mockRestore()
+  })
+})
+
 describe("PUT /api/admin/modelos/[etapa]/[alvo]", () => {
   it("grava a escolha com o e-mail do admin em alteradoPor", async () => {
     entrarComo(CHEFE)

@@ -149,6 +149,11 @@ describe("seloDoModelo", () => {
     expect(seloDoModelo("modelo-y", outra)).toMatchObject({ familia: null, texto: "modelo-y", fixo: true })
   })
 
+  it("o valor `default` gravado vale como null: selo de padrão", () => {
+    expect(seloDoModelo("default", lista)).toEqual(seloDoModelo(null, lista))
+    expect(seloDoModelo("default", lista)).toMatchObject({ texto: "Padrão (Opus 5.5)", padrao: true, fixo: false })
+  })
+
   it("null é o padrão, com o modelo padrão entre parênteses quando conhecido", () => {
     expect(seloDoModelo(null, lista)).toEqual({ familia: null, texto: "Padrão (Opus 5.5)", apelido: false, fixo: false, padrao: true })
     expect(seloDoModelo(null, montarListaDeModelos(INFO))).toMatchObject({ texto: "Padrão", padrao: true })

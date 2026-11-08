@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import type { ListaDeModelos } from "@workspace/core/modelos"
 import type { LinhaConfigModelo } from "@workspace/core/nuvem/tipos"
 import { seloDoModelo, type Sugestao } from "@workspace/core/modelos"
-import { ROTULOS_ALVO, escolhaAoTrocarModelo, escolhaSalva, esforcosDoModelo, foraDaLista, sugestaoVisivel, textoAlteracao, textoRodape, textoSelo } from "./celula-modelo"
+import { ROTULOS_ALVO, escolhaAoTrocarModelo, escolhaSalva, esforcosDoModelo, foraDaLista, sugestaoVisivel, textoAlteracao, textoRodape, textoSelo, textoSugestao } from "./celula-modelo"
 
 const lista: ListaDeModelos = {
   completa: true,
@@ -47,6 +47,7 @@ describe("foraDaLista", () => {
   it("é falso para modelo da lista e para o padrão", () => {
     expect(foraDaLista(lista, "opus")).toBe(false)
     expect(foraDaLista(lista, null)).toBe(false)
+    expect(foraDaLista(lista, "default")).toBe(false)
   })
 })
 
@@ -144,5 +145,30 @@ describe("escolhaSalva", () => {
   it("sem linha é o padrão, e esforço desconhecido vira nulo", () => {
     expect(escolhaSalva([linha({})], "04", "principal")).toEqual({ modelo: null, esforco: null })
     expect(escolhaSalva([linha({ esforco: "ultra" })], "03", "principal")).toEqual({ modelo: "sonnet", esforco: null })
+  })
+})
+
+describe("textoSugestao", () => {
+  const comVersao: ListaDeModelos = {
+    ...lista,
+    modelos: lista.modelos.map((m) => (m.value === "sonnet" ? { ...m, resolvido: "claude-sonnet-5-5" } : m)),
+  }
+  const base: Sugestao = { etapa: "03", alvo: "principal", modelo: "sonnet", esforco: null, motivo: "análise numérica pesada" }
+
+  it("usa só o nome amigável, sem `mais recente`, e termina no motivo (um único ponto médio)", () => {
+    const texto = textoSugestao(base, comVersao)
+    expect(texto).toBe("Sugestão: Sonnet 5.5 · análise numérica pesada")
+    expect(texto.match(/·/g)).toHaveLength(1)
+  })
+  it("id fixo também sai sem o sufixo `fixo`", () => {
+    expect(textoSugestao({ ...base, modelo: "claude-opus-5-5" }, comVersao)).toBe("Sugestão: Opus 5.5 · análise numérica pesada")
+  })
+  it("acrescenta o esforço sugerido", () => {
+    expect(textoSugestao({ ...base, esforco: "xhigh" }, comVersao)).toBe("Sugestão: Sonnet 5.5, esforço muito alto · análise numérica pesada")
+  })
+  it("acrescenta o agente quando o rótulo é informado", () => {
+    expect(textoSugestao({ ...base, alvo: "analista-dados", modelo: "haiku" }, comVersao, "Analista de dados")).toBe(
+      "Sugestão (Analista de dados): Haiku · análise numérica pesada",
+    )
   })
 })

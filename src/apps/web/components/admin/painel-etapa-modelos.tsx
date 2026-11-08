@@ -1,11 +1,11 @@
 "use client"
 
-import { FRASES_ESFORCO, ROTULOS_ESFORCO, seloDoModelo, type EscolhaModelo } from "@workspace/core/modelos"
+import { FRASES_ESFORCO, ROTULOS_ESFORCO, type EscolhaModelo } from "@workspace/core/modelos"
 import { Button } from "@workspace/ui/components/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@workspace/ui/components/select"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@workspace/ui/components/sheet"
 import type { ConfigModelos, EtapaConfiguravel } from "@/lib/api"
-import { ROTULOS_ALVO, escolhaAoTrocarModelo, escolhaSalva, esforcosDoModelo, foraDaLista, sugestaoVisivel, textoAlteracao, textoSelo } from "@/lib/celula-modelo"
+import { ROTULOS_ALVO, escolhaAoTrocarModelo, escolhaSalva, esforcosDoModelo, foraDaLista, sugestaoVisivel, textoAlteracao, textoSugestao } from "@/lib/celula-modelo"
 import { SeloModelo } from "./selo-modelo"
 
 const PADRAO = "__padrao__"
@@ -88,13 +88,7 @@ function AgenteNoPainel({ etapa, alvo, dados, salvando, salvar }: PropsAgente) {
       {fora && <p className="text-destructive text-xs">modelo não está mais na lista</p>}
       {sugestao && sugestaoVisivel(sugestao, atual) && (
         <div className="bg-muted/60 flex flex-col gap-1.5 rounded-lg px-2.5 py-2 text-xs">
-          <span>
-            <span className="font-medium">
-              Sugestão: {textoSelo(seloDoModelo(sugestao.modelo, lista), lista)}
-              {sugestao.esforco ? `, esforço ${ROTULOS_ESFORCO[sugestao.esforco].toLowerCase()}` : ""}
-            </span>
-            <span className="text-muted-foreground"> · {sugestao.motivo}</span>
-          </span>
+          <span>{textoSugestao(sugestao, lista)}</span>
           <Button variant="outline" size="xs" className="self-start" disabled={salvando} onClick={() => salvar(etapa.id, alvo, { modelo: sugestao.modelo, esforco: sugestao.esforco })}>
             Aplicar
           </Button>
@@ -123,7 +117,7 @@ interface Props {
 export function PainelEtapaModelos({ etapa, aberto, aoMudarAberto, dados, emSalvamento, salvar }: Props) {
   return (
     <Sheet open={aberto} onOpenChange={aoMudarAberto}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-md">
+      <SheetContent className="overflow-y-auto data-[side=right]:w-full data-[side=right]:sm:max-w-md">
         {etapa && (
           <>
             <SheetHeader>

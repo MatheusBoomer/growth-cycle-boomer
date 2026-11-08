@@ -2,6 +2,7 @@ import { nomeCurto } from "@workspace/core/autenticacao"
 import { formatarUsd } from "@workspace/core/metricas/formato"
 import {
   NIVEIS_ESFORCO,
+  ROTULOS_ESFORCO,
   rotuloDoModelo,
   seloDoModelo,
   type EscolhaModelo,
@@ -29,9 +30,9 @@ export function escolhaAoTrocarModelo(atual: EscolhaModelo, novoModelo: string |
   return { modelo: novoModelo, esforco: aceito ? atual.esforco : null }
 }
 
-/** Modelo gravado que não está mais na lista (o SDK deixou de oferecê-lo). O padrão nunca está fora. */
+/** Modelo gravado que não está mais na lista (o SDK deixou de oferecê-lo). O padrão (nulo ou `default`) nunca está fora. */
 export function foraDaLista(lista: ListaDeModelos, modelo: string | null): boolean {
-  return modelo !== null && !lista.modelos.some((m) => m.value === modelo)
+  return modelo !== null && modelo !== "default" && !lista.modelos.some((m) => m.value === modelo)
 }
 
 /** "Alterado por Ana Silva em 08/11", ou nulo quando a linha não existe ou não diz quem e quando. */
@@ -71,6 +72,16 @@ export function textoSelo(selo: SeloModelo, lista: ListaDeModelos): string {
   if (selo.padrao) return lista.padrao !== null && rotuloDoModelo(lista.padrao).familia !== null ? selo.texto : "Padrão"
   if (selo.apelido) return `${selo.texto} · mais recente`
   return selo.fixo ? `${selo.texto} · fixo` : selo.texto
+}
+
+/**
+ * Texto da sugestão pendente: só o nome amigável do modelo (sem `mais recente`/`fixo`), o agente quando não é o
+ * principal (`alvoRotulo`), o esforço sugerido e, depois do último ponto médio, o motivo.
+ */
+export function textoSugestao(sugestao: Sugestao, lista: ListaDeModelos, alvoRotulo?: string): string {
+  const agente = alvoRotulo ? ` (${alvoRotulo})` : ""
+  const esforco = sugestao.esforco ? `, esforço ${ROTULOS_ESFORCO[sugestao.esforco].toLowerCase()}` : ""
+  return `Sugestão${agente}: ${seloDoModelo(sugestao.modelo, lista).texto}${esforco} · ${sugestao.motivo}`
 }
 
 /** O que está gravado para um agente da etapa. Sem linha, é o padrão (tudo nulo); um esforço desconhecido também vira nulo. */

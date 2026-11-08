@@ -16,7 +16,15 @@ export async function GET() {
     await exigirAdmin()
     usuariosDaNuvem()
     const { raiz, catalogo, servico, modelosDisponiveis } = servidor()
-    const [config, lista, uso] = await Promise.all([servico.configModelos(), modelosDisponiveis(), servico.resumoDeUsoPorEtapa()])
+    const [config, lista, uso] = await Promise.all([
+      servico.configModelos(),
+      modelosDisponiveis(),
+      // O resumo de uso é enfeite: se falhar, os cartões aparecem sem ele e a aba continua usável.
+      servico.resumoDeUsoPorEtapa().catch((e: unknown) => {
+        console.error(`Falha ao resumir o uso por etapa: ${e instanceof Error ? e.message : String(e)}`)
+        return {}
+      }),
+    ])
     return json({
       etapas: catalogo.etapas.map((e) => ({ id: e.id, rotulo: e.rotuloStatus, alvos: alvosDaEtapa(catalogo, e.id) })),
       config,

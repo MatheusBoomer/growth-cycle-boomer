@@ -119,9 +119,9 @@ export interface SeloModelo {
   padrao: boolean
 }
 
-/** O que o selo de um modelo mostra. `null` é o modelo padrão. Os sufixos ficam a cargo da tela, a partir das flags. */
+/** O que o selo de um modelo mostra. `null` (ou o valor `default` do SDK) é o modelo padrão. Os sufixos ficam a cargo da tela, a partir das flags. */
 export function seloDoModelo(modelo: string | null, lista: ListaDeModelos): SeloModelo {
-  if (modelo === null) {
+  if (modelo === null || modelo === ENTRADA_PADRAO) {
     const texto = lista.padrao === null ? "Padrão" : `Padrão (${rotuloDoModelo(lista.padrao).texto})`
     return { familia: null, texto, apelido: false, fixo: false, padrao: true }
   }

@@ -1,9 +1,9 @@
 "use client"
 
-import { ALVO_PRINCIPAL, ROTULOS_ESFORCO, seloDoModelo, type EscolhaModelo } from "@workspace/core/modelos"
+import { ALVO_PRINCIPAL, type EscolhaModelo } from "@workspace/core/modelos"
 import { Button } from "@workspace/ui/components/button"
 import type { ConfigModelos, EtapaConfiguravel } from "@/lib/api"
-import { ROTULOS_ALVO, escolhaSalva, sugestaoVisivel, textoRodape, textoSelo } from "@/lib/celula-modelo"
+import { ROTULOS_ALVO, escolhaSalva, sugestaoVisivel, textoRodape, textoSelo, textoSugestao } from "@/lib/celula-modelo"
 import { BarraEsforco } from "./barra-esforco"
 import { SeloModelo } from "./selo-modelo"
 
@@ -50,11 +50,7 @@ export function CartaoEtapaModelos({ etapa, dados, emSalvamento, abrir, salvar }
       {pendentes.map(({ alvo, sugestao }) => (
         <div key={alvo} className="bg-muted/60 relative z-10 flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-xs">
           <span>
-            <span className="font-medium">
-              Sugestão{alvo === ALVO_PRINCIPAL ? "" : ` (${(ROTULOS_ALVO[alvo] ?? alvo).split(" · ")[0]})`}: {textoSelo(seloDoModelo(sugestao.modelo, lista), lista)}
-              {sugestao.esforco ? `, esforço ${ROTULOS_ESFORCO[sugestao.esforco].toLowerCase()}` : ""}
-            </span>
-            <span className="text-muted-foreground"> · {sugestao.motivo}</span>
+            {textoSugestao(sugestao, lista, alvo === ALVO_PRINCIPAL ? undefined : (ROTULOS_ALVO[alvo] ?? alvo).split(" · ")[0])}
           </span>
           <Button variant="outline" size="xs" disabled={emSalvamento === `${etapa.id}/${alvo}`} onClick={() => salvar(etapa.id, alvo, { modelo: sugestao.modelo, esforco: sugestao.esforco })}>
             Aplicar
