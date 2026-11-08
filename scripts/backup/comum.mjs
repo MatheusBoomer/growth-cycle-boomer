@@ -30,6 +30,7 @@ export const TABELAS = [
   { nome: "prospects", chave: ["slug"] },
   { nome: "usuarios", chave: ["email"], global: true },
   { nome: "config_modelos", chave: ["etapa", "alvo"], global: true },
+  { nome: "notas_skills", chave: ["id"], identidade: "id", global: true },
   { nome: "arquivos", chave: ["slug", "caminho"] },
   { nome: "arquivos_lixeira", chave: ["id"], identidade: "id" },
   { nome: "comentarios", chave: ["slug", "entregavel_id"] },

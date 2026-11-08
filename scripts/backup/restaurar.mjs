@@ -145,7 +145,13 @@ async function principal() {
       }
       console.log(`· ${t.nome}: repor o que falta · linhas: ${faltam.length}`)
       if (!op.aplicar) continue
-      await inserir(cliente, t.nome, faltam)
+      // Identidade (ex.: notas_skills): o banco gera o id, como na restauração por prospect.
+      const paraInserir = faltam.map((l) => {
+        const nova = { ...l }
+        if (t.identidade) delete nova[t.identidade]
+        return nova
+      })
+      await inserir(cliente, t.nome, paraInserir)
       console.log(`  ✓ ${faltam.length} restaurado(s)`)
     }
   }
