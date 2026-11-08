@@ -56,6 +56,25 @@ describe("montarOpcoesSdk", () => {
     expect(sem.resume).toBeUndefined()
     expect(montarOpcoesSdk(pedido("abc"), controle, {}).resume).toBe("abc")
   })
+
+  it("sem extras, as opções têm exatamente as chaves de sempre", () => {
+    const chaves = Object.keys(montarOpcoesSdk({ ...pedido(), cwd: path.join(tmpdir(), "inexistente-xyz") }, new AbortController(), {}))
+    expect(chaves.sort()).toEqual(
+      ["abortController", "allowedTools", "cwd", "env", "includePartialMessages", "mcpServers", "settings", "systemPrompt"].sort(),
+    )
+  })
+
+  it("com modelo, esforço e agentes, acrescenta model, effort e agents", () => {
+    const agentes = { "analista-dados": { description: "d", prompt: "p", tools: ["Read"], model: "haiku", effort: "low" as const } }
+    const opcoes = montarOpcoesSdk(
+      { ...pedido(), modelo: "haiku", esforco: "low", agentes },
+      new AbortController(),
+      {},
+    )
+    expect(opcoes.model).toBe("haiku")
+    expect(opcoes.effort).toBe("low")
+    expect(opcoes.agents).toEqual(agentes)
+  })
 })
 
 describe("pasta clientes como link (volume da nuvem)", () => {

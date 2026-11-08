@@ -1,5 +1,7 @@
 import { readFileSync } from "node:fs"
 import path from "node:path"
+import { ErroEntrada } from "./erros"
+import type { InfoModeloSdk } from "./executor/modelos-sdk"
 import type { Catalogo, EtapaId } from "./tipos"
 
 export const NIVEIS_ESFORCO = ["low", "medium", "high", "xhigh", "max"] as const
@@ -51,4 +53,100 @@ export function carregarSugestoes(raiz: string, catalogo: Catalogo): Sugestao[] 
     }
   }
   return bruto
+}
+
+export interface ModeloDisponivel {
+  value: string
+  nome: string
+  descricao: string
+  esforcos: NivelEsforco[]
+  /** true para opus, sonnet e haiku: valem sempre, e acompanham a versão mais nova do SDK. */
+  apelido: boolean
+}
+
+export interface ListaDeModelos {
+  modelos: ModeloDisponivel[]
+  /** false quando o SDK não respondeu: só os apelidos estão na lista. */
+  completa: boolean
+}
+
+const APELIDOS = [
+  { value: "opus", nome: "Opus" },
+  { value: "sonnet", nome: "Sonnet" },
+  { value: "haiku", nome: "Haiku" },
+] as const
+const ESFORCOS_PADRAO_APELIDO: NivelEsforco[] = ["low", "medium", "high"]
+
+const temInfoDeEsforco = (l: InfoModeloSdk) => l.supportsEffort !== undefined || l.supportedEffortLevels !== undefined
+
+function esforcosDaLinha(l: InfoModeloSdk): NivelEsforco[] {
+  if (l.supportsEffort === false) return []
+  return (l.supportedEffortLevels ?? []).filter((n) => (NIVEIS_ESFORCO as readonly string[]).includes(n))
+}
+
+/**
+ * Lista que a tela de configuração oferece: os três apelidos no topo e, depois, os demais modelos
+ * que o SDK informou. Com `info` nulo (SDK fora do ar), só os apelidos, e a lista sai incompleta.
+ */
+export function montarListaDeModelos(info: InfoModeloSdk[] | null): ListaDeModelos {
+  const linhas = info ?? []
+  const modelos: ModeloDisponivel[] = APELIDOS.map(({ value, nome }) => {
+    const propria = linhas.find((l) => l.value === value)
+    const resolvida = propria?.resolvedModel ? linhas.find((l) => l.value === propria.resolvedModel) : undefined
+    const fonte = [propria, resolvida].find((l): l is InfoModeloSdk => l !== undefined && temInfoDeEsforco(l))
+    return {
+      value,
+      nome: propria?.displayName || nome,
+      descricao: propria?.description ?? "",
+      esforcos: fonte ? esforcosDaLinha(fonte) : [...ESFORCOS_PADRAO_APELIDO],
+      apelido: true,
+    }
+  })
+  const vistos = new Set<string>(modelos.map((m) => m.value))
+  for (const l of linhas) {
+    if (vistos.has(l.value)) continue
+    vistos.add(l.value)
+    modelos.push({ value: l.value, nome: l.displayName, descricao: l.description, esforcos: esforcosDaLinha(l), apelido: false })
+  }
+  return { modelos, completa: info !== null }
+}
+
+/** Recusa (400) um modelo fora da lista e um esforço que o modelo não aceita; a mensagem diz o que vale. */
+export function validarEscolha(e: EscolhaModelo, lista: ListaDeModelos): void {
+  if (e.esforco !== null && !(NIVEIS_ESFORCO as readonly string[]).includes(e.esforco)) {
+    throw new ErroEntrada(`Esforço "${e.esforco}" desconhecido. Os níveis são: ${NIVEIS_ESFORCO.join(", ")}.`)
+  }
+  if (e.modelo === null) return
+  const modelo = lista.modelos.find((m) => m.value === e.modelo)
+  if (!modelo) {
+    const parcial = lista.completa ? "" : " (lista parcial: não foi possível consultar os modelos da conta)"
+    throw new ErroEntrada(
+      `Modelo "${e.modelo}" não está disponível. Modelos válidos: ${lista.modelos.map((m) => m.value).join(", ")}${parcial}.`,
+    )
+  }
+  if (e.esforco === null || modelo.esforcos.includes(e.esforco)) return
+  throw new ErroEntrada(
+    modelo.esforcos.length === 0
+      ? `O modelo "${modelo.value}" não aceita esforço.`
+      : `O modelo "${modelo.value}" não aceita o esforço "${e.esforco}". Níveis aceitos: ${modelo.esforcos.join(", ")}.`,
+  )
+}
+
+/** Guarda a lista por `ttlMs`. Falha da busca devolve só os apelidos e não fica em cache. */
+export function criarCacheDeModelos(
+  buscar: () => Promise<InfoModeloSdk[]>,
+  agora: () => number = Date.now,
+  ttlMs: number = 3_600_000,
+): () => Promise<ListaDeModelos> {
+  let guardada: { lista: ListaDeModelos; em: number } | null = null
+  return async () => {
+    if (guardada && agora() - guardada.em < ttlMs) return guardada.lista
+    try {
+      const lista = montarListaDeModelos(await buscar())
+      guardada = { lista, em: agora() }
+      return lista
+    } catch {
+      return montarListaDeModelos(null)
+    }
+  }
 }
