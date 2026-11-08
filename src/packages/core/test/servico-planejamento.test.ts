@@ -20,7 +20,7 @@ import { MemoriaArmazem, MemoriaRepositorio } from "../src/nuvem/memoria"
 import { Mesa } from "../src/nuvem/mesa"
 import type { UsuarioComPapel } from "../src/papeis"
 import { ServicoPlanejamento } from "../src/servico-planejamento"
-import type { EventoTempoReal, ResultadoValidacao } from "../src/tipos"
+import type { EtapaId, EventoTempoReal, ResultadoValidacao } from "../src/tipos"
 import { pastaDoFixture } from "../src/fixture"
 import { catalogoReal, raizTemporaria } from "./ajuda"
 import { criarFixtureMinimo } from "./fixture-minimo"
@@ -1347,6 +1347,129 @@ describe("custo por turno e métricas (dados na nuvem)", () => {
       const geral = await nuvem.metricasGerais(LIMITES)
       expect(geral.medias["01"]).toBeUndefined()
       expect(geral.projetos[0]?.metricas.custoUsd).toBe(2)
+    })
+  })
+
+  describe("resumoDeUsoPorEtapa", () => {
+    const hora = (n: number) => `2026-10-27T12:${String(n).padStart(2, "0")}:00.000Z`
+
+    /** Passa a etapa do prospect para concluída direto no repositório. */
+    async function concluir(slug: string, etapa: EtapaId): Promise<void> {
+      await nuvem.estado(slug)
+      const atual = (await repositorio.lerEstado(slug))!
+      atual.estado.etapas[etapa].status = "concluida"
+      await repositorio.gravarEstado(slug, atual.estado, atual.versao)
+    }
+
+    /** Um turno da etapa 03 em sessão própria, com o custo e o modelo dados. */
+    const turno03 = (slug: string, n: number, modelos: Record<string, number> | null, parcial: Partial<EntradaUsoTurno> = {}) =>
+      nuvem.registrarUso(
+        entrada(slug, {
+          etapa: "03",
+          sessao: `s${slug}${n}`,
+          custoUsd: Object.values(modelos ?? {}).reduce((a, b) => a + b, 0) || 0.5,
+          modelosAcumulado: modelos,
+          inicio: hora(n),
+          fim: hora(n),
+          ...parcial,
+        }),
+      )
+
+    it("a média é por prospect concluído, sem o cliente de teste, e conta os projetos que entraram", async () => {
+      await nuvem.criarProspect("Um", null)
+      await nuvem.criarProspect("Dois", null)
+      await nuvem.criarProspect("Tres", null)
+      await nuvem.criarClienteTeste("mini", "02")
+      await concluir("um", "03")
+      await concluir("dois", "03")
+      await concluir("cliente-teste", "03")
+      await turno03("um", 1, { opus: 1 })
+      await turno03("dois", 2, { opus: 1 })
+      await turno03("dois", 3, { opus: 2 })
+      await turno03("tres", 4, { opus: 99 }) // etapa não concluída: fora da média
+      await turno03("cliente-teste", 5, { opus: 50 })
+
+      const resumo = await nuvem.resumoDeUsoPorEtapa()
+
+      expect(resumo["03"]).toMatchObject({ mediaUsd: 2, projetos: 2 })
+    })
+
+    it("prospect concluído sem custo (usd 0) não entra na média", async () => {
+      await nuvem.criarProspect("Um", null)
+      await nuvem.criarProspect("Zero", null)
+      await concluir("um", "03")
+      await concluir("zero", "03")
+      await turno03("um", 1, { opus: 4 })
+      await turno03("zero", 2, null, { custoUsd: null })
+
+      expect((await nuvem.resumoDeUsoPorEtapa())["03"]).toMatchObject({ mediaUsd: 4, projetos: 1 })
+    })
+
+    it("o modelo recente é a chave de maior soma nos 5 usos mais recentes, de qualquer prospect ativo (teste incluso)", async () => {
+      await nuvem.criarProspect("Um", null)
+      await nuvem.criarClienteTeste("mini", "02")
+      await turno03("um", 1, { opus: 9 }) // o mais antigo: fica fora dos 5
+      await turno03("um", 2, { sonnet: 0.4 })
+      await turno03("cliente-teste", 3, { sonnet: 0.4 })
+      await turno03("um", 4, { haiku: 0.01 })
+      await turno03("cliente-teste", 5, { haiku: 0.01 })
+      await turno03("um", 6, { haiku: 0.01 })
+
+      expect((await nuvem.resumoDeUsoPorEtapa())["03"]?.modeloRecente).toBe("sonnet")
+    })
+
+    it("turnos antigos, sem modelos, dão modeloRecente nulo e a etapa fica só com a média", async () => {
+      await nuvem.criarProspect("Um", null)
+      await concluir("um", "03")
+      await turno03("um", 1, null, { sessao: null, custoUsd: 2 })
+
+      expect((await nuvem.resumoDeUsoPorEtapa())["03"]).toEqual({ mediaUsd: 2, projetos: 1, modeloRecente: null })
+    })
+
+    it("uma etapa sem média e sem modelo recente fica fora do resumo", async () => {
+      await nuvem.criarProspect("Um", null)
+      await turno03("um", 1, { sonnet: 0.4 })
+
+      const resumo = await nuvem.resumoDeUsoPorEtapa()
+
+      expect(resumo["03"]).toEqual({ mediaUsd: null, projetos: 0, modeloRecente: "sonnet" })
+      expect(Object.keys(resumo)).toEqual(["03"])
+    })
+
+    it("lê os slugs e o uso uma vez, o estado de cada prospect, e nunca a presença", async () => {
+      await nuvem.criarProspect("Um", null)
+      await nuvem.criarProspect("Dois", null)
+      await turno03("um", 1, { sonnet: 0.4 })
+      const espiaSlugs = vi.spyOn(repositorio, "listarSlugs")
+      const espiaUsos = vi.spyOn(repositorio, "listarUsos")
+      const espiaPresencas = vi.spyOn(repositorio, "listarPresencas")
+
+      await nuvem.resumoDeUsoPorEtapa()
+
+      expect(espiaSlugs).toHaveBeenCalledTimes(1)
+      expect(espiaUsos).toHaveBeenCalledTimes(1)
+      expect(espiaUsos.mock.calls[0]?.[0]).toBeUndefined()
+      expect([...(espiaUsos.mock.calls[0]?.[1] ?? [])].sort()).toEqual(["dois", "um"])
+      expect(espiaPresencas).not.toHaveBeenCalled()
+    })
+
+    it("pula o prospect de estado ilegível, com log, e segue com os outros", async () => {
+      await nuvem.criarProspect("Um", null)
+      await nuvem.criarProspect("Quebrado", null)
+      await concluir("um", "03")
+      await turno03("um", 1, { opus: 3 })
+      const lerEstado = repositorio.lerEstado.bind(repositorio)
+      vi.spyOn(repositorio, "lerEstado").mockImplementation(async (slug) => {
+        if (slug === "quebrado") throw new Error("estado corrompido")
+        return lerEstado(slug)
+      })
+      const erro = vi.spyOn(console, "error").mockImplementation(() => {})
+
+      const resumo = await nuvem.resumoDeUsoPorEtapa()
+
+      expect(resumo["03"]).toMatchObject({ mediaUsd: 3, projetos: 1 })
+      expect(erro).toHaveBeenCalledTimes(1)
+      erro.mockRestore()
     })
   })
 })
