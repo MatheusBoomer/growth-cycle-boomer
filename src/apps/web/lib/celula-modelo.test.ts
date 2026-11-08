@@ -5,6 +5,7 @@ import { escolhaAoTrocarModelo, esforcosDoModelo, foraDaLista, textoAlteracao } 
 
 const lista: ListaDeModelos = {
   completa: true,
+  padrao: null,
   modelos: [
     { value: "haiku", nome: "Haiku (mais recente)", descricao: "", esforcos: [], apelido: true },
     { value: "sonnet", nome: "Sonnet (mais recente)", descricao: "", esforcos: ["low", "medium", "high"], apelido: true },

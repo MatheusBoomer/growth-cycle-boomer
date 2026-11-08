@@ -7,7 +7,12 @@ import { consultarModelosSdk } from "../src/executor/modelos-sdk"
 import {
   alvosDaEtapa,
   criarCacheDeModelos,
+  FRASES_ESFORCO,
   montarListaDeModelos,
+  ROTULOS_ESFORCO,
+  rotuloDoModelo,
+  segmentosDoEsforco,
+  seloDoModelo,
   validarEscolha,
 } from "../src/modelos"
 import { catalogoReal } from "./ajuda"
@@ -70,6 +75,105 @@ describe("montarListaDeModelos", () => {
     expect(lista.completa).toBe(false)
     expect(lista.modelos.map((m) => m.value)).toEqual(["haiku", "sonnet", "opus"])
     expect(lista.modelos.every((m) => m.apelido && m.esforcos.length === 3)).toBe(true)
+  })
+})
+
+describe("montarListaDeModelos: modelo padrão e versão dos apelidos", () => {
+  const comPadrao: InfoModeloSdk[] = [
+    { value: "default", resolvedModel: "claude-opus-5-5", displayName: "Default (recommended)", description: "o padrão da conta" },
+    ...INFO,
+  ]
+
+  it("preenche padrao com o resolvedModel da entrada default e a deixa fora de modelos", () => {
+    const lista = montarListaDeModelos(comPadrao)
+    expect(lista.padrao).toBe("claude-opus-5-5")
+    expect(lista.modelos.map((m) => m.value)).toEqual(["haiku", "sonnet", "opus", "claude-haiku-5-5", "claude-opus-5-5"])
+  })
+
+  it("sem resolvedModel, padrao cai no displayName; sem entrada default, é null", () => {
+    expect(montarListaDeModelos([{ value: "default", displayName: "Default (recommended)", description: "" }]).padrao).toBe("Default (recommended)")
+    expect(montarListaDeModelos(INFO).padrao).toBeNull()
+    expect(montarListaDeModelos(null).padrao).toBeNull()
+  })
+
+  it("guarda o resolvedModel dos apelidos em resolvido", () => {
+    const por = (v: string) => montarListaDeModelos(INFO).modelos.find((m) => m.value === v)
+    expect(por("sonnet")?.resolvido).toBe("claude-sonnet-5-5")
+    expect(por("opus")?.resolvido).toBeUndefined()
+    expect(por("claude-opus-5-5")?.resolvido).toBeUndefined()
+  })
+})
+
+describe("rotuloDoModelo", () => {
+  it("lê família e versão do id", () => {
+    expect(rotuloDoModelo("claude-sonnet-5-5")).toEqual({ familia: "sonnet", texto: "Sonnet 5.5" })
+    expect(rotuloDoModelo("claude-fable-5-1")).toEqual({ familia: "fable", texto: "Fable 5.1" })
+  })
+
+  it("ignora o que vem depois da versão (datas, sufixos)", () => {
+    expect(rotuloDoModelo("claude-opus-4-1-20250805")).toEqual({ familia: "opus", texto: "Opus 4.1" })
+  })
+
+  it("fora do padrão, usa o nome do SDK ou o próprio id", () => {
+    expect(rotuloDoModelo("gpt-x", "Algo")).toEqual({ familia: null, texto: "Algo" })
+    expect(rotuloDoModelo("gpt-x")).toEqual({ familia: null, texto: "gpt-x" })
+  })
+})
+
+describe("seloDoModelo", () => {
+  const lista = montarListaDeModelos([
+    { value: "default", resolvedModel: "claude-opus-5-5", displayName: "Default", description: "" },
+    ...INFO,
+  ])
+
+  it("apelido com versão conhecida mostra a versão para a qual aponta", () => {
+    expect(seloDoModelo("sonnet", lista)).toEqual({ familia: "sonnet", texto: "Sonnet 5.5", apelido: true, fixo: false, padrao: false })
+  })
+
+  it("apelido sem versão conhecida mostra só a família", () => {
+    expect(seloDoModelo("sonnet", montarListaDeModelos(null))).toMatchObject({ familia: "sonnet", texto: "Sonnet", apelido: true, fixo: false })
+    expect(seloDoModelo("opus", lista)).toMatchObject({ familia: "opus", texto: "Opus", apelido: true })
+  })
+
+  it("id fixo mostra o rótulo do id", () => {
+    expect(seloDoModelo("claude-opus-5-5", lista)).toEqual({ familia: "opus", texto: "Opus 5.5", apelido: false, fixo: true, padrao: false })
+  })
+
+  it("id fixo fora da lista ainda ganha rótulo pelo id", () => {
+    expect(seloDoModelo("claude-velho-4-0", lista)).toMatchObject({ familia: "velho", texto: "Velho 4.0", fixo: true })
+  })
+
+  it("id fora do padrão usa o nome da lista, ou o próprio id", () => {
+    const outra = montarListaDeModelos([{ value: "modelo-x", displayName: "Modelo X", description: "" }])
+    expect(seloDoModelo("modelo-x", outra)).toMatchObject({ familia: null, texto: "Modelo X", fixo: true })
+    expect(seloDoModelo("modelo-y", outra)).toMatchObject({ familia: null, texto: "modelo-y", fixo: true })
+  })
+
+  it("null é o padrão, com o modelo padrão entre parênteses quando conhecido", () => {
+    expect(seloDoModelo(null, lista)).toEqual({ familia: null, texto: "Padrão (Opus 5.5)", apelido: false, fixo: false, padrao: true })
+    expect(seloDoModelo(null, montarListaDeModelos(INFO))).toMatchObject({ texto: "Padrão", padrao: true })
+  })
+})
+
+describe("esforço: rótulos, frases e segmentos", () => {
+  it("rótulos dos cinco níveis", () => {
+    expect(ROTULOS_ESFORCO).toEqual({ low: "Baixo", medium: "Médio", high: "Alto", xhigh: "Muito alto", max: "Máximo" })
+  })
+
+  it("frases dos cinco níveis e do padrão", () => {
+    expect(FRASES_ESFORCO).toEqual({
+      padrao: "deixa o Claude Code decidir",
+      low: "respostas rápidas, pouca reflexão",
+      medium: "equilíbrio entre rapidez e cuidado",
+      high: "pensa com cuidado antes de responder",
+      xhigh: "reflexão longa, para problemas difíceis",
+      max: "o máximo de reflexão, mais lento e caro",
+    })
+  })
+
+  it("segmentos acesos, de 0 (padrão) a 5", () => {
+    expect(segmentosDoEsforco(null)).toBe(0)
+    expect([..."low medium high xhigh max".split(" ")].map((n) => segmentosDoEsforco(n as never))).toEqual([1, 2, 3, 4, 5])
   })
 })
 
