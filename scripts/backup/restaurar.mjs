@@ -10,8 +10,9 @@
 //   - Prospect que existe: só voltam as linhas de `arquivos` e os objetos que sumiram.
 //   - --como <novo-slug>: recria o prospect do backup com outro slug, ao lado do original (para
 //     conferir um backup sem mexer no prospect de verdade). O novo slug não pode existir.
-//   - Usuários (tabela global): só na restauração completa (sem --prospect e sem --como). Entram
-//     só os e-mails que ainda não existem; papéis já cadastrados nunca são alterados.
+//   - Tabelas globais (usuarios, config_modelos, notas_skills): só na restauração completa (sem
+//     --prospect e sem --como). Entram só as linhas que ainda não existem; o que já está cadastrado
+//     (papéis, modelos, notas) nunca é alterado.
 import { readFile } from "node:fs/promises"
 import path from "node:path"
 import {
@@ -20,9 +21,11 @@ import {
   TABELAS,
   criarCliente,
   dentroDe,
+  lerTabela,
   limpar,
   listarObjetos,
 } from "./comum.mjs"
+import { linhasQueFaltam } from "./linhas.mjs"
 
 const LOTE = 500
 
@@ -130,14 +133,12 @@ async function principal() {
     console.log(`  ✓ restaurado`)
   }
 
-  // Tabelas globais (usuários): só na restauração completa, e só insere o que falta
+  // Tabelas globais (usuarios, config_modelos, notas_skills): só na restauração completa, e só insere o que falta
   if (!op.prospect && !op.como) {
     for (const t of TABELAS.filter((t) => t.global)) {
-      const { data: existentes, error } = await cliente.from(t.nome).select(t.chave.join(","))
-      if (error) throw new Error(limpar(error))
-      const chaveDe = (l) => t.chave.map((c) => l[c]).join("|")
-      const jaTem = new Set((existentes ?? []).map(chaveDe))
-      const faltam = backup[t.nome].filter((l) => !jaTem.has(chaveDe(l)))
+      // Leitura paginada: um select simples para em ~1000 linhas e faria linhas existentes parecerem faltar.
+      const existentes = await lerTabela(cliente, t)
+      const faltam = linhasQueFaltam(backup[t.nome], existentes, t.chave)
       pendencias += faltam.length
       if (faltam.length === 0) {
         console.log(`· ${t.nome}: nada faltando`)
@@ -145,7 +146,13 @@ async function principal() {
       }
       console.log(`· ${t.nome}: repor o que falta · linhas: ${faltam.length}`)
       if (!op.aplicar) continue
-      await inserir(cliente, t.nome, faltam)
+      // Identidade (ex.: notas_skills): o banco gera o id, como na restauração por prospect.
+      const paraInserir = faltam.map((l) => {
+        const nova = { ...l }
+        if (t.identidade) delete nova[t.identidade]
+        return nova
+      })
+      await inserir(cliente, t.nome, paraInserir)
       console.log(`  ✓ ${faltam.length} restaurado(s)`)
     }
   }

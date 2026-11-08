@@ -1,0 +1,38 @@
+flowchart TD
+  S03["Skill 03 · KPIs e gráficos do diagnóstico"]
+  S05["Skill 05 · Impacto de cada problema em R$ ou %"]
+  S06["Skill 06 · Meta mês a mês, cenários e planilha"]
+  S08["Skill 08 · Gráficos e tabelas-imagem de mídia"]
+  R1["Recebe: arquivo de dados, KPIs ou gráficos pedidos e o padrão"]
+  P1["Lê os dados com pandas"]
+  D1{"Tipo de pedido"}
+  G1["Gráfico no padrão visual, PNG com nome estável"]
+  G2["Projeção pelo projecao.py, nunca no olho"]
+  G3["Planilha pelo preencher_projecao_xlsx.py (meses m-12 a m-1)"]
+  G4["Cálculo de impacto sobre números já aprovados"]
+  P2["Confere números contra a origem e a soma anual"]
+  E1["Devolve resumo executivo: números, PNGs e pontos de atenção"]
+  CK["A skill pede a checagem do analista; o subagente nunca aprova"]
+
+  S03 --> R1
+  S05 --> R1
+  S06 --> R1
+  S08 --> R1
+  R1 --> P1
+  P1 --> D1
+  D1 -->|"gráfico"| G1
+  D1 -->|"projeção"| G2
+  G2 -->|"cenários aprovados"| G3
+  D1 -->|"impacto"| G4
+  G1 --> P2
+  G2 --> P2
+  G3 --> P2
+  G4 --> P2
+  P2 --> E1
+  E1 --> CK
+
+  class R1,P1,G1,G2,G3,G4,P2 subagente
+  class E1 entrega
+  classDef checkpoint fill:#fff1e6,stroke:#e8803a,color:#7a3d0c
+  classDef subagente fill:#e8f0fd,stroke:#1f4fa8,color:#173a7a
+  classDef entrega fill:#e6f6ec,stroke:#16743b,color:#0f4f28

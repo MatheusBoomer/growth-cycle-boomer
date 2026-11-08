@@ -1,0 +1,41 @@
+flowchart TD
+  S02["Skill 02 · Raspagem do site do prospect (pontual)"]
+  S05["Skill 05 · Faixa de benchmark com fonte citada"]
+  S08["Skill 08 · Benchmarking de mercado nacional e internacional"]
+  N07["Não é usado na Skill 07 (anúncios vêm da Apify)"]
+  R1["Recebe: segmento, lista do analista e o que procurar"]
+  P1["Começa com firecrawl_search para localizar as fontes"]
+  D2{"O que a pesquisa pede?"}
+  P2["firecrawl_scrape lê a página encontrada"]
+  P3["firecrawl_interact quando a página pede busca ou clique"]
+  P4["firecrawl_extract para dado estruturado"]
+  P5["firecrawl_agent para pesquisa aberta (aguarda o resultado)"]
+  D1{"O dado foi confirmado?"}
+  P6["Registrar como não verificado"]
+  E1["Devolve estratégias e ações aplicáveis, com fonte"]
+  CK["A skill pede a checagem do analista"]
+
+  S02 --> R1
+  S05 --> R1
+  S08 --> R1
+  R1 --> P1
+  P1 --> D2
+  D2 -->|"ler uma página"| P2
+  D2 -->|"busca ou clique"| P3
+  D2 -->|"dado estruturado"| P4
+  D2 -->|"pesquisa aberta"| P5
+  D2 -->|"a busca basta"| D1
+  P2 --> D1
+  P3 --> D1
+  P4 --> D1
+  P5 --> D1
+  D1 -->|"sim"| E1
+  D1 -->|"não"| P6
+  P6 --> E1
+  E1 --> CK
+
+  class R1,P1,P2,P3,P4,P5 subagente
+  class E1 entrega
+  classDef checkpoint fill:#fff1e6,stroke:#e8803a,color:#7a3d0c
+  classDef subagente fill:#e8f0fd,stroke:#1f4fa8,color:#173a7a
+  classDef entrega fill:#e6f6ec,stroke:#16743b,color:#0f4f28

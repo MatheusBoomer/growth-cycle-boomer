@@ -1,6 +1,7 @@
 import type { Comentario } from "../comentarios"
 import type { Acumulado, LinhaPresenca, LinhaUso } from "../metricas/tipos"
 import type { NivelEsforco } from "../modelos"
+import type { NotaSkill } from "../notas-skills"
 import type { Estado, EtapaId, EventoConversa } from "../tipos"
 
 export interface EstadoVersionado {
@@ -117,6 +118,15 @@ export interface Repositorio {
     esforco: NivelEsforco | null
     alteradoPor: string
   }): Promise<void>
+  /** Notas de melhoria das skills, as mais novas primeiro; com `item`, só as desse item do catálogo. */
+  listarNotasSkills(item?: string): Promise<NotaSkill[]>
+  /** O repositório não valida o item nem o texto; quem chama valida. */
+  criarNotaSkill(n: { item: string; texto: string; autor: string }): Promise<NotaSkill>
+  /**
+   * Resolve (`resolvida` verdadeiro) ou reabre a nota. Resolver uma nota já resolvida a devolve como está, sem mexer em
+   * `resolvidaEm` e `resolvidaPor`; reabrir limpa os dois. Null quando a nota não existe.
+   */
+  marcarNotaSkill(id: number, resolvida: boolean, autor: string): Promise<NotaSkill | null>
 }
 
 /** Arquivos do prospect, endereçados pelo conteúdo (objeto `<slug>/<sha256>`) e listados por um manifesto. */

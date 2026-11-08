@@ -8,6 +8,7 @@ import { etapaVazia } from "./maquina-estados"
 import type { Acumulado, LinhaPresenca, LinhaUso } from "./metricas/tipos"
 import { normalizarSlug } from "./slug"
 import type { NivelEsforco } from "./modelos"
+import type { NotaSkill } from "./notas-skills"
 import type { LinhaConfigModelo, RegistroUsoTurno } from "./nuvem/tipos"
 import { ORDEM_ETAPAS, type Estado, type EtapaId, type EventoConversa } from "./tipos"
 
@@ -336,6 +337,19 @@ export class FsArmazenamento {
     esforco: NivelEsforco | null
     alteradoPor: string
   }): Promise<void> {
+    throw new ErroEntrada("A administração de pessoas só existe com os dados na nuvem.")
+  }
+
+  /** Em disco não há notas das skills. */
+  async listarNotasSkills(_item?: string): Promise<NotaSkill[]> {
+    return []
+  }
+
+  async criarNotaSkill(_n: { item: string; texto: string; autor: string }): Promise<NotaSkill> {
+    throw new ErroEntrada("A administração de pessoas só existe com os dados na nuvem.")
+  }
+
+  async marcarNotaSkill(_id: number, _resolvida: boolean, _autor: string): Promise<NotaSkill | null> {
     throw new ErroEntrada("A administração de pessoas só existe com os dados na nuvem.")
   }
 

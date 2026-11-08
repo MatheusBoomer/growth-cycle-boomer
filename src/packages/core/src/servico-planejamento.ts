@@ -15,6 +15,7 @@ import {
   type ItemBiblioteca,
 } from "./biblioteca"
 import { etapaDoCatalogo, insumoDoCatalogo } from "./catalogo"
+import { itensDoCatalogo } from "./catalogo-skills"
 import { extrairOverrides, montarDossie, type AnteriorDossie } from "./dossie"
 import {
   aprovarEntregavel,
@@ -36,6 +37,7 @@ import { mediasPorEtapa, resumirProjeto, type MediaEtapa, type MetricasProjeto }
 import type { Acumulado, Limites, LinhaUso } from "./metricas/tipos"
 import { alvosDaEtapa, ALVO_PRINCIPAL, NIVEIS_ESFORCO, validarEscolha, type EscolhaModelo, type ListaDeModelos, type NivelEsforco, type UsoDaEtapa } from "./modelos"
 import type { EntradaUsoTurno, LinhaConfigModelo, RegistroUsoTurno } from "./nuvem/tipos"
+import { LIMITE_TEXTO_NOTA, type NotaSkill } from "./notas-skills"
 import { aplicarOverrides, lerKit, reposicionarNoFixture } from "./servico-teste"
 import { ehAdmin, normalizarEmail, podeVerProspect, type UsuarioComPapel } from "./papeis"
 import { normalizarSlug } from "./slug"
@@ -240,6 +242,37 @@ export class ServicoPlanejamento {
     if (!alvosDaEtapa(this.catalogo, etapa).includes(alvo)) throw new ErroNaoEncontrado("Etapa ou alvo inexistente.")
     validarEscolha(escolha, lista)
     await this.arm.gravarConfigModelo({ etapa, alvo, modelo: escolha.modelo, esforco: escolha.esforco, alteradoPor: autor })
+  }
+
+  /** Notas do item do catálogo, as mais novas primeiro (em disco, nenhuma). */
+  notasDoItem(item: string): Promise<NotaSkill[]> {
+    return this.arm.listarNotasSkills(item)
+  }
+
+  /** ErroNaoEncontrado (404) se o item não é do catálogo; ErroEntrada (400) se o texto aparado está vazio ou passa de 2000. */
+  async criarNota(item: string, texto: string, autor: string): Promise<NotaSkill> {
+    const ids = itensDoCatalogo(this.arm.raiz, this.catalogo).map((i) => i.id)
+    if (!ids.includes(item)) throw new ErroNaoEncontrado("Item do catálogo inexistente.")
+    const aparado = typeof texto === "string" ? texto.trim() : ""
+    if (!aparado) throw new ErroEntrada("Escreva o texto da nota.")
+    if (aparado.length > LIMITE_TEXTO_NOTA) throw new ErroEntrada(`A nota passa de ${LIMITE_TEXTO_NOTA} caracteres.`)
+    return this.arm.criarNotaSkill({ item, texto: aparado, autor })
+  }
+
+  /** ErroNaoEncontrado (404) se a nota não existe. Resolver de novo uma nota já resolvida não muda nada. */
+  async marcarNota(id: number, resolvida: boolean, autor: string): Promise<NotaSkill> {
+    const nota = await this.arm.marcarNotaSkill(id, resolvida, autor)
+    if (!nota) throw new ErroNaoEncontrado("Nota inexistente.")
+    return nota
+  }
+
+  /** Quantas notas abertas há em cada item (itens sem nota aberta não aparecem). */
+  async contagemNotasAbertas(): Promise<Record<string, number>> {
+    const contagem: Record<string, number> = {}
+    for (const n of await this.arm.listarNotasSkills()) {
+      if (n.resolvidaEm === null) contagem[n.item] = (contagem[n.item] ?? 0) + 1
+    }
+    return contagem
   }
 
   async metricasDoProjeto(slug: string, limites: Limites): Promise<MetricasProjeto> {

@@ -43,3 +43,13 @@ export function novoAlvoDeContrato(): string {
 export function ehAlvoDeContrato(alvo: string): boolean {
   return FORMATO_SLUG.test(alvo)
 }
+
+/** Item próprio de cada caso do contrato de notas das skills (o Repositorio não valida o item). */
+export function novoItemDeContrato(): string {
+  return `${PREFIXO_CONTRATO}${randomBytes(BYTES_DO_SLUG).toString("hex")}`
+}
+
+/** Só o formato exato de novoItemDeContrato: a limpeza da suíte viva nunca apaga uma nota de item real. */
+export function ehItemDeContrato(item: string): boolean {
+  return FORMATO_SLUG.test(item)
+}

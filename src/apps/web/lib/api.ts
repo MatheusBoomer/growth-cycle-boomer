@@ -1,9 +1,11 @@
 import type { AjusteBiblioteca, ItemBiblioteca } from "@workspace/core/biblioteca"
 import type { Comentario, MapaPrevia, Regiao } from "@workspace/core/comentarios"
+import type { ConteudoItem, ItemCatalogo } from "@workspace/core/catalogo-skills-tipos"
 import type { MediaEtapa, MetricasProjeto } from "@workspace/core/metricas/resumo"
 import type { EscolhaModelo, ListaDeModelos, Sugestao, UsoDaEtapa } from "@workspace/core/modelos"
 import type { LinhaConfigModelo } from "@workspace/core/nuvem/tipos"
 import type { PessoaRegistrada } from "@workspace/core/nuvem/usuarios"
+import type { NotaSkill } from "@workspace/core/notas-skills"
 import type { Papel } from "@workspace/core/papeis"
 import type { EtapaId, ResultadoValidacao, ResumoProspect, RespostaTeste } from "@workspace/core/tipos"
 import { tratarNaoAutenticado } from "@/lib/login"
@@ -68,6 +70,14 @@ export interface ConfigModelos {
   padrao: string | null
   uso: Partial<Record<EtapaId, UsoDaEtapa>>
 }
+export type ItemSkill = ItemCatalogo & { notasAbertas: number }
+/** Resposta de GET /api/admin/skills: os itens do catálogo e o texto das notas abertas, pronto para copiar. `notasDisponiveis` é falso no modo fs. */
+export interface CatalogoSkills {
+  itens: ItemSkill[]
+  textoExportacao: string
+  notasDisponiveis: boolean
+}
+export type DetalheItemSkill = ConteudoItem & { notas: NotaSkill[]; notasDisponiveis: boolean }
 /** Resposta do detalhe de um projeto; `medias` só vem quando pedidas (`medias: true`), senão é null. */
 export interface DetalheProjeto {
   projeto: ResumoProspect
@@ -129,6 +139,16 @@ export const api = {
   /** Só admin: grava o modelo e o esforço de um alvo da etapa; nulo é "padrão", e os dois nulos apagam a linha. */
   salvarModelo: (etapa: EtapaId, alvo: string, escolha: EscolhaModelo) =>
     chamar<{ ok: true }>(`/api/admin/modelos/${encodeURIComponent(etapa)}/${encodeURIComponent(alvo)}`, comJson("PUT", escolha)),
+  /** Só admin: o catálogo de skills com a contagem de notas abertas e o texto de exportação das notas. */
+  itensSkills: () => chamar<CatalogoSkills>("/api/admin/skills", { cache: "no-store" }),
+  /** Só admin: texto, fluxo e notas de um item do catálogo (`id` como `etapa:03`). */
+  itemSkill: (id: string) => chamar<DetalheItemSkill>(`/api/admin/skills/${encodeURIComponent(id)}`, { cache: "no-store" }),
+  /** Só admin: anota uma melhoria no item do catálogo. */
+  criarNotaSkill: (id: string, texto: string) =>
+    chamar<{ nota: NotaSkill }>(`/api/admin/skills/${encodeURIComponent(id)}/notas`, comJson("POST", { texto })),
+  /** Só admin: resolve (`true`) ou reabre (`false`) uma nota. */
+  marcarNotaSkill: (notaId: number, resolvida: boolean) =>
+    chamar<{ nota: NotaSkill }>(`/api/admin/skills/notas/${notaId}`, comJson("PATCH", { resolvida })),
   /** Só admin: custo e tempo de cada projeto ativo e a média por etapa concluída. */
   metricasGerais: () => chamar<{ projetos: ProjetoComMetricas[]; medias: MediasPorEtapa }>("/api/admin/projetos", { cache: "no-store" }),
   /** Só admin: o resumo e as métricas de um projeto. As médias por etapa (mais caras) só vêm com `{ medias: true }`. */

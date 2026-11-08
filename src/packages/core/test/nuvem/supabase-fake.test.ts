@@ -515,6 +515,96 @@ describe("SupabaseRepositorio (cliente falso)", () => {
       expect((erro as Error).message).not.toContain("supabase.co")
     })
 
+    it("listarNotasSkills: lê notas_skills da mais nova para a mais antiga, filtra por item e mapeia as colunas", async () => {
+      const fake = criarFake(() =>
+        ok([
+          { id: "7", item: "etapa:03", texto: "Ajustar", autor: "ana@x.com", criada_em: "2026-11-09T10:00:00+00:00", resolvida_em: "2026-11-10T10:00:00+00:00", resolvida_por: "bia@x.com" },
+          { id: 5, item: "etapa:03", texto: "Outra", autor: "bia@x.com", criada_em: "2026-11-08T10:00:00+00:00", resolvida_em: null, resolvida_por: null },
+        ]),
+      )
+      const lista = await new SupabaseRepositorio(fake.cliente).listarNotasSkills("etapa:03")
+      const c = fake.consultas[0]!
+      expect(c.tabela).toBe("notas_skills")
+      expect(op(c, "eq")).toEqual(["eq", "item", "etapa:03"])
+      expect(c.ops.filter(([m]) => m === "order")).toEqual([
+        ["order", "criada_em", { ascending: false }],
+        ["order", "id", { ascending: false }],
+      ])
+      expect(lista).toEqual([
+        { id: 7, item: "etapa:03", texto: "Ajustar", autor: "ana@x.com", criadaEm: "2026-11-09T10:00:00.000Z", resolvidaEm: "2026-11-10T10:00:00.000Z", resolvidaPor: "bia@x.com" },
+        { id: 5, item: "etapa:03", texto: "Outra", autor: "bia@x.com", criadaEm: "2026-11-08T10:00:00.000Z", resolvidaEm: null, resolvidaPor: null },
+      ])
+      const todas = criarFake(() => ok([]))
+      await new SupabaseRepositorio(todas.cliente).listarNotasSkills()
+      expect(op(todas.consultas[0]!, "eq")).toBeUndefined()
+      const falho = criarFake(() => ({ data: null, error: { message: "caiu em https://abc.supabase.co/rest" } }))
+      const erro = await new SupabaseRepositorio(falho.cliente).listarNotasSkills().catch((e: unknown) => e)
+      expect((erro as Error).message).not.toContain("supabase.co")
+    })
+
+    it("criarNotaSkill: insert só com item, texto e autor (o banco põe id e data) e devolve a linha mapeada", async () => {
+      const fake = criarFake(() =>
+        ok({ id: 3, item: "etapa:03", texto: "Ajustar", autor: "ana@x.com", criada_em: "2026-11-09T10:00:00+00:00", resolvida_em: null, resolvida_por: null }),
+      )
+      const nota = await new SupabaseRepositorio(fake.cliente).criarNotaSkill({ item: "etapa:03", texto: "Ajustar", autor: "ana@x.com" })
+      const c = fake.consultas[0]!
+      expect(c.tabela).toBe("notas_skills")
+      expect(op(c, "insert")![1]).toEqual({ item: "etapa:03", texto: "Ajustar", autor: "ana@x.com" })
+      expect(op(c, "single")).toBeDefined()
+      expect(nota).toEqual({ id: 3, item: "etapa:03", texto: "Ajustar", autor: "ana@x.com", criadaEm: "2026-11-09T10:00:00.000Z", resolvidaEm: null, resolvidaPor: null })
+      const falho = criarFake(() => ({ data: null, error: { message: "caiu em https://abc.supabase.co/rest" } }))
+      const erro = await new SupabaseRepositorio(falho.cliente)
+        .criarNotaSkill({ item: "etapa:03", texto: "x", autor: "a@x.com" })
+        .catch((e: unknown) => e)
+      expect((erro as Error).message).not.toContain("supabase.co")
+    })
+
+    const LINHA_NOTA = { id: 3, item: "etapa:03", texto: "Ajustar", autor: "ana@x.com", criada_em: "2026-11-09T10:00:00+00:00" }
+
+    it("marcarNotaSkill(true): update só da nota ainda aberta, com data do relógio e quem resolveu", async () => {
+      const fake = criarFake(() => ok([{ ...LINHA_NOTA, resolvida_em: EM, resolvida_por: "bia@x.com" }]))
+      const nota = await new SupabaseRepositorio(fake.cliente, () => EM).marcarNotaSkill(3, true, "bia@x.com")
+      expect(fake.consultas).toHaveLength(1)
+      const c = fake.consultas[0]!
+      expect(c.tabela).toBe("notas_skills")
+      expect(op(c, "update")![1]).toEqual({ resolvida_em: EM, resolvida_por: "bia@x.com" })
+      expect(op(c, "eq")).toEqual(["eq", "id", 3])
+      expect(op(c, "is")).toEqual(["is", "resolvida_em", null])
+      expect(nota).toMatchObject({ id: 3, resolvidaEm: EM, resolvidaPor: "bia@x.com" })
+    })
+
+    it("marcarNotaSkill(true): sem linha atualizada, lê a nota e a devolve como está; sem nota, null", async () => {
+      const jaResolvida = { ...LINHA_NOTA, resolvida_em: "2026-11-10T10:00:00+00:00", resolvida_por: "carla@x.com" }
+      const fake = criarFake((c) => (op(c, "update") ? ok([]) : ok(jaResolvida)))
+      const nota = await new SupabaseRepositorio(fake.cliente, () => EM).marcarNotaSkill(3, true, "bia@x.com")
+      expect(fake.consultas).toHaveLength(2)
+      expect(op(fake.consultas[1]!, "update")).toBeUndefined()
+      expect(op(fake.consultas[1]!, "maybeSingle")).toBeDefined()
+      expect(nota).toMatchObject({ resolvidaEm: "2026-11-10T10:00:00.000Z", resolvidaPor: "carla@x.com" })
+
+      const inexistente = criarFake((c) => (op(c, "update") ? ok([]) : ok(null)))
+      expect(await new SupabaseRepositorio(inexistente.cliente, () => EM).marcarNotaSkill(9, true, "bia@x.com")).toBeNull()
+    })
+
+    it("marcarNotaSkill(false): update que limpa os dois campos, sem filtro de aberta; sem linha, null", async () => {
+      const fake = criarFake(() => ok([{ ...LINHA_NOTA, resolvida_em: null, resolvida_por: null }]))
+      const nota = await new SupabaseRepositorio(fake.cliente, () => EM).marcarNotaSkill(3, false, "bia@x.com")
+      const c = fake.consultas[0]!
+      expect(op(c, "update")![1]).toEqual({ resolvida_em: null, resolvida_por: null })
+      expect(op(c, "is")).toBeUndefined()
+      expect(nota).toMatchObject({ id: 3, resolvidaEm: null, resolvidaPor: null })
+      const vazio = criarFake(() => ok([]))
+      expect(await new SupabaseRepositorio(vazio.cliente).marcarNotaSkill(9, false, "bia@x.com")).toBeNull()
+    })
+
+    it("marcarNotaSkill: erro do banco não vaza a URL", async () => {
+      const falho = criarFake(() => ({ data: null, error: { message: "caiu em https://abc.supabase.co/rest" } }))
+      for (const resolvida of [true, false]) {
+        const erro = await new SupabaseRepositorio(falho.cliente).marcarNotaSkill(3, resolvida, "a@x.com").catch((e: unknown) => e)
+        expect((erro as Error).message).not.toContain("supabase.co")
+      }
+    })
+
     it("listarPresencas: ordena por em, mapeia as colunas e respeita os prospects ativos", async () => {
       const linha = (slug: string) => ({
         slug,

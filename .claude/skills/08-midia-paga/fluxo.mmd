@@ -1,0 +1,61 @@
+flowchart TD
+  I1["Base: histórico, Curva ABC, cenário Realista e registro de soluções"]
+  I2["Prints das campanhas (opcional)"]
+  S1["analista-dados: gráficos e tabelas-imagem"]
+  E1x["Etapa 1 · Verba mensal por plataforma, nunca flat"]
+  C1{"Analista aprova?"}
+  E2x["Etapa 2 · Estratégia por Curva ABC"]
+  C2{"Analista aprova?"}
+  E3x["Etapa 3 · Calendário: contenção, manutenção, escala, pico"]
+  C3{"Analista aprova?"}
+  E4x["Etapa 4 · ROAS esperado: global, Google e Meta"]
+  C4{"Analista aprova?"}
+  E5x["Etapa 5 · Redução de dependência: meta, canais e ações"]
+  C5{"Analista aprova?"}
+  S2["pesquisador-benchmark: referências nacionais e internacionais"]
+  E6x["Etapa 6 · Benchmarking de mercado"]
+  C6{"Analista aprova?"}
+  D1{"Vieram prints das campanhas?"}
+  EX["Etapa extra · Estrutura de campanha x benchmark do setor"]
+  C7{"Analista aprova?"}
+  E1["Entrega: plano de mídia salvo nos ativos aprovados"]
+  H1["Handoff para a 09: data de hoje, cenário base e 2 a 3 frentes"]
+
+  I1 --> E1x
+  S1 -.-> E1x
+  S1 -.-> E2x
+  S1 -.-> E3x
+  S1 -.-> E4x
+  E1x --> C1
+  C1 -->|"sim"| E2x
+  C1 -->|"não, ajustar"| E1x
+  E2x --> C2
+  C2 -->|"sim"| E3x
+  C2 -->|"não, ajustar"| E2x
+  E3x --> C3
+  C3 -->|"sim"| E4x
+  C3 -->|"não, ajustar"| E3x
+  E4x --> C4
+  C4 -->|"sim"| E5x
+  C4 -->|"não, ajustar"| E4x
+  E5x --> C5
+  C5 -->|"sim"| E6x
+  C5 -->|"não, ajustar"| E5x
+  S2 -.-> E6x
+  E6x --> C6
+  C6 -->|"sim"| D1
+  C6 -->|"não, ajustar"| E6x
+  I2 --> D1
+  D1 -->|"sim"| EX
+  D1 -->|"não"| E1
+  EX --> C7
+  C7 -->|"sim"| E1
+  C7 -->|"não, ajustar"| EX
+  E1 --> H1
+
+  class C1,C2,C3,C4,C5,C6,C7 checkpoint
+  class S1,S2 subagente
+  class E1,H1 entrega
+  classDef checkpoint fill:#fff1e6,stroke:#e8803a,color:#7a3d0c
+  classDef subagente fill:#e8f0fd,stroke:#1f4fa8,color:#173a7a
+  classDef entrega fill:#e6f6ec,stroke:#16743b,color:#0f4f28

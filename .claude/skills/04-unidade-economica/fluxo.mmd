@@ -1,0 +1,47 @@
+flowchart TD
+  I1["Cliente histórico: uma linha por cliente, maior período possível"]
+  D1{"O arquivo tem CPF, e-mail, telefone, endereço ou cartão?"}
+  R1["Interromper e pedir o reenvio sem esses dados"]
+  P1["CAC mês a mês, com linha de média"]
+  C1{"Analista aprova?"}
+  P2["Novos x recorrentes mês a mês (janela de 12 meses)"]
+  C2{"Analista aprova?"}
+  P3["LTV histórico: fórmula, total de clientes e período (sem gráfico)"]
+  C3{"Analista aprova?"}
+  P4["Top-5 clientes por gasto, conferido pelo analista na plataforma"]
+  C4{"Analista aprova?"}
+  R2["Interromper até resolver a divergência"]
+  P5["LTV/CAC (último mês) classificado pela faixa de benchmark"]
+  P6["Análise: CAC, novos x recorrentes, LTV, LTV/CAC"]
+  C5{"Analista aprova?"}
+  E1["Entrega: análise salva nas seções aprovadas"]
+  H1["Handoff para a 05: lembrar o que o prospect já tentou"]
+
+  I1 --> D1
+  D1 -->|"sim"| R1
+  R1 --> I1
+  D1 -->|"não"| P1
+  P1 --> C1
+  C1 -->|"sim"| P2
+  C1 -->|"não, ajustar"| P1
+  P2 --> C2
+  C2 -->|"sim"| P3
+  C2 -->|"não, ajustar"| P2
+  P3 --> C3
+  C3 -->|"sim"| P4
+  C3 -->|"não, ajustar"| P3
+  P4 --> C4
+  C4 -->|"sim"| P5
+  C4 -->|"não, ajustar"| R2
+  R2 --> P4
+  P5 --> P6
+  P6 --> C5
+  C5 -->|"sim"| E1
+  C5 -->|"não, ajustar"| P6
+  E1 --> H1
+
+  class C1,C2,C3,C4,C5 checkpoint
+  class E1,H1 entrega
+  classDef checkpoint fill:#fff1e6,stroke:#e8803a,color:#7a3d0c
+  classDef subagente fill:#e8f0fd,stroke:#1f4fa8,color:#173a7a
+  classDef entrega fill:#e6f6ec,stroke:#16743b,color:#0f4f28

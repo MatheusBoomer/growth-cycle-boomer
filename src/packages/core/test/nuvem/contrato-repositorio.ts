@@ -4,7 +4,7 @@ import { ErroConflitoVersao, ErroNaoEncontrado, ErroProspectExistente } from "..
 import { estadoInicial } from "../../src/maquina-estados"
 import type { Comentario } from "../../src/comentarios"
 import type { EventoConversa } from "../../src/tipos"
-import { novoAlvoDeContrato, novoSlug } from "./suite-viva"
+import { novoAlvoDeContrato, novoItemDeContrato, novoSlug } from "./suite-viva"
 
 const EM = "2026-10-27T12:00:00.000Z"
 
@@ -71,6 +71,45 @@ export function contratoRepositorio(
       } finally {
         await repo.gravarConfigModelo({ etapa: "01", alvo, modelo: null, esforco: null, alteradoPor: "contrato" })
       }
+    })
+
+    it("cria, lista por item, resolve, resolve de novo sem mudança e reabre uma nota de skill", async () => {
+      const repo = await criar()
+      const item = novoItemDeContrato()
+      const outro = novoItemDeContrato()
+      const primeira = await repo.criarNotaSkill({ item, texto: "Explicar a Curva ABC", autor: "ana@boomer.com.br" })
+      const segunda = await repo.criarNotaSkill({ item, texto: "Pedir o relatório antes", autor: "bia@gestaoboomer.com" })
+      const deOutro = await repo.criarNotaSkill({ item: outro, texto: "Outra", autor: "ana@boomer.com.br" })
+      expect(primeira).toMatchObject({ item, texto: "Explicar a Curva ABC", autor: "ana@boomer.com.br", resolvidaEm: null, resolvidaPor: null })
+      expect(typeof primeira.id).toBe("number")
+      expect(new Date(primeira.criadaEm).toISOString()).toBe(primeira.criadaEm)
+      expect(segunda.id).not.toBe(primeira.id)
+
+      // Mais novas primeiro; o filtro traz só as do item.
+      const doItem = await repo.listarNotasSkills(item)
+      expect(doItem.map((n) => n.id)).toEqual([segunda.id, primeira.id])
+      expect((await repo.listarNotasSkills(outro)).map((n) => n.id)).toEqual([deOutro.id])
+      const todas = (await repo.listarNotasSkills()).map((n) => n.id)
+      expect(todas).toEqual(expect.arrayContaining([primeira.id, segunda.id, deOutro.id]))
+
+      const resolvida = await repo.marcarNotaSkill(primeira.id, true, "carla@boomer.com.br")
+      expect(resolvida).toMatchObject({ id: primeira.id, resolvidaPor: "carla@boomer.com.br" })
+      expect(resolvida!.resolvidaEm).not.toBeNull()
+
+      // Resolver de novo, por outra pessoa, devolve a nota sem mexer em quem nem quando resolveu.
+      const repetida = await repo.marcarNotaSkill(primeira.id, true, "dora@boomer.com.br")
+      expect(repetida).toEqual(resolvida)
+      expect((await repo.listarNotasSkills(item)).find((n) => n.id === primeira.id)).toEqual(resolvida)
+
+      const reaberta = await repo.marcarNotaSkill(primeira.id, false, "dora@boomer.com.br")
+      expect(reaberta).toMatchObject({ id: primeira.id, resolvidaEm: null, resolvidaPor: null })
+      expect((await repo.listarNotasSkills(item)).find((n) => n.id === primeira.id)).toMatchObject({ resolvidaEm: null, resolvidaPor: null })
+    })
+
+    it("marcar uma nota de skill que não existe dá null, resolvendo ou reabrindo", async () => {
+      const repo = await criar()
+      expect(await repo.marcarNotaSkill(2_000_000_000, true, "ana@boomer.com.br")).toBeNull()
+      expect(await repo.marcarNotaSkill(2_000_000_000, false, "ana@boomer.com.br")).toBeNull()
     })
 
     it("lê o dono, troca o dono e não lista nem lê o dono de um excluído", async () => {
