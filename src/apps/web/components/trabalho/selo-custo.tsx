@@ -8,6 +8,7 @@ import { tempoUtil } from "@workspace/core/metricas/tempo"
 import type { EtapaId } from "@workspace/core/tipos"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip"
 import { api } from "@/lib/api"
+import { atualizarEnquantoVisivel } from "@/lib/atualizacao-periodica"
 
 const INTERVALO_MS = 60_000
 
@@ -20,8 +21,8 @@ export function textoDaEtapa(metricas: MetricasProjeto, etapa: EtapaId): string 
 }
 
 /**
- * Selo da barra do topo, só para admin: custo e tempo útil do projeto, atualizado a cada minuto (sem as médias,
- * que são caras). Leva ao detalhe. Uma falha ao carregar esconde o selo, sem mostrar erro.
+ * Selo da barra do topo, só para admin: custo e tempo útil do projeto, atualizado a cada minuto com a aba visível (sem as
+ * médias, que são caras). Leva ao detalhe. Uma falha ao carregar esconde o selo, sem mostrar erro.
  */
 export function SeloCusto({ slug, etapa }: { slug: string; etapa: EtapaId }) {
   const [metricas, setMetricas] = useState<MetricasProjeto | null>(null)
@@ -37,10 +38,10 @@ export function SeloCusto({ slug, etapa }: { slug: string; etapa: EtapaId }) {
       }
     }
     void carregar()
-    const relogio = window.setInterval(() => void carregar(), INTERVALO_MS)
+    const parar = atualizarEnquantoVisivel(() => void carregar(), INTERVALO_MS)
     return () => {
       ativo = false
-      window.clearInterval(relogio)
+      parar()
     }
   }, [slug])
 
