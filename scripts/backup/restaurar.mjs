@@ -10,8 +10,9 @@
 //   - Prospect que existe: só voltam as linhas de `arquivos` e os objetos que sumiram.
 //   - --como <novo-slug>: recria o prospect do backup com outro slug, ao lado do original (para
 //     conferir um backup sem mexer no prospect de verdade). O novo slug não pode existir.
-//   - Usuários (tabela global): só na restauração completa (sem --prospect e sem --como). Entram
-//     só os e-mails que ainda não existem; papéis já cadastrados nunca são alterados.
+//   - Tabelas globais (usuarios, config_modelos, notas_skills): só na restauração completa (sem
+//     --prospect e sem --como). Entram só as linhas que ainda não existem; o que já está cadastrado
+//     (papéis, modelos, notas) nunca é alterado.
 import { readFile } from "node:fs/promises"
 import path from "node:path"
 import {
@@ -20,6 +21,7 @@ import {
   TABELAS,
   criarCliente,
   dentroDe,
+  lerTabela,
   limpar,
   listarObjetos,
 } from "./comum.mjs"
@@ -131,12 +133,12 @@ async function principal() {
     console.log(`  ✓ restaurado`)
   }
 
-  // Tabelas globais (usuários): só na restauração completa, e só insere o que falta
+  // Tabelas globais (usuarios, config_modelos, notas_skills): só na restauração completa, e só insere o que falta
   if (!op.prospect && !op.como) {
     for (const t of TABELAS.filter((t) => t.global)) {
-      const { data: existentes, error } = await cliente.from(t.nome).select(t.chave.join(","))
-      if (error) throw new Error(limpar(error))
-      const faltam = linhasQueFaltam(backup[t.nome], existentes ?? [], t.chave)
+      // Leitura paginada: um select simples para em ~1000 linhas e faria linhas existentes parecerem faltar.
+      const existentes = await lerTabela(cliente, t)
+      const faltam = linhasQueFaltam(backup[t.nome], existentes, t.chave)
       pendencias += faltam.length
       if (faltam.length === 0) {
         console.log(`· ${t.nome}: nada faltando`)
