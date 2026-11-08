@@ -4,7 +4,7 @@ import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { Barramento } from "@workspace/core/barramento"
 import { carregarCatalogo } from "@workspace/core/catalogo"
-import { montarListaDeModelos, type ListaDeModelos, type Sugestao } from "@workspace/core/modelos"
+import { montarListaDeModelos, type ListaDeModelos, type Sugestao, type UsoDaEtapa } from "@workspace/core/modelos"
 import { NuvemArmazenamento } from "@workspace/core/nuvem/armazenamento-nuvem"
 import { MemoriaArmazem, MemoriaRepositorio } from "@workspace/core/nuvem/memoria"
 import { Mesa } from "@workspace/core/nuvem/mesa"
@@ -102,6 +102,8 @@ describe("GET /api/admin/modelos", () => {
       config: LinhaConfigModelo[]
       sugestoes: Sugestao[]
       lista: ListaDeModelos
+      uso: Record<string, UsoDaEtapa>
+      padrao: string | null
     }
     expect(corpo.etapas.map((e) => e.id)).toEqual(["01", "02", "03", "04", "05", "06", "07", "08", "09", "final"])
     for (const e of corpo.etapas) {
@@ -114,6 +116,19 @@ describe("GET /api/admin/modelos", () => {
     expect(corpo.sugestoes.length).toBeGreaterThan(0)
     expect(corpo.sugestoes[0]).toHaveProperty("motivo")
     expect(corpo.lista).toEqual(LISTA)
+    expect(corpo.uso).toEqual({})
+    expect(corpo.padrao).toBeNull()
+  })
+
+  it("traz o resumo de uso por etapa e o modelo padrão da lista", async () => {
+    vi.spyOn(servico, "resumoDeUsoPorEtapa").mockResolvedValue({ "03": { mediaUsd: 2, projetos: 2, modeloRecente: "sonnet" } })
+    mundo.servidor = { ...(mundo.servidor as object), modelosDisponiveis: async () => ({ ...LISTA, padrao: "claude-sonnet-x" }) }
+    entrarComo(CHEFE)
+
+    const corpo = (await (await lerModelos()).json()) as { uso: Record<string, UsoDaEtapa>; padrao: string | null }
+
+    expect(corpo.uso).toEqual({ "03": { mediaUsd: 2, projetos: 2, modeloRecente: "sonnet" } })
+    expect(corpo.padrao).toBe("claude-sonnet-x")
   })
 })
 

@@ -31,10 +31,10 @@ import { destinoInsumo, extensao, extensaoAceita, nomeSeguro, registrarInsumo } 
 import * as me from "./maquina-estados"
 import { descreverMarcacoes, type MarcaAjuste } from "./marcacoes"
 import { mensagemAjuste, mensagemAjustes, mensagemAprovacao, mensagemEtapaAnteriorAlterada, mensagemInsumoRecebido } from "./prompts"
-import { custoDoTurno } from "./metricas/custo"
+import { custoDoTurno, custoPorEtapa } from "./metricas/custo"
 import { mediasPorEtapa, resumirProjeto, type MediaEtapa, type MetricasProjeto } from "./metricas/resumo"
-import type { Acumulado, Limites } from "./metricas/tipos"
-import { alvosDaEtapa, ALVO_PRINCIPAL, NIVEIS_ESFORCO, validarEscolha, type EscolhaModelo, type ListaDeModelos, type NivelEsforco } from "./modelos"
+import type { Acumulado, Limites, LinhaUso } from "./metricas/tipos"
+import { alvosDaEtapa, ALVO_PRINCIPAL, NIVEIS_ESFORCO, validarEscolha, type EscolhaModelo, type ListaDeModelos, type NivelEsforco, type UsoDaEtapa } from "./modelos"
 import type { EntradaUsoTurno, LinhaConfigModelo, RegistroUsoTurno } from "./nuvem/tipos"
 import { aplicarOverrides, lerKit, reposicionarNoFixture } from "./servico-teste"
 import { ehAdmin, normalizarEmail, podeVerProspect, type UsuarioComPapel } from "./papeis"
@@ -119,6 +119,19 @@ function agruparPorSlug<T extends { slug: string }>(linhas: T[]): Map<string, T[
     else porSlug.set(l.slug, [l])
   }
   return porSlug
+}
+
+/** Quantos usos mais recentes da etapa decidem o modelo mostrado no cartão. */
+const USOS_RECENTES = 5
+
+/** O modelo de maior custo somado nos usos mais recentes (por `fim`), ou nulo se nenhum deles tem `modelos`. */
+function modeloMaisUsado(usosDaEtapa: LinhaUso[]): string | null {
+  const recentes = [...usosDaEtapa].sort((a, b) => b.fim.localeCompare(a.fim)).slice(0, USOS_RECENTES)
+  const soma = new Map<string, number>()
+  for (const u of recentes) for (const [modelo, valor] of Object.entries(u.modelos ?? {})) soma.set(modelo, (soma.get(modelo) ?? 0) + valor)
+  let melhor: string | null = null
+  for (const [modelo, valor] of soma) if (melhor === null || valor > soma.get(melhor)!) melhor = modelo
+  return melhor
 }
 
 function ultimoIndice<T>(lista: T[], teste: (x: T) => boolean): number {
@@ -291,6 +304,41 @@ export class ServicoPlanejamento {
     }
     projetos.sort((a, b) => b.atualizadoEm.localeCompare(a.atualizadoEm))
     return { projetos, medias: mediasPorEtapa(paraMedia) }
+  }
+
+  /**
+   * Resumo de uso de cada etapa para os cartões da aba Modelos. `mediaUsd` é a média do custo da etapa nos prospects
+   * que a concluíram, sem teste e com custo. `modeloRecente` é o modelo de maior custo nos 5 usos mais recentes da
+   * etapa, em qualquer prospect ativo (teste incluso). Etapa sem nenhum dos dois fica de fora. Não lê presença.
+   */
+  async resumoDeUsoPorEtapa(): Promise<Partial<Record<EtapaId, UsoDaEtapa>>> {
+    const slugs = await this.arm.listarSlugs()
+    const usos = await this.arm.listarUsos(undefined, new Set(slugs))
+    const usosPorSlug = agruparPorSlug(usos)
+    const custos = new Map<EtapaId, number[]>()
+    for (const slug of slugs) {
+      try {
+        const estado = await this.estado(slug)
+        if (estado.teste !== undefined) continue
+        const porEtapa = custoPorEtapa(usosPorSlug.get(slug) ?? [])
+        for (const id of ORDEM_ETAPAS) {
+          const usd = porEtapa.get(id)?.usd ?? 0
+          if (estado.etapas[id].status !== "concluida" || usd <= 0) continue
+          custos.set(id, [...(custos.get(id) ?? []), usd])
+        }
+      } catch (e) {
+        console.error(`Não consegui ler o prospect ${slug}:`, e)
+      }
+    }
+    const resumo: Partial<Record<EtapaId, UsoDaEtapa>> = {}
+    for (const id of ORDEM_ETAPAS) {
+      const valores = custos.get(id) ?? []
+      const mediaUsd = valores.length > 0 ? valores.reduce((a, b) => a + b, 0) / valores.length : null
+      const modeloRecente = modeloMaisUsado(usos.filter((u) => u.etapa === id))
+      if (mediaUsd === null && modeloRecente === null) continue
+      resumo[id] = { mediaUsd, projetos: valores.length, modeloRecente }
+    }
+    return resumo
   }
 
   /** Sincroniza os arquivos do prospect com a nuvem (no disco local não faz nada). Falha com ErroSincronizacao. */

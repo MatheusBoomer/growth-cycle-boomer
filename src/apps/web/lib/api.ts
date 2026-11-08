@@ -1,7 +1,7 @@
 import type { AjusteBiblioteca, ItemBiblioteca } from "@workspace/core/biblioteca"
 import type { Comentario, MapaPrevia, Regiao } from "@workspace/core/comentarios"
 import type { MediaEtapa, MetricasProjeto } from "@workspace/core/metricas/resumo"
-import type { EscolhaModelo, ListaDeModelos, Sugestao } from "@workspace/core/modelos"
+import type { EscolhaModelo, ListaDeModelos, Sugestao, UsoDaEtapa } from "@workspace/core/modelos"
 import type { LinhaConfigModelo } from "@workspace/core/nuvem/tipos"
 import type { PessoaRegistrada } from "@workspace/core/nuvem/usuarios"
 import type { Papel } from "@workspace/core/papeis"
@@ -59,12 +59,14 @@ export interface EtapaConfiguravel {
   rotulo: string
   alvos: string[]
 }
-/** Resposta de GET /api/admin/modelos: etapas e alvos, o que está gravado, as sugestões da agência e os modelos disponíveis. */
+/** Resposta de GET /api/admin/modelos: etapas e alvos, o que está gravado, as sugestões da agência, os modelos disponíveis, o modelo padrão e o uso por etapa. */
 export interface ConfigModelos {
   etapas: EtapaConfiguravel[]
   config: LinhaConfigModelo[]
   sugestoes: Sugestao[]
   lista: ListaDeModelos
+  padrao: string | null
+  uso: Partial<Record<EtapaId, UsoDaEtapa>>
 }
 /** Resposta do detalhe de um projeto; `medias` só vem quando pedidas (`medias: true`), senão é null. */
 export interface DetalheProjeto {
