@@ -1,0 +1,44 @@
+flowchart TD
+  NP["Novo prospect (criar-prospect)"]
+  E01["01 · Preparação de contexto"]
+  E02["02 · Contextualização estratégica"]
+  E03["03 · Diagnóstico de performance"]
+  E04["04 · Unidade econômica"]
+  E05["05 · Soluções"]
+  E06["06 · Metas e cenários"]
+  E07["07 · Briefing e benchmark"]
+  E08["08 · Mídia paga"]
+  E09["09 · Plano de ação"]
+  E10["10 · Apresentação final"]
+  FIM["Deck .pptx para o prospect"]
+  AD["analista-dados"]
+  PB["pesquisador-benchmark"]
+  CK["Checagem do analista antes de cada avanço"]
+
+  NP -->|"pasta do prospect"| E01
+  E01 -->|"kickoff limpo"| E02
+  E02 -->|"contexto, hipóteses e gargalos"| E03
+  E03 -->|"achados com dado e benchmark"| E04
+  E04 -->|"CAC, LTV e LTV/CAC"| E05
+  E05 -->|"registro de soluções"| E06
+  E06 -->|"meta e 3 cenários"| E07
+  E07 -->|"briefing e benchmark de anúncios"| E08
+  E08 -->|"plano de mídia"| E09
+  E09 -->|"plano de ação .docx"| E10
+  E10 -->|"roteiro aprovado"| FIM
+
+  AD -.->|"KPIs e gráficos"| E03
+  AD -.->|"impacto em R$ ou %"| E05
+  AD -.->|"projeção e planilha"| E06
+  AD -.->|"tabelas-imagem"| E08
+  PB -.->|"site do prospect (pontual)"| E02
+  PB -.->|"faixa de benchmark com fonte"| E05
+  PB -.->|"referências de mercado"| E08
+  CK -.->|"vale para toda etapa"| E01
+
+  class AD,PB subagente
+  class FIM entrega
+  class CK checkpoint
+  classDef checkpoint fill:#fff1e6,stroke:#e8803a,color:#7a3d0c
+  classDef subagente fill:#e8f0fd,stroke:#1f4fa8,color:#173a7a
+  classDef entrega fill:#e6f6ec,stroke:#16743b,color:#0f4f28

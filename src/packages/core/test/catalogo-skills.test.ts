@@ -123,3 +123,33 @@ describe("catálogo de skills", () => {
     expect(fonte).not.toMatch(/require\(\s*["']node:/)
   })
 })
+
+describe("fluxogramas do catálogo", () => {
+  const CLASSDEFS = [
+    "classDef checkpoint fill:#fff1e6,stroke:#e8803a,color:#7a3d0c",
+    "classDef subagente fill:#e8f0fd,stroke:#1f4fa8,color:#173a7a",
+    "classDef entrega fill:#e6f6ec,stroke:#16743b,color:#0f4f28",
+  ]
+  const comFluxo = () => itensDoCatalogo(RAIZ, catalogoReal()).filter((i) => i.temFluxo)
+
+  it("há 13 itens com fluxo", () => {
+    expect(comFluxo()).toHaveLength(13)
+  })
+
+  it("todo item com fluxo tem o arquivo existente e não vazio", () => {
+    for (const i of comFluxo()) {
+      const fluxo = lerItemDoCatalogo(RAIZ, catalogoReal(), i.id)?.fluxo
+      expect(fluxo, i.id).toBeTruthy()
+      expect(fluxo!.trim().length, i.id).toBeGreaterThan(0)
+    }
+  })
+
+  it("todo fluxo começa com flowchart TD e traz as três classDef da legenda", () => {
+    for (const i of comFluxo()) {
+      const fluxo = lerItemDoCatalogo(RAIZ, catalogoReal(), i.id)?.fluxo ?? ""
+      const primeira = fluxo.split("\n").find((l) => l.trim() !== "")
+      expect(primeira?.trim(), i.id).toBe("flowchart TD")
+      for (const c of CLASSDEFS) expect(fluxo, `${i.id}: ${c}`).toContain(c)
+    }
+  })
+})

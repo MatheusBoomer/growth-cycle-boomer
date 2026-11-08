@@ -1,0 +1,38 @@
+flowchart TD
+  I1["Confirmar data de hoje, cenário base e 2 a 3 frentes prioritárias"]
+  I2["Decisões das etapas anteriores e registro de soluções"]
+  P1["Ações por frente: o quê, quando, por quem, como, soluções"]
+  P2["Organizar em 3 horizontes: imediato, curto e médio prazo"]
+  P3["Tabela-resumo cronológica"]
+  C1{"Analista aprova?"}
+  P4["Montar o JSON do plano"]
+  V1["validar_solucoes.py --modo plano"]
+  D1{"Saiu ERRO?"}
+  P5["Criar ou ajustar ações até cobrir toda solução"]
+  P6["preencher_plano_acao_docx.py gera o .docx pelo modelo"]
+  C2{"Analista aprova?"}
+  E1["Entrega: plano de ação estratégico (.docx)"]
+  H1["Handoff para a apresentação final: roteiro e .pptx"]
+
+  I1 --> P1
+  I2 --> P1
+  P1 --> P2
+  P2 --> P3
+  P3 --> C1
+  C1 -->|"sim"| P4
+  C1 -->|"não, ajustar"| P1
+  P4 --> V1
+  V1 --> D1
+  D1 -->|"sim"| P5
+  P5 --> P4
+  D1 -->|"não"| P6
+  P6 --> C2
+  C2 -->|"sim"| E1
+  C2 -->|"não, ajustar"| P6
+  E1 --> H1
+
+  class C1,C2 checkpoint
+  class E1,H1 entrega
+  classDef checkpoint fill:#fff1e6,stroke:#e8803a,color:#7a3d0c
+  classDef subagente fill:#e8f0fd,stroke:#1f4fa8,color:#173a7a
+  classDef entrega fill:#e6f6ec,stroke:#16743b,color:#0f4f28

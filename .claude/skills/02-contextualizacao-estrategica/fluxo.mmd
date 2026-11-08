@@ -1,0 +1,36 @@
+flowchart TD
+  I1["Kickoff limpo (Skill 01)"]
+  I2["Link do site"]
+  P1["Ler o kickoff limpo"]
+  P2["Analisar o site: proposta de valor, posicionamento, maturidade"]
+  S1["pesquisador-benchmark: raspagem do site (pontual)"]
+  P3["Entendimento do negócio e objetivo declarado"]
+  P4["Hipóteses estratégicas iniciais (a validar nas 03 e 04)"]
+  P5["Gargalos estruturais possíveis"]
+  P6["Perguntas estratégicas pendentes (máximo 10)"]
+  P7["Fazer uma pergunta por vez e esperar a resposta"]
+  D1{"Ainda há pergunta ou lacuna relevante?"}
+  P8["Consolidar o entendimento final com as respostas"]
+  E1["Entrega: contextualização estratégica consolidada"]
+  H1["Handoff para a 03: histórico mensal, produtos e quebra por pagamento"]
+
+  I1 --> P1
+  P1 --> P2
+  I2 --> P2
+  S1 -.->|"quando ajudar"| P2
+  P2 --> P3
+  P3 --> P4
+  P4 --> P5
+  P5 --> P6
+  P6 --> P7
+  P7 --> D1
+  D1 -->|"sim"| P7
+  D1 -->|"não"| P8
+  P8 --> E1
+  E1 --> H1
+
+  class S1 subagente
+  class E1,H1 entrega
+  classDef checkpoint fill:#fff1e6,stroke:#e8803a,color:#7a3d0c
+  classDef subagente fill:#e8f0fd,stroke:#1f4fa8,color:#173a7a
+  classDef entrega fill:#e6f6ec,stroke:#16743b,color:#0f4f28

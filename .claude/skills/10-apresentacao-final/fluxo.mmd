@@ -1,0 +1,39 @@
+flowchart TD
+  I1["Ativos aprovados das etapas 03 a 09"]
+  D1{"Falta material de alguma das 6 seções?"}
+  P1["Avisar o que falta e de qual etapa"]
+  P2["Fase 1 · Roteiro slide a slide (40 a 60 slides)"]
+  P3["Cobrir todo gráfico, tabela e desafio do registro"]
+  P4["Checklist da Regra 8 (5 itens)"]
+  C1{"Analista aprova?"}
+  P5["Fase 2 · gerar_apresentacao.py monta o .pptx"]
+  D2{"Saiu ERRO ou aviso de texto?"}
+  P6["Corrigir ou encurtar no roteiro e regerar"]
+  C2{"Analista aprova?"}
+  P7["Ajustar só os slides citados no roteiro"]
+  E1["Entrega: apresentação final (.pptx)"]
+  FIM["Fim do processo: abrir no Google Slides ou PowerPoint"]
+
+  I1 --> D1
+  D1 -->|"sim"| P1
+  D1 -->|"não"| P2
+  P1 --> P2
+  P2 --> P3
+  P3 --> P4
+  P4 --> C1
+  C1 -->|"sim"| P5
+  C1 -->|"não, ajustar"| P2
+  P5 --> D2
+  D2 -->|"sim"| P6
+  P6 --> P5
+  D2 -->|"não"| C2
+  C2 -->|"sim"| E1
+  C2 -->|"não, ajustar"| P7
+  P7 --> P5
+  E1 --> FIM
+
+  class C1,C2 checkpoint
+  class E1,FIM entrega
+  classDef checkpoint fill:#fff1e6,stroke:#e8803a,color:#7a3d0c
+  classDef subagente fill:#e8f0fd,stroke:#1f4fa8,color:#173a7a
+  classDef entrega fill:#e6f6ec,stroke:#16743b,color:#0f4f28

@@ -1,0 +1,39 @@
+flowchart TD
+  I1["Transcrição do kickoff (obrigatória)"]
+  I2["Formulário pré-kickoff (opcional)"]
+  I3["Link do site (obrigatório)"]
+  P1["Ler os materiais brutos na íntegra"]
+  P2["Separar alta qualidade de ruído de reunião"]
+  P3["Cruzar formulário e transcrição sem duplicar"]
+  P4["Escrever o kickoff limpo, organizado por tema"]
+  C1{"Analista aprova?"}
+  P5["Conferir o link do site (pedir só se faltar)"]
+  P6["Trocar o placeholder pelo nome real no CLAUDE.md"]
+  D1{"O material traz exceção de processo?"}
+  P7["Registrar o override, citando a origem"]
+  P8["Manter o texto padrão do template"]
+  E1["Entrega: kickoff limpo, site e CLAUDE.md do prospect"]
+  H1["Handoff para a 02: preparar respostas às perguntas estratégicas"]
+
+  I1 --> P1
+  I2 --> P1
+  P1 --> P2
+  P2 --> P3
+  P3 --> P4
+  P4 --> C1
+  C1 -->|"sim"| P5
+  C1 -->|"não, ajustar"| P4
+  I3 --> P5
+  P5 --> P6
+  P6 --> D1
+  D1 -->|"sim"| P7
+  D1 -->|"não"| P8
+  P7 --> E1
+  P8 --> E1
+  E1 --> H1
+
+  class C1 checkpoint
+  class E1,H1 entrega
+  classDef checkpoint fill:#fff1e6,stroke:#e8803a,color:#7a3d0c
+  classDef subagente fill:#e8f0fd,stroke:#1f4fa8,color:#173a7a
+  classDef entrega fill:#e6f6ec,stroke:#16743b,color:#0f4f28

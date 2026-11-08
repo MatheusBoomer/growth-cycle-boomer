@@ -1,0 +1,42 @@
+flowchart TD
+  I1["Leitura: contexto da 02, decisões e seções das 03 e 04, benchmarks, repertório"]
+  P1["Passo 1 · Classificar cada KPI: problema ou ponto forte"]
+  D1{"KPI sem faixa de benchmark?"}
+  S1["pesquisador-benchmark: faixa com fonte citada (ou valor do analista)"]
+  C1{"Analista aprova?"}
+  P2["Passo 2 · Para cada problema: dado, benchmark, hipóteses de causa"]
+  P3["1 a 3 soluções concretas, cada uma ligada a uma hipótese, e a frente"]
+  S2["analista-dados: impacto em R$ ou % com fórmula e premissa"]
+  P4["Passo 3 · Gravar o registro de soluções"]
+  V1["validar_solucoes.py --modo registro"]
+  D2{"Saiu ERRO?"}
+  P5["Passo 4 · Checklist da Regra 8 (itens 1 a 3) e seção gerada"]
+  C2{"Analista aprova?"}
+  E1["Entrega: registro de soluções e seção aprovada"]
+  H1["Handoff para a 06: meta clara, receita do ano passado, sazonalidade"]
+
+  I1 --> P1
+  P1 --> D1
+  D1 -->|"sim"| S1
+  S1 --> P1
+  D1 -->|"não"| C1
+  C1 -->|"sim, com prioridade"| P2
+  C1 -->|"não, ajustar"| P1
+  P2 --> P3
+  P3 --> S2
+  S2 --> P4
+  P4 --> V1
+  V1 --> D2
+  D2 -->|"sim, corrigir o registro"| P4
+  D2 -->|"não, mostrar avisos"| P5
+  P5 --> C2
+  C2 -->|"sim"| E1
+  C2 -->|"não, ajustar"| P4
+  E1 --> H1
+
+  class C1,C2 checkpoint
+  class S1,S2 subagente
+  class E1,H1 entrega
+  classDef checkpoint fill:#fff1e6,stroke:#e8803a,color:#7a3d0c
+  classDef subagente fill:#e8f0fd,stroke:#1f4fa8,color:#173a7a
+  classDef entrega fill:#e6f6ec,stroke:#16743b,color:#0f4f28

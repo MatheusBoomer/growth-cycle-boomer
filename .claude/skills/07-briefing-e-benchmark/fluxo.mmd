@@ -1,0 +1,54 @@
+flowchart TD
+  I1["Decisões das etapas 01 a 06 e pasta de contexto"]
+  I2["Lista de concorrentes, com site ou @"]
+  I3["Apify configurada e ffmpeg instalado"]
+  P1["Fase 1 · Preencher o briefing, sem campo em branco"]
+  C1{"Analista aprova?"}
+  D1{"Mais de 4 concorrentes?"}
+  P2["Analista escolhe os 4 prioritários"]
+  D2{"Todos têm link da página na Biblioteca?"}
+  P3["Pedir todos os links que faltam numa mensagem só"]
+  P4["Fase 2 · Coletar um anunciante por vez (prospect por último)"]
+  D3{"O script saiu com ERRO?"}
+  P5["Mostrar o erro e parar até o analista resolver"]
+  P6["Abrir cada criativo, preencher a análise e a síntese"]
+  D4{"Falta anunciante?"}
+  P7["Relatório HTML do benchmark"]
+  C2{"Analista aprova?"}
+  P8["Camada estratégica: Lição, Evidência, O que testar"]
+  C3{"Analista aprova?"}
+  E1["Entrega: briefing, relatório HTML e camada estratégica"]
+  H1["Handoff para a 08: confirmar o cenário base, prints opcionais"]
+
+  I1 --> P1
+  I2 --> P1
+  P1 --> C1
+  C1 -->|"sim"| D1
+  C1 -->|"não, ajustar"| P1
+  D1 -->|"sim"| P2
+  D1 -->|"não"| D2
+  P2 --> D2
+  D2 -->|"não"| P3
+  P3 --> D2
+  D2 -->|"sim"| P4
+  I3 --> P4
+  P4 --> D3
+  D3 -->|"sim"| P5
+  P5 --> P4
+  D3 -->|"não"| P6
+  P6 --> D4
+  D4 -->|"sim"| P4
+  D4 -->|"não"| P7
+  P7 --> C2
+  C2 -->|"sim"| P8
+  C2 -->|"não, ajustar"| P7
+  P8 --> C3
+  C3 -->|"sim"| E1
+  C3 -->|"não, ajustar"| P8
+  E1 --> H1
+
+  class C1,C2,C3 checkpoint
+  class E1,H1 entrega
+  classDef checkpoint fill:#fff1e6,stroke:#e8803a,color:#7a3d0c
+  classDef subagente fill:#e8f0fd,stroke:#1f4fa8,color:#173a7a
+  classDef entrega fill:#e6f6ec,stroke:#16743b,color:#0f4f28

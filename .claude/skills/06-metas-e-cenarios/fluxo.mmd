@@ -1,0 +1,46 @@
+flowchart TD
+  I1["Diagnóstico das 03 e 04 e registro de soluções da 05"]
+  P1["Parte 1 · Definir KPI-alvo e horizonte (perguntar se faltar)"]
+  P2["Classificar a meta: conservadora, realista ou agressiva"]
+  P3["Perguntar: cenário único ou múltiplos (só muda o deck)"]
+  S1["analista-dados: projecao.py quebra a meta mês a mês, nunca flat"]
+  P4["Gráfico ano analisado x ano projetado"]
+  C1{"Analista aprova?"}
+  P5["Parte 2 · Alavancas: soluções do registro por cenário"]
+  S2["analista-dados: 3 cenários pela cadeia de KPIs (projecao.py)"]
+  P6["Tabela, gráfico combinado e tabela-imagem dos cenários"]
+  C2{"Analista aprova?"}
+  P7["Bullets: lógica, papel dos KPIs, risco e alavanca principal"]
+  C3{"Analista aprova?"}
+  S3["analista-dados: planilha de projeção pelo modelo (meses m-12 a m-1)"]
+  C4{"Analista aprova?"}
+  E1["Entrega: meta, cenários, visuais e planilha de projeção"]
+  H1["Handoff para a 07: lista de concorrentes para pesquisar"]
+
+  I1 --> P1
+  P1 --> P2
+  P2 --> P3
+  P3 --> S1
+  S1 --> P4
+  P4 --> C1
+  C1 -->|"sim"| P5
+  C1 -->|"não, ajustar"| S1
+  P5 --> S2
+  S2 --> P6
+  P6 --> C2
+  C2 -->|"sim"| P7
+  C2 -->|"não, ajustar"| S2
+  P7 --> C3
+  C3 -->|"sim"| S3
+  C3 -->|"não, ajustar"| P7
+  S3 --> C4
+  C4 -->|"sim"| E1
+  C4 -->|"não, ajustar"| S3
+  E1 --> H1
+
+  class C1,C2,C3,C4 checkpoint
+  class S1,S2,S3 subagente
+  class E1,H1 entrega
+  classDef checkpoint fill:#fff1e6,stroke:#e8803a,color:#7a3d0c
+  classDef subagente fill:#e8f0fd,stroke:#1f4fa8,color:#173a7a
+  classDef entrega fill:#e6f6ec,stroke:#16743b,color:#0f4f28
