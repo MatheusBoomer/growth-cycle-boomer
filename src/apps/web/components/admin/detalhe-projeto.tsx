@@ -13,6 +13,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { api, mensagemDeErro, type DetalheProjeto as Detalhe } from "@/lib/api"
 import { formatarDataHora, MarcaEstimado, type EtapaRotulada } from "./painel-projetos"
 
+/** O que a coluna de modelos mostra quando a etapa não tem custo por modelo: custo só estimado (linhas antigas) ou sem o detalhe. */
+export function textoSemModelos(m: MetricasEtapa): string {
+  return m.custo.estimado ? "não registrado" : "Sem detalhe"
+}
+
 /** Comparação do custo e do tempo útil da etapa com a média das etapas concluídas; null quando não há como comparar. */
 export function comparacoesDaEtapa(m: MetricasEtapa, media: MediaEtapa | undefined): { custo: string | null; tempo: string | null } {
   if (!media) return { custo: null, tempo: null }
@@ -129,7 +134,7 @@ export function DetalheProjeto({ slug, etapas }: { slug: string; etapas: EtapaRo
                       </TableCell>
                       <TableCell className="text-right tabular-nums">{m.custo.turnos}</TableCell>
                       <TableCell className="text-muted-foreground text-xs">
-                        {modelos.length === 0 ? "Sem detalhe" : modelos.map(([modelo, usd]) => <div key={modelo}>{modelo}: {formatarUsd(usd)}</div>)}
+                        {modelos.length === 0 ? textoSemModelos(m) : modelos.map(([modelo, usd]) => <div key={modelo}>{modelo}: {formatarUsd(usd)}</div>)}
                       </TableCell>
                       <TableCell className="text-right tabular-nums">{formatarDuracao(m.tempo.agente)}</TableCell>
                       <TableCell className="text-right tabular-nums">{formatarDuracao(m.tempo.ativo)}</TableCell>

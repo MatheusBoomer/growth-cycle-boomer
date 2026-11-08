@@ -48,6 +48,9 @@ export function filtrarPorNome(lista: ProjetoComMetricas[], busca: string): Proj
   return lista.filter((p) => p.nome.toLowerCase().includes(termo))
 }
 
+/** Selo da média de uma etapa com poucos projetos na base. */
+export const ROTULO_BASE_PEQUENA = "base pequena, menos de 5 projetos"
+
 export function MarcaEstimado() {
   return <span className="text-muted-foreground ml-1 text-xs font-normal">estimado</span>
 }
@@ -99,7 +102,7 @@ function MediasPorEtapaTabela({ medias, etapas }: { medias: MediasPorEtapa; etap
                     {etapa.rotulo}
                     {media.basePequena && (
                       <Badge variant="secondary" className="ml-2">
-                        base pequena
+                        {ROTULO_BASE_PEQUENA}
                       </Badge>
                     )}
                   </TableCell>

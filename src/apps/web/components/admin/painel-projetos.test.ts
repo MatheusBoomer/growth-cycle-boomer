@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { ProjetoComMetricas } from "@/lib/api"
-import { filtrarPorNome, ordenarPorAtividade } from "./painel-projetos"
+import { filtrarPorNome, ordenarPorAtividade, ROTULO_BASE_PEQUENA } from "./painel-projetos"
 
 const projeto = (nome: string, ultimaAtividade: string | null): ProjetoComMetricas =>
   ({ slug: nome.toLowerCase(), nome, metricas: { ultimaAtividade } }) as ProjetoComMetricas
@@ -23,5 +23,11 @@ describe("filtrarPorNome", () => {
     const lista = [projeto("Verdeluz", null), projeto("Casa Azul", null)]
     expect(filtrarPorNome(lista, "  VERDE ").map((p) => p.nome)).toEqual(["Verdeluz"])
     expect(filtrarPorNome(lista, "")).toHaveLength(2)
+  })
+})
+
+describe("ROTULO_BASE_PEQUENA", () => {
+  it("diz quantos projetos faltam para a média valer", () => {
+    expect(ROTULO_BASE_PEQUENA).toBe("base pequena, menos de 5 projetos")
   })
 })

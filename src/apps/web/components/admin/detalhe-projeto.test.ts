@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { MediaEtapa, MetricasEtapa } from "@workspace/core/metricas/resumo"
-import { comparacoesDaEtapa } from "./detalhe-projeto"
+import { comparacoesDaEtapa, textoSemModelos } from "./detalhe-projeto"
 
 const etapa = (usd: number, ativo: number, temPresenca: boolean): MetricasEtapa => ({
   custo: { usd, estimado: false, turnos: 1, modelos: {} },
@@ -23,5 +23,13 @@ describe("comparacoesDaEtapa", () => {
 
   it("não compara o tempo de etapa sem presença nem o custo zerado", () => {
     expect(comparacoesDaEtapa(etapa(0, 1500, false), media)).toEqual({ custo: null, tempo: null })
+  })
+})
+
+describe("textoSemModelos", () => {
+  it("etapa só estimada diz não registrado; sem estimativa, Sem detalhe", () => {
+    const estimada: MetricasEtapa = { ...etapa(1, 0, false), custo: { usd: 1, estimado: true, turnos: 2, modelos: {} } }
+    expect(textoSemModelos(estimada)).toBe("não registrado")
+    expect(textoSemModelos(etapa(1, 0, false))).toBe("Sem detalhe")
   })
 })
