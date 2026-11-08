@@ -217,12 +217,20 @@ describe("PATCH /api/admin/skills/notas/[notaId]", () => {
     expect((await lista()).itens.find((i) => i.id === "regra:padrao-visual")?.notasAbertas).toBe(1)
   })
 
-  it("nota inexistente, ou notaId que não é inteiro positivo, dá 404", async () => {
+  it("nota inexistente dá 404", async () => {
     entrarComo(CHEFE)
-    for (const id of ["999", "0", "-1", "1.5", "abc", "", "1e3", "99999999999999999999"]) {
+    const r = await marcarNota(pedido("PATCH", { resolvida: true }), ctxNota("999"))
+    expect(r.status).toBe(404)
+  })
+
+  it("notaId que não é inteiro positivo em decimal dá 404 sem chegar ao serviço", async () => {
+    entrarComo(CHEFE)
+    const marcar = vi.spyOn(servico, "marcarNota")
+    for (const id of ["0", "-1", "1.5", "abc", "", "01", "1e3", "0x10", " 12 ", "+5", "99999999999999999999"]) {
       const r = await marcarNota(pedido("PATCH", { resolvida: true }), ctxNota(id))
-      expect(r.status).toBe(404)
+      expect(r.status, `notaId ${JSON.stringify(id)}`).toBe(404)
     }
+    expect(marcar).not.toHaveBeenCalled()
   })
 
   it("resolvida que não é booleano dá 400", async () => {
