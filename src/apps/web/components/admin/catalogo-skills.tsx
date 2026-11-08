@@ -100,22 +100,20 @@ export function CatalogoSkills() {
     setSelecionado(id)
   }
 
-  async function copiarNotas() {
-    let atual: DadosCatalogo
+  function copiarNotas() {
+    if (!catalogo) return
+    // Síncrono dentro do clique: o Safari recusa a escrita na área de transferência depois de um await (perde a ativação
+    // do usuário). O catálogo já é recarregado a cada nota criada, resolvida ou reaberta, então o texto está em dia.
     try {
-      // Recarrega antes: o texto copiado tem que refletir as notas de agora, não as de quando a aba abriu.
-      atual = await api.itensSkills()
-    } catch (e) {
-      toast.error(mensagemDeErro(e))
-      return
-    }
-    setCatalogo(atual)
-    try {
-      await navigator.clipboard.writeText(atual.textoExportacao)
-      toast.success("Notas copiadas.")
+      navigator.clipboard.writeText(catalogo.textoExportacao).then(
+        () => toast.success("Notas copiadas."),
+        () => toast.error("Não foi possível copiar."),
+      )
     } catch {
       toast.error("Não foi possível copiar.")
     }
+    // Atualiza em segundo plano, para o próximo clique pegar notas que outras pessoas tenham mexido.
+    void carregarCatalogo()
   }
 
   function notaCriada(nota: NotaSkill) {
@@ -144,7 +142,7 @@ export function CatalogoSkills() {
     <section className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-muted-foreground text-sm">Fluxo e texto de cada etapa, subagente e regra. As notas anotam o que melhorar.</p>
-        <Button variant="outline" size="sm" onClick={() => void copiarNotas()}>
+        <Button variant="outline" size="sm" onClick={copiarNotas}>
           Copiar notas abertas
         </Button>
       </div>
