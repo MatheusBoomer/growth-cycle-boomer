@@ -18,10 +18,9 @@ import { NotasSkill } from "./notas-skill"
 
 const LEGENDA = "Laranja: aprovação do analista · Azul: subagente · Verde: entrega"
 
-/** Subagentes vêm com um bloco YAML no começo do arquivo, que não deve aparecer no texto. */
+/** Subagentes e SKILL.md de etapa começam com um bloco YAML, que não deve aparecer no texto. */
 function textoParaExibir(detalhe: DetalheItemSkill): string | null {
-  if (detalhe.texto === null) return null
-  return detalhe.id.startsWith("subagente:") ? semFrontmatter(detalhe.texto) : detalhe.texto
+  return detalhe.texto === null ? null : semFrontmatter(detalhe.texto)
 }
 
 function ListaItens({ itens, selecionado, escolher }: { itens: ItemSkill[]; selecionado: string; escolher: (id: string) => void }) {
@@ -63,7 +62,8 @@ export function CatalogoSkills() {
   const [detalhe, setDetalhe] = useState<DetalheItemSkill | null>(null)
   const [erroDetalhe, setErroDetalhe] = useState<string | null>(null)
   const [textoAberto, setTextoAberto] = useState(false)
-  const [semNuvem, setSemNuvem] = useState(false)
+  // Verdadeiro quando uma escrita voltou com o 400 do modo fs (rede de segurança além do `notasDisponiveis` do servidor).
+  const [semNuvemNaEscrita, setSemNuvemNaEscrita] = useState(false)
 
   const carregarCatalogo = useCallback(async () => {
     try {
@@ -101,14 +101,20 @@ export function CatalogoSkills() {
   }
 
   async function copiarNotas() {
+    let atual: DadosCatalogo
     try {
       // Recarrega antes: o texto copiado tem que refletir as notas de agora, não as de quando a aba abriu.
-      const atual = await api.itensSkills()
-      setCatalogo(atual)
-      await navigator.clipboard.writeText(atual.textoExportacao)
-      toast.success("Notas copiadas.")
+      atual = await api.itensSkills()
     } catch (e) {
       toast.error(mensagemDeErro(e))
+      return
+    }
+    setCatalogo(atual)
+    try {
+      await navigator.clipboard.writeText(atual.textoExportacao)
+      toast.success("Notas copiadas.")
+    } catch {
+      toast.error("Não foi possível copiar.")
     }
   }
 
@@ -219,8 +225,8 @@ export function CatalogoSkills() {
               key={detalhe.id}
               itemId={detalhe.id}
               notas={detalhe.notas}
-              semNuvem={semNuvem}
-              aoSemNuvem={() => setSemNuvem(true)}
+              semNuvem={semNuvemNaEscrita || !detalhe.notasDisponiveis}
+              aoSemNuvem={() => setSemNuvemNaEscrita(true)}
               aoCriar={notaCriada}
               aoAtualizar={notaAtualizada}
             />

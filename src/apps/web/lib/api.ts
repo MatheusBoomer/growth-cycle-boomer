@@ -71,12 +71,13 @@ export interface ConfigModelos {
   uso: Partial<Record<EtapaId, UsoDaEtapa>>
 }
 export type ItemSkill = ItemCatalogo & { notasAbertas: number }
-/** Resposta de GET /api/admin/skills: os itens do catálogo e o texto das notas abertas, pronto para copiar. */
+/** Resposta de GET /api/admin/skills: os itens do catálogo e o texto das notas abertas, pronto para copiar. `notasDisponiveis` é falso no modo fs. */
 export interface CatalogoSkills {
   itens: ItemSkill[]
   textoExportacao: string
+  notasDisponiveis: boolean
 }
-export type DetalheItemSkill = ConteudoItem & { notas: NotaSkill[] }
+export type DetalheItemSkill = ConteudoItem & { notas: NotaSkill[]; notasDisponiveis: boolean }
 /** Resposta do detalhe de um projeto; `medias` só vem quando pedidas (`medias: true`), senão é null. */
 export interface DetalheProjeto {
   projeto: ResumoProspect

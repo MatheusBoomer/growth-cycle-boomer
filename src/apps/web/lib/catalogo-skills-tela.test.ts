@@ -88,6 +88,10 @@ describe("ehErroSemNuvem", () => {
 })
 
 describe("semFrontmatter (borda)", () => {
+  it("tira o bloco das SKILL.md de etapa, que também começam com ---", () => {
+    expect(semFrontmatter("---\nname: preparacao-de-contexto\ndescription: Primeira etapa.\n---\n\n# Skill 01\n")).toBe("# Skill 01\n")
+  })
+
   it("aceita bloco vazio", () => {
     expect(semFrontmatter("---\n---\ntexto")).toBe("texto")
   })

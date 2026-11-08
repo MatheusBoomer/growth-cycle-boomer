@@ -117,8 +117,9 @@ describe("GET /api/admin/skills", () => {
 
     const r = await listar()
     expect(r.status).toBe(200)
-    const { itens, textoExportacao } = (await r.json()) as { itens: ItemDaLista[]; textoExportacao: string }
+    const { itens, textoExportacao, notasDisponiveis } = (await r.json()) as { itens: ItemDaLista[]; textoExportacao: string; notasDisponiveis: boolean }
 
+    expect(notasDisponiveis).toBe(true)
     expect(itens).toHaveLength(16)
     expect(itens[0]).toMatchObject({ id: "visao-geral", grupo: "Processo", temFluxo: true, notasAbertas: 1 })
     expect(itens.find((i) => i.id === "etapa:03")?.notasAbertas).toBe(2)
@@ -143,8 +144,8 @@ describe("GET /api/admin/skills/[id]", () => {
 
     const r = await ler(new Request("http://127.0.0.1:3000/api/x"), ctxId("etapa%3A03"))
     expect(r.status).toBe(200)
-    const corpo = (await r.json()) as ConteudoItem & { notas: NotaSkill[] }
-    expect(corpo).toMatchObject({ id: "etapa:03", grupo: "Etapas" })
+    const corpo = (await r.json()) as ConteudoItem & { notas: NotaSkill[]; notasDisponiveis: boolean }
+    expect(corpo).toMatchObject({ id: "etapa:03", grupo: "Etapas", notasDisponiveis: true })
     expect(corpo.texto).toContain("diagnostico-performance")
     expect(corpo.fluxo).toMatch(/^\s*flowchart TD/)
     expect(corpo.notas).toMatchObject([{ item: "etapa:03", texto: "ajustar o gráfico", autor: CHEFE, resolvidaEm: null }])
@@ -256,13 +257,14 @@ describe("sem repositório de usuários (modo fs)", () => {
 
     const l = await listar()
     expect(l.status).toBe(200)
-    const corpo = (await l.json()) as { itens: ItemDaLista[]; textoExportacao: string }
+    const corpo = (await l.json()) as { itens: ItemDaLista[]; textoExportacao: string; notasDisponiveis: boolean }
+    expect(corpo.notasDisponiveis).toBe(false)
     expect(corpo.itens).toHaveLength(16)
     expect(corpo.itens.every((i) => i.notasAbertas === 0)).toBe(true)
     expect(corpo.textoExportacao).toBe("Nenhuma nota aberta.")
 
     const d = await ler(new Request("http://127.0.0.1:3000/api/x"), ctxId("etapa%3A03"))
     expect(d.status).toBe(200)
-    expect(await d.json()).toMatchObject({ id: "etapa:03", notas: [] })
+    expect(await d.json()).toMatchObject({ id: "etapa:03", notas: [], notasDisponiveis: false })
   })
 })
