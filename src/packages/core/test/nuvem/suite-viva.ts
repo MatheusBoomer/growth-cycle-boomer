@@ -33,3 +33,13 @@ export function novoEmail(): string {
 export function ehEmailDeContrato(email: string): boolean {
   return FORMATO_EMAIL.test(email)
 }
+
+/** Alvo próprio de cada caso do contrato de configuração de modelo (o Repositorio não valida alvos). */
+export function novoAlvoDeContrato(): string {
+  return `${PREFIXO_CONTRATO}${randomBytes(BYTES_DO_SLUG).toString("hex")}`
+}
+
+/** Só o formato exato de novoAlvoDeContrato: a limpeza da suíte viva nunca apaga uma configuração real. */
+export function ehAlvoDeContrato(alvo: string): boolean {
+  return FORMATO_SLUG.test(alvo)
+}

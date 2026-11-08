@@ -6,7 +6,7 @@ import { SupabaseUsuarios } from "../../src/nuvem/usuarios-supabase"
 import { contratoArmazem } from "./contrato-armazem"
 import { contratoRepositorio } from "./contrato-repositorio"
 import { contratoUsuarios } from "./contrato-usuarios"
-import { ehEmailDeContrato, ehSlugDeContrato, PREFIXO_CONTRATO, suiteVivaHabilitada } from "./suite-viva"
+import { ehAlvoDeContrato, ehEmailDeContrato, ehSlugDeContrato, PREFIXO_CONTRATO, suiteVivaHabilitada } from "./suite-viva"
 
 const BUCKETS = ["planejamento-prospects", "planejamento-sessoes"]
 
@@ -115,6 +115,18 @@ describe.skipIf(!suiteVivaHabilitada(process.env))("Supabase (integração)", ()
       if (!ehEmailDeContrato(String(linha.email))) continue
       const { error } = await c.from("usuarios").delete().eq("email", linha.email)
       registrar("apagar usuarios", error)
+    }
+
+    // Configurações de modelo gravadas pelo contrato: só o formato exato de novoAlvoDeContrato, nunca uma real.
+    const { data: configs, error: erroConfigs } = await c
+      .from("config_modelos")
+      .select("etapa, alvo")
+      .like("alvo", `${PREFIXO_CONTRATO}%`)
+    registrar("ler config_modelos", erroConfigs)
+    for (const linha of configs ?? []) {
+      if (!ehAlvoDeContrato(String(linha.alvo))) continue
+      const { error } = await c.from("config_modelos").delete().eq("etapa", linha.etapa).eq("alvo", linha.alvo)
+      registrar("apagar config_modelos", error)
     }
 
     // Objetos sem linha no banco também vazam: a busca parte da raiz de cada bucket.

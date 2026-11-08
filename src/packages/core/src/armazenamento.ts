@@ -7,7 +7,8 @@ import { ErroCaminhoForaDoProspect, ErroEntrada, ErroNaoEncontrado, ErroProspect
 import { etapaVazia } from "./maquina-estados"
 import type { Acumulado, LinhaPresenca, LinhaUso } from "./metricas/tipos"
 import { normalizarSlug } from "./slug"
-import type { RegistroUsoTurno } from "./nuvem/tipos"
+import type { NivelEsforco } from "./modelos"
+import type { LinhaConfigModelo, RegistroUsoTurno } from "./nuvem/tipos"
 import { ORDEM_ETAPAS, type Estado, type EtapaId, type EventoConversa } from "./tipos"
 
 const ARQUIVO_ESTADO = ".app/estado.json"
@@ -321,6 +322,21 @@ export class FsArmazenamento {
 
   async listarPresencas(_slug?: string, _ativos?: ReadonlySet<string>): Promise<LinhaPresenca[]> {
     return []
+  }
+
+  /** Em disco não há configuração de modelo gravada: tudo é padrão. */
+  async lerConfigModelos(): Promise<LinhaConfigModelo[]> {
+    return []
+  }
+
+  async gravarConfigModelo(_l: {
+    etapa: EtapaId
+    alvo: string
+    modelo: string | null
+    esforco: NivelEsforco | null
+    alteradoPor: string
+  }): Promise<void> {
+    throw new ErroEntrada("A administração de pessoas só existe com os dados na nuvem.")
   }
 
   /** No disco, conversas e comentários vivem em .app/, que o reposicionamento do cliente de teste já apaga. */

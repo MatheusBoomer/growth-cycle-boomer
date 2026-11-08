@@ -34,7 +34,8 @@ import { mensagemAjuste, mensagemAjustes, mensagemAprovacao, mensagemEtapaAnteri
 import { custoDoTurno } from "./metricas/custo"
 import { mediasPorEtapa, resumirProjeto, type MediaEtapa, type MetricasProjeto } from "./metricas/resumo"
 import type { Acumulado, Limites } from "./metricas/tipos"
-import type { EntradaUsoTurno, RegistroUsoTurno } from "./nuvem/tipos"
+import { alvosDaEtapa, ALVO_PRINCIPAL, NIVEIS_ESFORCO, validarEscolha, type EscolhaModelo, type ListaDeModelos, type NivelEsforco } from "./modelos"
+import type { EntradaUsoTurno, LinhaConfigModelo, RegistroUsoTurno } from "./nuvem/tipos"
 import { aplicarOverrides, lerKit, reposicionarNoFixture } from "./servico-teste"
 import { ehAdmin, normalizarEmail, podeVerProspect, type UsuarioComPapel } from "./papeis"
 import { normalizarSlug } from "./slug"
@@ -185,6 +186,47 @@ export class ServicoPlanejamento {
   /** Aviso de que a tela de `email` está aberta na etapa (a cada 30 s); só o tempo de presença usa isso. */
   registrarPresenca(slug: string, email: string, etapa: EtapaId, visivel: boolean, segundosSemInteracao: number): Promise<void> {
     return this.arm.registrarPresenca({ slug, email, etapa, visivel, segundosSemInteracao })
+  }
+
+  /** Todas as linhas gravadas de modelo e esforço (em disco, nenhuma). */
+  configModelos(): Promise<LinhaConfigModelo[]> {
+    return this.arm.lerConfigModelos()
+  }
+
+  /**
+   * Modelo e esforço da etapa: o agente principal e cada subagente que ela aciona. Alvo sem linha, ou com esforço
+   * fora de NIVEIS_ESFORCO, vale padrão (nulo). Nunca lança por falha de leitura: registra e devolve tudo padrão,
+   * para o turno rodar do mesmo jeito.
+   */
+  async configDaEtapa(etapa: EtapaId): Promise<{ principal: EscolhaModelo; subagentes: Record<string, EscolhaModelo> }> {
+    const alvos = alvosDaEtapa(this.catalogo, etapa)
+    let linhas: LinhaConfigModelo[] = []
+    try {
+      linhas = (await this.arm.lerConfigModelos()).filter((l) => l.etapa === etapa)
+    } catch (e) {
+      console.error(`Não consegui ler a configuração de modelo da etapa ${etapa}; usando o padrão:`, e)
+    }
+    const escolhaDe = (alvo: string): EscolhaModelo => {
+      const l = linhas.find((x) => x.alvo === alvo)
+      const valido = l?.esforco != null && (NIVEIS_ESFORCO as readonly string[]).includes(l.esforco)
+      return { modelo: l?.modelo ?? null, esforco: valido ? (l.esforco as NivelEsforco) : null }
+    }
+    const subagentes: Record<string, EscolhaModelo> = {}
+    for (const alvo of alvos) if (alvo !== ALVO_PRINCIPAL) subagentes[alvo] = escolhaDe(alvo)
+    return { principal: escolhaDe(ALVO_PRINCIPAL), subagentes }
+  }
+
+  /** ErroNaoEncontrado (404) se o alvo não é da etapa; ErroEntrada (400) se o modelo ou o esforço não valem. */
+  async salvarConfigModelo(
+    etapa: EtapaId,
+    alvo: string,
+    escolha: EscolhaModelo,
+    autor: string,
+    lista: ListaDeModelos,
+  ): Promise<void> {
+    if (!alvosDaEtapa(this.catalogo, etapa).includes(alvo)) throw new ErroNaoEncontrado("Etapa ou alvo inexistente.")
+    validarEscolha(escolha, lista)
+    await this.arm.gravarConfigModelo({ etapa, alvo, modelo: escolha.modelo, esforco: escolha.esforco, alteradoPor: autor })
   }
 
   async metricasDoProjeto(slug: string, limites: Limites): Promise<MetricasProjeto> {

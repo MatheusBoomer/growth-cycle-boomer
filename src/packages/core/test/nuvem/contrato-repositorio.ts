@@ -4,7 +4,7 @@ import { ErroConflitoVersao, ErroNaoEncontrado, ErroProspectExistente } from "..
 import { estadoInicial } from "../../src/maquina-estados"
 import type { Comentario } from "../../src/comentarios"
 import type { EventoConversa } from "../../src/tipos"
-import { novoSlug } from "./suite-viva"
+import { novoAlvoDeContrato, novoSlug } from "./suite-viva"
 
 const EM = "2026-10-27T12:00:00.000Z"
 
@@ -51,6 +51,26 @@ export function contratoRepositorio(
       await repo.excluirProspect(com)
       await repo.criarProspect(com)
       if (lerCriadoPor) expect(await lerCriadoPor(repo, com)).toBeNull()
+    })
+
+    it("grava, lê e regrava a configuração de modelo; os dois nulos apagam a linha", async () => {
+      const repo = await criar()
+      const alvo = novoAlvoDeContrato()
+      const da = async () => (await repo.lerConfigModelos()).find((l) => l.etapa === "01" && l.alvo === alvo)
+      try {
+        expect(await da()).toBeUndefined()
+        await repo.gravarConfigModelo({ etapa: "01", alvo, modelo: "sonnet", esforco: "low", alteradoPor: "ana@boomer.com.br" })
+        const primeira = await da()
+        expect(primeira).toMatchObject({ modelo: "sonnet", esforco: "low", alteradoPor: "ana@boomer.com.br" })
+        expect(primeira!.alteradoEm).not.toBeNull()
+        await repo.gravarConfigModelo({ etapa: "01", alvo, modelo: "opus", esforco: null, alteradoPor: "bia@gestaoboomer.com" })
+        expect(await da()).toMatchObject({ modelo: "opus", esforco: null, alteradoPor: "bia@gestaoboomer.com" })
+        expect((await repo.lerConfigModelos()).filter((l) => l.alvo === alvo)).toHaveLength(1)
+        await repo.gravarConfigModelo({ etapa: "01", alvo, modelo: null, esforco: null, alteradoPor: "bia@gestaoboomer.com" })
+        expect(await da()).toBeUndefined()
+      } finally {
+        await repo.gravarConfigModelo({ etapa: "01", alvo, modelo: null, esforco: null, alteradoPor: "contrato" })
+      }
     })
 
     it("lê o dono, troca o dono e não lista nem lê o dono de um excluído", async () => {

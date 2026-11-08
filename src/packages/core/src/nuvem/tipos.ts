@@ -1,5 +1,6 @@
 import type { Comentario } from "../comentarios"
 import type { Acumulado, LinhaPresenca, LinhaUso } from "../metricas/tipos"
+import type { NivelEsforco } from "../modelos"
 import type { Estado, EtapaId, EventoConversa } from "../tipos"
 
 export interface EstadoVersionado {
@@ -43,6 +44,16 @@ export type EntradaUsoTurno = Omit<RegistroUsoTurno, "custoTurnoUsd" | "modelos"
    * continuou. Sem linha anterior da sessão, serve para abater o custo das linhas antigas da etapa.
    */
   retomada: boolean
+}
+
+/** Uma linha de `config_modelos`; `modelo` e `esforco` nulos valem "padrão". `esforco` vem do banco como texto. */
+export interface LinhaConfigModelo {
+  etapa: EtapaId
+  alvo: string
+  modelo: string | null
+  esforco: string | null
+  alteradoPor: string | null
+  alteradoEm: string | null
 }
 
 /** Dados estruturados de cada prospect (estado, conversa, comentários, uso). */
@@ -96,6 +107,16 @@ export interface Repositorio {
   /** Ordenado por `em`, paginado. Sem `slug`, só os de prospects ativos (`ativos` como em `listarUsos`). */
   listarPresencas(slug?: string, ativos?: ReadonlySet<string>): Promise<LinhaPresenca[]>
   marcarSincronizacao(slug: string, pendente: boolean): Promise<void>
+  /** Todas as linhas de modelo e esforço por etapa e alvo; linha ausente equivale a padrão. */
+  lerConfigModelos(): Promise<LinhaConfigModelo[]>
+  /** Os dois campos nulos apagam a linha; senão, upsert com `alterado_em` = agora. O repositório não valida o alvo. */
+  gravarConfigModelo(l: {
+    etapa: EtapaId
+    alvo: string
+    modelo: string | null
+    esforco: NivelEsforco | null
+    alteradoPor: string
+  }): Promise<void>
 }
 
 /** Arquivos do prospect, endereçados pelo conteúdo (objeto `<slug>/<sha256>`) e listados por um manifesto. */

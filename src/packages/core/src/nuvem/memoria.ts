@@ -2,11 +2,13 @@ import { createHash } from "node:crypto"
 import type { Comentario } from "../comentarios"
 import { ErroConflitoVersao, ErroNaoEncontrado, ErroProspectExistente, ErroSincronizacao } from "../erros"
 import type { Acumulado, LinhaPresenca, LinhaUso } from "../metricas/tipos"
+import type { NivelEsforco } from "../modelos"
 import type { Estado, EtapaId, EventoConversa } from "../tipos"
 import type {
   ArmazemArquivos,
   EntradaManifesto,
   EstadoVersionado,
+  LinhaConfigModelo,
   RegistroUsoTurno,
   Repositorio,
 } from "./tipos"
@@ -23,6 +25,7 @@ interface RegistroProspect {
 /** Implementação em memória do Repositorio: base dos testes e do contrato compartilhado com o banco. */
 export class MemoriaRepositorio implements Repositorio {
   private readonly prospects = new Map<string, RegistroProspect>()
+  private readonly configModelos = new Map<string, LinhaConfigModelo>()
   /** Registros de uso, abertos para inspeção nos testes. */
   readonly usos: RegistroUsoTurno[] = []
   /** Avisos de presença, abertos para inspeção nos testes. */
@@ -177,6 +180,34 @@ export class MemoriaRepositorio implements Repositorio {
   }
 
   /** Quem criou o prospect (`prospects.criado_por`), para os testes. */
+  async lerConfigModelos(): Promise<LinhaConfigModelo[]> {
+    return [...this.configModelos.values()]
+      .map((l) => ({ ...l }))
+      .sort((a, b) => a.etapa.localeCompare(b.etapa) || a.alvo.localeCompare(b.alvo))
+  }
+
+  async gravarConfigModelo(l: {
+    etapa: EtapaId
+    alvo: string
+    modelo: string | null
+    esforco: NivelEsforco | null
+    alteradoPor: string
+  }): Promise<void> {
+    const chave = `${l.etapa}/${l.alvo}`
+    if (l.modelo === null && l.esforco === null) {
+      this.configModelos.delete(chave)
+      return
+    }
+    this.configModelos.set(chave, {
+      etapa: l.etapa,
+      alvo: l.alvo,
+      modelo: l.modelo,
+      esforco: l.esforco,
+      alteradoPor: l.alteradoPor,
+      alteradoEm: this.agora(),
+    })
+  }
+
   criadoPor(slug: string): string | null {
     return this.prospects.get(slug)?.criadoPor ?? null
   }
