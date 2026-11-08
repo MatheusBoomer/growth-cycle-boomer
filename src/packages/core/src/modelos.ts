@@ -60,7 +60,7 @@ export interface ModeloDisponivel {
   nome: string
   descricao: string
   esforcos: NivelEsforco[]
-  /** true para opus, sonnet e haiku: valem sempre, e acompanham a versão mais nova do SDK. */
+  /** true para haiku, sonnet e opus: valem sempre, e acompanham a versão mais nova do SDK. */
   apelido: boolean
 }
 
@@ -71,9 +71,9 @@ export interface ListaDeModelos {
 }
 
 const APELIDOS = [
-  { value: "opus", nome: "Opus" },
-  { value: "sonnet", nome: "Sonnet" },
-  { value: "haiku", nome: "Haiku" },
+  { value: "haiku", nome: "Haiku (mais recente)" },
+  { value: "sonnet", nome: "Sonnet (mais recente)" },
+  { value: "opus", nome: "Opus (mais recente)" },
 ] as const
 const ESFORCOS_PADRAO_APELIDO: NivelEsforco[] = ["low", "medium", "high"]
 
@@ -96,7 +96,7 @@ export function montarListaDeModelos(info: InfoModeloSdk[] | null): ListaDeModel
     const fonte = [propria, resolvida].find((l): l is InfoModeloSdk => l !== undefined && temInfoDeEsforco(l))
     return {
       value,
-      nome: propria?.displayName || nome,
+      nome,
       descricao: propria?.description ?? "",
       esforcos: fonte ? esforcosDaLinha(fonte) : [...ESFORCOS_PADRAO_APELIDO],
       apelido: true,
@@ -127,7 +127,7 @@ export function validarEscolha(e: EscolhaModelo, lista: ListaDeModelos): void {
   if (e.esforco === null || modelo.esforcos.includes(e.esforco)) return
   throw new ErroEntrada(
     modelo.esforcos.length === 0
-      ? `O modelo "${modelo.value}" não aceita esforço.`
+      ? `O modelo "${modelo.value}" não aceita esforço; deixe o esforço em Padrão.`
       : `O modelo "${modelo.value}" não aceita o esforço "${e.esforco}". Níveis aceitos: ${modelo.esforcos.join(", ")}.`,
   )
 }
@@ -139,14 +139,22 @@ export function criarCacheDeModelos(
   ttlMs: number = 3_600_000,
 ): () => Promise<ListaDeModelos> {
   let guardada: { lista: ListaDeModelos; em: number } | null = null
-  return async () => {
-    if (guardada && agora() - guardada.em < ttlMs) return guardada.lista
+  let buscando: Promise<ListaDeModelos> | null = null
+  const buscarEGuardar = async (): Promise<ListaDeModelos> => {
     try {
       const lista = montarListaDeModelos(await buscar())
       guardada = { lista, em: agora() }
       return lista
-    } catch {
+    } catch (e) {
+      console.error(`Falha ao consultar os modelos do SDK: ${e instanceof Error ? e.message : String(e)}`)
       return montarListaDeModelos(null)
+    } finally {
+      buscando = null
     }
+  }
+  return async () => {
+    if (guardada && agora() - guardada.em < ttlMs) return guardada.lista
+    buscando ??= buscarEGuardar()
+    return buscando
   }
 }

@@ -1,7 +1,7 @@
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { ehErroDominio } from "../src/erros"
 import type { InfoModeloSdk } from "../src/executor/modelos-sdk"
 import { consultarModelosSdk } from "../src/executor/modelos-sdk"
@@ -62,11 +62,11 @@ describe("montarListaDeModelos", () => {
   it("põe os três apelidos primeiro e depois os demais modelos do SDK", () => {
     const lista = montarListaDeModelos(INFO)
     expect(lista.completa).toBe(true)
-    expect(lista.modelos.map((m) => m.value)).toEqual(["opus", "sonnet", "haiku", "claude-haiku-5-5", "claude-opus-5-5"])
+    expect(lista.modelos.map((m) => m.value)).toEqual(["haiku", "sonnet", "opus", "claude-haiku-5-5", "claude-opus-5-5"])
     expect(lista.modelos.slice(0, 3).every((m) => m.apelido)).toBe(true)
     expect(lista.modelos.slice(3).some((m) => m.apelido)).toBe(false)
     const por = (v: string) => lista.modelos.find((m) => m.value === v)
-    expect(por("sonnet")).toMatchObject({ nome: "Sonnet", descricao: "equilibrado", esforcos: ["low", "high"] })
+    expect(por("sonnet")).toMatchObject({ nome: "Sonnet (mais recente)", descricao: "equilibrado", esforcos: ["low", "high"] })
     expect(por("claude-haiku-5-5")?.esforcos).toEqual([])
     expect(por("claude-opus-5-5")?.esforcos).toEqual(["low", "medium", "high", "xhigh", "max"])
   })
@@ -80,6 +80,7 @@ describe("montarListaDeModelos", () => {
     expect(por("opus")?.esforcos).toEqual(["medium", "max"])
     expect(por("sonnet")?.esforcos).toEqual(["low", "medium", "high"])
     expect(lista.modelos.filter((m) => m.value === "opus")).toHaveLength(1)
+    expect(lista.modelos.map((m) => m.nome).slice(0, 3)).toEqual(["Haiku (mais recente)", "Sonnet (mais recente)", "Opus (mais recente)"])
   })
 
   it("ignora níveis de esforço que o app não conhece", () => {
@@ -92,7 +93,7 @@ describe("montarListaDeModelos", () => {
   it("sem resposta do SDK, traz só os apelidos e marca como incompleta", () => {
     const lista = montarListaDeModelos(null)
     expect(lista.completa).toBe(false)
-    expect(lista.modelos.map((m) => m.value)).toEqual(["opus", "sonnet", "haiku"])
+    expect(lista.modelos.map((m) => m.value)).toEqual(["haiku", "sonnet", "opus"])
     expect(lista.modelos.every((m) => m.apelido && m.esforcos.length === 3)).toBe(true)
   })
 })
@@ -132,7 +133,7 @@ describe("validarEscolha", () => {
       expect.unreachable()
     } catch (e) {
       expect(ehErroDominio(e) && e.status).toBe(400)
-      expect((e as Error).message).toMatch(/não aceita esforço/)
+      expect((e as Error).message).toMatch(/não aceita esforço; deixe o esforço em Padrão/)
     }
   })
 
@@ -186,6 +187,17 @@ describe("consultarModelosSdk", () => {
     expect(controle?.signal.aborted).toBe(true)
   })
 
+  it("repassa o cwd às opções só quando informado", async () => {
+    const vistos: Array<string | undefined> = []
+    const consulta = ({ options }: { options: { cwd?: string } }) => {
+      vistos.push(options.cwd)
+      return { supportedModels: async () => INFO }
+    }
+    await consultarModelosSdk({}, consulta, 50, "/raiz/do/projeto")
+    await consultarModelosSdk({}, consulta)
+    expect(vistos).toEqual(["/raiz/do/projeto", undefined])
+  })
+
   it("propaga a falha da consulta e aborta", async () => {
     let controle: AbortController | undefined
     await expect(
@@ -212,7 +224,23 @@ describe("criarCacheDeModelos", () => {
     expect(buscas).toBe(2)
   })
 
-  it("em falha devolve só os apelidos e tenta de novo na chamada seguinte", async () => {
+  it("duas chamadas durante a mesma busca fazem uma busca só", async () => {
+    let buscas = 0
+    let liberar!: () => void
+    const cache = criarCacheDeModelos(async () => {
+      buscas++
+      await new Promise<void>((r) => (liberar = r))
+      return INFO
+    })
+    const a = cache()
+    const b = cache()
+    liberar()
+    expect(await a).toBe(await b)
+    expect(buscas).toBe(1)
+  })
+
+  it("em falha devolve só os apelidos, registra o erro uma vez e tenta de novo na chamada seguinte", async () => {
+    const erro = vi.spyOn(console, "error").mockImplementation(() => {})
     let buscas = 0
     const cache = criarCacheDeModelos(async () => {
       buscas++
@@ -221,7 +249,10 @@ describe("criarCacheDeModelos", () => {
     })
     const falha = await cache()
     expect(falha.completa).toBe(false)
-    expect(falha.modelos.map((m) => m.value)).toEqual(["opus", "sonnet", "haiku"])
+    expect(falha.modelos.map((m) => m.value)).toEqual(["haiku", "sonnet", "opus"])
+    expect(erro).toHaveBeenCalledTimes(1)
+    expect(String(erro.mock.calls[0]?.[0])).toContain("fora do ar")
+    erro.mockRestore()
     const ok = await cache()
     expect(buscas).toBe(2)
     expect(ok.completa).toBe(true)

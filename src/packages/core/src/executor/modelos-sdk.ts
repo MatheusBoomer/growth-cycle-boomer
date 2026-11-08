@@ -28,6 +28,7 @@ export async function consultarModelosSdk(
   env: Record<string, string | undefined>,
   consulta: ConsultaModelosSdk = query as unknown as ConsultaModelosSdk,
   limiteMs: number = LIMITE_PADRAO_MS,
+  cwd?: string,
 ): Promise<InfoModeloSdk[]> {
   const controle = new AbortController()
   const semMensagens = async function* (): AsyncGenerator<never> {
@@ -35,7 +36,7 @@ export async function consultarModelosSdk(
   }
   let relogio: ReturnType<typeof setTimeout> | undefined
   try {
-    const sessao = consulta({ prompt: semMensagens(), options: { abortController: controle, env } })
+    const sessao = consulta({ prompt: semMensagens(), options: { abortController: controle, env, ...(cwd ? { cwd } : {}) } })
     const tempoEsgotado = new Promise<never>((_, rejeitar) => {
       relogio = setTimeout(
         () => rejeitar(new Error(`A consulta de modelos passou do tempo limite (${limiteMs} ms).`)),
