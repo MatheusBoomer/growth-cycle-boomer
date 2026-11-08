@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs"
 import path from "node:path"
+import { SUBAGENTES_CONFIGURAVEIS } from "./modelos"
 import { ORDEM_ETAPAS, type Catalogo, type EtapaCatalogo, type EtapaId, type InsumoCatalogo } from "./tipos"
 
 export const CAMINHO_CATALOGO = ".claude/skills/_shared/etapas.json"
@@ -19,6 +20,14 @@ export function validarCatalogo(c: Catalogo): void {
   }
   const insumos = new Set(c.insumos.map((i) => i.id))
   for (const e of c.etapas) {
+    if (!Array.isArray(e.subagentes)) {
+      throw new Error(`etapas.json: a etapa ${e.id} precisa do campo "subagentes" (lista, pode ser vazia)`)
+    }
+    for (const nome of e.subagentes) {
+      if (!(SUBAGENTES_CONFIGURAVEIS as readonly string[]).includes(nome)) {
+        throw new Error(`etapas.json: a etapa ${e.id} lista o subagente "${nome}", que não é configurável`)
+      }
+    }
     for (const r of e.insumos) {
       if (!insumos.has(r.id)) throw new Error(`etapas.json: a etapa ${e.id} referencia o insumo inexistente "${r.id}"`)
     }

@@ -1,0 +1,13 @@
+[
+  { "etapa": "01", "alvo": "principal", "modelo": "haiku", "esforco": null, "motivo": "só organiza a transcrição" },
+  { "etapa": "03", "alvo": "principal", "modelo": "sonnet", "esforco": null, "motivo": "análise que vai para o deck, com volume grande de gráficos" },
+  { "etapa": "04", "alvo": "principal", "modelo": "sonnet", "esforco": null, "motivo": "cálculo de CAC/LTV com barreira de PII" },
+  { "etapa": "03", "alvo": "analista-dados", "modelo": "haiku", "esforco": null, "motivo": "gera gráficos a partir de código padronizado" },
+  { "etapa": "05", "alvo": "analista-dados", "modelo": "haiku", "esforco": null, "motivo": "gráficos e contas simples" },
+  { "etapa": "06", "alvo": "analista-dados", "modelo": "sonnet", "esforco": null, "motivo": "o JSON da projeção, com meses posicionais, é frágil" },
+  { "etapa": "08", "alvo": "analista-dados", "modelo": "haiku", "esforco": null, "motivo": "gráficos" },
+  { "etapa": "02", "alvo": "pesquisador-benchmark", "modelo": "haiku", "esforco": null, "motivo": "raspagem e resumo" },
+  { "etapa": "05", "alvo": "pesquisador-benchmark", "modelo": "haiku", "esforco": null, "motivo": "raspagem e resumo" },
+  { "etapa": "08", "alvo": "pesquisador-benchmark", "modelo": "haiku", "esforco": null, "motivo": "raspagem e resumo" },
+  { "etapa": "final", "alvo": "principal", "modelo": "haiku", "esforco": null, "motivo": "monta o .pptx a partir do roteiro aprovado" }
+]

@@ -25,6 +25,24 @@ describe("catálogo", () => {
     expect(() => validarCatalogo(c)).toThrow(/ordem/)
   })
 
+  it("traz os subagentes de cada etapa do etapas.json real", () => {
+    const c = catalogoReal()
+    expect(etapaDoCatalogo(c, "05").subagentes).toEqual(["analista-dados", "pesquisador-benchmark"])
+    expect(etapaDoCatalogo(c, "01").subagentes).toEqual([])
+  })
+
+  it("recusa subagente fora dos configuráveis", () => {
+    const c = structuredClone(catalogoReal()) as Catalogo
+    c.etapas[4]!.subagentes.push("designer")
+    expect(() => validarCatalogo(c)).toThrow(/designer/)
+  })
+
+  it("recusa etapa sem a lista de subagentes", () => {
+    const c = structuredClone(catalogoReal()) as Catalogo
+    delete (c.etapas[0] as unknown as Record<string, unknown>).subagentes
+    expect(() => validarCatalogo(c)).toThrow(/subagentes/)
+  })
+
   it("navega entre etapas", () => {
     expect(etapaAnterior("01")).toBeNull()
     expect(etapaAnterior("final")).toBe("09")
