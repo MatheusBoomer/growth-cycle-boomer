@@ -8,6 +8,7 @@ const ABAS = [
   { href: "/admin/pessoas", rotulo: "Pessoas" },
   { href: "/admin/projetos", rotulo: "Projetos" },
   { href: "/admin/modelos", rotulo: "Modelos" },
+  { href: "/admin/skills", rotulo: "Skills" },
 ]
 
 /** Abas da administração. São links (cada aba é uma rota). */

@@ -1,9 +1,10 @@
+// @vitest-environment jsdom
 import { readFileSync } from "node:fs"
 import path from "node:path"
 import { describe, expect, it } from "vitest"
 
-// Validação estrutural de reserva dos 13 fluxogramas do catálogo de skills.
-// A Task 6 troca por `mermaid.parse` quando o `mermaid` estiver instalado no web.
+// Validação dos 13 fluxogramas do catálogo de skills: o parser do Mermaid (roda no jsdom) e, além dele, a validação
+// estrutural, que também confere a convenção de checkpoint e a ausência de travessão, coisas que o parser não vê.
 
 const RAIZ = path.resolve(import.meta.dirname, "../../../..")
 
@@ -118,6 +119,17 @@ function validarCheckpoints(codigo: string): string[] {
 }
 
 describe("fluxogramas do catálogo de skills", () => {
+  it.each(FLUXOS)("%s é aceito pelo parser do Mermaid", async (arquivo) => {
+    const { default: mermaid } = await import("mermaid")
+    const codigo = readFileSync(path.join(RAIZ, arquivo), "utf8")
+    await expect(mermaid.parse(codigo)).resolves.toMatchObject({ diagramType: "flowchart-v2" })
+  })
+
+  it("o parser do Mermaid recusa sintaxe quebrada", async () => {
+    const { default: mermaid } = await import("mermaid")
+    await expect(mermaid.parse('flowchart TD\nA["sem fecha --> ')).rejects.toThrow()
+  })
+
   it.each(FLUXOS)("%s passa na validação estrutural", (arquivo) => {
     const codigo = readFileSync(path.join(RAIZ, arquivo), "utf8")
     expect(validar(codigo)).toEqual([])
