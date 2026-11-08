@@ -5,8 +5,11 @@ import { FsArmazenamento } from "@workspace/core/armazenamento"
 import { Barramento } from "@workspace/core/barramento"
 import { carregarCatalogo } from "@workspace/core/catalogo"
 import { AgentSdkExecutor } from "@workspace/core/executor/agent-sdk"
+import { ambienteDoAgente } from "@workspace/core/executor/ambiente-agente"
 import { ClaudeCliExecutor } from "@workspace/core/executor/claude-cli"
 import { criarExecutorDemo } from "@workspace/core/executor/fake"
+import { consultarModelosSdk } from "@workspace/core/executor/modelos-sdk"
+import { criarCacheDeModelos, type ListaDeModelos } from "@workspace/core/modelos"
 import { NuvemArmazenamento } from "@workspace/core/nuvem/armazenamento-nuvem"
 import { MemoriaSessao, type MemoriaDeSessao } from "@workspace/core/nuvem/memoria-sessao"
 import { Mesa } from "@workspace/core/nuvem/mesa"
@@ -31,6 +34,8 @@ interface Servidor {
   comentarios: ServicoComentarios
   /** Quem já entrou e com qual papel. Null no modo fs (sem banco): toda sessão válida vale como admin. */
   usuarios: RepositorioUsuarios | null
+  /** Modelos que a conta enxerga, com cache de uma hora. Nunca lança: sem resposta do SDK, só os apelidos. */
+  modelosDisponiveis: () => Promise<ListaDeModelos>
 }
 
 // Um só conjunto de serviços por processo, mesmo que o Next carregue este módulo em mais de uma rota.
@@ -41,7 +46,11 @@ interface Nuvem {
   memoria: MemoriaDeSessao
   usuarios: RepositorioUsuarios
 }
-const registro = globalThis as unknown as { __planejamento?: Servidor; __planejamentoNuvem?: Nuvem }
+const registro = globalThis as unknown as {
+  __planejamento?: Servidor
+  __planejamentoNuvem?: Nuvem
+  __planejamentoModelos?: () => Promise<ListaDeModelos>
+}
 
 const ERRO_SEM_SUPABASE = "PLANEJAMENTO_DADOS=supabase exige SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no .env da raiz."
 
@@ -82,6 +91,15 @@ function montarNuvem(raiz: string): Nuvem {
   return registro.__planejamentoNuvem
 }
 
+/**
+ * Lista de modelos com cache, uma só por processo (sobrevive à recriação dos serviços, para não consultar o SDK de novo).
+ * Usa o mesmo ambiente do subprocesso do agente, para o CLI achar o PATH e a credencial.
+ */
+function modelosDisponiveisDoProcesso(raiz: string): () => Promise<ListaDeModelos> {
+  registro.__planejamentoModelos ??= criarCacheDeModelos(() => consultarModelosSdk(ambienteDoAgente(process.env), undefined, undefined, raiz))
+  return registro.__planejamentoModelos
+}
+
 /** Algum agente rodando? (lê o mapa interno: a instância pode ser de uma versão anterior da classe) */
 function turnoEmAndamento(s: Servidor): boolean {
   return ((s.turnos as unknown as { ativos?: Map<string, unknown> }).ativos?.size ?? 0) > 0
@@ -108,6 +126,8 @@ export function servidor(): Servidor {
     if (typeof atual.comentarios?.previaPlanilha !== "function") atual.comentarios = new ServicoComentarios({ armazenamento: atual.armazenamento, planejamento: atual.servico, previa: criarPreviaPython(atual.raiz) })
     // Idem para o repositório de usuários: null só no modo fs; no supabase ele sempre existe (ver montarNuvem).
     if (atual.usuarios === undefined) atual.usuarios = modoDeDados() === "fs" ? null : montarNuvem(atual.raiz).usuarios
+    // Idem para a lista de modelos, que veio depois das demais partes.
+    if (typeof atual.modelosDisponiveis !== "function") atual.modelosDisponiveis = modelosDisponiveisDoProcesso(atual.raiz)
     return atual
   }
   // `next dev` roda em src/apps/web → a raiz do projeto de planejamento fica três níveis acima.
@@ -147,6 +167,6 @@ export function servidor(): Servidor {
       firecrawlNoMcp: modoExecutor === "sdk",
     },
   })
-  registro.__planejamento = { raiz, catalogo, armazenamento, barramento, servico, turnos, comentarios, usuarios: nuvem ? nuvem.usuarios : null }
+  registro.__planejamento = { raiz, catalogo, armazenamento, barramento, servico, turnos, comentarios, usuarios: nuvem ? nuvem.usuarios : null, modelosDisponiveis: modelosDisponiveisDoProcesso(raiz) }
   return registro.__planejamento
 }

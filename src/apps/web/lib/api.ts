@@ -1,6 +1,8 @@
 import type { AjusteBiblioteca, ItemBiblioteca } from "@workspace/core/biblioteca"
 import type { Comentario, MapaPrevia, Regiao } from "@workspace/core/comentarios"
 import type { MediaEtapa, MetricasProjeto } from "@workspace/core/metricas/resumo"
+import type { EscolhaModelo, ListaDeModelos, Sugestao } from "@workspace/core/modelos"
+import type { LinhaConfigModelo } from "@workspace/core/nuvem/tipos"
 import type { PessoaRegistrada } from "@workspace/core/nuvem/usuarios"
 import type { Papel } from "@workspace/core/papeis"
 import type { EtapaId, ResultadoValidacao, ResumoProspect, RespostaTeste } from "@workspace/core/tipos"
@@ -52,6 +54,18 @@ const base = (slug: string) => `/api/prospects/${encodeURIComponent(slug)}`
 export type PessoaComProjetos = PessoaRegistrada & { projetos: number }
 export type ProjetoComMetricas = ResumoProspect & { metricas: MetricasProjeto }
 export type MediasPorEtapa = Partial<Record<EtapaId, MediaEtapa>>
+export interface EtapaConfiguravel {
+  id: EtapaId
+  rotulo: string
+  alvos: string[]
+}
+/** Resposta de GET /api/admin/modelos: etapas e alvos, o que está gravado, as sugestões da agência e os modelos disponíveis. */
+export interface ConfigModelos {
+  etapas: EtapaConfiguravel[]
+  config: LinhaConfigModelo[]
+  sugestoes: Sugestao[]
+  lista: ListaDeModelos
+}
 /** Resposta do detalhe de um projeto; `medias` só vem quando pedidas (`medias: true`), senão é null. */
 export interface DetalheProjeto {
   projeto: ResumoProspect
@@ -108,6 +122,11 @@ export const api = {
   /** Só admin: quem já entrou no app, com o papel e quantos projetos ativos cada um tem. */
   listarPessoas: () => chamar<{ pessoas: PessoaComProjetos[]; admins: number }>("/api/admin/pessoas", { cache: "no-store" }),
   alterarPapel: (email: string, papel: Papel) => chamar<{ ok: true }>("/api/admin/pessoas/papel", comJson("POST", { email, papel })),
+  /** Só admin: modelo e esforço de cada alvo das etapas, com as sugestões e os modelos que a conta enxerga. */
+  configModelos: () => chamar<ConfigModelos>("/api/admin/modelos", { cache: "no-store" }),
+  /** Só admin: grava o modelo e o esforço de um alvo da etapa; nulo é "padrão", e os dois nulos apagam a linha. */
+  salvarModelo: (etapa: EtapaId, alvo: string, escolha: EscolhaModelo) =>
+    chamar<{ ok: true }>(`/api/admin/modelos/${encodeURIComponent(etapa)}/${encodeURIComponent(alvo)}`, comJson("PUT", escolha)),
   /** Só admin: custo e tempo de cada projeto ativo e a média por etapa concluída. */
   metricasGerais: () => chamar<{ projetos: ProjetoComMetricas[]; medias: MediasPorEtapa }>("/api/admin/projetos", { cache: "no-store" }),
   /** Só admin: o resumo e as métricas de um projeto. As médias por etapa (mais caras) só vêm com `{ medias: true }`. */
