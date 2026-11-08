@@ -50,6 +50,12 @@
     --color-aviso: var(--aviso);
     --color-aviso-fundo: var(--aviso-fundo);
     --color-perigo-fundo: var(--perigo-fundo);
+    --color-selo-haiku: var(--selo-haiku);
+    --color-selo-haiku-fundo: var(--selo-haiku-fundo);
+    --color-selo-sonnet: var(--selo-sonnet);
+    --color-selo-sonnet-fundo: var(--selo-sonnet-fundo);
+    --color-selo-opus: var(--selo-opus);
+    --color-selo-opus-fundo: var(--selo-opus-fundo);
     --color-volume: var(--volume);
     --color-link-acao: var(--link-acao);
     --color-papel: var(--papel);
@@ -106,6 +112,12 @@
     --aviso: #b45309;
     --aviso-fundo: rgb(245 158 11 / 0.12);
     --perigo-fundo: rgb(225 29 72 / 0.08);
+    --selo-haiku: #047857;
+    --selo-haiku-fundo: rgb(16 185 129 / 0.14);
+    --selo-sonnet: #1d4ed8;
+    --selo-sonnet-fundo: rgb(59 130 246 / 0.14);
+    --selo-opus: #6d28d9;
+    --selo-opus-fundo: rgb(139 92 246 / 0.14);
     --volume: #2563eb;
     --link-acao: #c2410c;
     --papel: #ffffff;
@@ -155,6 +167,12 @@
     --aviso: #fbbf24;
     --aviso-fundo: rgb(251 191 36 / 0.1);
     --perigo-fundo: rgb(244 63 94 / 0.1);
+    --selo-haiku: #34d399;
+    --selo-haiku-fundo: rgb(16 185 129 / 0.16);
+    --selo-sonnet: #7db4f5;
+    --selo-sonnet-fundo: rgb(59 130 246 / 0.18);
+    --selo-opus: #b79af8;
+    --selo-opus-fundo: rgb(139 92 246 / 0.2);
     --volume: #3987e5;
     --link-acao: #f0894a;
     --vidro-1: rgb(255 255 255 / 0.035);
