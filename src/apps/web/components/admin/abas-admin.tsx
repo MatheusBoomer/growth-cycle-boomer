@@ -7,6 +7,7 @@ import { cn } from "@workspace/ui/lib/utils"
 const ABAS = [
   { href: "/admin/pessoas", rotulo: "Pessoas" },
   { href: "/admin/projetos", rotulo: "Projetos" },
+  { href: "/admin/modelos", rotulo: "Modelos" },
 ]
 
 /** Abas da administração. São links (cada aba é uma rota). */
