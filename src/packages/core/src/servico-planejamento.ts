@@ -162,13 +162,17 @@ export class ServicoPlanejamento {
   /**
    * Guarda o custo e os tokens de um turno (no disco local não faz nada). O custo do turno é a diferença para o
    * acumulado do turno anterior da mesma sessão; se a consulta ao anterior falhar, o turno vale o acumulado e a
-   * linha é gravada do mesmo jeito.
+   * linha é gravada do mesmo jeito. Numa conversa retomada que começou antes do custo por turno (as linhas antigas
+   * não têm sessão), o primeiro turno novo parte do acumulado da linha antiga mais recente da etapa, que a estimativa
+   * de `custoPorEtapa` já conta.
    */
-  async registrarUso(r: EntradaUsoTurno): Promise<void> {
+  async registrarUso(entrada: EntradaUsoTurno): Promise<void> {
+    const { retomada, ...r } = entrada
     let anterior: Acumulado | null = null
     if (r.sessao) {
       try {
         anterior = await this.arm.ultimoUsoDaSessao(r.slug, r.sessao)
+        if (!anterior && retomada) anterior = await this.arm.ultimoUsoAntigo(r.slug, r.etapa)
       } catch (e) {
         console.error(`Não consegui ler o turno anterior da sessão de "${r.slug}":`, e)
       }
@@ -218,11 +222,12 @@ export class ServicoPlanejamento {
   async metricasGerais(
     limites: Limites,
   ): Promise<{ projetos: Array<ResumoProspect & { metricas: MetricasProjeto }>; medias: Partial<Record<EtapaId, MediaEtapa>> }> {
-    const [slugs, donos, usos, presencas] = await Promise.all([
-      this.arm.listarSlugs(),
+    const slugs = await this.arm.listarSlugs()
+    const ativos = new Set(slugs)
+    const [donos, usos, presencas] = await Promise.all([
       this.arm.listarDonos(),
-      this.arm.listarUsos(),
-      this.arm.listarPresencas(),
+      this.arm.listarUsos(undefined, ativos),
+      this.arm.listarPresencas(undefined, ativos),
     ])
     const usosPorSlug = agruparPorSlug(usos)
     const presencasPorSlug = agruparPorSlug(presencas)

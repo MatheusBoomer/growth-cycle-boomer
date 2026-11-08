@@ -12,7 +12,8 @@ import {
   ErroTurnoAtivo,
   TransicaoInvalida,
 } from "../src/erros"
-import type { EntradaUsoTurno } from "../src/nuvem/tipos"
+import { custoPorEtapa } from "../src/metricas/custo"
+import type { EntradaUsoTurno, RegistroUsoTurno } from "../src/nuvem/tipos"
 import { NuvemArmazenamento } from "../src/nuvem/armazenamento-nuvem"
 import { MemoriaArmazem, MemoriaRepositorio } from "../src/nuvem/memoria"
 import { Mesa } from "../src/nuvem/mesa"
@@ -1134,6 +1135,7 @@ describe("custo por turno e métricas (dados na nuvem)", () => {
       etapa: "01",
       autor: ANA,
       sessao: "s1",
+      retomada: false,
       custoUsd: 0.3,
       modelosAcumulado: { opus: 0.3 },
       esforco: null,
@@ -1164,6 +1166,64 @@ describe("custo por turno e métricas (dados na nuvem)", () => {
     await nuvem.registrarUso(entrada("cliente", { sessao: null, custoUsd: 0.7, modelosAcumulado: null }))
     expect(espiao).not.toHaveBeenCalled()
     expect(repositorio.usos[0]).toMatchObject({ sessao: null, custoUsd: 0.7, custoTurnoUsd: 0.7, modelos: null })
+  })
+
+  describe("sessão retomada depois do deploy do custo por turno", () => {
+    const antiga = (custoUsd: number, fim: string, parcial: Partial<RegistroUsoTurno> = {}): RegistroUsoTurno => ({
+      slug: "cliente",
+      etapa: "03",
+      autor: ANA,
+      sessao: null,
+      custoUsd,
+      custoTurnoUsd: null,
+      modelos: null,
+      modelosAcumulado: null,
+      esforco: null,
+      tokensEntrada: null,
+      tokensSaida: null,
+      inicio: fim,
+      fim,
+      status: "ok",
+      ...parcial,
+    })
+
+    it("o primeiro turno parte do acumulado da linha antiga da etapa e não conta o custo duas vezes", async () => {
+      await nuvem.criarProspect("Cliente", null)
+      await repositorio.registrarUso(antiga(0.2, "2026-10-01T10:00:00.000Z"))
+      await repositorio.registrarUso(antiga(0.6, "2026-10-01T11:00:00.000Z"))
+      await nuvem.registrarUso(
+        entrada("cliente", { etapa: "03", sessao: "s-velha", retomada: true, custoUsd: 0.9, modelosAcumulado: { opus: 0.9 } }),
+      )
+      const novo = repositorio.usos.at(-1)!
+      expect(novo).toMatchObject({ sessao: "s-velha", custoUsd: 0.9, custoTurnoUsd: 0.3, modelos: { opus: 0.9 } })
+      expect(novo).not.toHaveProperty("retomada")
+      const etapa = custoPorEtapa(await repositorio.listarUsos("cliente")).get("03")
+      expect(etapa?.usd).toBeCloseTo(0.9, 4)
+      expect(etapa?.estimado).toBe(true)
+    })
+
+    it("sem retomada, o primeiro turno da sessão vale o acumulado e as linhas antigas nem são consultadas", async () => {
+      await nuvem.criarProspect("Cliente", null)
+      await repositorio.registrarUso(antiga(0.6, "2026-10-01T11:00:00.000Z"))
+      const espiao = vi.spyOn(repositorio, "ultimoUsoAntigo")
+      await nuvem.registrarUso(entrada("cliente", { etapa: "03", sessao: "s-nova", custoUsd: 0.9 }))
+      expect(espiao).not.toHaveBeenCalled()
+      expect(repositorio.usos.at(-1)).toMatchObject({ custoTurnoUsd: 0.9 })
+    })
+
+    it("com linha da própria sessão, as linhas antigas não entram na conta", async () => {
+      await nuvem.criarProspect("Cliente", null)
+      await repositorio.registrarUso(antiga(0.6, "2026-10-01T11:00:00.000Z"))
+      await nuvem.registrarUso(entrada("cliente", { etapa: "03", sessao: "s-velha", retomada: true, custoUsd: 0.9 }))
+      await nuvem.registrarUso(entrada("cliente", { etapa: "03", sessao: "s-velha", retomada: true, custoUsd: 1.1, fim: "2026-10-27T13:00:00.000Z" }))
+      expect(repositorio.usos.at(-1)).toMatchObject({ custoUsd: 1.1, custoTurnoUsd: 0.2 })
+    })
+
+    it("retomada sem linha antiga na etapa vale o acumulado", async () => {
+      await nuvem.criarProspect("Cliente", null)
+      await nuvem.registrarUso(entrada("cliente", { etapa: "03", sessao: "s-velha", retomada: true, custoUsd: 0.9 }))
+      expect(repositorio.usos.at(-1)).toMatchObject({ custoTurnoUsd: 0.9 })
+    })
   })
 
   it("custo nulo continua nulo no custo do turno", async () => {
@@ -1256,6 +1316,7 @@ describe("custo por turno e métricas (dados na nuvem)", () => {
 
       const espiaUsos = vi.spyOn(repositorio, "listarUsos")
       const espiaPresencas = vi.spyOn(repositorio, "listarPresencas")
+      const espiaSlugs = vi.spyOn(repositorio, "listarSlugs")
       const geral = await nuvem.metricasGerais(LIMITES)
 
       expect(geral.projetos.map((p) => [p.slug, p.teste]).sort()).toEqual([
@@ -1272,6 +1333,11 @@ describe("custo por turno e métricas (dados na nuvem)", () => {
       expect(espiaUsos.mock.calls[0]?.[0]).toBeUndefined()
       expect(espiaPresencas.mock.calls[0]?.[0]).toBeUndefined()
       expect(espiaPresencas).toHaveBeenCalledTimes(1)
+      // Os slugs ativos são lidos uma vez e repassados às duas leituras.
+      expect(espiaSlugs).toHaveBeenCalledTimes(1)
+      const ativos = [...(espiaUsos.mock.calls[0]?.[1] ?? [])].sort()
+      expect(ativos).toEqual(["cliente-teste", "real"])
+      expect([...(espiaPresencas.mock.calls[0]?.[1] ?? [])].sort()).toEqual(ativos)
     })
 
     it("etapa que o prospect não concluiu não entra na média", async () => {

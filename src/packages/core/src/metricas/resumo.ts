@@ -152,10 +152,15 @@ export function mediasPorEtapa(
   return medias
 }
 
-/** Compara um valor com a média: `null` sem média útil, `dentro da média` entre 0,8 e 1,25, senão `2,4× a média`. */
+/**
+ * Compara um valor com a média: `null` sem média útil, `dentro da média` entre 0,8 e 1,25, senão `2,4× a média`.
+ * Perto da borda da faixa (0,8, 1,2 ou 1,3 com uma casa), usa duas casas para o número não contradizer a faixa.
+ */
 export function compararComMedia(valor: number, media: number | null | undefined): string | null {
   if (!media) return null
   const razao = valor / media
   if (razao >= RAZAO_MINIMA && razao <= RAZAO_MAXIMA) return "dentro da média"
-  return `${razao.toFixed(1).replace(".", ",")}× a média`
+  const umaCasa = razao.toFixed(1)
+  const texto = ["0.8", "1.2", "1.3"].includes(umaCasa) ? razao.toFixed(2) : umaCasa
+  return `${texto.replace(".", ",")}× a média`
 }

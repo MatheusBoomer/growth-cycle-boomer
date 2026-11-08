@@ -349,6 +349,31 @@ describe("SupabaseRepositorio (cliente falso)", () => {
       expect((erro as Error).message).not.toContain("supabase.co")
     })
 
+    it("ultimoUsoAntigo: filtra etapa e linhas antigas, pega a mais recente e não traz modelos", async () => {
+      const fake = criarFake(() => ok({ custo_usd: "0.6000" }))
+      const repo = new SupabaseRepositorio(fake.cliente, () => EM)
+      expect(await repo.ultimoUsoAntigo("p", "03")).toEqual({ custoUsd: 0.6, modelos: null })
+      const c = fake.consultas[0]!
+      expect(c.tabela).toBe("uso_turnos")
+      expect(c.ops.filter(([m]) => m === "eq")).toEqual([
+        ["eq", "slug", "p"],
+        ["eq", "etapa", "03"],
+      ])
+      expect(c.ops.filter(([m]) => m === "is")).toEqual([
+        ["is", "sessao", null],
+        ["is", "custo_turno_usd", null],
+      ])
+      expect(c.ops.filter(([m]) => m === "order")[0]).toEqual(["order", "fim", { ascending: false }])
+      expect(op(c, "limit")).toEqual(["limit", 1])
+    })
+
+    it("ultimoUsoAntigo: sem linha é null e falha vira Error sem a URL", async () => {
+      expect(await new SupabaseRepositorio(criarFake(() => ok(null)).cliente).ultimoUsoAntigo("p", "03")).toBeNull()
+      const falho = criarFake(() => ({ data: null, error: { message: "caiu em https://abc.supabase.co/rest" } }))
+      const erro = await new SupabaseRepositorio(falho.cliente).ultimoUsoAntigo("p", "03").catch((e: unknown) => e)
+      expect((erro as Error).message).not.toContain("supabase.co")
+    })
+
     const linhaUso = (slug: string) => ({
       slug,
       etapa: "03",
@@ -395,6 +420,19 @@ describe("SupabaseRepositorio (cliente falso)", () => {
       expect(usos.map((u) => u.slug)).toEqual(["ativo"])
       expect(fake.consultas.map((c) => c.tabela)).toEqual(["prospects", "uso_turnos"])
       expect(op(fake.consultas[0]!, "is")).toEqual(["is", "excluido_em", null])
+    })
+
+    it("listarUsos e listarPresencas sem slug com ativos informados não consultam prospects", async () => {
+      const usos = criarFake(() => ok([linhaUso("ativo"), linhaUso("excluido")]))
+      const lidos = await new SupabaseRepositorio(usos.cliente).listarUsos(undefined, new Set(["ativo"]))
+      expect(lidos.map((u) => u.slug)).toEqual(["ativo"])
+      expect(usos.consultas.map((c) => c.tabela)).toEqual(["uso_turnos"])
+
+      const linha = (slug: string) => ({ slug, email: "a@x.com", etapa: "03", em: EM, visivel: true, segundos_sem_interacao: 0 })
+      const presencas = criarFake(() => ok([linha("ativo"), linha("excluido")]))
+      const lista = await new SupabaseRepositorio(presencas.cliente).listarPresencas(undefined, new Set(["ativo"]))
+      expect(lista.map((p) => p.slug)).toEqual(["ativo"])
+      expect(presencas.consultas.map((c) => c.tabela)).toEqual(["presenca"])
     })
 
     it("registrarPresenca: grava nas colunas de presenca, sem `em` (o banco preenche)", async () => {

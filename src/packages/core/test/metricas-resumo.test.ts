@@ -190,6 +190,16 @@ describe("compararComMedia", () => {
   it("abaixo da faixa também mostra a razão", () => {
     expect(compararComMedia(0.5, 1)).toBe("0,5× a média")
   })
+  it("perto da borda usa duas casas para não contradizer a faixa", () => {
+    expect(compararComMedia(0.79, 1)).toBe("0,79× a média")
+    expect(compararComMedia(1.26, 1)).toBe("1,26× a média")
+    expect(compararComMedia(1.34, 1)).toBe("1,34× a média")
+    expect(compararComMedia(0.9, 1)).toBe("dentro da média")
+  })
+  it("fora da borda mantém uma casa", () => {
+    expect(compararComMedia(1.5, 1)).toBe("1,5× a média")
+    expect(compararComMedia(0.7, 1)).toBe("0,7× a média")
+  })
   it("sem média útil devolve nulo", () => {
     expect(compararComMedia(1, 0)).toBeNull()
     expect(compararComMedia(1, null)).toBeNull()

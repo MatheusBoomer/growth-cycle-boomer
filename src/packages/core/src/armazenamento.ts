@@ -309,13 +309,17 @@ export class FsArmazenamento {
     return null
   }
 
-  async listarUsos(_slug?: string): Promise<LinhaUso[]> {
+  async ultimoUsoAntigo(_slug: string, _etapa: EtapaId): Promise<Acumulado | null> {
+    return null
+  }
+
+  async listarUsos(_slug?: string, _ativos?: ReadonlySet<string>): Promise<LinhaUso[]> {
     return []
   }
 
   async registrarPresenca(_p: Omit<LinhaPresenca, "em">): Promise<void> {}
 
-  async listarPresencas(_slug?: string): Promise<LinhaPresenca[]> {
+  async listarPresencas(_slug?: string, _ativos?: ReadonlySet<string>): Promise<LinhaPresenca[]> {
     return []
   }
 

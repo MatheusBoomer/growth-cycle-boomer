@@ -342,8 +342,25 @@ export class SupabaseRepositorio implements Repositorio {
     }
   }
 
-  async listarUsos(slug?: string): Promise<LinhaUso[]> {
-    const ativos = slug ? null : new Set(await this.listarSlugs())
+  async ultimoUsoAntigo(slug: string, etapa: EtapaId): Promise<Acumulado | null> {
+    const { data, error } = await this.cliente
+      .from("uso_turnos")
+      .select("custo_usd")
+      .eq("slug", slug)
+      .eq("etapa", etapa)
+      .is("sessao", null)
+      .is("custo_turno_usd", null)
+      .order("fim", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (error) throw falha(error)
+    if (!data) return null
+    return { custoUsd: numeroOuNulo(data.custo_usd), modelos: null }
+  }
+
+  async listarUsos(slug?: string, ativosLidos?: ReadonlySet<string>): Promise<LinhaUso[]> {
+    const ativos = slug ? null : (ativosLidos ?? new Set(await this.listarSlugs()))
     const linhas = await paginar<LinhaUsoBanco>((de, ate) => {
       let consulta = this.cliente
         .from("uso_turnos")
@@ -377,8 +394,8 @@ export class SupabaseRepositorio implements Repositorio {
     if (error) throw falha(error)
   }
 
-  async listarPresencas(slug?: string): Promise<LinhaPresenca[]> {
-    const ativos = slug ? null : new Set(await this.listarSlugs())
+  async listarPresencas(slug?: string, ativosLidos?: ReadonlySet<string>): Promise<LinhaPresenca[]> {
+    const ativos = slug ? null : (ativosLidos ?? new Set(await this.listarSlugs()))
     const linhas = await paginar<LinhaPresencaBanco>((de, ate) => {
       let consulta = this.cliente
         .from("presenca")

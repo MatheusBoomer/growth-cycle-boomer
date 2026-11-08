@@ -215,16 +215,20 @@ export class NuvemArmazenamento extends FsArmazenamento {
     return this.repositorio.ultimoUsoDaSessao(slug, sessao)
   }
 
-  override listarUsos(slug?: string): Promise<LinhaUso[]> {
-    return this.repositorio.listarUsos(slug)
+  override ultimoUsoAntigo(slug: string, etapa: EtapaId): Promise<Acumulado | null> {
+    return this.repositorio.ultimoUsoAntigo(slug, etapa)
+  }
+
+  override listarUsos(slug?: string, ativos?: ReadonlySet<string>): Promise<LinhaUso[]> {
+    return this.repositorio.listarUsos(slug, ativos)
   }
 
   override registrarPresenca(p: Omit<LinhaPresenca, "em">): Promise<void> {
     return this.repositorio.registrarPresenca(p)
   }
 
-  override listarPresencas(slug?: string): Promise<LinhaPresenca[]> {
-    return this.repositorio.listarPresencas(slug)
+  override listarPresencas(slug?: string, ativos?: ReadonlySet<string>): Promise<LinhaPresenca[]> {
+    return this.repositorio.listarPresencas(slug, ativos)
   }
 
   private cancelarAgendamento(slug: string): void {

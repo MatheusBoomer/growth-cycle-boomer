@@ -131,9 +131,18 @@ export class MemoriaRepositorio implements Repositorio {
     return { custoUsd: ultimo.custoUsd, modelos: ultimo.modelosAcumulado ? { ...ultimo.modelosAcumulado } : null }
   }
 
-  async listarUsos(slug?: string): Promise<LinhaUso[]> {
+  async ultimoUsoAntigo(slug: string, etapa: EtapaId): Promise<Acumulado | null> {
+    let ultimo: RegistroUsoTurno | null = null
+    for (const u of this.usos) {
+      if (u.slug !== slug || u.etapa !== etapa || u.sessao !== null || u.custoTurnoUsd !== null) continue
+      if (!ultimo || u.fim >= ultimo.fim) ultimo = u
+    }
+    return ultimo ? { custoUsd: ultimo.custoUsd, modelos: null } : null
+  }
+
+  async listarUsos(slug?: string, ativos?: ReadonlySet<string>): Promise<LinhaUso[]> {
     return this.usos
-      .filter((u) => (slug ? u.slug === slug : this.estaAtivo(u.slug)))
+      .filter((u) => (slug ? u.slug === slug : ativos ? ativos.has(u.slug) : this.estaAtivo(u.slug)))
       .map((u) => ({
         slug: u.slug,
         etapa: u.etapa,
@@ -151,9 +160,9 @@ export class MemoriaRepositorio implements Repositorio {
     this.presencas.push({ ...p, em: this.agora() })
   }
 
-  async listarPresencas(slug?: string): Promise<LinhaPresenca[]> {
+  async listarPresencas(slug?: string, ativos?: ReadonlySet<string>): Promise<LinhaPresenca[]> {
     return this.presencas
-      .filter((p) => (slug ? p.slug === slug : this.estaAtivo(p.slug)))
+      .filter((p) => (slug ? p.slug === slug : ativos ? ativos.has(p.slug) : this.estaAtivo(p.slug)))
       .map((p) => ({ ...p }))
       .sort((a, b) => a.em.localeCompare(b.em))
   }

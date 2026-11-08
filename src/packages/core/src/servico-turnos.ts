@@ -442,6 +442,8 @@ export class ServicoTurnos {
       allowedTools: FERRAMENTAS_PERMITIDAS,
     }
 
+    // Conversa que já existia antes deste turno (e que o SDK continua): o custo dela já tem linhas anteriores.
+    const sessaoAnterior = sessionId
     const inicio = this.agora()
     await this.registrar(slug, etapa, { tipo: "turno_inicio", em: inicio })
     if (retomada) await this.registrar(slug, etapa, { tipo: "aviso", nivel: "info", texto: AVISO_RETOMADA, em: this.agora() })
@@ -480,11 +482,13 @@ export class ServicoTurnos {
           const status = sinal.aborted ? "interrompido" : ev.ok ? "ok" : "erro"
           const fim = this.agora()
           await this.registrar(slug, etapa, { tipo: "turno_fim", status, detalhe: ev.ok ? null : ev.erro, em: fim })
+          const sessao = ev.sessionId ?? sessionId ?? null
           await this.registrarUso({
             slug,
             etapa,
             autor,
-            sessao: ev.sessionId ?? sessionId ?? null,
+            sessao,
+            retomada: sessaoAnterior != null && sessaoAnterior === sessao,
             custoUsd: ev.uso?.custoUsd ?? null,
             modelosAcumulado: ev.uso?.modelos ?? null,
             esforco: null,

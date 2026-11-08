@@ -37,7 +37,13 @@ export interface RegistroUsoTurno {
 }
 
 /** O que o `ServicoTurnos` informa; o custo do turno e por modelo o `ServicoPlanejamento` calcula antes de gravar. */
-export type EntradaUsoTurno = Omit<RegistroUsoTurno, "custoTurnoUsd" | "modelos">
+export type EntradaUsoTurno = Omit<RegistroUsoTurno, "custoTurnoUsd" | "modelos"> & {
+  /**
+   * Verdadeiro quando o turno rodou numa sessão que já existia (a mesma que o SDK devolveu), isto é, a conversa
+   * continuou. Sem linha anterior da sessão, serve para abater o custo das linhas antigas da etapa.
+   */
+  retomada: boolean
+}
 
 /** Dados estruturados de cada prospect (estado, conversa, comentários, uso). */
 export interface Repositorio {
@@ -75,12 +81,20 @@ export interface Repositorio {
   registrarUso(r: RegistroUsoTurno): Promise<void>
   /** Acumulado do turno mais recente (por `fim`) dessa sessão no prospect; null se não há. */
   ultimoUsoDaSessao(slug: string, sessao: string): Promise<Acumulado | null>
-  /** Todos os turnos, paginado. Sem `slug`, só os de prospects ativos. */
-  listarUsos(slug?: string): Promise<LinhaUso[]>
+  /**
+   * Acumulado da linha antiga mais recente (por `fim`) da etapa no prospect: sem sessão e sem custo do turno, de
+   * antes do custo por turno. `modelos` é sempre null; null se não há linha antiga.
+   */
+  ultimoUsoAntigo(slug: string, etapa: EtapaId): Promise<Acumulado | null>
+  /**
+   * Todos os turnos, paginado. Sem `slug`, só os de prospects ativos; `ativos` dá esses slugs a quem já os leu
+   * (sem ele o repositório os consulta).
+   */
+  listarUsos(slug?: string, ativos?: ReadonlySet<string>): Promise<LinhaUso[]>
   /** `em` vem do banco (ou do relógio do repositório). */
   registrarPresenca(p: Omit<LinhaPresenca, "em">): Promise<void>
-  /** Ordenado por `em`, paginado. Sem `slug`, só os de prospects ativos. */
-  listarPresencas(slug?: string): Promise<LinhaPresenca[]>
+  /** Ordenado por `em`, paginado. Sem `slug`, só os de prospects ativos (`ativos` como em `listarUsos`). */
+  listarPresencas(slug?: string, ativos?: ReadonlySet<string>): Promise<LinhaPresenca[]>
   marcarSincronizacao(slug: string, pendente: boolean): Promise<void>
 }
 

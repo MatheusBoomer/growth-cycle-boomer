@@ -48,6 +48,7 @@ async function registrarTurno(slug: string) {
     sessao: "s1",
     custoUsd: 2.5,
     modelosAcumulado: { "claude-opus": 2.5 },
+    retomada: false,
     esforco: null,
     tokensEntrada: null,
     tokensSaida: null,

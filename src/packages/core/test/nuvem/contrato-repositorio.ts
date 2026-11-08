@@ -270,6 +270,39 @@ export function contratoRepositorio(
         expect(await repo.ultimoUsoDaSessao(slug, "inexistente")).toBeNull()
       })
 
+      it("ultimoUsoAntigo devolve o acumulado da linha antiga mais recente da etapa, sem modelos", async () => {
+        const repo = await criar()
+        const slug = novoSlug()
+        await repo.criarProspect(slug)
+        const antiga = (parcial: Partial<RegistroUsoTurno>) =>
+          turno(slug, { sessao: null, custoTurnoUsd: null, modelos: null, modelosAcumulado: null, ...parcial })
+        expect(await repo.ultimoUsoAntigo(slug, "03")).toBeNull()
+        // Gravado fora de ordem: vale o de maior `fim`.
+        await repo.registrarUso(antiga({ custoUsd: 0.6, fim: T2 }))
+        await repo.registrarUso(antiga({ custoUsd: 0.2, fim: T1 }))
+        // Linhas novas (com sessão, ou sem sessão mas com custo do turno) e de outra etapa ou prospect não contam.
+        await repo.registrarUso(turno(slug, { custoUsd: 9, custoTurnoUsd: 9, fim: T2 }))
+        await repo.registrarUso(antiga({ custoUsd: 8, custoTurnoUsd: 8, fim: T2 }))
+        await repo.registrarUso(antiga({ etapa: "04", custoUsd: 7, fim: T2 }))
+        expect(await repo.ultimoUsoAntigo(slug, "03")).toEqual({ custoUsd: 0.6, modelos: null })
+        expect(await repo.ultimoUsoAntigo(slug, "04")).toEqual({ custoUsd: 7, modelos: null })
+        expect(await repo.ultimoUsoAntigo(slug, "05")).toBeNull()
+      })
+
+      it("listarUsos sem slug usa os ativos informados, sem consultá-los de novo", async () => {
+        const repo = await criar()
+        const a = novoSlug()
+        const b = novoSlug()
+        await repo.criarProspect(a)
+        await repo.criarProspect(b)
+        await repo.registrarUso(turno(a, {}))
+        await repo.registrarUso(turno(b, {}))
+        await repo.registrarPresenca({ slug: a, email: "ana@x.com", etapa: "03", visivel: true, segundosSemInteracao: 1 })
+        await repo.registrarPresenca({ slug: b, email: "ana@x.com", etapa: "03", visivel: true, segundosSemInteracao: 1 })
+        expect((await repo.listarUsos(undefined, new Set([a]))).map((u) => u.slug)).toEqual([a])
+        expect((await repo.listarPresencas(undefined, new Set([b]))).map((p) => p.slug)).toEqual([b])
+      })
+
       it("listarUsos traz as colunas novas, por slug", async () => {
         const repo = await criar()
         const slug = novoSlug()

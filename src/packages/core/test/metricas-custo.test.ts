@@ -112,6 +112,19 @@ describe("custoPorEtapa", () => {
     expect(r?.turnos).toBe(2)
   })
 
+  it("turno novo sem sessão mas com custo do turno não é linha antiga", () => {
+    const usos = [
+      linha({ custoUsd: 2 }),
+      linha({ sessao: null, custoUsd: 0.5, custoTurnoUsd: 0.5 }),
+    ]
+    const r = custoPorEtapa(usos).get("03")
+    expect(r?.usd).toBeCloseTo(2.5, 4)
+    expect(r?.estimado).toBe(true)
+    const soNovo = custoPorEtapa([linha({ sessao: null, custoUsd: 0.5, custoTurnoUsd: 0.5 })]).get("03")
+    expect(soNovo?.usd).toBeCloseTo(0.5, 4)
+    expect(soNovo?.estimado).toBe(false)
+  })
+
   it("separa as etapas", () => {
     const usos = [
       linha({ etapa: "01", sessao: "a", custoTurnoUsd: 0.1 }),
@@ -132,6 +145,14 @@ describe("custoPorPessoa", () => {
     const r = custoPorPessoa(usos)
     expect(r.size).toBe(1)
     expect(r.get("ana@x")).toBeCloseTo(0.5, 4)
+  })
+
+  it("turno novo sem sessão conta para o autor", () => {
+    const usos = [
+      linha({ autor: "ana@x", sessao: null, custoUsd: 0.4, custoTurnoUsd: 0.4 }),
+      linha({ autor: "ana@x", custoUsd: 3 }),
+    ]
+    expect(custoPorPessoa(usos).get("ana@x")).toBeCloseTo(0.4, 4)
   })
 
   it("linha antiga sem sessão e autor nulo não entram", () => {

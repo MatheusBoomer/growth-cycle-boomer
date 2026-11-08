@@ -31,6 +31,14 @@ export function custoDoTurno(
   return { custoTurnoUsd, modelos }
 }
 
+/**
+ * Linha do custo por turno: tem sessão ou custo do turno. Só a que não tem nenhum dos dois é antiga, de antes do custo
+ * por turno, e vale pelo acumulado estimado. (Um turno novo sem sessão ainda traz o custo do turno.)
+ */
+function ehLinhaNova(u: LinhaUso): boolean {
+  return u.sessao != null || u.custoTurnoUsd != null
+}
+
 export function custoPorEtapa(usos: LinhaUso[]): Map<EtapaId, CustoEtapa> {
   const novos = new Map<EtapaId, CustoEtapa>()
   const maxAntigo = new Map<EtapaId, number>()
@@ -42,7 +50,7 @@ export function custoPorEtapa(usos: LinhaUso[]): Map<EtapaId, CustoEtapa> {
       novos.set(u.etapa, etapa)
     }
     etapa.turnos += 1
-    if (u.sessao) {
+    if (ehLinhaNova(u)) {
       etapa.usd += u.custoTurnoUsd ?? 0
       for (const [modelo, valor] of Object.entries(u.modelos ?? {})) {
         etapa.modelos[modelo] = (etapa.modelos[modelo] ?? 0) + valor
@@ -63,7 +71,7 @@ export function custoPorEtapa(usos: LinhaUso[]): Map<EtapaId, CustoEtapa> {
 export function custoPorPessoa(usos: LinhaUso[]): Map<string, number> {
   const porPessoa = new Map<string, number>()
   for (const u of usos) {
-    if (!u.sessao || !u.autor) continue
+    if (!ehLinhaNova(u) || !u.autor) continue
     const email = normalizarEmail(u.autor)
     porPessoa.set(email, arredondar((porPessoa.get(email) ?? 0) + (u.custoTurnoUsd ?? 0)))
   }

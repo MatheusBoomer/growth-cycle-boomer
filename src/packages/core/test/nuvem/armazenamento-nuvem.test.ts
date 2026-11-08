@@ -260,6 +260,7 @@ describe("NuvemArmazenamento", () => {
     expect(repositorio.usos).toHaveLength(1)
     expect(await arm.ultimoUsoDaSessao(SLUG, "s1")).toEqual({ custoUsd: 0.1, modelos: null })
     expect(await arm.listarUsos(SLUG)).toHaveLength(1)
+    expect(await arm.ultimoUsoAntigo(SLUG, "03")).toBeNull()
   })
 
   it("registrarPresenca e listarPresencas vão ao repositório", async () => {

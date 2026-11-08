@@ -517,6 +517,42 @@ describe("custo de cada turno", () => {
     expect(uso.inicio < uso.fim).toBe(true)
   })
 
+  it("marca como retomada só o turno que continua uma sessão que já existia", async () => {
+    const arm = new ArmazenamentoComUso(raiz, async () => {})
+    const { svc, t } = comArmazenamento(arm, roteiroComUso)
+    const espiao = vi.spyOn(svc, "registrarUso")
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    await t.enviarMensagem(slug, "01", "Continue")
+    await t.aguardarOcioso(slug)
+    expect(espiao.mock.calls.map(([e]) => [e.sessao, e.retomada])).toEqual([
+      ["s1", false],
+      ["s1", true],
+    ])
+  })
+
+  it("sessão nova no lugar da que existia não é retomada", async () => {
+    const arm = new ArmazenamentoComUso(raiz, async () => {})
+    let n = 0
+    const roteiro: Roteiro = async function* () {
+      const id = `s${++n}`
+      yield { tipo: "sessao", sessionId: id }
+      yield { tipo: "fim", ok: true, erro: null, sessionId: id, uso: { custoUsd: 0.1, tokensEntrada: 1, tokensSaida: 1, modelos: null } }
+    }
+    const { svc, t } = comArmazenamento(arm, roteiro)
+    const espiao = vi.spyOn(svc, "registrarUso")
+    const slug = await svc.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    await t.enviarMensagem(slug, "01", "Continue")
+    await t.aguardarOcioso(slug)
+    expect(espiao.mock.calls.map(([e]) => [e.sessao, e.retomada])).toEqual([
+      ["s1", false],
+      ["s2", false],
+    ])
+  })
+
   it("falha ao registrar o uso não afeta o turno", async () => {
     class Quebrado extends FsArmazenamento {
       override async registrarUso(): Promise<void> {
