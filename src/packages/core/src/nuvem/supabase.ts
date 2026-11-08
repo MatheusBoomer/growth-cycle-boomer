@@ -378,8 +378,8 @@ export class SupabaseRepositorio implements Repositorio {
         custoUsd: numeroOuNulo(l.custo_usd),
         custoTurnoUsd: numeroOuNulo(l.custo_turno_usd),
         modelos: l.modelos,
-        inicio: l.inicio,
-        fim: l.fim,
+        inicio: new Date(l.inicio).toISOString(),
+        fim: new Date(l.fim).toISOString(),
       }))
   }
 
@@ -409,7 +409,7 @@ export class SupabaseRepositorio implements Repositorio {
         slug: l.slug,
         email: l.email,
         etapa: l.etapa,
-        em: l.em,
+        em: new Date(l.em).toISOString(),
         visivel: l.visivel,
         segundosSemInteracao: l.segundos_sem_interacao,
       }))

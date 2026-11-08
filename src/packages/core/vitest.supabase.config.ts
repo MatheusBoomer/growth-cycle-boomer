@@ -16,6 +16,7 @@ export default defineConfig({
   test: {
     include: ["test/nuvem/supabase.test.ts"],
     testTimeout: 20000,
+    hookTimeout: 60000,
     env: loadEnv("test", raizDoProjeto, "SUPABASE_TESTE_"),
   },
 })
