@@ -75,21 +75,24 @@ export function DialogoTrocarDono({
             {prospect.dono ? `Hoje é de ${nomeCurto(prospect.dono)}.` : "Hoje não tem dono."} Quem recebe passa a ver este prospect.
           </DialogDescription>
         </DialogHeader>
-        <Field>
+        {/* min-w-0: sem ele o texto escolhido define a largura mínima do campo e empurra a janela para fora da tela. */}
+        <Field className="min-w-0">
           <FieldLabel>Novo dono</FieldLabel>
           <Select
             value={escolhido}
             onValueChange={(v) => setEscolhido(v)}
-            items={(pessoas ?? []).map((p) => ({ value: p.email, label: `${nomeCurto(p.email)} (${p.email})` }))}
+            items={(pessoas ?? []).map((p) => ({ value: p.email, label: nomeCurto(p.email) }))}
             disabled={pessoas === null}
           >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder={pessoas === null && !erro ? "Carregando…" : "Escolha uma pessoa"} />
+            <SelectTrigger className="w-full min-w-0">
+              <SelectValue className="min-w-0 truncate" placeholder={pessoas === null && !erro ? "Carregando…" : "Escolha uma pessoa"} />
             </SelectTrigger>
             <SelectContent alignItemWithTrigger={false}>
               {(pessoas ?? []).map((p) => (
                 <SelectItem key={p.email} value={p.email}>
-                  {nomeCurto(p.email)} ({p.email})
+                  <span className="truncate">
+                    {nomeCurto(p.email)} <span className="text-muted-foreground">{p.email}</span>
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>
