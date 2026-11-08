@@ -3,6 +3,7 @@ import type { Comentario } from "../comentarios"
 import { ErroConflitoVersao, ErroNaoEncontrado, ErroProspectExistente, ErroSincronizacao } from "../erros"
 import type { Acumulado, LinhaPresenca, LinhaUso } from "../metricas/tipos"
 import type { NivelEsforco } from "../modelos"
+import type { NotaSkill } from "../notas-skills"
 import type { Estado, EtapaId, EventoConversa } from "../tipos"
 import type {
   ArmazemArquivos,
@@ -26,6 +27,8 @@ interface RegistroProspect {
 export class MemoriaRepositorio implements Repositorio {
   private readonly prospects = new Map<string, RegistroProspect>()
   private readonly configModelos = new Map<string, LinhaConfigModelo>()
+  private readonly notasSkills: NotaSkill[] = []
+  private proximaNota = 1
   /** Registros de uso, abertos para inspeção nos testes. */
   readonly usos: RegistroUsoTurno[] = []
   /** Avisos de presença, abertos para inspeção nos testes. */
@@ -206,6 +209,40 @@ export class MemoriaRepositorio implements Repositorio {
       alteradoPor: l.alteradoPor,
       alteradoEm: this.agora(),
     })
+  }
+
+  async listarNotasSkills(item?: string): Promise<NotaSkill[]> {
+    return this.notasSkills
+      .filter((n) => item === undefined || n.item === item)
+      .map((n) => ({ ...n }))
+      .sort((a, b) => b.criadaEm.localeCompare(a.criadaEm) || b.id - a.id)
+  }
+
+  async criarNotaSkill(n: { item: string; texto: string; autor: string }): Promise<NotaSkill> {
+    const nota: NotaSkill = {
+      id: this.proximaNota++,
+      item: n.item,
+      texto: n.texto,
+      autor: n.autor,
+      criadaEm: this.agora(),
+      resolvidaEm: null,
+      resolvidaPor: null,
+    }
+    this.notasSkills.push(nota)
+    return { ...nota }
+  }
+
+  async marcarNotaSkill(id: number, resolvida: boolean, autor: string): Promise<NotaSkill | null> {
+    const nota = this.notasSkills.find((n) => n.id === id)
+    if (!nota) return null
+    if (!resolvida) {
+      nota.resolvidaEm = null
+      nota.resolvidaPor = null
+    } else if (nota.resolvidaEm === null) {
+      nota.resolvidaEm = this.agora()
+      nota.resolvidaPor = autor
+    }
+    return { ...nota }
   }
 
   criadoPor(slug: string): string | null {

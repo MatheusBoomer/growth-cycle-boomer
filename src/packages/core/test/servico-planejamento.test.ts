@@ -1584,3 +1584,90 @@ describe("modelo e esforço por etapa", () => {
     ).rejects.toBeInstanceOf(ErroEntrada)
   })
 })
+
+describe("notas de melhoria das skills", () => {
+  let repositorio: MemoriaRepositorio
+  let nuvem: ServicoPlanejamento
+  let relogio: number
+
+  beforeEach(() => {
+    relogio = 0
+    // Um relógio que anda, para a ordem "mais novas primeiro" não depender do desempate pelo id.
+    repositorio = new MemoriaRepositorio(() => new Date(Date.UTC(2026, 10, 9, 12, 0, ++relogio)).toISOString())
+    const armazem = new MemoriaArmazem()
+    const mesa = new Mesa({ pastaClientes: path.join(raiz, "clientes"), armazem, esperar: async () => {} })
+    nuvem = new ServicoPlanejamento({
+      armazenamento: new NuvemArmazenamento({ raiz, repositorio, armazem, mesa, atrasoAgendamentoMs: 0 }),
+      catalogo: catalogoReal(),
+      barramento: new Barramento(),
+      validar: async () => proximaValidacao,
+      agora: () => "2026-09-28T10:00:00.000Z",
+    })
+  })
+
+  it("cria a nota com o texto aparado e lista as do item, a mais nova primeiro", async () => {
+    const a = await nuvem.criarNota("etapa:03", "  Explicar a Curva ABC \n", "ana@boomer.com.br")
+    const b = await nuvem.criarNota("etapa:03", "Pedir o relatório antes", "bia@gestaoboomer.com")
+    await nuvem.criarNota("regra:padrao-visual", "Outra", "ana@boomer.com.br")
+    expect(a).toMatchObject({ item: "etapa:03", texto: "Explicar a Curva ABC", autor: "ana@boomer.com.br", resolvidaEm: null })
+    expect((await nuvem.notasDoItem("etapa:03")).map((n) => n.id)).toEqual([b.id, a.id])
+    expect(await nuvem.notasDoItem("etapa:04")).toEqual([])
+  })
+
+  it("texto vazio ou só de espaços dá ErroEntrada e não grava", async () => {
+    await expect(nuvem.criarNota("etapa:03", "   ", "ana@boomer.com.br")).rejects.toBeInstanceOf(ErroEntrada)
+    await expect(nuvem.criarNota("etapa:03", "", "ana@boomer.com.br")).rejects.toBeInstanceOf(ErroEntrada)
+    expect(await repositorio.listarNotasSkills()).toEqual([])
+  })
+
+  it("aceita 2000 caracteres (contados depois de aparar) e recusa 2001", async () => {
+    const limite = "a".repeat(2000)
+    await expect(nuvem.criarNota("etapa:03", ` ${limite} `, "ana@boomer.com.br")).resolves.toMatchObject({ texto: limite })
+    await expect(nuvem.criarNota("etapa:03", "a".repeat(2001), "ana@boomer.com.br")).rejects.toBeInstanceOf(ErroEntrada)
+    expect(await repositorio.listarNotasSkills()).toHaveLength(1)
+  })
+
+  it("item fora do catálogo dá ErroNaoEncontrado e não grava", async () => {
+    for (const item of ["etapa:99", "", "../etc/passwd", "subagente:inexistente"]) {
+      await expect(nuvem.criarNota(item, "texto", "ana@boomer.com.br")).rejects.toBeInstanceOf(ErroNaoEncontrado)
+    }
+    expect(await repositorio.listarNotasSkills()).toEqual([])
+  })
+
+  it("a validação do item vem antes da do texto", async () => {
+    await expect(nuvem.criarNota("etapa:99", "   ", "ana@boomer.com.br")).rejects.toBeInstanceOf(ErroNaoEncontrado)
+  })
+
+  it("marca como resolvida, é idempotente e reabre", async () => {
+    const n = await nuvem.criarNota("etapa:03", "Ajustar", "ana@boomer.com.br")
+    const resolvida = await nuvem.marcarNota(n.id, true, "bia@gestaoboomer.com")
+    expect(resolvida).toMatchObject({ id: n.id, resolvidaPor: "bia@gestaoboomer.com" })
+    expect(resolvida.resolvidaEm).not.toBeNull()
+    const de_novo = await nuvem.marcarNota(n.id, true, "carla@boomer.com.br")
+    expect(de_novo).toEqual(resolvida)
+    const reaberta = await nuvem.marcarNota(n.id, false, "carla@boomer.com.br")
+    expect(reaberta).toMatchObject({ resolvidaEm: null, resolvidaPor: null })
+  })
+
+  it("marcar uma nota que não existe dá ErroNaoEncontrado", async () => {
+    await expect(nuvem.marcarNota(999, true, "ana@boomer.com.br")).rejects.toBeInstanceOf(ErroNaoEncontrado)
+    await expect(nuvem.marcarNota(999, false, "ana@boomer.com.br")).rejects.toBeInstanceOf(ErroNaoEncontrado)
+  })
+
+  it("a contagem de abertas por item ignora as resolvidas e some com o item zerado", async () => {
+    const a = await nuvem.criarNota("etapa:03", "A", "ana@boomer.com.br")
+    await nuvem.criarNota("etapa:03", "B", "ana@boomer.com.br")
+    const c = await nuvem.criarNota("regra:padrao-visual", "C", "ana@boomer.com.br")
+    await nuvem.marcarNota(a.id, true, "bia@gestaoboomer.com")
+    expect(await nuvem.contagemNotasAbertas()).toEqual({ "etapa:03": 1, "regra:padrao-visual": 1 })
+    await nuvem.marcarNota(c.id, true, "bia@gestaoboomer.com")
+    expect(await nuvem.contagemNotasAbertas()).toEqual({ "etapa:03": 1 })
+  })
+
+  it("em disco, a lista e a contagem são vazias e criar ou marcar só existem na nuvem", async () => {
+    expect(await servico.notasDoItem("etapa:03")).toEqual([])
+    expect(await servico.contagemNotasAbertas()).toEqual({})
+    await expect(servico.criarNota("etapa:03", "texto", "ana@boomer.com.br")).rejects.toBeInstanceOf(ErroEntrada)
+    await expect(servico.marcarNota(1, true, "ana@boomer.com.br")).rejects.toBeInstanceOf(ErroEntrada)
+  })
+})

@@ -4,6 +4,7 @@ import type { Comentario } from "../comentarios"
 import { ErroProspectExistente, ErroSincronizacao } from "../erros"
 import type { Acumulado, LinhaPresenca, LinhaUso } from "../metricas/tipos"
 import type { NivelEsforco } from "../modelos"
+import type { NotaSkill } from "../notas-skills"
 import type { Estado, EtapaId, EventoConversa } from "../tipos"
 import type { Mesa } from "./mesa"
 import type { ArmazemArquivos, LinhaConfigModelo, RegistroUsoTurno, Repositorio } from "./tipos"
@@ -244,6 +245,18 @@ export class NuvemArmazenamento extends FsArmazenamento {
     alteradoPor: string
   }): Promise<void> {
     return this.repositorio.gravarConfigModelo(l)
+  }
+
+  override listarNotasSkills(item?: string): Promise<NotaSkill[]> {
+    return this.repositorio.listarNotasSkills(item)
+  }
+
+  override criarNotaSkill(n: { item: string; texto: string; autor: string }): Promise<NotaSkill> {
+    return this.repositorio.criarNotaSkill(n)
+  }
+
+  override marcarNotaSkill(id: number, resolvida: boolean, autor: string): Promise<NotaSkill | null> {
+    return this.repositorio.marcarNotaSkill(id, resolvida, autor)
   }
 
   private cancelarAgendamento(slug: string): void {

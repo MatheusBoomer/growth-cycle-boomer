@@ -4,6 +4,7 @@ import type { Comentario } from "../comentarios"
 import { ErroConflitoVersao, ErroNaoEncontrado, ErroProspectExistente } from "../erros"
 import type { Acumulado, LinhaPresenca, LinhaUso } from "../metricas/tipos"
 import type { NivelEsforco } from "../modelos"
+import type { NotaSkill } from "../notas-skills"
 import { ORDEM_ETAPAS, type Estado, type EtapaId, type EventoConversa } from "../tipos"
 import type {
   ArmazemArquivos,
@@ -101,6 +102,30 @@ interface LinhaConfigModeloBanco {
   esforco: string | null
   alterado_por: string | null
   alterado_em: string | null
+}
+
+interface LinhaNotaSkillBanco {
+  id: number | string
+  item: string
+  texto: string
+  autor: string
+  criada_em: string
+  resolvida_em: string | null
+  resolvida_por: string | null
+}
+
+const COLUNAS_NOTA_SKILL = "id, item, texto, autor, criada_em, resolvida_em, resolvida_por"
+
+function notaSkillDe(l: LinhaNotaSkillBanco): NotaSkill {
+  return {
+    id: Number(l.id),
+    item: l.item,
+    texto: l.texto,
+    autor: l.autor,
+    criadaEm: new Date(l.criada_em).toISOString(),
+    resolvidaEm: l.resolvida_em ? new Date(l.resolvida_em).toISOString() : null,
+    resolvidaPor: l.resolvida_por,
+  }
 }
 
 /** O PostgREST pode devolver `numeric` como texto; nulo continua nulo. */
@@ -480,6 +505,55 @@ export class SupabaseRepositorio implements Repositorio {
       { onConflict: "etapa,alvo" },
     )
     if (error) throw falha(error)
+  }
+
+  async listarNotasSkills(item?: string): Promise<NotaSkill[]> {
+    const linhas = await paginar<LinhaNotaSkillBanco>((de, ate) => {
+      let consulta = this.cliente.from("notas_skills").select(COLUNAS_NOTA_SKILL)
+      if (item !== undefined) consulta = consulta.eq("item", item)
+      return consulta.order("criada_em", { ascending: false }).order("id", { ascending: false }).range(de, ate)
+    })
+    return linhas.map(notaSkillDe)
+  }
+
+  async criarNotaSkill(n: { item: string; texto: string; autor: string }): Promise<NotaSkill> {
+    const { data, error } = await this.cliente
+      .from("notas_skills")
+      .insert({ item: n.item, texto: n.texto, autor: n.autor })
+      .select(COLUNAS_NOTA_SKILL)
+      .single()
+    if (error) throw falha(error)
+    return notaSkillDe(data as LinhaNotaSkillBanco)
+  }
+
+  async marcarNotaSkill(id: number, resolvida: boolean, autor: string): Promise<NotaSkill | null> {
+    if (!resolvida) {
+      const { data, error } = await this.cliente
+        .from("notas_skills")
+        .update({ resolvida_em: null, resolvida_por: null })
+        .eq("id", id)
+        .select(COLUNAS_NOTA_SKILL)
+      if (error) throw falha(error)
+      const linha = (data as LinhaNotaSkillBanco[] | null)?.[0]
+      return linha ? notaSkillDe(linha) : null
+    }
+    // Só toca numa nota ainda aberta: resolver duas vezes não troca quem nem quando resolveu.
+    const { data, error } = await this.cliente
+      .from("notas_skills")
+      .update({ resolvida_em: this.agora(), resolvida_por: autor })
+      .eq("id", id)
+      .is("resolvida_em", null)
+      .select(COLUNAS_NOTA_SKILL)
+    if (error) throw falha(error)
+    const atualizada = (data as LinhaNotaSkillBanco[] | null)?.[0]
+    if (atualizada) return notaSkillDe(atualizada)
+    const { data: atual, error: erroLeitura } = await this.cliente
+      .from("notas_skills")
+      .select(COLUNAS_NOTA_SKILL)
+      .eq("id", id)
+      .maybeSingle()
+    if (erroLeitura) throw falha(erroLeitura)
+    return atual ? notaSkillDe(atual as LinhaNotaSkillBanco) : null
   }
 }
 

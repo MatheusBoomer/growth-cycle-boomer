@@ -6,7 +6,7 @@ import { SupabaseUsuarios } from "../../src/nuvem/usuarios-supabase"
 import { contratoArmazem } from "./contrato-armazem"
 import { contratoRepositorio } from "./contrato-repositorio"
 import { contratoUsuarios } from "./contrato-usuarios"
-import { ehAlvoDeContrato, ehEmailDeContrato, ehSlugDeContrato, PREFIXO_CONTRATO, suiteVivaHabilitada } from "./suite-viva"
+import { ehAlvoDeContrato, ehEmailDeContrato, ehItemDeContrato, ehSlugDeContrato, PREFIXO_CONTRATO, suiteVivaHabilitada } from "./suite-viva"
 
 const BUCKETS = ["planejamento-prospects", "planejamento-sessoes"]
 
@@ -127,6 +127,18 @@ describe.skipIf(!suiteVivaHabilitada(process.env))("Supabase (integração)", ()
       if (!ehAlvoDeContrato(String(linha.alvo))) continue
       const { error } = await c.from("config_modelos").delete().eq("etapa", linha.etapa).eq("alvo", linha.alvo)
       registrar("apagar config_modelos", error)
+    }
+
+    // Notas das skills criadas pelo contrato: só itens no formato exato de novoItemDeContrato, nunca uma nota real.
+    const { data: notas, error: erroNotas } = await c
+      .from("notas_skills")
+      .select("id, item")
+      .like("item", `${PREFIXO_CONTRATO}%`)
+    registrar("ler notas_skills", erroNotas)
+    for (const linha of notas ?? []) {
+      if (!ehItemDeContrato(String(linha.item))) continue
+      const { error } = await c.from("notas_skills").delete().eq("id", linha.id)
+      registrar("apagar notas_skills", error)
     }
 
     // Objetos sem linha no banco também vazam: a busca parte da raiz de cada bucket.
