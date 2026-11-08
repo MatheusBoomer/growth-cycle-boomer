@@ -459,6 +459,62 @@ describe("SupabaseRepositorio (cliente falso)", () => {
       expect((erro as Error).message).not.toContain("supabase.co")
     })
 
+    it("lerConfigModelos: lê config_modelos ordenada e mapeia as colunas", async () => {
+      const fake = criarFake(() =>
+        ok([{ etapa: "03", alvo: "principal", modelo: "sonnet", esforco: "low", alterado_por: "ana@x.com", alterado_em: "2026-11-09T10:00:00+00:00" }]),
+      )
+      const lista = await new SupabaseRepositorio(fake.cliente).lerConfigModelos()
+      expect(fake.consultas.map((c) => c.tabela)).toEqual(["config_modelos"])
+      expect(lista).toEqual([
+        { etapa: "03", alvo: "principal", modelo: "sonnet", esforco: "low", alteradoPor: "ana@x.com", alteradoEm: "2026-11-09T10:00:00.000Z" },
+      ])
+      const falho = criarFake(() => ({ data: null, error: { message: "caiu em https://abc.supabase.co/rest" } }))
+      const erro = await new SupabaseRepositorio(falho.cliente).lerConfigModelos().catch((e: unknown) => e)
+      expect((erro as Error).message).not.toContain("supabase.co")
+    })
+
+    it("gravarConfigModelo: upsert com onConflict etapa,alvo e alterado_em do relógio", async () => {
+      const fake = criarFake(() => ok(null))
+      await new SupabaseRepositorio(fake.cliente, () => EM).gravarConfigModelo({
+        etapa: "03",
+        alvo: "analista-dados",
+        modelo: "haiku",
+        esforco: null,
+        alteradoPor: "ana@x.com",
+      })
+      const c = fake.consultas[0]!
+      expect(c.tabela).toBe("config_modelos")
+      expect(op(c, "upsert")!.slice(1)).toEqual([
+        { etapa: "03", alvo: "analista-dados", modelo: "haiku", esforco: null, alterado_por: "ana@x.com", alterado_em: EM },
+        { onConflict: "etapa,alvo" },
+      ])
+      expect(op(c, "delete")).toBeUndefined()
+    })
+
+    it("gravarConfigModelo: os dois nulos fazem delete da linha, sem upsert", async () => {
+      const fake = criarFake(() => ok(null))
+      await new SupabaseRepositorio(fake.cliente, () => EM).gravarConfigModelo({
+        etapa: "03",
+        alvo: "principal",
+        modelo: null,
+        esforco: null,
+        alteradoPor: "ana@x.com",
+      })
+      const c = fake.consultas[0]!
+      expect(c.tabela).toBe("config_modelos")
+      expect(op(c, "delete")).toBeDefined()
+      expect(op(c, "upsert")).toBeUndefined()
+      expect(c.ops.filter(([m]) => m === "eq")).toEqual([
+        ["eq", "etapa", "03"],
+        ["eq", "alvo", "principal"],
+      ])
+      const falho = criarFake(() => ({ data: null, error: { message: "caiu em https://abc.supabase.co/rest" } }))
+      const erro = await new SupabaseRepositorio(falho.cliente)
+        .gravarConfigModelo({ etapa: "03", alvo: "principal", modelo: "opus", esforco: null, alteradoPor: "a@x.com" })
+        .catch((e: unknown) => e)
+      expect((erro as Error).message).not.toContain("supabase.co")
+    })
+
     it("listarPresencas: ordena por em, mapeia as colunas e respeita os prospects ativos", async () => {
       const linha = (slug: string) => ({
         slug,

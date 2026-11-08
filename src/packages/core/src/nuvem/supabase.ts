@@ -3,11 +3,13 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js"
 import type { Comentario } from "../comentarios"
 import { ErroConflitoVersao, ErroNaoEncontrado, ErroProspectExistente } from "../erros"
 import type { Acumulado, LinhaPresenca, LinhaUso } from "../metricas/tipos"
+import type { NivelEsforco } from "../modelos"
 import { ORDEM_ETAPAS, type Estado, type EtapaId, type EventoConversa } from "../tipos"
 import type {
   ArmazemArquivos,
   EntradaManifesto,
   EstadoVersionado,
+  LinhaConfigModelo,
   RegistroUsoTurno,
   Repositorio,
 } from "./tipos"
@@ -90,6 +92,15 @@ interface LinhaPresencaBanco {
   em: string
   visivel: boolean
   segundos_sem_interacao: number
+}
+
+interface LinhaConfigModeloBanco {
+  etapa: EtapaId
+  alvo: string
+  modelo: string | null
+  esforco: string | null
+  alterado_por: string | null
+  alterado_em: string | null
 }
 
 /** O PostgREST pode devolver `numeric` como texto; nulo continua nulo. */
@@ -424,6 +435,51 @@ export class SupabaseRepositorio implements Repositorio {
       .select("slug")
     if (error) throw falha(error)
     if (!data || data.length === 0) throw new ErroNaoEncontrado(`Prospect "${slug}" não encontrado.`)
+  }
+
+  async lerConfigModelos(): Promise<LinhaConfigModelo[]> {
+    const linhas = await paginar<LinhaConfigModeloBanco>((de, ate) =>
+      this.cliente
+        .from("config_modelos")
+        .select("etapa, alvo, modelo, esforco, alterado_por, alterado_em")
+        .order("etapa")
+        .order("alvo")
+        .range(de, ate),
+    )
+    return linhas.map((l) => ({
+      etapa: l.etapa,
+      alvo: l.alvo,
+      modelo: l.modelo,
+      esforco: l.esforco,
+      alteradoPor: l.alterado_por,
+      alteradoEm: l.alterado_em ? new Date(l.alterado_em).toISOString() : null,
+    }))
+  }
+
+  async gravarConfigModelo(l: {
+    etapa: EtapaId
+    alvo: string
+    modelo: string | null
+    esforco: NivelEsforco | null
+    alteradoPor: string
+  }): Promise<void> {
+    if (l.modelo === null && l.esforco === null) {
+      const { error } = await this.cliente.from("config_modelos").delete().eq("etapa", l.etapa).eq("alvo", l.alvo)
+      if (error) throw falha(error)
+      return
+    }
+    const { error } = await this.cliente.from("config_modelos").upsert(
+      {
+        etapa: l.etapa,
+        alvo: l.alvo,
+        modelo: l.modelo,
+        esforco: l.esforco,
+        alterado_por: l.alteradoPor,
+        alterado_em: this.agora(),
+      },
+      { onConflict: "etapa,alvo" },
+    )
+    if (error) throw falha(error)
   }
 }
 

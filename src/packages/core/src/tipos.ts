@@ -38,6 +38,8 @@ export interface EtapaCatalogo {
   rotuloStatus: string
   descricao: string
   skill: string | null
+  /** Subagentes que a etapa pode acionar (só os de SUBAGENTES_CONFIGURAVEIS). */
+  subagentes: string[]
   insumos: RefInsumo[]
 }
 

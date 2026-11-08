@@ -1,3 +1,5 @@
+import type { NivelEsforco } from "../modelos"
+
 export type EventoExecutor =
   | { tipo: "sessao"; sessionId: string }
   | { tipo: "texto_delta"; texto: string }
@@ -17,6 +19,15 @@ export interface UsoDoTurno {
   modelos: Record<string, number> | null
 }
 
+/** Definição de um subagente no formato do `agents` do SDK e do `--agents` do CLI. */
+export interface DefinicaoAgente {
+  description: string
+  prompt: string
+  tools: string[]
+  model?: string
+  effort?: NivelEsforco
+}
+
 export interface PedidoTurno {
   cwd: string
   mensagem: string
@@ -27,6 +38,12 @@ export interface PedidoTurno {
   /** JSON (string) passado em --settings (hook de escrita). */
   settings: string
   allowedTools: string[]
+  /** Modelo do agente principal (apelido ou id). Sem ele, vale o padrão do Claude Code. */
+  modelo?: string
+  /** Esforço do agente principal. Sem ele, vale o padrão do modelo. */
+  esforco?: NivelEsforco
+  /** Subagentes com a configuração do app (nome do subagente → definição). */
+  agentes?: Record<string, DefinicaoAgente>
 }
 
 /** Fronteira trocável: v1 é o CLI headless; a Fase 2 troca por Agent SDK sem mexer no resto. */

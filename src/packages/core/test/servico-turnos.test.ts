@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises"
+import { cp, mkdir, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { FsArmazenamento } from "../src/armazenamento"
@@ -8,9 +8,10 @@ import { FakeExecutor, roteiroSimples, type Roteiro } from "../src/executor/fake
 import type { PedidoTurno } from "../src/executor/tipos"
 import type { MemoriaDeSessao } from "../src/nuvem/memoria-sessao"
 import type { RegistroUsoTurno } from "../src/nuvem/tipos"
+import type { EscolhaModelo } from "../src/modelos"
 import { ServicoPlanejamento } from "../src/servico-planejamento"
 import { aspasShell, montarMcpConfig, montarSettingsHook, ServicoTurnos, type ConfigTurnos } from "../src/servico-turnos"
-import { catalogoReal, raizTemporaria } from "./ajuda"
+import { catalogoReal, RAIZ, raizTemporaria } from "./ajuda"
 
 let raiz: string
 let servico: ServicoPlanejamento
@@ -1001,5 +1002,140 @@ describe("desligamento: drenar os turnos", () => {
     expect(resultado).toEqual({ abortados: [] })
     expect(log).toContain("executor fim")
     expect((await svc.conversa(slug, "01")).at(-1)).toMatchObject({ tipo: "turno_fim", status: "ok" })
+  })
+})
+
+describe("modelo e esforço configurados para a etapa", () => {
+  const SEM: EscolhaModelo = { modelo: null, esforco: null }
+
+  class ArmazenamentoComUso extends FsArmazenamento {
+    readonly usos: RegistroUsoTurno[] = []
+    override async registrarUso(r: RegistroUsoTurno): Promise<void> {
+      this.usos.push(r)
+    }
+  }
+
+  function montar(
+    config: { principal?: EscolhaModelo; subagentes?: Record<string, EscolhaModelo> },
+    roteiro: Roteiro = roteiroSimples("ok"),
+    cfg: ConfigTurnos = { ...globalConfig() },
+  ) {
+    const arm = new ArmazenamentoComUso(raiz, async () => {})
+    const svc = new ServicoPlanejamento({
+      armazenamento: arm,
+      catalogo: catalogoReal(),
+      barramento,
+      validar: async () => ({ ok: true, problemas: [], avisos: [], resumo: null }),
+    })
+    vi.spyOn(svc, "configDaEtapa").mockResolvedValue({ principal: config.principal ?? SEM, subagentes: config.subagentes ?? {} })
+    const executor = new FakeExecutor(roteiro)
+    const t = new ServicoTurnos({ servico: svc, executor, barramento, catalogo: catalogoReal(), config: cfg })
+    return { arm, svc, t, executor }
+  }
+  const globalConfig = () => config
+
+  async function rodar(m: ReturnType<typeof montar>, etapa: "01", nome: string) {
+    const slug = await m.svc.criarProspect(nome, null)
+    await m.t.iniciar(slug, etapa)
+    await m.t.aguardarOcioso(slug)
+    return slug
+  }
+
+  it("sem configuração, o pedido não tem modelo, esforço nem agentes", async () => {
+    const m = montar({})
+    await rodar(m, "01", "Sem Config")
+    const pedido = m.executor.pedidos[0]!
+    expect("modelo" in pedido).toBe(false)
+    expect("esforco" in pedido).toBe(false)
+    expect("agentes" in pedido).toBe(false)
+  })
+
+  it("modelo vazio na configuração vale como padrão", async () => {
+    const m = montar({ principal: { modelo: "", esforco: null } })
+    await rodar(m, "01", "Modelo Vazio")
+    expect("modelo" in m.executor.pedidos[0]!).toBe(false)
+  })
+
+  it("o principal leva modelo e esforço ao pedido, e o uso grava o esforço", async () => {
+    const m = montar({ principal: { modelo: "haiku", esforco: "low" } }, async function* () {
+      yield { tipo: "sessao", sessionId: "s1" }
+      yield { tipo: "fim", ok: true, erro: null, sessionId: "s1", uso: { custoUsd: 0.1, tokensEntrada: 1, tokensSaida: 1, modelos: null } }
+    })
+    await rodar(m, "01", "Com Config")
+    expect(m.executor.pedidos[0]).toMatchObject({ modelo: "haiku", esforco: "low" })
+    expect("agentes" in m.executor.pedidos[0]!).toBe(false)
+    expect(m.arm.usos[0]).toMatchObject({ esforco: "low" })
+  })
+
+  it("subagente configurado vai em agentes com o model, as tools do .md e sem effort", async () => {
+    await cp(path.join(RAIZ, ".claude/agents"), path.join(raiz, ".claude/agents"), { recursive: true })
+    const m = montar({ subagentes: { "analista-dados": { modelo: "haiku", esforco: null } } })
+    await rodar(m, "01", "Com Subagente")
+    const agente = m.executor.pedidos[0]!.agentes?.["analista-dados"]
+    expect(agente).toBeDefined()
+    expect(agente!.model).toBe("haiku")
+    expect(agente!.tools.length).toBeGreaterThan(0)
+    expect(agente!.prompt).not.toBe("")
+    expect("effort" in agente!).toBe(false)
+  })
+
+  it("subagente sem modelo nem esforço configurados fica de fora", async () => {
+    await cp(path.join(RAIZ, ".claude/agents"), path.join(raiz, ".claude/agents"), { recursive: true })
+    const m = montar({ subagentes: { "analista-dados": SEM } })
+    await rodar(m, "01", "Subagente Padrao")
+    expect("agentes" in m.executor.pedidos[0]!).toBe(false)
+  })
+
+  it("com o .md ilegível, o turno roda sem agentes e termina ok", async () => {
+    const erro = vi.spyOn(console, "error").mockImplementation(() => {})
+    try {
+      const m = montar({ subagentes: { "analista-dados": { modelo: "haiku", esforco: "low" } } })
+      const slug = await rodar(m, "01", "Md Ilegivel")
+      expect("agentes" in m.executor.pedidos[0]!).toBe(false)
+      const conversa = await m.svc.conversa(slug, "01")
+      expect(conversa.at(-1)).toMatchObject({ tipo: "turno_fim", status: "ok" })
+      expect(erro).toHaveBeenCalledTimes(1)
+    } finally {
+      erro.mockRestore()
+    }
+  })
+
+  it("um erro ao ler a configuração não derruba o turno", async () => {
+    const erro = vi.spyOn(console, "error").mockImplementation(() => {})
+    try {
+      const m = montar({})
+      vi.mocked(m.svc.configDaEtapa).mockRejectedValue(new Error("falha inesperada"))
+      const slug = await rodar(m, "01", "Config Quebrada")
+      expect(m.executor.pedidos[0]).toBeDefined()
+      expect((await m.svc.conversa(slug, "01")).at(-1)).toMatchObject({ tipo: "turno_fim", status: "ok" })
+    } finally {
+      erro.mockRestore()
+    }
+  })
+
+  it("modelo recusado: a mensagem do turno diz onde ajustar, antes do erro original", async () => {
+    const m = montar({ principal: { modelo: "claude-x", esforco: null } }, async function* () {
+      yield { tipo: "sessao", sessionId: "s1" }
+      yield { tipo: "fim", ok: false, erro: "model not found: claude-x", sessionId: "s1" }
+    })
+    const slug = await rodar(m, "01", "Modelo Recusado")
+    const fim = (await m.svc.conversa(slug, "01")).at(-1)
+    expect(fim).toMatchObject({ tipo: "turno_fim", status: "erro" })
+    const detalhe = (fim as { detalhe: string }).detalhe
+    expect(detalhe).toContain("O modelo claude-x foi recusado. Ajuste em Administração → Modelos.")
+    expect(detalhe.endsWith("model not found: claude-x")).toBe(true)
+  })
+
+  it("erro sem relação com modelo, ou sem modelo configurado, não ganha a mensagem", async () => {
+    const roteiro = (erro: string): Roteiro =>
+      async function* () {
+        yield { tipo: "fim", ok: false, erro, sessionId: null }
+      }
+    const a = montar({ principal: { modelo: "claude-x", esforco: null } }, roteiro("rede caiu"))
+    const slugA = await rodar(a, "01", "Erro Rede")
+    expect((await a.svc.conversa(slugA, "01")).at(-1)).toMatchObject({ detalhe: "rede caiu" })
+    const b = montar({}, roteiro("model not found"))
+    const slugB = await rodar(b, "01", "Erro Sem Modelo")
+    expect((await b.svc.conversa(slugB, "01")).at(-1)).toMatchObject({ detalhe: "model not found" })
   })
 })

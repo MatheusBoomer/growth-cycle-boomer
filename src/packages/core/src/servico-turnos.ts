@@ -4,7 +4,8 @@ import { descreverAtividade } from "./atividade"
 import type { Barramento } from "./barramento"
 import { etapaDoCatalogo } from "./catalogo"
 import { ErroReiniciando, ErroTurnoAtivo } from "./erros"
-import type { Executor, PedidoTurno } from "./executor/tipos"
+import type { DefinicaoAgente, Executor, PedidoTurno } from "./executor/tipos"
+import { lerDefinicaoSubagente } from "./executor/subagentes"
 import type { MemoriaDeSessao } from "./nuvem/memoria-sessao"
 import type { EntradaUsoTurno } from "./nuvem/tipos"
 import { promptInicialEtapa, promptRetomadaEtapa, systemPromptModoInterface } from "./prompts"
@@ -98,6 +99,12 @@ export function montarSettingsHook(config: ConfigTurnos, pastaProspect: string):
       ],
     },
   })
+}
+
+/** Quando o Claude recusa o modelo configurado, diz ao analista onde corrigir; o erro original segue depois. */
+function detalheDoErro(erro: string | null, modelo: string | undefined): string | null {
+  if (!modelo || !erro || !/model/i.test(erro)) return erro
+  return `O modelo ${modelo} foi recusado. Ajuste em Administração → Modelos. ${erro}`
 }
 
 function horario(resetsAt: number | null): string {
@@ -403,6 +410,35 @@ export class ServicoTurnos {
     }
   }
 
+  /**
+   * Modelo, esforço e subagentes configurados para a etapa. Sem configuração devolve {}, e o pedido
+   * fica como era antes. Nenhum problema de configuração pode derrubar o turno: tudo cai no padrão.
+   */
+  private async configuracaoDaEtapa(etapa: EtapaId): Promise<Pick<PedidoTurno, "modelo" | "esforco" | "agentes">> {
+    const extra: Pick<PedidoTurno, "modelo" | "esforco" | "agentes"> = {}
+    try {
+      const { principal, subagentes } = await this.servico.configDaEtapa(etapa)
+      if (principal.modelo) extra.modelo = principal.modelo
+      if (principal.esforco) extra.esforco = principal.esforco
+      const agentes: Record<string, DefinicaoAgente> = {}
+      for (const [nome, escolha] of Object.entries(subagentes)) {
+        if (!escolha.modelo && !escolha.esforco) continue
+        try {
+          const definicao = lerDefinicaoSubagente(this.config.raiz, nome)
+          if (escolha.modelo) definicao.model = escolha.modelo
+          if (escolha.esforco) definicao.effort = escolha.esforco
+          agentes[nome] = definicao
+        } catch (e) {
+          console.error(`Não consegui ler o subagente "${nome}"; ele segue com o padrão:`, e)
+        }
+      }
+      if (Object.keys(agentes).length > 0) extra.agentes = agentes
+    } catch (e) {
+      console.error(`Não consegui montar a configuração de modelo da etapa ${etapa}; usando o padrão:`, e)
+    }
+    return extra
+  }
+
   private async rodarTurno(slug: string, etapa: EtapaId, texto: string | null, sinal: AbortSignal, autor: string | null): Promise<void> {
     const estado = await this.servico.estado(slug)
     const etapaCat = etapaDoCatalogo(this.catalogo, etapa)
@@ -440,6 +476,7 @@ export class ServicoTurnos {
       mcpConfig: montarMcpConfig(this.config, token, this.config.firecrawlNoMcp ? process.env : {}),
       settings: montarSettingsHook(this.config, path.join(this.config.raiz, "clientes", slug)),
       allowedTools: FERRAMENTAS_PERMITIDAS,
+      ...(await this.configuracaoDaEtapa(etapa)),
     }
 
     // Conversa que já existia antes deste turno (e que o SDK continua): o custo dela já tem linhas anteriores.
@@ -481,7 +518,8 @@ export class ServicoTurnos {
           if (ev.sessionId && ev.sessionId !== sessionId) await this.servico.definirSessao(slug, etapa, ev.sessionId)
           const status = sinal.aborted ? "interrompido" : ev.ok ? "ok" : "erro"
           const fim = this.agora()
-          await this.registrar(slug, etapa, { tipo: "turno_fim", status, detalhe: ev.ok ? null : ev.erro, em: fim })
+          const detalhe = ev.ok ? null : detalheDoErro(ev.erro, pedido.modelo)
+          await this.registrar(slug, etapa, { tipo: "turno_fim", status, detalhe, em: fim })
           const sessao = ev.sessionId ?? sessionId ?? null
           await this.registrarUso({
             slug,
@@ -491,7 +529,7 @@ export class ServicoTurnos {
             retomada: sessaoAnterior != null && sessaoAnterior === sessao,
             custoUsd: ev.uso?.custoUsd ?? null,
             modelosAcumulado: ev.uso?.modelos ?? null,
-            esforco: null,
+            esforco: pedido.esforco ?? null,
             tokensEntrada: ev.uso?.tokensEntrada ?? null,
             tokensSaida: ev.uso?.tokensSaida ?? null,
             inicio,

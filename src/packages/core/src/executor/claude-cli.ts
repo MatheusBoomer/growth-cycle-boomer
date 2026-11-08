@@ -26,6 +26,9 @@ export function montarArgsClaude(p: PedidoTurno): string[] {
     p.allowedTools.join(","),
   ]
   if (p.sessionId) args.push("--resume", p.sessionId)
+  if (p.modelo) args.push("--model", p.modelo)
+  if (p.esforco) args.push("--effort", p.esforco)
+  if (p.agentes) args.push("--agents", JSON.stringify(p.agentes))
   return args
 }
 

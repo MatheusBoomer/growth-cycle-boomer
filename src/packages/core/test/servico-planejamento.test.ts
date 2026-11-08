@@ -13,6 +13,7 @@ import {
   TransicaoInvalida,
 } from "../src/erros"
 import { custoPorEtapa } from "../src/metricas/custo"
+import { montarListaDeModelos } from "../src/modelos"
 import type { EntradaUsoTurno, RegistroUsoTurno } from "../src/nuvem/tipos"
 import { NuvemArmazenamento } from "../src/nuvem/armazenamento-nuvem"
 import { MemoriaArmazem, MemoriaRepositorio } from "../src/nuvem/memoria"
@@ -1347,5 +1348,116 @@ describe("custo por turno e métricas (dados na nuvem)", () => {
       expect(geral.medias["01"]).toBeUndefined()
       expect(geral.projetos[0]?.metricas.custoUsd).toBe(2)
     })
+  })
+})
+
+describe("modelo e esforço por etapa", () => {
+  const LISTA = montarListaDeModelos(null)
+  let repositorio: MemoriaRepositorio
+  let nuvem: ServicoPlanejamento
+
+  function servicoNuvem(repo: MemoriaRepositorio) {
+    const armazem = new MemoriaArmazem()
+    const mesa = new Mesa({ pastaClientes: path.join(raiz, "clientes"), armazem, esperar: async () => {} })
+    return new ServicoPlanejamento({
+      armazenamento: new NuvemArmazenamento({ raiz, repositorio: repo, armazem, mesa, atrasoAgendamentoMs: 0 }),
+      catalogo: catalogoReal(),
+      barramento: new Barramento(),
+      validar: async () => proximaValidacao,
+      agora: () => "2026-09-28T10:00:00.000Z",
+    })
+  }
+
+  beforeEach(() => {
+    repositorio = new MemoriaRepositorio()
+    nuvem = servicoNuvem(repositorio)
+  })
+
+  it("sem nada gravado, a etapa inteira é padrão", async () => {
+    const c = await nuvem.configDaEtapa("03")
+    expect(c.principal).toEqual({ modelo: null, esforco: null })
+    expect(Object.keys(c.subagentes)).toContain("analista-dados")
+    for (const escolha of Object.values(c.subagentes)) expect(escolha).toEqual({ modelo: null, esforco: null })
+  })
+
+  it("salva e lê a escolha do agente principal e de um subagente da etapa", async () => {
+    await nuvem.salvarConfigModelo("03", "principal", { modelo: "sonnet", esforco: "low" }, "ana@boomer.com.br", LISTA)
+    await nuvem.salvarConfigModelo("03", "analista-dados", { modelo: "haiku", esforco: null }, "bia@boomer.com.br", LISTA)
+    const c = await nuvem.configDaEtapa("03")
+    expect(c.principal).toEqual({ modelo: "sonnet", esforco: "low" })
+    expect(c.subagentes["analista-dados"]).toEqual({ modelo: "haiku", esforco: null })
+    const todas = await nuvem.configModelos()
+    expect(todas.map((l) => [l.etapa, l.alvo, l.alteradoPor])).toEqual([
+      ["03", "analista-dados", "bia@boomer.com.br"],
+      ["03", "principal", "ana@boomer.com.br"],
+    ])
+  })
+
+  it("salvar os dois campos nulos volta ao padrão", async () => {
+    await nuvem.salvarConfigModelo("03", "principal", { modelo: "opus", esforco: "high" }, "ana@boomer.com.br", LISTA)
+    await nuvem.salvarConfigModelo("03", "principal", { modelo: null, esforco: null }, "ana@boomer.com.br", LISTA)
+    expect((await nuvem.configDaEtapa("03")).principal).toEqual({ modelo: null, esforco: null })
+    expect(await nuvem.configModelos()).toEqual([])
+  })
+
+  it("ignora a linha de um subagente que a etapa não aciona", async () => {
+    await repositorio.gravarConfigModelo({ etapa: "01", alvo: "analista-dados", modelo: "opus", esforco: "high", alteradoPor: "x@x.com" })
+    await repositorio.gravarConfigModelo({ etapa: "01", alvo: "principal", modelo: "haiku", esforco: null, alteradoPor: "x@x.com" })
+    const c = await nuvem.configDaEtapa("01")
+    expect(c.subagentes).toEqual({})
+    expect(c.principal).toEqual({ modelo: "haiku", esforco: null })
+  })
+
+  it("um esforço desconhecido lido do banco vira padrão, mantendo o modelo", async () => {
+    await repositorio.gravarConfigModelo({
+      etapa: "03",
+      alvo: "principal",
+      modelo: "sonnet",
+      esforco: "turbo" as never,
+      alteradoPor: "x@x.com",
+    })
+    expect((await nuvem.configDaEtapa("03")).principal).toEqual({ modelo: "sonnet", esforco: null })
+  })
+
+  it("com erro de leitura registra no log e devolve tudo padrão, sem lançar", async () => {
+    const quebrado = new MemoriaRepositorio()
+    quebrado.lerConfigModelos = async () => {
+      throw new Error("banco fora do ar")
+    }
+    const erro = vi.spyOn(console, "error").mockImplementation(() => {})
+    try {
+      const c = await servicoNuvem(quebrado).configDaEtapa("03")
+      expect(c.principal).toEqual({ modelo: null, esforco: null })
+      expect(c.subagentes["analista-dados"]).toEqual({ modelo: null, esforco: null })
+      expect(erro).toHaveBeenCalledTimes(1)
+      expect(String(erro.mock.calls[0]?.join(" "))).toContain("banco fora do ar")
+    } finally {
+      erro.mockRestore()
+    }
+  })
+
+  it("salvar um alvo que a etapa não tem dá ErroNaoEncontrado e não grava", async () => {
+    const r = nuvem.salvarConfigModelo("01", "analista-dados", { modelo: "haiku", esforco: null }, "ana@boomer.com.br", LISTA)
+    await expect(r).rejects.toBeInstanceOf(ErroNaoEncontrado)
+    await expect(r).rejects.toThrow("Etapa ou alvo inexistente.")
+    expect(await nuvem.configModelos()).toEqual([])
+  })
+
+  it("salvar um modelo fora da lista ou um esforço que ele não aceita dá ErroEntrada e não grava", async () => {
+    await expect(
+      nuvem.salvarConfigModelo("03", "principal", { modelo: "gpt-4", esforco: null }, "ana@boomer.com.br", LISTA),
+    ).rejects.toBeInstanceOf(ErroEntrada)
+    await expect(
+      nuvem.salvarConfigModelo("03", "principal", { modelo: "sonnet", esforco: "max" }, "ana@boomer.com.br", LISTA),
+    ).rejects.toBeInstanceOf(ErroEntrada)
+    expect(await nuvem.configModelos()).toEqual([])
+  })
+
+  it("em disco, a lista é vazia e salvar só existe na nuvem", async () => {
+    expect(await servico.configModelos()).toEqual([])
+    expect((await servico.configDaEtapa("03")).principal).toEqual({ modelo: null, esforco: null })
+    await expect(
+      servico.salvarConfigModelo("03", "principal", { modelo: "sonnet", esforco: null }, "ana@boomer.com.br", LISTA),
+    ).rejects.toBeInstanceOf(ErroEntrada)
   })
 })

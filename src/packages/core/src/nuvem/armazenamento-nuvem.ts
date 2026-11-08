@@ -3,9 +3,10 @@ import { FsArmazenamento, normalizarEstado } from "../armazenamento"
 import type { Comentario } from "../comentarios"
 import { ErroProspectExistente, ErroSincronizacao } from "../erros"
 import type { Acumulado, LinhaPresenca, LinhaUso } from "../metricas/tipos"
+import type { NivelEsforco } from "../modelos"
 import type { Estado, EtapaId, EventoConversa } from "../tipos"
 import type { Mesa } from "./mesa"
-import type { ArmazemArquivos, RegistroUsoTurno, Repositorio } from "./tipos"
+import type { ArmazemArquivos, LinhaConfigModelo, RegistroUsoTurno, Repositorio } from "./tipos"
 
 const ATRASO_PADRAO_MS = 1000
 
@@ -229,6 +230,20 @@ export class NuvemArmazenamento extends FsArmazenamento {
 
   override listarPresencas(slug?: string, ativos?: ReadonlySet<string>): Promise<LinhaPresenca[]> {
     return this.repositorio.listarPresencas(slug, ativos)
+  }
+
+  override lerConfigModelos(): Promise<LinhaConfigModelo[]> {
+    return this.repositorio.lerConfigModelos()
+  }
+
+  override gravarConfigModelo(l: {
+    etapa: EtapaId
+    alvo: string
+    modelo: string | null
+    esforco: NivelEsforco | null
+    alteradoPor: string
+  }): Promise<void> {
+    return this.repositorio.gravarConfigModelo(l)
   }
 
   private cancelarAgendamento(slug: string): void {

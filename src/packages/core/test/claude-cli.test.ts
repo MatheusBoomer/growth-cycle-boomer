@@ -42,6 +42,32 @@ describe("montarArgsClaude", () => {
     const com = montarArgsClaude(pedido("abc"))
     expect(com.slice(-2)).toEqual(["--resume", "abc"])
   })
+
+  it("sem modelo, esforço e agentes, os args são os de sempre", () => {
+    expect(montarArgsClaude(pedido())).toEqual([
+      "-p",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--include-partial-messages",
+      "--append-system-prompt",
+      "SP",
+      "--mcp-config",
+      '{"mcpServers":{}}',
+      "--settings",
+      '{"hooks":{}}',
+      "--allowedTools",
+      "Read,Bash(python3 *)",
+    ])
+  })
+
+  it("com modelo, esforço e agentes, acrescenta --model, --effort e --agents", () => {
+    const agentes = { "analista-dados": { description: "d", prompt: "p", tools: ["Read"], model: "haiku" } }
+    const args = montarArgsClaude({ ...pedido(), modelo: "haiku", esforco: "low", agentes })
+    expect(args[args.indexOf("--model") + 1]).toBe("haiku")
+    expect(args[args.indexOf("--effort") + 1]).toBe("low")
+    expect(JSON.parse(args[args.indexOf("--agents") + 1] ?? "null")).toEqual(agentes)
+  })
 })
 
 describe("ClaudeCliExecutor", () => {

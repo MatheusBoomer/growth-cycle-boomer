@@ -16,7 +16,7 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
         <header>
           <p className="text-muted-foreground text-[11px] font-medium tracking-[0.14em] uppercase">Administração</p>
-          <h1 className="text-texto-forte mt-1 text-2xl font-semibold tracking-tight">Pessoas e projetos</h1>
+          <h1 className="text-texto-forte mt-1 text-2xl font-semibold tracking-tight">Pessoas, projetos e modelos</h1>
         </header>
         <AbasAdmin />
         {children}

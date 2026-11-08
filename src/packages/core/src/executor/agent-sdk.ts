@@ -53,6 +53,9 @@ export function montarOpcoesSdk(p: PedidoTurno, controle: AbortController, env: 
   const extras = diretoriosExtrasDoAgente(p.cwd)
   if (extras.length > 0) opcoes.additionalDirectories = extras
   if (p.sessionId) opcoes.resume = p.sessionId
+  if (p.modelo) opcoes.model = p.modelo
+  if (p.esforco) opcoes.effort = p.esforco
+  if (p.agentes) opcoes.agents = p.agentes
   return opcoes
 }
 
