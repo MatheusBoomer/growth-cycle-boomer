@@ -79,10 +79,70 @@ function validar(codigo: string): string[] {
   return erros
 }
 
+
+/** Nós com a classe `checkpoint`, por `class a,b checkpoint` ou `id:::checkpoint`. */
+function comClasseCheckpoint(linhas: string[]): Set<string> {
+  const ids = new Set<string>()
+  for (const l of linhas) {
+    const m = /^class\s+([A-Za-z0-9_,\s]+?)\s+checkpoint$/.exec(l)
+    if (m) for (const id of m[1]!.split(",")) ids.add(id.trim())
+    for (const n of l.matchAll(/\b([A-Za-z0-9_]+)(?:\[[^\]]*\]|\{[^}]*\})?:::checkpoint\b/g)) ids.add(n[1]!)
+  }
+  return ids
+}
+
+/** Erros da convenção de checkpoint: só o losango "Analista aprova?" é laranja, com saídas sim e não, ajustar. */
+function validarCheckpoints(codigo: string): string[] {
+  const erros: string[] = []
+  const linhas = semComentarios(codigo)
+  const aprova = new Set<string>()
+  const losangos = new Set<string>()
+  for (const l of linhas) {
+    for (const m of l.matchAll(/\b([A-Za-z0-9_]+)\s*\{"([^"]*)"\}/g)) {
+      losangos.add(m[1]!)
+      if (m[2] === "Analista aprova?") aprova.add(m[1]!)
+    }
+  }
+  const classe = comClasseCheckpoint(linhas)
+  for (const id of aprova) {
+    if (!classe.has(id)) erros.push(`${id}: Analista aprova? sem classe checkpoint`)
+    const saidas = linhas
+      .map((l) => new RegExp(`^${id}\\s*-->\\|"([^"]*)"\\|`).exec(l)?.[1])
+      .filter((x): x is string => x !== undefined)
+      .sort()
+    if (JSON.stringify(saidas) !== JSON.stringify(["não, ajustar", "sim"]))
+      erros.push(`${id}: saídas ${JSON.stringify(saidas)}`)
+  }
+  for (const id of classe) if (!losangos.has(id)) erros.push(`${id}: classe checkpoint fora de decisão`)
+  return erros
+}
+
 describe("fluxogramas do catálogo de skills", () => {
   it.each(FLUXOS)("%s passa na validação estrutural", (arquivo) => {
     const codigo = readFileSync(path.join(RAIZ, arquivo), "utf8")
     expect(validar(codigo)).toEqual([])
+  })
+
+  it.each(FLUXOS)("%s segue a convenção de checkpoint", (arquivo) => {
+    const codigo = readFileSync(path.join(RAIZ, arquivo), "utf8")
+    expect(validarCheckpoints(codigo)).toEqual([])
+  })
+
+  it("a convenção de checkpoint pega saída errada, classe faltando e classe em retângulo", () => {
+    const ruim = [
+      "flowchart TD",
+      'A["passo"] --> C{"Analista aprova?"}',
+      'C -->|"sim, com prioridade"| B["próximo"]',
+      'C -->|"não, ajustar"| A',
+      'N["nota"]',
+      "class N checkpoint",
+      ...CLASSDEFS,
+    ].join("\n")
+    expect(validarCheckpoints(ruim)).toEqual([
+      "C: Analista aprova? sem classe checkpoint",
+      'C: saídas ["não, ajustar","sim, com prioridade"]',
+      "N: classe checkpoint fora de decisão",
+    ])
   })
 
   it("o validador pega rótulo sem aspas, id sem rótulo e travessão", () => {

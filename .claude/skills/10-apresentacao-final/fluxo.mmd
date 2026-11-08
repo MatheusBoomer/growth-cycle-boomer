@@ -9,8 +9,11 @@ flowchart TD
   P5["Fase 2 · gerar_apresentacao.py monta o .pptx"]
   D2{"Saiu ERRO ou aviso de texto?"}
   P6["Corrigir ou encurtar no roteiro e regerar"]
+  D3{"Aviso de cobertura: gráfico ou problema de fora?"}
+  P8["Incluir no roteiro o que ficou de fora"]
   C2{"Analista aprova?"}
   P7["Ajustar só os slides citados no roteiro"]
+  D4{"O ajuste mudou o conteúdo?"}
   E1["Entrega: apresentação final (.pptx)"]
   FIM["Fim do processo: abrir no Google Slides ou PowerPoint"]
 
@@ -26,10 +29,15 @@ flowchart TD
   P5 --> D2
   D2 -->|"sim"| P6
   P6 --> P5
-  D2 -->|"não"| C2
+  D2 -->|"não"| D3
+  D3 -->|"sim"| P8
+  P8 --> P5
+  D3 -->|"não"| C2
   C2 -->|"sim"| E1
   C2 -->|"não, ajustar"| P7
-  P7 --> P5
+  P7 --> D4
+  D4 -->|"sim, propor o roteiro de novo"| C1
+  D4 -->|"não, só regerar"| P5
   E1 --> FIM
 
   class C1,C2 checkpoint

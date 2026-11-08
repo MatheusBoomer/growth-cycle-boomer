@@ -4,6 +4,8 @@ flowchart TD
   P2["Classificar a meta: conservadora, realista ou agressiva"]
   P3["Perguntar: cenário único ou múltiplos (só muda o deck)"]
   S1["analista-dados: projecao.py quebra a meta mês a mês, nunca flat"]
+  D0{"A meta saiu dividida igual por todos os meses?"}
+  R0["Regra crítica: interromper e pedir redistribuição"]
   P4["Gráfico ano analisado x ano projetado"]
   C1{"Analista aprova?"}
   P5["Parte 2 · Alavancas: soluções do registro por cenário"]
@@ -21,7 +23,10 @@ flowchart TD
   P1 --> P2
   P2 --> P3
   P3 --> S1
-  S1 --> P4
+  S1 --> D0
+  D0 -->|"sim"| R0
+  R0 --> S1
+  D0 -->|"não"| P4
   P4 --> C1
   C1 -->|"sim"| P5
   C1 -->|"não, ajustar"| S1

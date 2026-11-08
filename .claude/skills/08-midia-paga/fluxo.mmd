@@ -14,8 +14,10 @@ flowchart TD
   C5{"Analista aprova?"}
   S2["pesquisador-benchmark: referências nacionais e internacionais"]
   E6x["Etapa 6 · Benchmarking de mercado"]
+  C6{"Analista aprova?"}
   D1{"Vieram prints das campanhas?"}
   EX["Etapa extra · Estrutura de campanha x benchmark do setor"]
+  C7{"Analista aprova?"}
   E1["Entrega: plano de mídia salvo nos ativos aprovados"]
   H1["Handoff para a 09: data de hoje, cenário base e 2 a 3 frentes"]
 
@@ -40,14 +42,18 @@ flowchart TD
   C5 -->|"sim"| E6x
   C5 -->|"não, ajustar"| E5x
   S2 -.-> E6x
-  E6x --> D1
+  E6x --> C6
+  C6 -->|"sim"| D1
+  C6 -->|"não, ajustar"| E6x
   I2 --> D1
   D1 -->|"sim"| EX
   D1 -->|"não"| E1
-  EX --> E1
+  EX --> C7
+  C7 -->|"sim"| E1
+  C7 -->|"não, ajustar"| EX
   E1 --> H1
 
-  class C1,C2,C3,C4,C5 checkpoint
+  class C1,C2,C3,C4,C5,C6,C7 checkpoint
   class S1,S2 subagente
   class E1,H1 entrega
   classDef checkpoint fill:#fff1e6,stroke:#e8803a,color:#7a3d0c
