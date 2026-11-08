@@ -19,6 +19,14 @@ describe("alvosDaEtapa", () => {
   })
 })
 
+/** Iterador de sessão que não produz nada e termina ao abort (como o do SDK). */
+const semMensagensAteAbortar = (options: { abortController?: AbortController }): AsyncIterable<never> => ({
+  [Symbol.asyncIterator]: async function* () {
+    const sinal = options.abortController?.signal
+    if (sinal && !sinal.aborted) await new Promise<void>((r) => sinal.addEventListener("abort", () => r(), { once: true }))
+  },
+})
+
 const INFO: InfoModeloSdk[] = [
   { value: "sonnet", resolvedModel: "claude-sonnet-5-5", displayName: "Sonnet", description: "equilibrado", supportsEffort: true, supportedEffortLevels: ["low", "high"] },
   { value: "claude-haiku-5-5", displayName: "Haiku 5.5", description: "rápido", supportsEffort: false },
@@ -116,7 +124,7 @@ describe("consultarModelosSdk", () => {
     const r = await consultarModelosSdk({ A: "1" }, ({ options }) => {
       controle = options.abortController
       expect(options.env).toEqual({ A: "1" })
-      return { supportedModels: async () => INFO }
+      return { ...semMensagensAteAbortar(options), supportedModels: async () => INFO }
     })
     expect(r).toEqual(INFO)
     expect(controle?.signal.aborted).toBe(true)
@@ -129,6 +137,7 @@ describe("consultarModelosSdk", () => {
         for await (const _ of prompt as AsyncIterable<unknown>) produziu = true
       })()
       return {
+        ...semMensagensAteAbortar(options),
         supportedModels: async () => {
           options.abortController?.abort()
           await new Promise((r) => setTimeout(r, 10))
@@ -146,7 +155,7 @@ describe("consultarModelosSdk", () => {
         {},
         ({ options }) => {
           controle = options.abortController
-          return { supportedModels: () => new Promise<InfoModeloSdk[]>(() => {}) }
+          return { ...semMensagensAteAbortar(options), supportedModels: () => new Promise<InfoModeloSdk[]>(() => {}) }
         },
         50,
       ),
@@ -156,9 +165,9 @@ describe("consultarModelosSdk", () => {
 
   it("repassa o cwd às opções só quando informado", async () => {
     const vistos: Array<string | undefined> = []
-    const consulta = ({ options }: { options: { cwd?: string } }) => {
+    const consulta = ({ options }: { options: { cwd?: string; abortController?: AbortController } }) => {
       vistos.push(options.cwd)
-      return { supportedModels: async () => INFO }
+      return { ...semMensagensAteAbortar(options), supportedModels: async () => INFO }
     }
     await consultarModelosSdk({}, consulta, 50, "/raiz/do/projeto")
     await consultarModelosSdk({}, consulta)
@@ -170,10 +179,33 @@ describe("consultarModelosSdk", () => {
     await expect(
       consultarModelosSdk({}, ({ options }) => {
         controle = options.abortController
-        return { supportedModels: async () => Promise.reject(new Error("sem rede")) }
+        return { ...semMensagensAteAbortar(options), supportedModels: async () => Promise.reject(new Error("sem rede")) }
       }),
     ).rejects.toThrow("sem rede")
     expect(controle?.signal.aborted).toBe(true)
+  })
+
+  it("rejeição do iterador depois do abort não vira unhandledRejection", async () => {
+    const naoTratadas: unknown[] = []
+    const ouvinte = (motivo: unknown) => naoTratadas.push(motivo)
+    process.on("unhandledRejection", ouvinte)
+    try {
+      await consultarModelosSdk({}, ({ options }) => {
+        // Como no SDK, a falha nasce do abort por conta própria: quem não consumir o iterador deixa a rejeição solta.
+        const falha = new Promise<never>((_, rejeitar) =>
+          options.abortController?.signal.addEventListener("abort", () => rejeitar(new Error("sessão abortada")), { once: true }),
+        )
+        return {
+          [Symbol.asyncIterator]: () => ({ next: () => falha }),
+          supportedModels: async () => INFO,
+        }
+      })
+      // dá tempo de a rejeição do iterador (disparada pelo abort) acontecer e de o Node reportar uma eventual não tratada
+      await new Promise((r) => setTimeout(r, 50))
+    } finally {
+      process.off("unhandledRejection", ouvinte)
+    }
+    expect(naoTratadas).toEqual([])
   })
 })
 

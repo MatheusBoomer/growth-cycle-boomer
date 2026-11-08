@@ -15,7 +15,7 @@ export interface InfoModeloSdk {
 export type ConsultaModelosSdk = (entrada: {
   prompt: AsyncIterable<never>
   options: Options
-}) => { supportedModels(): Promise<InfoModeloSdk[]> }
+}) => AsyncIterable<unknown> & { supportedModels(): Promise<InfoModeloSdk[]> }
 
 const LIMITE_PADRAO_MS = 20_000
 
@@ -37,6 +37,16 @@ export async function consultarModelosSdk(
   let relogio: ReturnType<typeof setTimeout> | undefined
   try {
     const sessao = consulta({ prompt: semMensagens(), options: { abortController: controle, env, ...(cwd ? { cwd } : {}) } })
+    // Esvazia o iterador em segundo plano: uma rejeição que chegue depois do abort não vira unhandledRejection.
+    void (async () => {
+      try {
+        for await (const _ of sessao) {
+          // nenhuma mensagem é esperada; só consumir
+        }
+      } catch {
+        // a falha que importa chega por supportedModels() ou pelo tempo limite
+      }
+    })()
     const tempoEsgotado = new Promise<never>((_, rejeitar) => {
       relogio = setTimeout(
         () => rejeitar(new Error(`A consulta de modelos passou do tempo limite (${limiteMs} ms).`)),
