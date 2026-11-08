@@ -30,7 +30,8 @@ export const TABELAS = [
   { nome: "prospects", chave: ["slug"] },
   { nome: "usuarios", chave: ["email"], global: true },
   { nome: "config_modelos", chave: ["etapa", "alvo"], global: true },
-  { nome: "notas_skills", chave: ["id"], identidade: "id", global: true },
+  // A chave é o conteúdo (sem o id): o id muda a cada banco, e a restauração compara por ela.
+  { nome: "notas_skills", chave: ["item", "autor", "criada_em"], identidade: "id", global: true },
   { nome: "arquivos", chave: ["slug", "caminho"] },
   { nome: "arquivos_lixeira", chave: ["id"], identidade: "id" },
   { nome: "comentarios", chave: ["slug", "entregavel_id"] },
@@ -69,7 +70,9 @@ export async function lerTabela(cliente, tabela) {
   const linhas = []
   for (let de = 0; ; de += PAGINA) {
     let consulta = cliente.from(tabela.nome).select("*")
-    for (const coluna of tabela.chave) consulta = consulta.order(coluna, { ascending: true })
+    // Ordem estável para a paginação: a chave, e o id se a chave não for única (notas_skills).
+    const ordem = tabela.identidade && !tabela.chave.includes(tabela.identidade) ? [...tabela.chave, tabela.identidade] : tabela.chave
+    for (const coluna of ordem) consulta = consulta.order(coluna, { ascending: true })
     const { data, error } = await consulta.range(de, de + PAGINA - 1)
     if (error) throw new Error(`tabela ${tabela.nome}: ${limpar(error)}`)
     linhas.push(...(data ?? []))

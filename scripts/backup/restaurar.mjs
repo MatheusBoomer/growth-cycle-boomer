@@ -23,6 +23,7 @@ import {
   limpar,
   listarObjetos,
 } from "./comum.mjs"
+import { linhasQueFaltam } from "./linhas.mjs"
 
 const LOTE = 500
 
@@ -135,9 +136,7 @@ async function principal() {
     for (const t of TABELAS.filter((t) => t.global)) {
       const { data: existentes, error } = await cliente.from(t.nome).select(t.chave.join(","))
       if (error) throw new Error(limpar(error))
-      const chaveDe = (l) => t.chave.map((c) => l[c]).join("|")
-      const jaTem = new Set((existentes ?? []).map(chaveDe))
-      const faltam = backup[t.nome].filter((l) => !jaTem.has(chaveDe(l)))
+      const faltam = linhasQueFaltam(backup[t.nome], existentes ?? [], t.chave)
       pendencias += faltam.length
       if (faltam.length === 0) {
         console.log(`· ${t.nome}: nada faltando`)
