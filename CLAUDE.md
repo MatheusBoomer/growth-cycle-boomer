@@ -90,6 +90,38 @@ quando existirem — a regra padrão é não ter nenhum.
 - **`pesquisador-benchmark`** — pesquisa de mercado e referências via Firecrawl. Usado pela Skill 08 (e pontualmente pelas 02 e 05). O benchmark de anúncios da Skill 07 não usa subagente: roda `scripts/coleta_meta_ads.py` (Apify) na própria conversa.
 - **`designer-apresentacao`** — desativado; a apresentação final é gerada pela Skill 10 (.pptx no molde da agência).
 
+## Fluxogramas do catálogo de skills
+
+A aba Administração → Skills mostra um fluxograma Mermaid de cada processo, e a
+equipe aprende o planejamento por eles. Fluxograma desatualizado ensina errado,
+então a skill e o fluxograma mudam juntos, no mesmo commit:
+
+- **Mudou uma skill:** ao incluir, remover ou reordenar um passo, uma fase, um
+  checkpoint de aprovação, um insumo, uma chamada de subagente ou o handoff num
+  `SKILL.md`, atualize o `fluxo.mmd` da mesma pasta.
+- **Mudou um subagente:** o mesmo vale para `.claude/agents/<nome>.md` e
+  `.claude/agents/<nome>.fluxo.mmd`.
+- **Mudou o uso de subagentes entre etapas:** se mudar quais etapas usam um
+  subagente (campo `subagentes` de
+  `.claude/skills/_shared/etapas.json`), atualize também
+  `.claude/skills/_shared/fluxo-geral.mmd`, o fluxo do subagente e a lista acima,
+  em "Subagentes disponíveis".
+- **Skill ou subagente novo ou removido:**
+  - crie ou apague o fluxograma correspondente;
+  - atualize `fluxo-geral.mmd`;
+  - atualize a lista fixa do catálogo em `src/packages/core/src/catalogo-skills.ts`.
+
+Siga as convenções dos fluxos existentes:
+- `flowchart TD`, com todo rótulo entre aspas;
+- cada aprovação do analista é uma decisão `"Analista aprova?"` com a classe
+  `checkpoint` e as saídas `sim` e `não, ajustar`;
+- `subagente` em azul e `entrega` em verde;
+- as três `classDef` no fim do arquivo.
+
+Antes de concluir, rode `npm test` em `src/apps/web` (`lib/fluxos.test.ts` valida
+os 13 arquivos com o leitor do Mermaid) e em `src/packages/core`
+(`test/catalogo-skills.test.ts`).
+
 ## Pré-requisitos da Skill 07
 
 O benchmark de anúncios coleta a Biblioteca de Anúncios do Meta pela Apify:
