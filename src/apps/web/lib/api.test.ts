@@ -49,4 +49,11 @@ describe("api: sessão expirada", () => {
     await expect(api.listarArquivos("acme")).resolves.toEqual({ arquivos: [] })
     expect(assign).not.toHaveBeenCalled()
   })
+
+  it("painelMetricas chama /api/admin/painel com os parâmetros e sem cache", async () => {
+    janela("/")
+    fetchFalso.mockResolvedValue(respostaJson({ painel: {}, opcoes: {}, avatares: {} }, 200))
+    await api.painelMetricas(new URLSearchParams("periodo=7d&testes=1"))
+    expect(fetchFalso).toHaveBeenCalledExactlyOnceWith("/api/admin/painel?periodo=7d&testes=1", expect.objectContaining({ cache: "no-store" }))
+  })
 })

@@ -1,6 +1,7 @@
 import type { AjusteBiblioteca, ItemBiblioteca } from "@workspace/core/biblioteca"
 import type { Comentario, MapaPrevia, Regiao } from "@workspace/core/comentarios"
 import type { ConteudoItem, ItemCatalogo } from "@workspace/core/catalogo-skills-tipos"
+import type { PainelMetricas } from "@workspace/core/metricas/painel"
 import type { MediaEtapa, MetricasProjeto } from "@workspace/core/metricas/resumo"
 import type { EscolhaModelo, ListaDeModelos, Sugestao, UsoDaEtapa } from "@workspace/core/modelos"
 import type { LinhaConfigModelo } from "@workspace/core/nuvem/tipos"
@@ -84,6 +85,12 @@ export interface DetalheProjeto {
   metricas: MetricasProjeto
   medias: MediasPorEtapa | null
 }
+/** Resposta de GET /api/admin/painel: o painel filtrado, as opções dos filtros e a foto de cada dono (e-mail para URL). */
+export interface RespostaPainel {
+  painel: PainelMetricas
+  opcoes: { donos: string[]; projetos: Array<{ slug: string; nome: string }>; modelos: string[] }
+  avatares: Record<string, string>
+}
 export interface CorpoPresenca {
   etapa: EtapaId
   visivel: boolean
@@ -154,6 +161,8 @@ export const api = {
   /** Só admin: o resumo e as métricas de um projeto. As médias por etapa (mais caras) só vêm com `{ medias: true }`. */
   metricasDoProjeto: (slug: string, { medias }: { medias?: boolean } = {}) =>
     chamar<DetalheProjeto>(`/api/admin/projetos/${encodeURIComponent(slug)}${medias ? "?medias=1" : ""}`, { cache: "no-store" }),
+  /** Só admin: o painel de métricas com os filtros em `params` (ver `parametrosDeFiltro`); `atualizar=1` força a releitura. */
+  painelMetricas: (params: URLSearchParams) => chamar<RespostaPainel>("/api/admin/painel?" + params.toString(), { cache: "no-store" }),
   /** Aviso de presença: nunca lança (falha é ignorada em silêncio) e `keepalive` deixa o último sair ao fechar a aba. */
   enviarPresenca: async (slug: string, corpo: CorpoPresenca): Promise<void> => {
     try {
