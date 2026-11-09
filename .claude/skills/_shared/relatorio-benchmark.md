@@ -1,11 +1,12 @@
 # Relatório de benchmark Meta Ads
 
-Referenciado pela Skill 07 (`briefing-e-benchmark`, Fase 2). Não copie este
+Referenciado pela etapa `briefing-e-benchmark` (Fase 2), hoje desativada em
+`.claude/skills/_desativadas/`. Não copie este
 conteúdo para dentro de uma skill — referencie este arquivo.
 
 Adaptado de `docs/referencias/benchmark-meta-ads/references/geracao-relatorio.md`.
-Vale **apenas para a pesquisa de concorrentes** (Skill 07). O benchmarking de
-mercado da Skill 08 continua em texto livre.
+Vale **apenas para a pesquisa de concorrentes** (etapa `briefing-e-benchmark`). O
+benchmarking de mercado da Skill 07 (mídia paga) continua em texto livre.
 
 ## O que é
 

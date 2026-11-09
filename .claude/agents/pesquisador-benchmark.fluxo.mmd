@@ -1,8 +1,7 @@
 flowchart TD
   S02["Skill 02 · Raspagem do site do prospect (pontual)"]
   S05["Skill 05 · Faixa de benchmark com fonte citada"]
-  S08["Skill 08 · Benchmarking de mercado nacional e internacional"]
-  N07["Não é usado na Skill 07 (anúncios vêm da Apify)"]
+  S07["Skill 07 · Benchmarking de mercado nacional e internacional"]
   R1["Recebe: segmento, lista do analista e o que procurar"]
   P1["Começa com firecrawl_search para localizar as fontes"]
   D2{"O que a pesquisa pede?"}
@@ -17,7 +16,7 @@ flowchart TD
 
   S02 --> R1
   S05 --> R1
-  S08 --> R1
+  S07 --> R1
   R1 --> P1
   P1 --> D2
   D2 -->|"ler uma página"| P2

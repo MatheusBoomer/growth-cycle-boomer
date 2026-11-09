@@ -1,11 +1,11 @@
 ---
 name: designer-apresentacao
-description: Monta a apresentação final do planejamento estratégico no Canva, a partir dos gráficos e textos já aprovados ao longo do processo. Roda uma única vez, ao final, depois da Skill 09 (plano-de-acao) concluída. Use quando o analista pedir para gerar/montar a apresentação final do prospect.
+description: Monta a apresentação final do planejamento estratégico no Canva, a partir dos gráficos e textos já aprovados ao longo do processo. Roda uma única vez, ao final, depois da Skill 08 (plano-de-acao) concluída. Use quando o analista pedir para gerar/montar a apresentação final do prospect.
 tools: mcp__claude_ai_Canva__create-design-from-brand-template, mcp__claude_ai_Canva__get-brand-template-dataset, mcp__claude_ai_Canva__upload-asset-from-url, mcp__claude_ai_Canva__export-design, mcp__claude_ai_Canva__get-design, mcp__claude_ai_Canva__search-brand-templates, Read, Glob
 ---
 
-> **Desativado.** A apresentação final é gerada pela Skill 10
-> (`10-apresentacao-final`) como .pptx no molde da agência. Este subagente fica
+> **Desativado.** A apresentação final é gerada pela Skill 09
+> (`09-apresentacao-final`) como .pptx no molde da agência. Este subagente fica
 > como referência para um renderizador Canva futuro, que usaria o mesmo
 > `roteiro-apresentacao.json` aprovado.
 
@@ -23,16 +23,16 @@ ainda não existir, **pare e avise o analista** — montar esse template do zero
 apresentação por outro caminho (ex.: `generate-design` genérico) como
 substituto — o resultado não ficaria on-brand.
 
-## Estrutura do deck (6 seções, mapeadas das 8 skills de conteúdo)
+## Estrutura do deck (6 seções, mapeadas das skills de conteúdo)
 
 | Seção do deck | Fonte em `entrega/ativos-aprovados/secoes/` |
 |---|---|
 | 1. Diagnóstico atual | conteúdo das Skills 03 e 04 |
 | 2. Metas do projeto | conteúdo da Skill 06, parte 1 |
 | 3. Cenários e impactos esperados | conteúdo da Skill 06, parte 2 |
-| 4. Benchmarking | conteúdo da Skill 07 |
-| 5. Plano de mídia | conteúdo da Skill 08 |
-| 6. Plano de ação | conteúdo da Skill 09 |
+| 4. Benchmarking | etapa de briefing e benchmark desativada, sem conteúdo |
+| 5. Plano de mídia | conteúdo da Skill 07 |
+| 6. Plano de ação | conteúdo da Skill 08 |
 
 As Skills 01 e 02 não geram seção própria — elas sustentam o entendimento por
 trás da seção 1, mas não viram slide visível.
@@ -69,7 +69,7 @@ trás da seção 1, mas não viram slide visível.
   parecer incompleto, avise o analista em vez de completar por conta própria.
 - Não gerar gráfico novo — todo gráfico já deveria existir em `graficos/`,
   aprovado pela skill correspondente.
-- Não rodar no meio do processo (antes da Skill 09 concluída) — a
+- Não rodar no meio do processo (antes da Skill 08 concluída) — a
   apresentação é montada uma única vez, ao final.
 
 ## Encerramento

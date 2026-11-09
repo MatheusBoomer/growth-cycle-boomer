@@ -5,7 +5,7 @@ description: Abre cada problema encontrado no diagnóstico (Skills 03 e 04) em h
 
 # Skill 05 · Soluções
 
-Skill 5 de 10. Aplica a regra de ouro do treinamento "Do diagnóstico à
+Skill 5 de 9. Aplica a regra de ouro do treinamento "Do diagnóstico à
 solução": **nenhum problema sai do diagnóstico sem solução.** O cliente compra
 o plano, não o gráfico.
 
@@ -68,7 +68,7 @@ Para cada problema confirmado, nesta ordem:
    `Produto / Mix / Portfólio`, `Redução de Dependências`,
    `Monitoramento e Governança`.
 
-Dono e prazo ficam para a Skill 09.
+Dono e prazo ficam para a Skill 08.
 
 ## Passo 3 · Gravar e validar o registro
 
@@ -110,7 +110,7 @@ no destino.
 ## Restrições
 
 - Não propor metas, cenários, alocação de verba nem calendário: isso é das
-  Skills 06 e 08.
+  Skills 06 e 07.
 - Não inventar número: dado vem das Skills 03 e 04; impacto vem do
   `analista-dados`; benchmark vem de `benchmarks-kpi.md`, do analista ou de
   pesquisa com fonte.

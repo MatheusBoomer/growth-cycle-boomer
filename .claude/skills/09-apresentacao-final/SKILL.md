@@ -1,9 +1,9 @@
 ---
 name: 09-apresentacao-final
-description: Monta a apresentação final do planejamento para o prospect, no padrão visual da agência, como um .pptx editável. Escreve o roteiro slide a slide a partir do que foi aprovado (gráficos e seções), passa pela aprovação do analista e gera o arquivo com scripts/gerar_apresentacao.py. Use depois da Skill 09 (plano-de-acao) concluída, quando o analista pedir a apresentação final.
+description: Monta a apresentação final do planejamento para o prospect, no padrão visual da agência, como um .pptx editável. Escreve o roteiro slide a slide a partir do que foi aprovado (gráficos e seções), passa pela aprovação do analista e gera o arquivo com scripts/gerar_apresentacao.py. Use depois da Skill 08 (plano-de-acao) concluída, quando o analista pedir a apresentação final.
 ---
 
-# Skill 10 — Apresentação final
+# Skill 09 — Apresentação final
 
 Última etapa. Transforma o que foi aprovado em `entrega/ativos-aprovados/` na
 apresentação que vai para o prospect, no molde da agência
@@ -20,8 +20,8 @@ Confira que existe material das 6 seções do deck em `entrega/ativos-aprovados/
 | 02. Desafios | `contexto/solucoes.json`, `secoes/05-solucoes.md` | 05 |
 | 03. Benchmarking | `secoes/07-benchmark.md`, `dados/benchmark-meta/<marca>/` | 07 |
 | 04. Metas | `graficos/cenarios-*`, `graficos/tabela-cenarios-*`, `secoes/06-*.md` | 06 |
-| 05. Cenários e impactos | `secoes/06-*.md`, `secoes/08-midia-paga.md`, `graficos/tabela-*` | 06 e 08 |
-| 06. Plano de ação | `plano-de-acao/*.docx`, `secoes/08-*.md` | 09 |
+| 05. Cenários e impactos | `secoes/06-*.md`, `secoes/07-midia-paga.md`, `graficos/tabela-*` | 06 e 07 |
+| 06. Plano de ação | `plano-de-acao/*.docx`, `secoes/08-*.md` | 08 |
 
 Faltando material de uma seção, diga ao analista o que falta e de qual etapa
 vem; não monte um deck incompleto em silêncio.

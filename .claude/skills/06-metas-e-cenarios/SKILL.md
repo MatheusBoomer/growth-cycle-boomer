@@ -5,7 +5,7 @@ description: Define a meta do projeto, quebra ela mês a mês respeitando sazona
 
 # Skill 06 — Metas e Cenários
 
-Skill 6 de 10. Corresponde aos Prompts 5 (Metas do Projeto) e 6
+Skill 6 de 9. Corresponde aos Prompts 5 (Metas do Projeto) e 6
 (Cenários/Impactos Esperados) do processo original. O Diagnóstico Atual está
 concluído — esta skill define o alvo e a engenharia matemática que sustenta
 os cenários.
@@ -203,7 +203,7 @@ linha) corresponde à coluna de mês do histórico da Skill 03**, sem inversão?
 ## Restrições
 
 - Não definir estrutura de campanha ou plano de mídia ainda — isso é a
-  Skill 08.
+  Skill 07.
 - Um KPI Influenciador pode (e deve) ser "compensado" por outro para que os
   KPIs Resultado batam com a meta — não force todos os KPIs a melhorarem
   igualmente.
@@ -226,10 +226,10 @@ Ao concluir, marque "06 · Metas e cenários" como ✅ em
 natural, sem citar caminho de arquivo:
 
 "Nesta sessão, a meta e os cenários ficaram fechados. Não preciso de nada
-novo — só pensa numa lista de
-concorrentes que você quer que eu pesquise na próxima etapa.
+novo para a próxima etapa — só confirma comigo se seguimos com o cenário
+Realista como base do plano de mídia paga.
 
-Quando estiver pronto, rode `/07-briefing-e-benchmark`."
+Quando estiver pronto, rode `/07-midia-paga`."
 
 Reescreva também o bloco "Próximo passo" de `contexto/status-planejamento.md`
 com esse mesmo pedido.

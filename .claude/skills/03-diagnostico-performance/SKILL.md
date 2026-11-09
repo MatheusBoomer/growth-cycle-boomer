@@ -5,7 +5,7 @@ description: Analisa o histórico de 12 meses de mídia paga, receita, sessões,
 
 # Skill 03 — Diagnóstico de Performance
 
-Skill 3 de 10. Corresponde aos Prompts 2 (Macro Financeiro) e 3 (Aquisição,
+Skill 3 de 9. Corresponde aos Prompts 2 (Macro Financeiro) e 3 (Aquisição,
 Dependência e Conversão) do processo original. Ainda estamos no Diagnóstico
 Atual — **não proponha metas, plano de mídia ou soluções nesta etapa.**
 

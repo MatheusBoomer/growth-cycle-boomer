@@ -24,8 +24,8 @@ refazer um gráfico ou reescrever uma análise mais tarde, a nova versão
 aprovada **sobrescreve** a anterior no mesmo caminho — não criar `-v2`, `-v3`
 nem manter histórico. Só a versão aprovada mais recente importa.
 
-Isso desacopla a montagem da apresentação final (feita pela Skill 10, ao
-final de tudo) da conversa em si: a Skill 10 lê apenas essa pasta, não precisa
+Isso desacopla a montagem da apresentação final (feita pela Skill 09, ao
+final de tudo) da conversa em si: a Skill 09 lê apenas essa pasta, não precisa
 saber quantas iterações aconteceram em cada gráfico ou texto.
 
 ## 3. Regra do não-flat
@@ -125,7 +125,7 @@ está rodando dentro da interface web, e estas regras substituem o jeito
 ## 8. Checklist de qualidade do diagnóstico
 
 Regra de ouro: nenhum problema sai do diagnóstico sem solução. Antes do
-checkpoint final, a Skill 05 (Soluções) e a Skill 10 (Apresentação final)
+checkpoint final, a Skill 05 (Soluções) e a Skill 09 (Apresentação final)
 apresentam ao analista os 5 itens abaixo, cada um marcado como atendido ou
 com o que falta:
 
@@ -137,7 +137,9 @@ com o que falta:
    cliente. Garantido pelo validador (`nao_quantificavel` só com
    justificativa, e vira aviso).
 4. **Cada solução vira item do plano**, com dono, prazo e frente. Garantido
-   por `scripts/validar_solucoes.py --modo plano` na Skill 09.
+   por `scripts/validar_solucoes.py --modo plano` na Skill 08.
 5. **Benchmarking termina em teste**: o que vamos aplicar, não só o que o
-   concorrente faz. Conferência do analista no bloco "O que testar" da
-   Skill 07.
+   concorrente faz. Conferência do analista no bloco "O que testar" do
+   benchmark de concorrentes. Esse benchmark está na etapa de briefing e
+   benchmark, hoje desativada: enquanto ela estiver desativada, marque este
+   item como "não se aplica".

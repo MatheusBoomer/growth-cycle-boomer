@@ -36,14 +36,16 @@ certa pela descrição — ex.: `/03-diagnostico-performance`.
         ↓
 06-metas-e-cenarios
         ↓
-07-briefing-e-benchmark
+07-midia-paga
         ↓
-08-midia-paga
+08-plano-de-acao
         ↓
-09-plano-de-acao
-        ↓
-10-apresentacao-final (roteiro + .pptx no molde da agência; comando: /apresentacao-final)
+09-apresentacao-final (roteiro + .pptx no molde da agência; comando: /apresentacao-final)
 ```
+
+A etapa de briefing e benchmark de anúncios está desativada: a pasta dela fica
+em `.claude/skills/_desativadas/briefing-e-benchmark/`, com o que a reativação
+exige.
 
 Nenhuma etapa avança sem a checagem manual da etapa anterior confirmada pelo
 analista. Não pule etapas, mesmo que pareçam repetir informação já discutida —
@@ -86,9 +88,9 @@ quando existirem — a regra padrão é não ter nenhum.
 
 ## Subagentes disponíveis
 
-- **`analista-dados`** — cálculo de KPIs, geração de gráficos, motor de projeção (`scripts/projecao.py`). Usado pelas Skills 03, 05 e 06.
-- **`pesquisador-benchmark`** — pesquisa de mercado e referências via Firecrawl. Usado pela Skill 08 (e pontualmente pelas 02 e 05). O benchmark de anúncios da Skill 07 não usa subagente: roda `scripts/coleta_meta_ads.py` (Apify) na própria conversa.
-- **`designer-apresentacao`** — desativado; a apresentação final é gerada pela Skill 10 (.pptx no molde da agência).
+- **`analista-dados`** — cálculo de KPIs, geração de gráficos, motor de projeção (`scripts/projecao.py`). Usado pelas Skills 03, 05, 06 e 07.
+- **`pesquisador-benchmark`** — pesquisa de mercado e referências via Firecrawl. Usado pela Skill 07 (e pontualmente pelas 02 e 05).
+- **`designer-apresentacao`** — desativado; a apresentação final é gerada pela Skill 09 (.pptx no molde da agência).
 
 ## Fluxogramas do catálogo de skills
 
@@ -119,15 +121,8 @@ Siga as convenções dos fluxos existentes:
 - as três `classDef` no fim do arquivo.
 
 Antes de concluir, rode `npm test` em `src/apps/web` (`lib/fluxos.test.ts` valida
-os 13 arquivos com o leitor do Mermaid) e em `src/packages/core`
+os 12 arquivos com o leitor do Mermaid) e em `src/packages/core`
 (`test/catalogo-skills.test.ts`).
-
-## Pré-requisitos da Skill 07
-
-O benchmark de anúncios coleta a Biblioteca de Anúncios do Meta pela Apify:
-precisa de `APIFY_TOKEN` no `.env` da raiz (modelo em `.env.example`) e do
-`ffmpeg` instalado (`brew install ffmpeg`). O token nunca aparece em arquivo
-gerado nem na conversa.
 
 ## Ferramenta de desenvolvimento da interface
 

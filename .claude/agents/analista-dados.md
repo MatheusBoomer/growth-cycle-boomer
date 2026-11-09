@@ -14,7 +14,7 @@ ajuste.
 ## O que você recebe
 
 Um pedido de uma das skills do processo (`03-diagnostico-performance`,
-`06-metas-e-cenarios`) especificando: qual arquivo de `dados/` usar, qual(is)
+`06-metas-e-cenarios`, `07-midia-paga`) especificando: qual arquivo de `dados/` usar, qual(is)
 KPI(s) calcular ou gráfico(s) gerar, e qual padrão seguir.
 
 Também da Skill 05 (`05-solucoes`): o cálculo do impacto, em R$ ou %, de cada

@@ -39,15 +39,15 @@ Estratégico entregue a prospects.
    > "Vamos iniciar o planejamento estratégico do [nome do prospect]. Use a
    > skill `preparacao-de-contexto`."
 
-4. **Siga a sequência das 9 skills, em ordem**, confirmando cada checagem
+4. **Siga a sequência das 8 skills de conteúdo, em ordem**, confirmando cada checagem
    manual que a skill pedir. Não pule etapas — use os comandos
-   `/01-preparacao-de-contexto` até `/09-plano-de-acao`, na ordem:
+   `/01-preparacao-de-contexto` até `/08-plano-de-acao`, na ordem:
 
    ```
    01-preparacao-de-contexto → 02-contextualizacao-estrategica →
    03-diagnostico-performance → 04-unidade-economica →
    05-solucoes → 06-metas-e-cenarios →
-   07-briefing-e-benchmark → 08-midia-paga → 09-plano-de-acao
+   07-midia-paga → 08-plano-de-acao
    ```
 
    Ao final de cada etapa, a skill já avisa em linguagem natural o que
@@ -56,7 +56,7 @@ Estratégico entregue a prospects.
    qualquer momento para ver em que etapa o prospect está e o que falta,
    mesmo reabrindo o projeto em outro dia.
 
-5. **Depois da Skill 09 concluída**, rode o comando `/apresentacao-final`
+5. **Depois da Skill 08 concluída**, rode o comando `/apresentacao-final`
    para montar a apresentação — o subagente `designer-apresentacao` lê só
    `entrega/ativos-aprovados/` e produz o arquivo final em `entrega/`.
 
@@ -102,16 +102,17 @@ CLAUDE.md                      # regras gerais da agência
     04-unidade-economica/
     05-solucoes/
     06-metas-e-cenarios/
-    07-briefing-e-benchmark/
-    08-midia-paga/
-    09-plano-de-acao/
+    07-midia-paga/
+    08-plano-de-acao/
+    09-apresentacao-final/
+    _desativadas/              # etapas fora do fluxo (briefing-e-benchmark)
   agents/
     analista-dados.md          # cálculo, gráficos, motor de projeção
     pesquisador-benchmark.md   # pesquisa de concorrentes via Firecrawl
     designer-apresentacao.md   # montagem final no Canva
   commands/                    # atalho direto pra cada skill/subagente
     novo-prospect.md           # /novo-prospect [nome]
-    01-preparacao-de-contexto.md ... 09-plano-de-acao.md
+    01-preparacao-de-contexto.md ... 08-plano-de-acao.md
     apresentacao-final.md      # /apresentacao-final
 scripts/
   projecao.py                  # motor de projeção (testado — ver spec)
@@ -119,19 +120,3 @@ clientes/
   _template/                   # nunca editar direto — só copiar
   <prospect>/                  # uma pasta por prospect real
 ```
-
-## Token da Apify (Skill 07)
-
-O benchmark de anúncios da Skill 07 coleta a Biblioteca de Anúncios do Meta
-pelo ator `apify/facebook-ads-scraper`. Uma vez por máquina:
-
-1. Crie uma conta em apify.com e gere um token em **Settings → API &
-   Integrations**.
-2. Na raiz do projeto: `cp .env.example .env` e preencha `APIFY_TOKEN=`.
-3. Instale o ffmpeg: `brew install ffmpeg`.
-
-O analista informa o link da página de cada concorrente na Biblioteca de
-Anúncios (com `view_all_page_id=`): o script não gasta API procurando páginas.
-
-Custo de referência: um benchmark completo (4 concorrentes + prospect, 5
-criativos analisados por marca) usa por volta de 80 anúncios na Apify.

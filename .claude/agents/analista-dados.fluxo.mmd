@@ -2,7 +2,7 @@ flowchart TD
   S03["Skill 03 · KPIs e gráficos do diagnóstico"]
   S05["Skill 05 · Impacto de cada problema em R$ ou %"]
   S06["Skill 06 · Meta mês a mês, cenários e planilha"]
-  S08["Skill 08 · Gráficos e tabelas-imagem de mídia"]
+  S07["Skill 07 · Gráficos e tabelas-imagem de mídia"]
   R1["Recebe: arquivo de dados, KPIs ou gráficos pedidos e o padrão"]
   P1["Lê os dados com pandas"]
   D1{"Tipo de pedido"}
@@ -17,7 +17,7 @@ flowchart TD
   S03 --> R1
   S05 --> R1
   S06 --> R1
-  S08 --> R1
+  S07 --> R1
   R1 --> P1
   P1 --> D1
   D1 -->|"gráfico"| G1

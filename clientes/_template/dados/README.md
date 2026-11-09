@@ -12,9 +12,10 @@ Três arquivos, com propósitos e sensibilidade diferentes:
 (12 meses, KPIs de investimento/receita/ROAS/sessões/conversão já quebrados
 por Google e Meta).
 
-## benchmark-meta/ (gerada pela Skill 07)
+## benchmark-meta/ (etapa desativada)
 
-Não é insumo do analista. A Skill 07 cria `benchmark-meta/<marca>/` com os
-anúncios coletados pela Apify (`resumo.md`, `anuncios.json`, `bruto.json`,
+Não é insumo do analista. A etapa de briefing e benchmark está desativada
+(`.claude/skills/_desativadas/briefing-e-benchmark/`); se for reativada, ela
+cria `benchmark-meta/<marca>/` com os anúncios coletados pela Apify (`resumo.md`, `anuncios.json`, `bruto.json`,
 `midia/`) e o arquivo `analise-benchmark.md`. São anúncios públicos das
 marcas, sem dado de cliente final.

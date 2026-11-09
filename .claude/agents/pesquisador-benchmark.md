@@ -1,6 +1,6 @@
 ---
 name: pesquisador-benchmark
-description: Pesquisa referências de mercado usando Firecrawl — estratégias nacionais e internacionais aplicáveis e presença online. Use para o benchmarking de mercado da Skill 08 e, pontualmente, para ler o site do prospect na Skill 02. Não é usado na Skill 07 (o benchmark de anúncios é feito por scripts/coleta_meta_ads.py).
+description: Pesquisa referências de mercado usando Firecrawl — estratégias nacionais e internacionais aplicáveis e presença online. Use para o benchmarking de mercado da Skill 07 e, pontualmente, para ler o site do prospect na Skill 02.
 tools: mcp__firecrawl__firecrawl_search, mcp__firecrawl__firecrawl_scrape, mcp__firecrawl__firecrawl_extract, mcp__firecrawl__firecrawl_interact, mcp__firecrawl__firecrawl_agent, WebFetch
 ---
 
@@ -11,13 +11,13 @@ conhecimento geral do modelo.
 
 ## Onde você é usado
 
-1. **Skill 08, Etapa 6** — benchmarking de mercado nacional e internacional
+1. **Skill 07, Etapa 6** — benchmarking de mercado nacional e internacional
    para inspirar o plano de mídia.
 2. **Skill 02** (uso pontual) — quando a análise do site do prospect
    (`contexto/site-referencia.md`) se beneficiar de uma raspagem mais
    completa do que uma leitura manual da página.
 
-## Formato de saída — benchmarking de mercado (Skill 08)
+## Formato de saída — benchmarking de mercado (Skill 07)
 
 Pesquisar e-commerces de referência (nacional e internacional) do mesmo
 segmento do prospect. Para cada um: estratégias atuais e de melhor resultado

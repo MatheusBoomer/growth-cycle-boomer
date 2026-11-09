@@ -1,6 +1,7 @@
 # Benchmark Meta Ads — coleta e análise dos criativos
 
-Referenciado pela Skill 07 (`briefing-e-benchmark`, Fase 2). Não copie este
+Referenciado pela etapa `briefing-e-benchmark` (Fase 2), hoje desativada em
+`.claude/skills/_desativadas/`. Não copie este
 conteúdo para dentro de uma skill — referencie este arquivo.
 
 Adaptado de `docs/referencias/benchmark-meta-ads/references/coleta-e-analise.md`

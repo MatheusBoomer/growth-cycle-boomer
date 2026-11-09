@@ -12,7 +12,7 @@ hipótese de causa vale para o prospect.
 ## Padrão (todo problema)
 
 Dado → Benchmark → Hipóteses de causa → 1 a 3 soluções → Impacto em R$ ou % →
-Plano (dono, prazo e frente, na Skill 09). 1 solução: ok; 2: bom; 3: ótimo;
+Plano (dono, prazo e frente, na Skill 08). 1 solução: ok; 2: bom; 3: ótimo;
 zero: erro.
 
 ## Quebra de receita
@@ -97,7 +97,7 @@ gatilho definido, quiz de escuta ativa, kits.
   Número sem solução vira só alerta.
 - Iszi: R$ 1,1M de quebra anual = 5,4 meses de investimento em mídia.
 
-## Benchmark de concorrentes (Skill 07)
+## Benchmark de concorrentes (etapa desativada)
 
 Termina em "o que testar": Sofá na Caixa (criativo próprio para topo e fundo;
 vídeo selfie de baixa produção; estático com citação real de cliente); Iszi

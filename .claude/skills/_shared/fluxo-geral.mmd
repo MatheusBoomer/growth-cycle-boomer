@@ -6,10 +6,9 @@ flowchart TD
   E04["04 · Unidade econômica"]
   E05["05 · Soluções"]
   E06["06 · Metas e cenários"]
-  E07["07 · Briefing e benchmark"]
-  E08["08 · Mídia paga"]
-  E09["09 · Plano de ação"]
-  E10["10 · Apresentação final"]
+  E07["07 · Mídia paga"]
+  E08["08 · Plano de ação"]
+  E09["09 · Apresentação final"]
   FIM["Deck .pptx para o prospect"]
   AD["analista-dados"]
   PB["pesquisador-benchmark"]
@@ -22,18 +21,17 @@ flowchart TD
   E04 -->|"CAC, LTV e LTV/CAC"| E05
   E05 -->|"registro de soluções"| E06
   E06 -->|"meta e 3 cenários"| E07
-  E07 -->|"briefing e benchmark de anúncios"| E08
-  E08 -->|"plano de mídia"| E09
-  E09 -->|"plano de ação .docx"| E10
-  E10 -->|"roteiro aprovado"| FIM
+  E07 -->|"plano de mídia"| E08
+  E08 -->|"plano de ação .docx"| E09
+  E09 -->|"roteiro aprovado"| FIM
 
   AD -.->|"KPIs e gráficos"| E03
   AD -.->|"impacto em R$ ou %"| E05
   AD -.->|"projeção e planilha"| E06
-  AD -.->|"tabelas-imagem"| E08
+  AD -.->|"tabelas-imagem"| E07
   PB -.->|"site do prospect (pontual)"| E02
   PB -.->|"faixa de benchmark com fonte"| E05
-  PB -.->|"referências de mercado"| E08
+  PB -.->|"referências de mercado"| E07
   CK -.->|"vale para toda etapa"| E01
 
   class AD,PB subagente

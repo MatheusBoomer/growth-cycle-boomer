@@ -5,7 +5,7 @@ description: Cria a pasta de um prospect novo, copiando a estrutura completa de 
 
 # Skill utilitária — Criar Prospect
 
-Não faz parte da sequência numerada 01–08: é um passo de preparação, usado
+Não faz parte da sequência numerada 01–09: é um passo de preparação, usado
 uma vez por prospect, antes de tudo o resto começar. Também disponível como
 comando direto: `/novo-prospect [nome]`.
 
