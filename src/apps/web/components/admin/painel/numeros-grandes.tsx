@@ -50,7 +50,7 @@ export function NumerosGrandes({ painel }: { painel: PainelMetricas }) {
       />
       <Numero
         rotulo="Custo médio por concluído"
-        valor={concluidos.media === null ? "—" : formatarUsd(concluidos.media)}
+        valor={concluidos.media === null ? "Sem dado" : formatarUsd(concluidos.media)}
         detalhe={
           concluidos.n === 0 || concluidos.mediana === null
             ? "Nenhum concluído no período"

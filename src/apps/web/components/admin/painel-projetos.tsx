@@ -1,30 +1,24 @@
 "use client"
 
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
-import { nomeCurto } from "@workspace/core/autenticacao"
-import { formatarDuracao, formatarUsd } from "@workspace/core/metricas/formato"
-import type { Estatistica, MediaEtapa } from "@workspace/core/metricas/resumo"
-import { tempoUtil } from "@workspace/core/metricas/tempo"
-import type { EtapaId } from "@workspace/core/tipos"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import type { FiltroPainel } from "@workspace/core/metricas/painel"
 import { Alert, AlertDescription } from "@workspace/ui/components/alert"
-import { Badge } from "@workspace/ui/components/badge"
-import { Input } from "@workspace/ui/components/input"
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@workspace/ui/components/empty"
 import { Skeleton } from "@workspace/ui/components/skeleton"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@workspace/ui/components/table"
-import { api, mensagemDeErro, type MediasPorEtapa, type ProjetoComMetricas } from "@/lib/api"
+import { api, mensagemDeErro, type ProjetoComMetricas, type RespostaPainel } from "@/lib/api"
+import { filtroDeParametros, parametrosDeFiltro, type PeriodoRapido } from "@/lib/painel-filtro"
+import { painelParaCsv } from "@/lib/painel-csv"
+import { BarraFiltros } from "./painel/barra-filtros"
+import { TEXTO_SEM_USO, type EtapaRotulada } from "./painel/comuns"
+import { GraficosPainel } from "./painel/graficos-painel"
+import { ListaProjetos } from "./painel/lista-projetos"
+import { NumerosGrandes } from "./painel/numeros-grandes"
 
-export interface EtapaRotulada {
-  id: EtapaId
-  rotulo: string
-}
+// Reexportados porque o detalhe do projeto e os testes importam daqui.
+export { MarcaEstimado, formatarDataHora, type EtapaRotulada } from "./painel/comuns"
 
-export function formatarDataHora(iso: string | null): string {
-  if (!iso) return "Sem atividade"
-  const d = new Date(iso)
-  return Number.isNaN(d.getTime()) ? "Sem atividade" : d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
-}
+const CAMINHO = "/admin/projetos"
 
 /** Mais recente primeiro; projetos sem atividade no fim (por nome). Puro, para testar sem tela. */
 export function ordenarPorAtividade(lista: ProjetoComMetricas[]): ProjetoComMetricas[] {
@@ -51,105 +45,90 @@ export function filtrarPorNome(lista: ProjetoComMetricas[], busca: string): Proj
 /** Selo da média de uma etapa com poucos projetos na base. */
 export const ROTULO_BASE_PEQUENA = "base pequena, menos de 5 projetos"
 
-export function MarcaEstimado() {
-  return <span className="text-muted-foreground ml-1 text-xs font-normal">estimado</span>
+/** Como o período está na URL: `periodo=` válido, `de`/`ate` aceitos pelo leitor, ou o padrão de 30 dias. */
+function periodoDaUrl(p: URLSearchParams, f: FiltroPainel): PeriodoRapido | "custom" {
+  const rapido = p.get("periodo")
+  if (rapido === "7d" || rapido === "30d" || rapido === "90d" || rapido === "ano") return rapido
+  return p.get("de") === f.de && p.get("ate") === f.ate ? "custom" : "30d"
 }
 
-function Estat({ e, formatar }: { e: Estatistica | null; formatar: (v: number) => string }) {
-  if (!e) return <span className="text-muted-foreground">Sem dados</span>
-  return (
-    <div className="tabular-nums">
-      <div className="font-medium">{formatar(e.media)}</div>
-      <div className="text-muted-foreground text-xs">
-        mediana {formatar(e.mediana)} · {formatar(e.min)} a {formatar(e.max)} · {e.n} {e.n === 1 ? "projeto" : "projetos"}
-      </div>
-    </div>
-  )
+function alternar(lista: string[], id: string): string[] {
+  return lista.includes(id) ? lista.filter((x) => x !== id) : [...lista, id]
 }
 
-function MediasPorEtapaTabela({ medias, etapas }: { medias: MediasPorEtapa; etapas: EtapaRotulada[] }) {
-  const linhas = etapas.flatMap((e) => {
-    const m: MediaEtapa | undefined = medias[e.id]
-    return m ? [{ etapa: e, media: m }] : []
-  })
-  return (
-    <section className="flex flex-col gap-3">
-      <div>
-        <h2 className="text-base font-semibold tracking-tight">Médias por etapa</h2>
-        <p className="text-muted-foreground text-sm">Etapas concluídas de projetos ativos, sem os clientes de teste.</p>
-      </div>
-      {linhas.length === 0 ? (
-        <p className="text-muted-foreground text-sm">Ainda não há etapa concluída para calcular médias.</p>
-      ) : (
-        <>
-          {linhas.some((l) => l.media.basePequena) && (
-            <Alert>
-              <AlertDescription>Base pequena: as etapas marcadas têm menos de 5 projetos em alguma das médias, então vale pouco como referência.</AlertDescription>
-            </Alert>
-          )}
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Etapa</TableHead>
-                <TableHead>Custo</TableHead>
-                <TableHead>Tempo útil</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {linhas.map(({ etapa, media }) => (
-                <TableRow key={etapa.id}>
-                  <TableCell className="font-medium">
-                    {etapa.rotulo}
-                    {media.basePequena && (
-                      <Badge variant="secondary" className="ml-2">
-                        {ROTULO_BASE_PEQUENA}
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Estat e={media.custo} formatar={formatarUsd} />
-                  </TableCell>
-                  <TableCell>
-                    <Estat e={media.tempoUtil} formatar={formatarDuracao} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </>
-      )}
-    </section>
-  )
+function baixarCsv(r: RespostaPainel): void {
+  const url = URL.createObjectURL(new Blob([painelParaCsv(r)], { type: "text/csv;charset=utf-8" }))
+  const a = document.createElement("a")
+  a.href = url
+  a.download = `projetos-${r.painel.periodo.de}_a_${r.painel.periodo.ate}.csv`
+  document.body.append(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
 }
 
-interface Dados {
-  projetos: ProjetoComMetricas[]
-  medias: MediasPorEtapa
-}
-
-/** Aba "Projetos": médias por etapa e a lista de projetos com custo, tempo útil e última atividade. */
+/** Aba "Projetos": filtros (na URL), números do período, gráficos e a lista de projetos. */
 export function PainelProjetos({ etapas }: { etapas: EtapaRotulada[] }) {
   const roteador = useRouter()
-  const [dados, setDados] = useState<Dados | null>(null)
+  const parametros = useSearchParams()
+  const consulta = parametros.toString()
+  const { filtro, periodo } = useMemo(() => {
+    const p = new URLSearchParams(consulta)
+    const f = filtroDeParametros(p, new Date())
+    return { filtro: f, periodo: periodoDaUrl(p, f) }
+  }, [consulta])
+
+  const [resposta, setResposta] = useState<RespostaPainel | null>(null)
   const [erro, setErro] = useState<string | null>(null)
-  const [busca, setBusca] = useState("")
+  const [carregando, setCarregando] = useState(true)
+  const [tentativa, setTentativa] = useState(0)
+  const forcarAtualizacao = useRef(false)
 
   useEffect(() => {
     let ativo = true
+    const pedido = parametrosDeFiltro(filtro, periodo)
+    if (forcarAtualizacao.current) {
+      pedido.set("atualizar", "1")
+      forcarAtualizacao.current = false
+    }
+    setCarregando(true)
     api
-      .metricasGerais()
-      .then((d) => {
-        if (ativo) setDados(d)
+      .painelMetricas(pedido)
+      .then((r) => {
+        if (!ativo) return
+        setResposta(r)
+        setErro(null)
       })
       .catch((e: unknown) => {
         if (ativo) setErro(mensagemDeErro(e))
       })
+      .finally(() => {
+        if (ativo) setCarregando(false)
+      })
     return () => {
       ativo = false
     }
-  }, [])
+  }, [filtro, periodo, tentativa])
 
-  const projetos = useMemo(() => (dados ? filtrarPorNome(ordenarPorAtividade(dados.projetos), busca) : []), [dados, busca])
+  const gravarNaUrl = useCallback((p: URLSearchParams) => roteador.replace(`${CAMINHO}?${p.toString()}`, { scroll: false }), [roteador])
+  const atualizar = useCallback(() => {
+    forcarAtualizacao.current = true
+    setTentativa((n) => n + 1)
+  }, [])
+  const aoFiltrar = useCallback(
+    ({ etapa, projeto }: { etapa?: string; projeto?: string }) =>
+      gravarNaUrl(
+        parametrosDeFiltro(
+          {
+            ...filtro,
+            etapas: etapa === undefined ? filtro.etapas : alternar(filtro.etapas, etapa),
+            projetos: projeto === undefined ? filtro.projetos : alternar(filtro.projetos, projeto),
+          },
+          periodo,
+        ),
+      ),
+    [filtro, periodo, gravarNaUrl],
+  )
 
   if (erro) {
     return (
@@ -158,61 +137,39 @@ export function PainelProjetos({ etapas }: { etapas: EtapaRotulada[] }) {
       </Alert>
     )
   }
-  if (!dados) return <Skeleton className="h-64 w-full" />
+  if (!resposta) return <Skeleton className="h-64 w-full" />
+
+  const { painel, opcoes, avatares } = resposta
+  const semUso = painel.totais.custoUsd === 0 && painel.totais.tempoUtilSeg === 0 && painel.porProjeto.every((p) => p.usd === 0 && p.tempoUtilSeg === 0)
 
   return (
-    <div className="flex flex-col gap-8">
-      <MediasPorEtapaTabela medias={dados.medias} etapas={etapas} />
-      <section className="flex flex-col gap-3">
-        <div className="flex items-end justify-between gap-3">
-          <h2 className="text-base font-semibold tracking-tight">Projetos</h2>
-          <Input type="search" value={busca} onChange={(ev) => setBusca(ev.target.value)} placeholder="Buscar por nome" aria-label="Buscar projeto por nome" className="max-w-64" />
-        </div>
-        {projetos.length === 0 ? (
-          <p className="text-muted-foreground text-sm">{dados.projetos.length === 0 ? "Nenhum projeto ainda." : "Nenhum projeto com esse nome."}</p>
+    <div className="flex flex-col gap-6" aria-busy={carregando}>
+      <BarraFiltros
+        filtro={filtro}
+        periodo={periodo}
+        opcoes={opcoes}
+        etapas={etapas}
+        aoMudar={gravarNaUrl}
+        aoAtualizar={atualizar}
+        aoExportar={() => baixarCsv(resposta)}
+        atualizando={carregando}
+      />
+      <div className={carregando ? "flex flex-col gap-6 opacity-60 transition-opacity" : "flex flex-col gap-6"}>
+        {semUso ? (
+          <Empty>
+            <EmptyHeader>
+              <EmptyTitle>{TEXTO_SEM_USO}</EmptyTitle>
+              <EmptyDescription>Troque o período ou limpe os filtros para ver outros dados.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Projeto</TableHead>
-                <TableHead>Dono</TableHead>
-                <TableHead>Etapa atual</TableHead>
-                <TableHead className="text-right">Custo total</TableHead>
-                <TableHead className="text-right">Tempo útil</TableHead>
-                <TableHead>Última atividade</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {projetos.map((p) => (
-                <TableRow key={p.slug} className="cursor-pointer" onClick={() => roteador.push(`/admin/projetos/${encodeURIComponent(p.slug)}`)}>
-                  <TableCell className="font-medium">
-                    <Link
-                      href={`/admin/projetos/${encodeURIComponent(p.slug)}`}
-                      onClick={(ev) => ev.stopPropagation()}
-                      className="rounded-sm hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-                    >
-                      {p.nome}
-                    </Link>
-                    {p.teste && (
-                      <Badge variant="secondary" className="ml-2">
-                        teste
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{p.dono ? nomeCurto(p.dono) : "Sem dono"}</TableCell>
-                  <TableCell>{p.rotuloEtapaAtual}</TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatarUsd(p.metricas.custoUsd)}
-                    {p.metricas.estimado && <MarcaEstimado />}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">{formatarDuracao(tempoUtil(p.metricas.tempo))}</TableCell>
-                  <TableCell className="text-muted-foreground">{formatarDataHora(p.metricas.ultimaAtividade)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <>
+            <NumerosGrandes painel={painel} />
+            <GraficosPainel painel={painel} avatares={avatares} filtro={filtro} aoFiltrar={aoFiltrar} />
+          </>
         )}
-      </section>
+        <ListaProjetos projetos={painel.porProjeto} etapas={etapas} avatares={avatares} />
+      </div>
     </div>
   )
 }
