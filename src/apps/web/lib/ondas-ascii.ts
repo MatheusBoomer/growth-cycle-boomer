@@ -28,8 +28,9 @@ export function caractereDaIntensidade(intensidade: number): string {
 
 /**
  * `t` em segundos. Listras verticais (uma fase por coluna) que viajam da esquerda para a direita, com a massa mais
- * densa à esquerda e cobrindo a altura toda. Todo termo que depende de x e t tem a forma `k·x − w·t`, ou seja,
- * avança para +x; nenhum anda para a esquerda.
+ * densa à esquerda e cobrindo a altura toda. Todo termo de fase que depende de x e t tem a forma `k·x − w·t`, ou
+ * seja, avança para +x. A fase local total pode recuar de leve em poucos pontos, onde a ondulação lenta é mais
+ * rápida que a listra; o deslocamento líquido do padrão é sempre para a direita.
  */
 export function celulaOnda(coluna: number, linha: number, t: number, colunas: number, linhas: number): Celula {
   const x = coluna / Math.max(colunas, 1)
@@ -46,7 +47,8 @@ export function celulaOnda(coluna: number, linha: number, t: number, colunas: nu
   const miolo = Math.exp(-(dx * dx + dy * dy))
 
   const intensidade = limitar(miolo * (0.2 + 0.8 * listra ** 1.4))
-  const ruido = Math.sin(x * 11 + y * 4 + t * 0.35) * Math.sin(y * 9 - x * 5 - t * 0.28)
+  // Mesma forma `k·x − w·t` das listras: as manchas laranja também avançam para a direita.
+  const ruido = Math.sin(x * 11 + y * 4 - t * 0.35) * Math.sin(y * 9 + x * 5 - t * 0.28)
   return { intensidade, caractere: caractereDaIntensidade(intensidade), laranja: ruido > LIMIAR_LARANJA }
 }
 

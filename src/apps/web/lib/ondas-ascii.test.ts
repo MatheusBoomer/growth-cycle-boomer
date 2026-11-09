@@ -140,3 +140,25 @@ describe("direção e cobertura (revisão: da esquerda para a direita, fundo int
     for (const t of [0, 5, 40]) expect(media(grade(t, 0, 90, 27, 40))).toBeGreaterThanOrEqual(0.8 * media(grade(t, 0, 90, 0, 13)))
   })
 })
+
+describe("o laranja também avança para a direita", () => {
+  it("o padrão de células laranja se desloca para +x entre dois quadros, 1 s depois", () => {
+    const colunas = 200
+    const perfil = (linha: number, t: number) => Array.from({ length: colunas }, (_, c) => (celulaOnda(c, linha, t, colunas, 40).laranja ? 1 : 0))
+    const soma = new Map<number, number>()
+    for (const t of [0, 9, 23])
+      for (const linha of [3, 11, 20, 31]) {
+        const a = perfil(linha, t)
+        const b = perfil(linha, t + 1)
+        for (let s = -20; s <= 20; s++) {
+          let corr = 0
+          for (let c = 30; c < colunas - 30; c++) corr += a[c]! * b[c + s]!
+          soma.set(s, (soma.get(s) ?? 0) + corr)
+        }
+      }
+    const ordenado = [...soma.entries()].sort((x, y) => y[1] - x[1])
+    // Sem nenhuma célula laranja na amostra a correlação seria zero em todo deslocamento e o teste não provaria nada.
+    expect(ordenado[0]![1]).toBeGreaterThan(0)
+    expect(ordenado[0]![0]).toBeGreaterThan(0)
+  })
+})

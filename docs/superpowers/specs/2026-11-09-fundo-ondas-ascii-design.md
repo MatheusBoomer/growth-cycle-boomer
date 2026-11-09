@@ -26,7 +26,7 @@ Duas unidades, cada uma com um propósito.
 - Entrada: coluna, linha, tempo em segundos e dimensões da grade.
 - Saída: `{ intensidade: number (0–1), caractere: string, laranja: boolean }`.
 - Rampa de caracteres: ` . : - = + * # @` (da menor para a maior intensidade).
-- O campo é a soma de senoides lentas. A fase de cada listra anda com o tempo no sentido +x (`coluna * k - t * v`), o que faz as ondas viajarem para a direita. Todos os termos que dependem de `x` e `t` avançam para a direita; nenhum anda para a esquerda.
+- O campo é a soma de senoides lentas. A fase de cada listra anda com o tempo no sentido +x (`coluna * k - t * v`), o que faz as ondas viajarem para a direita. Todos os termos de fase que dependem de `x` e `t` avançam para a direita, inclusive o ruído que decide o laranja; o deslocamento líquido do padrão é sempre para a direita.
 - Um envelope concentra a intensidade no lado esquerdo e cobre a altura toda da janela (sem miolo no centro).
 - O laranja é decidido por um segundo ruído lento e fica em cerca de 10–15% das células.
 - Exporta também as paletas por tema (`claro`, `escuro`), `fatorDeDegrade(posicao, total)` (1 no início, 0 no fim) e `dimensionarGrade`.
