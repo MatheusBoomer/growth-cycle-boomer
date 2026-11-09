@@ -175,3 +175,50 @@ git commit -m "feat(fundo): ondas ASCII na home, no login e na tela do projeto"
 git add src/apps/web/lib/ondas-ascii.ts
 git commit -m "fix(fundo): ajuste fino visual das ondas ASCII"
 ```
+
+---
+
+### Task 5: Revisão — ondas da esquerda para a direita e fundo único no app inteiro
+
+Revisão pedida depois de ver o resultado (ver "Histórico de revisões" no spec). Substitui, onde houver conflito, o degradê vertical e a seleção por rota das Tasks 1–3.
+
+**Files:**
+- Modify: `src/apps/web/lib/ondas-ascii.ts`, `src/apps/web/lib/ondas-ascii.test.ts`
+- Modify: `src/apps/web/components/marca/fundo-ondas-ascii.tsx`, `src/apps/web/components/marca/fundo-ondas-ascii.test.ts`
+- Modify: `src/apps/web/app/layout.tsx` (troca `<FundoBoomer />` por `<FundoOndasAscii />`)
+- Delete: `src/apps/web/components/marca/fundo-boomer.tsx`, `src/apps/web/lib/rota-ondas.ts`, `src/apps/web/lib/rota-ondas.test.ts`
+
+**Interfaces:**
+- Consumes (Task 1): `celulaOnda`, `fatorDeDegrade`, `dimensionarGrade`, `PALETAS`.
+- Produces: `fatorDeDegrade(posicao: number, total: number): number` (mesma regra, parâmetros renomeados: 1 no início, 0 no fim). `celulaOnda` mantém a assinatura.
+
+- [ ] **Step 1: Write the failing tests**
+
+`lib/ondas-ascii.test.ts` (novos):
+```ts
+it("as ondas avançam para a direita: o melhor deslocamento entre dois quadros é positivo")
+// perfil de intensidade de uma linha em t e t+1s (grade 120×40, várias linhas e tempos);
+// a correlação cruzada máxima entre deslocamentos inteiros de -6 a +6 colunas fica em s > 0.
+it("a esquerda é mais intensa que a direita: média do terço esquerdo > média do terço direito")
+it("o fundo cobre a altura: média do terço inferior ≥ 50% da média do terço superior")
+```
+`components/marca/fundo-ondas-ascii.test.ts` (trocar/acrescentar):
+```ts
+it("a máscara é horizontal") // className contém "mask-image:linear-gradient(to_right,#000,transparent)"
+it("não desenha nas colunas que o degradê já escondeu e desenha por toda a largura útil")
+// com innerWidth 1024: todo x de fillText ≤ 0.96 * 1024 e algum x > 0.5 * 1024
+```
+Remover `lib/rota-ondas.test.ts` junto com o módulo.
+
+- [ ] **Step 2: Run** `npx vitest run lib/ondas-ascii.test.ts components/marca/fundo-ondas-ascii.test.ts`. Expected: FAIL nos quatro testes novos/alterados.
+
+- [ ] **Step 3: Implement.** `celulaOnda`: a fase da listra passa a `coluna * 1.15 - t * v` e todo termo com `x` e `t` avança para +x; o envelope passa a ter centro em x≈0.2–0.3, sigma horizontal largo, e sigma vertical grande o bastante para cobrir a altura. `fatorDeDegrade` com parâmetros `posicao, total`. O componente percorre as colunas como laço externo, interrompe quando `fatorDeDegrade(coluna, colunas) < DEGRADE_MINIMO` e usa a máscara `to_right`. `layout.tsx` usa `FundoOndasAscii` direto; apagar `fundo-boomer.tsx` e a seleção por rota.
+
+- [ ] **Step 4: Run** os dois arquivos de teste, depois `npm test`, `npm run lint` e `npm run typecheck` em `src/apps/web`. Expected: tudo verde.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add -A src/apps/web/lib src/apps/web/components/marca src/apps/web/app/layout.tsx docs/superpowers
+git commit -m "feat(fundo): ondas da esquerda para a direita e fundo único no app inteiro"
+```
