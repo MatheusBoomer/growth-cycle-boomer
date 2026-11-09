@@ -9,7 +9,7 @@ O desenvolvedor roda o app (`npm run dev` em `src/`), liga o modo dev (botão "D
 
 Seu trabalho: executar os ajustes e deixar a lista só com o que ficou pendente.
 
-Isto não é uma etapa do planejamento estratégico. Não se aplicam `regras-de-validacao.md`, checkpoints nem o handoff da Regra 6.
+Isto não é uma etapa do Growth Cycle. Não se aplicam `regras-de-validacao.md`, checkpoints nem o handoff da Regra 6.
 
 ## 1. Ler
 

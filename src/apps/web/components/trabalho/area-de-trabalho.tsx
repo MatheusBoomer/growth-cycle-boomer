@@ -263,7 +263,7 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
       <div className="flex h-svh flex-col">
         <AvisoPresenca slug={slug} etapa={etapa} />
         <BarraTopo
-          titulo="Planejamento estratégico"
+          titulo="Growth Cycle"
           subtitulo={dados.estado.prospect.nome}
           extra={admin ? <SeloCusto slug={slug} etapa={etapa} /> : undefined}
         />

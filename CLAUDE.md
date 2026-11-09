@@ -1,6 +1,6 @@
-# Agência — Planejamento Estratégico
+# Agência — Growth Cycle
 
-Este projeto gera o documento de Planejamento Estratégico que a agência entrega a
+Este projeto gera o documento de Growth Cycle que a agência entrega a
 prospects (ainda não são clientes fechados): diagnóstico dos últimos 12 meses,
 benchmark de concorrentes, metas, projeções e plano de ação. É o argumento
 comercial para fechar um contrato de 12 meses.

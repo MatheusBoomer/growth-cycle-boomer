@@ -11,7 +11,7 @@ export function CartaoLogin({ href, mensagemDeErro }: { href: string; mensagemDe
       <Card className="w-full max-w-sm">
         <CardHeader className="items-center text-center">
           <LogoBoomer className="mb-2 h-6" />
-          <CardTitle className="text-texto-forte">Planejamento estratégico</CardTitle>
+          <CardTitle className="text-texto-forte">Growth Cycle</CardTitle>
           <CardDescription>Entre com a conta Google da Boomer para continuar.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">

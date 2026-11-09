@@ -15,7 +15,7 @@ import { usuarioDaRequisicao } from "@/lib/sessao"
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 const fontMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
 
-export const metadata: Metadata = { title: "Planejamento Estratégico · Boomer" }
+export const metadata: Metadata = { title: "Growth Cycle · Boomer" }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   // O ambiente vem de variáveis lidas em tempo de execução (na nuvem só existem no contêiner, não no build): sem

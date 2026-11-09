@@ -69,7 +69,7 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
               </Button>
               <Button
                 size="sm"
-                render={<a href={urlArquivo(slug, final.caminho, true, `Planejamento Estratégico - ${dados.estado.prospect.nome}`)} download />}
+                render={<a href={urlArquivo(slug, final.caminho, true, `Growth Cycle - ${dados.estado.prospect.nome}`)} download />}
                 nativeButton={false}
               >
                 <DownloadIcon /> Baixar .pptx

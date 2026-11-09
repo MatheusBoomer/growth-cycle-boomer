@@ -1,6 +1,6 @@
 ---
 name: midia-paga
-description: Constrói o planejamento estratégico de mídia paga — alocação de verba por plataforma, estratégia por Curva ABC, calendário estratégico anual, ROAS esperado e redução de dependência — com base em tudo que foi diagnosticado e projetado. Use após metas-e-cenarios, com o cenário Realista já validado.
+description: Constrói o plano estratégico de mídia paga — alocação de verba por plataforma, estratégia por Curva ABC, calendário estratégico anual, ROAS esperado e redução de dependência — com base em tudo que foi diagnosticado e projetado. Use após metas-e-cenarios, com o cenário Realista já validado.
 ---
 
 # Skill 07 — Planejamento de Mídia Paga

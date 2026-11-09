@@ -3,7 +3,7 @@ import { nomeDeDownload } from "./nome-download"
 
 describe("nome do arquivo baixado", () => {
   it("usa o nome pedido com a extensão do arquivo", () => {
-    expect(nomeDeDownload("Planejamento Estratégico - ADDA", "/x/entrega/apresentacao-final.pptx")).toBe("Planejamento Estratégico - ADDA.pptx")
+    expect(nomeDeDownload("Growth Cycle - ADDA", "/x/entrega/apresentacao-final.pptx")).toBe("Growth Cycle - ADDA.pptx")
   })
   it("tira caracteres que não podem ir em nome de arquivo e caminhos", () => {
     expect(nomeDeDownload('../a/b:c*"d', "/x/f.pptx")).toBe("..-a-b-c--d.pptx")

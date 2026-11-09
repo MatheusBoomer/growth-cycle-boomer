@@ -13,6 +13,12 @@ describe("prompts", () => {
     for (const f of ["propor_entregavel", "solicitar_insumo", "sinalizar_etapa_pronta"]) expect(s).toContain(f)
   })
 
+  it("chama o produto de Growth Cycle", () => {
+    const s = systemPromptModoInterface({ slug: "iszi", etapa: etapaDoCatalogo(cat, "03") })
+    expect(s).toContain("# Modo interface do Growth Cycle")
+    expect(s).not.toContain("Planejamento Estratégico")
+  })
+
   it("manda perguntar no chat, em texto, uma pergunta por vez", () => {
     const s = systemPromptModoInterface({ slug: "iszi", etapa: etapaDoCatalogo(cat, "03") })
     expect(s).not.toContain("fazer_perguntas")

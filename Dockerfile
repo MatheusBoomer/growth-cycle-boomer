@@ -1,4 +1,4 @@
-# Imagem do servidor do planejamento estratégico (app web + agente + ferramentas).
+# Imagem do servidor do Growth Cycle (app web + agente + ferramentas).
 # Camadas da mais estável para a mais volátil: programas do sistema, Python, dependências
 # Node, código e build do Next. Mudar só o código reconstrói a partir da cópia do código.
 # Nada aqui depende da arquitetura (roda em linux/amd64 no provedor e linux/arm64 local).

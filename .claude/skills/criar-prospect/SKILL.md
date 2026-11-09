@@ -1,6 +1,6 @@
 ---
 name: criar-prospect
-description: Cria a pasta de um prospect novo, copiando a estrutura completa de clientes/_template/ e normalizando o nome da pasta. Use sempre que for iniciar o planejamento estratégico de um prospect que ainda não tem pasta própria em clientes/ — antes da Skill 01.
+description: Cria a pasta de um prospect novo, copiando a estrutura completa de clientes/_template/ e normalizando o nome da pasta. Use sempre que for iniciar o Growth Cycle de um prospect que ainda não tem pasta própria em clientes/ — antes da Skill 01.
 ---
 
 # Skill utilitária — Criar Prospect

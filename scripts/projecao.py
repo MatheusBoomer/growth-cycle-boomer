@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-scripts/projecao.py — motor de projeção do planejamento estratégico.
+scripts/projecao.py — motor de projeção do Growth Cycle.
 
 Implementa em código as duas regras mais frágeis do processo manual original:
 
@@ -203,7 +203,7 @@ def _cmd_projetar(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Motor de projeção do planejamento estratégico.")
+    parser = argparse.ArgumentParser(description="Motor de projeção do Growth Cycle.")
     subparsers = parser.add_subparsers(dest="comando", required=True)
 
     p_dist = subparsers.add_parser("distribuir", help="Quebra uma meta anual em 12 meses, respeitando sazonalidade.")

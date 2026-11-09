@@ -1,11 +1,11 @@
 ---
 name: preparacao-de-contexto
-description: Primeira etapa do planejamento estratégico de um prospect novo. Lê a transcrição bruta da reunião de kickoff (.docx) e o outros materiais pré-kickoff (quando existir), separa conteúdo de alta qualidade de ruído de reunião, e gera a versão limpa que alimenta a etapa de contextualização estratégica. Use quando iniciar o planejamento de um prospect novo, antes de qualquer outra skill deste projeto.
+description: Primeira etapa do Growth Cycle de um prospect novo. Lê a transcrição bruta da reunião de kickoff (.docx) e o outros materiais pré-kickoff (quando existir), separa conteúdo de alta qualidade de ruído de reunião, e gera a versão limpa que alimenta a etapa de contextualização estratégica. Use quando iniciar o planejamento de um prospect novo, antes de qualquer outra skill deste projeto.
 ---
 
 # Skill 01 — Preparação de Contexto
 
-Skill 1 de 9 do processo de Planejamento Estratégico. Etapa nova, sem
+Skill 1 de 9 do processo do Growth Cycle. Etapa nova, sem
 equivalente nos prompts originais — criada para tirar do analista o trabalho
 manual de limpar a transcrição antes de usá-la.
 

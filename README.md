@@ -1,7 +1,7 @@
-# Agência — Planejamento Estratégico (Claude Code)
+# Agência — Growth Cycle (Claude Code)
 
-Estrutura de projeto para padronizar a produção do documento de Planejamento
-Estratégico entregue a prospects.
+Estrutura de projeto para padronizar a produção do documento de
+Growth Cycle entregue a prospects.
 
 ## Como usar, para um prospect novo
 
@@ -36,7 +36,7 @@ Estratégico entregue a prospects.
 
    ou pedindo em linguagem natural:
 
-   > "Vamos iniciar o planejamento estratégico do [nome do prospect]. Use a
+   > "Vamos iniciar o Growth Cycle do [nome do prospect]. Use a
    > skill `preparacao-de-contexto`."
 
 4. **Siga a sequência das 8 skills de conteúdo, em ordem**, confirmando cada checagem

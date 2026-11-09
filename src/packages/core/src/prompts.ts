@@ -5,9 +5,9 @@ export function systemPromptModoInterface({ slug, etapa }: { slug: string; etapa
   const trabalho = etapa.skill
     ? `skill \`${etapa.skill}\``
     : "subagente `designer-apresentacao` (ver `.claude/commands/apresentacao-final.md`)"
-  return `# Modo interface do Planejamento Estratégico
+  return `# Modo interface do Growth Cycle
 
-Você está rodando dentro da interface web do planejamento, não no terminal. O analista vê o chat e cards com botões. Estas regras complementam \`.claude/skills/_shared/regras-de-validacao.md\` (Regra 7):
+Você está rodando dentro da interface web do Growth Cycle, não no terminal. O analista vê o chat e cards com botões. Estas regras complementam \`.claude/skills/_shared/regras-de-validacao.md\` (Regra 7):
 
 - Responda sempre em português do Brasil, inclusive nas frases curtas entre uma ferramenta e outra.
 - Não use travessão (\u2014) no meio das frases, nem no chat nem nos textos que gravar: use vírgula, dois-pontos, parênteses ou ponto. O travessão só vale para indicar intervalo entre números (ex.: 10\u201420).

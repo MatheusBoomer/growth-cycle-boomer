@@ -15,7 +15,7 @@ KICKOFF: list[tuple[str, str]] = [
     ("C", "Oi, gente, bom dia. Estão me ouvindo? Acho que o meu microfone está baixinho."),
     ("M", "Bom dia, Camila! Te ouvimos sim. A Luiza está entrando agora, ela ficou presa no trânsito, aquela chuva em Curitiba de manhã não perdoa."),
     ("L", "Cheguei, cheguei. Desculpa o atraso, gente. Posso só pegar um café aqui? Dois minutinhos. [risos]"),
-    ("C", "Fica à vontade. Enquanto isso eu apresento quem está comigo hoje: o Rafael, que já cuida do tráfego de vocês e vai ajudar a gente a entender o histórico, e eu, a Camila, que vou conduzir o planejamento estratégico."),
+    ("C", "Fica à vontade. Enquanto isso eu apresento quem está comigo hoje: o Rafael, que já cuida do tráfego de vocês e vai ajudar a gente a entender o histórico, e eu, a Camila, que vou conduzir o Growth Cycle."),
     ("R", "Oi, pessoal. Eu sou o Rafael, freelancer, cuido de Meta e Google da Verdeluz desde o começo do ano passado. Tá picotando um pouco a minha conexão, se eu travar me avisem."),
     ("C", "Perfeito. Então vamos ao objetivo desta reunião, que é a gente se conhecer, entender o negócio por dentro e alinhar o que vocês esperam do planejamento de 12 meses. Depois eu vou pedir alguns arquivos, mas isso fica para o final. Pode ser?"),
     ("M", "Pode ser. Quer que eu comece contando a história da marca?"),

@@ -1,6 +1,6 @@
 ---
 name: contextualizacao-estrategica
-description: Constrói o entendimento estratégico do negócio do prospect — modelo de negócio, produto, público, posicionamento, hipóteses e gargalos — antes de qualquer análise numérica. Use logo após a Skill 01 (preparacao-de-contexto), como primeira etapa analítica do planejamento estratégico.
+description: Constrói o entendimento estratégico do negócio do prospect — modelo de negócio, produto, público, posicionamento, hipóteses e gargalos — antes de qualquer análise numérica. Use logo após a Skill 01 (preparacao-de-contexto), como primeira etapa analítica do Growth Cycle.
 ---
 
 # Skill 02 — Contextualização Estratégica
