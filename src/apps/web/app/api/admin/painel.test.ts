@@ -98,12 +98,21 @@ describe("GET /api/admin/painel", () => {
     expect((await painel(pedido())).status).toBe(401)
   })
 
-  it("no modo disco responde 400 com a mensagem da nuvem", async () => {
+  it("no modo disco responde 200 com um painel vazio comum, sem avatares e sem a mensagem da nuvem", async () => {
     mundo.servidor = { servico, armazenamento, usuarios: null }
     entrarComo(CHEFE)
     const r = await painel(pedido())
-    expect(r.status).toBe(400)
-    expect(await r.json()).toMatchObject({ erro: MSG_SEM_NUVEM })
+    expect(r.status).toBe(200)
+    const corpo = (await r.json()) as {
+      erro?: string
+      painel: { totais: { custoUsd: number }; porProjeto: unknown[] }
+      avatares: Record<string, string>
+    }
+    expect(corpo.erro).toBeUndefined()
+    expect(JSON.stringify(corpo)).not.toContain(MSG_SEM_NUVEM)
+    expect(corpo.painel.totais.custoUsd).toBe(0)
+    expect(corpo.painel.porProjeto).toEqual([])
+    expect(corpo.avatares).toEqual({})
   })
 
   it("o admin recebe painel, opções e avatares, com o filtro lido da query", async () => {
