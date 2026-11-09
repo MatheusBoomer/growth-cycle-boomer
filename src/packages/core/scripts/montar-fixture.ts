@@ -143,8 +143,8 @@ function tipoDoAprovado(rel: string): { tipo: TipoEntregavel; etapa: EtapaId; no
   const unicos: Record<string, { tipo: TipoEntregavel; etapa: EtapaId; nomeFinal: string; titulo: string }> = {
     "projecao-de-cenarios.xlsx": { tipo: "planilha", etapa: "06", nomeFinal: "projecao-de-cenarios", titulo: "Planilha de projeção de cenários" },
     "plano-de-acao-estrategico.docx": { tipo: "documento", etapa: "08", nomeFinal: "plano-de-acao-estrategico", titulo: "Plano de ação estratégico" },
-    "roteiro-apresentacao.json": { tipo: "roteiro", etapa: "final", nomeFinal: "roteiro-apresentacao", titulo: "Roteiro da apresentação final (60 slides)" },
-    "apresentacao-final.pptx": { tipo: "apresentacao", etapa: "final", nomeFinal: "apresentacao", titulo: "Apresentação final (60 slides)" },
+    "roteiro-apresentacao.json": { tipo: "roteiro", etapa: "final", nomeFinal: "roteiro-apresentacao", titulo: "Roteiro da apresentação final (55 slides)" },
+    "apresentacao-final.pptx": { tipo: "apresentacao", etapa: "final", nomeFinal: "apresentacao", titulo: "Apresentação final (55 slides)" },
   }
   return rel.startsWith("entrega/") ? (unicos[base] ?? null) : null
 }
