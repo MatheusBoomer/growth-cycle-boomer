@@ -33,6 +33,8 @@ export interface RefInsumo {
 
 export interface EtapaCatalogo {
   id: EtapaId
+  /** Agrupa etapas na tela (ex.: "Diagnóstico"). Opcional no tipo; o etapas.json real exige. */
+  fase?: string
   numero: string
   titulo: string
   rotuloStatus: string

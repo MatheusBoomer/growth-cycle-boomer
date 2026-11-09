@@ -5,6 +5,9 @@ import { ORDEM_ETAPAS, type Catalogo, type EtapaCatalogo, type EtapaId, type Ins
 
 export const CAMINHO_CATALOGO = ".claude/skills/_shared/etapas.json"
 
+/** Fase das etapas que saíram do catálogo (ex.: briefing-benchmark) mas ainda aparecem em projetos antigos. */
+export const FASE_ARQUIVADA = "Arquivada"
+
 export function carregarCatalogo(raiz: string): Catalogo {
   const bruto = JSON.parse(readFileSync(path.join(raiz, CAMINHO_CATALOGO), "utf8")) as Catalogo
   validarCatalogo(bruto)
@@ -20,6 +23,9 @@ export function validarCatalogo(c: Catalogo): void {
   }
   const insumos = new Set(c.insumos.map((i) => i.id))
   for (const e of c.etapas) {
+    if (typeof e.fase !== "string" || e.fase.trim() === "") {
+      throw new Error(`etapas.json: a etapa ${e.id} precisa do campo "fase" (texto não vazio)`)
+    }
     if (!Array.isArray(e.subagentes)) {
       throw new Error(`etapas.json: a etapa ${e.id} precisa do campo "subagentes" (lista, pode ser vazia)`)
     }
@@ -43,6 +49,11 @@ export function etapaDoCatalogo(c: Catalogo, id: EtapaId): EtapaCatalogo {
   const e = c.etapas.find((x) => x.id === id)
   if (!e) throw new Error(`Etapa desconhecida no catálogo: ${id}`)
   return e
+}
+
+/** Fase da etapa; etapa fora do catálogo (arquivada) devolve FASE_ARQUIVADA. */
+export function faseDaEtapa(c: Catalogo, etapa: string): string {
+  return c.etapas.find((x) => x.id === etapa)?.fase ?? FASE_ARQUIVADA
 }
 
 export function insumoDoCatalogo(c: Catalogo, id: string): InsumoCatalogo {
