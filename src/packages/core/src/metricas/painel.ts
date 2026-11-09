@@ -4,6 +4,10 @@ import { custosPorTurno } from "./custo"
 import { classificarTempo } from "./tempo"
 import type { Limites, LinhaPresenca, LinhaUso } from "./tipos"
 
+/**
+ * Filtro do painel. Contrato: `de` e `ate` são datas de calendário de Brasília `AAAA-MM-DD`, os dois dias incluídos;
+ * data inválida ou `ate` antes de `de` faz `agregarPainel` lançar `RangeError`.
+ */
 export interface FiltroPainel {
   /** Primeiro dia do período, `AAAA-MM-DD`, no fuso de Brasília (inclusivo). */
   de: string
@@ -29,12 +33,17 @@ export interface EntradaProjeto {
 export interface PontoSerie {
   inicio: string
   total: number
+  /** Ids crus de `LinhaUso.modelos`, mais `"outros"` (CHAVE_OUTROS) para o custo sem modelo; soma `total`. */
   porModelo: Record<string, number>
 }
 
 export interface PainelMetricas {
   periodo: { de: string; ate: string; granularidade: "dia" | "semana" }
   totais: { custoUsd: number; estimado: boolean; tempoUtilSeg: number; custoAnteriorUsd: number; tempoUtilAnteriorSeg: number }
+  /**
+   * Custo de vida inteira dos projetos concluídos (`concluidoEm`) dentro do período. Esse custo aplica os filtros de
+   * etapa e de modelo, mas NÃO o período.
+   */
   concluidos: { media: number | null; mediana: number | null; n: number }
   contagem: { ativos: number; concluidos: number; comPendencia: number }
   serie: PontoSerie[]
@@ -57,6 +66,8 @@ const DIA_MS = 86_400_000
 const BLOCO_MS = 30_000
 const BLOCO_SEGUNDOS = 30
 const MAXIMO_DIAS_POR_DIA = 31
+/** Chave de `PontoSerie.porModelo` para o custo sem modelo registrado. */
+export const CHAVE_OUTROS = "outros"
 
 const relogioLocal = new Intl.DateTimeFormat("en-US", {
   timeZone: FUSO,
@@ -122,6 +133,16 @@ function indiceDoBucket(inicios: number[], ms: number): number {
     }
   }
   return achado
+}
+
+/**
+ * Completa o custo por modelo de um bucket com a chave `"outros"`: o custo de turnos cujo `modelos` é nulo ou não cobre
+ * todo o `usd` (por exemplo, linhas antigas). Só entra quando o resto passa de 1e-9; ruído de ponto flutuante e resto
+ * negativo (modelos somando mais que o turno) não geram chave.
+ */
+function porModeloComOutros(total: number, porModelo: Record<string, number>): Record<string, number> {
+  const resto = arredondar(total - Object.values(porModelo).reduce((s, v) => s + v, 0))
+  return resto > 1e-9 ? { ...porModelo, [CHAVE_OUTROS]: resto } : porModelo
 }
 
 function mediana(valores: number[]): number | null {
@@ -208,8 +229,12 @@ export function agregarPainel(
   const porEtapa = new Map<string, number>()
   for (const c of custosPorTurno(usos)) {
     if (!etapaVale(c.etapa)) continue
-    const parcela =
-      modelos.size === 0 ? c.modelos : Object.fromEntries(Object.entries(c.modelos).filter(([m]) => modelos.has(m)))
+    // Valores por modelo arredondados por turno: com filtro de modelo, o custo do turno é exatamente a soma deles.
+    const parcela = Object.fromEntries(
+      Object.entries(c.modelos)
+        .filter(([m]) => modelos.size === 0 || modelos.has(m))
+        .map(([m, v]) => [m, arredondar(v)]),
+    )
     const valor = arredondar(modelos.size === 0 ? c.usd : Object.values(parcela).reduce((s, v) => s + v, 0))
     const projeto = projetos.get(c.slug)!
     projeto.vida += valor
@@ -279,7 +304,7 @@ export function agregarPainel(
     serie: serie.map((s, i) => ({
       inicio: new Date(inicios[i]!).toISOString(),
       total: arredondar(s.total),
-      porModelo: arredondarValores(s.porModelo),
+      porModelo: porModeloComOutros(arredondar(s.total), arredondarValores(s.porModelo)),
     })),
     porEtapa: [...porEtapa]
       .map(([etapa, usd]) => ({ etapa, fase: entrada.faseDaEtapa(etapa), usd: arredondar(usd) }))

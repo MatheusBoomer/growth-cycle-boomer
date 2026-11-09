@@ -94,6 +94,10 @@ function conferirSomas(p: PainelMetricas): void {
   expect(Math.abs(soma(p.serie.map((s) => s.total)) - total)).toBeLessThan(TOLERANCIA)
   expect(Math.abs(soma(p.porEtapa.map((e) => e.usd)) - total)).toBeLessThan(TOLERANCIA)
   expect(Math.abs(soma(p.porProjeto.map((e) => e.usd)) - total)).toBeLessThan(TOLERANCIA)
+  for (const ponto of p.serie) {
+    expect(Math.abs(soma(Object.values(ponto.porModelo)) - ponto.total)).toBeLessThan(TOLERANCIA)
+    for (const v of Object.values(ponto.porModelo)) expect(v).toBeGreaterThan(0)
+  }
   for (const pr of p.porProjeto) {
     expect(Math.abs(soma(Object.values(pr.porFase)) - pr.usd)).toBeLessThan(TOLERANCIA)
   }
@@ -176,6 +180,33 @@ describe("agregarPainel: série", () => {
     expect(p.serie[0]?.total).toBe(1)
     expect(p.serie.at(-1)?.total).toBe(2)
     expect(p.totais.custoUsd).toBe(3)
+  })
+
+  it("custo sem modelo registrado entra em \"outros\" e o porModelo soma o total do bucket", () => {
+    const usos = [
+      uso({ sessao: null, custoTurnoUsd: null, custoUsd: 0.6, modelos: null, fim: "2026-11-05T12:00:00Z" }),
+      uso({ sessao: "s2", custoTurnoUsd: 0.25, modelos: { haiku: 0.25 }, fim: "2026-11-05T14:00:00Z" }),
+    ]
+    const p = agregar({ usos })
+    expect(p.serie[2]?.total).toBe(0.85)
+    expect(p.serie[2]?.porModelo).toEqual({ haiku: 0.25, outros: 0.6 })
+    conferirSomas(p)
+  })
+
+  it("modelos que não cobrem o custo do turno deixam o resto em \"outros\"; ids crus nas chaves", () => {
+    const usos = [uso({ custoTurnoUsd: 1, modelos: { "claude-opus-4": 0.7 } })]
+    expect(agregar({ usos }).serie[2]?.porModelo).toEqual({ "claude-opus-4": 0.7, outros: 0.3 })
+  })
+
+  it("com filtro de modelo, \"outros\" não aparece e o porModelo soma o total", () => {
+    const usos = [
+      uso({ sessao: null, custoTurnoUsd: null, custoUsd: 0.6, modelos: null, fim: "2026-11-05T12:00:00Z" }),
+      uso({ sessao: "s2", custoTurnoUsd: 0.4, modelos: { haiku: 0.12345, opus: 0.27655 }, fim: "2026-11-05T14:00:00Z" }),
+    ]
+    const p = agregar({ usos }, filtro({ modelos: ["haiku"] }))
+    expect(p.serie[2]?.porModelo).toEqual({ haiku: p.serie[2]?.total })
+    expect(p.serie.every((s) => !("outros" in s.porModelo))).toBe(true)
+    conferirSomas(p)
   })
 
   it("31 dias ainda é por dia", () => {
