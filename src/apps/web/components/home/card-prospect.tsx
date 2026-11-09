@@ -35,25 +35,28 @@ export function CardProspect({ prospect: p, fotoUrl }: { prospect: ResumoProspec
   const [excluindo, setExcluindo] = useState(false)
   const [trocandoDono, setTrocandoDono] = useState(false)
   const concluido = p.etapaAtual === null
+  const nomeDono = p.dono ? nomeCurto(p.dono) : "Sem dono"
 
   return (
     // O link do nome se estica sobre o card inteiro (::after); só o menu ⋯ fica por cima dele.
-    <Card className="has-[a:focus-visible]:ring-ring relative transition duration-300 hover:border-foreground/15 has-[a:focus-visible]:ring-2">
+    <Card className="has-[a:focus-visible]:ring-ring relative h-full transition duration-300 hover:border-foreground/15 has-[a:focus-visible]:ring-2">
       <CardHeader>
         <CardTitle className="text-texto-forte truncate">
-          <Link href={`/prospects/${p.slug}`} className="after:absolute after:inset-0 after:rounded-[inherit] focus-visible:outline-none">
+          <Link href={`/prospects/${p.slug}`} title={p.nome} className="after:absolute after:inset-0 after:rounded-[inherit] focus-visible:outline-none">
             {p.nome}
           </Link>
         </CardTitle>
         {admin && (
           <div className="text-muted-foreground flex min-w-0 items-center gap-1.5 text-xs">
-            <AvatarPessoa email={p.dono} nome={p.dono ? nomeCurto(p.dono) : "Sem dono"} fotoUrl={fotoUrl} tamanho="sm" />
-            <span className="truncate">{p.dono ? nomeCurto(p.dono) : "Sem dono"}</span>
+            <AvatarPessoa email={p.dono} nome={nomeDono} fotoUrl={fotoUrl} tamanho="sm" />
+            <span className="truncate" title={nomeDono}>
+              {nomeDono}
+            </span>
           </div>
         )}
-        <CardAction className="relative z-10">
+        <CardAction className="relative z-10 max-sm:-my-1.5 max-sm:-mr-1.5">
           <DropdownMenu>
-            <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label={`Ações de ${p.nome}`} />}>
+            <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" className="max-sm:size-10" aria-label={`Ações de ${p.nome}`} />}>
               <EllipsisIcon />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -73,10 +76,10 @@ export function CardProspect({ prospect: p, fotoUrl }: { prospect: ResumoProspec
         </CardAction>
       </CardHeader>
       <CardContent className="space-y-2.5">
-        <p className={cn("truncate text-sm font-medium", concluido ? "text-sucesso" : "text-texto-forte")}>
+        <p className={cn("truncate text-sm font-medium", concluido ? "text-sucesso" : "text-texto-forte")} title={concluido ? undefined : p.rotuloEtapaAtual}>
           {concluido ? "Concluído" : p.rotuloEtapaAtual}
         </p>
-        <BarraEtapas concluidas={p.concluidas} total={p.totalEtapas} atual={!concluido} />
+        <BarraEtapas concluidas={p.concluidas} total={p.totalEtapas} atual={!concluido} aguardando={p.pendencias > 0} />
         {(p.teste || p.pendencias > 0) && (
           <div className="flex flex-wrap gap-1.5">
             {p.teste && <Badge variant="outline">Teste</Badge>}
@@ -88,7 +91,7 @@ export function CardProspect({ prospect: p, fotoUrl }: { prospect: ResumoProspec
           </div>
         )}
       </CardContent>
-      <CardFooter className="text-muted-foreground text-[11px]">
+      <CardFooter className="text-muted-foreground mt-auto text-[11px]">
         <span className="truncate">
           {p.concluidas} de {p.totalEtapas} etapas · atualizado em {quando(p.atualizadoEm)}
         </span>

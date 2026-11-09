@@ -65,6 +65,9 @@ for (const [nome, seletor] of [["escuro", ".dark"], ["claro", ":root"]] as const
       ["--muted-foreground", "popover", c("--muted-foreground"), c("--popover"), 4.5],
       ["--sucesso", "chip de sucesso", c("--sucesso"), sobre(c("--sucesso-fundo"), card), 4.5],
       ["--aviso", "chip de aviso", c("--aviso"), sobre(c("--aviso-fundo"), card), 4.5],
+      // Pior caso: o chip em cima do fundo da página (card translúcido sobre os halos), não só sobre o card branco.
+      ["--aviso", "chip de aviso sobre o fundo da página", c("--aviso"), sobre(c("--aviso-fundo"), fundo), 4.5],
+      ["--sucesso", "chip de sucesso sobre o fundo da página", c("--sucesso"), sobre(c("--sucesso-fundo"), fundo), 4.5],
       ["--destructive", "chip de perigo", c("--destructive"), sobre(c("--perigo-fundo"), card), 4.5],
       ["--link-acao", "card", c("--link-acao"), card, 4.5],
       ["--primary-foreground", "--primary (exceção do botão)", c("--primary-foreground"), c("--primary"), 3],

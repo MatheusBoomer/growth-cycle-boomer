@@ -43,7 +43,7 @@ function FiltroSelect({
 }) {
   return (
     <Select items={itens} value={valor} onValueChange={(v) => aoMudar(v ?? TODOS)}>
-      <SelectTrigger size="sm" className={cn("w-44", className)} aria-label={rotulo}>
+      <SelectTrigger className={cn("w-full data-[size=default]:h-10 sm:w-44 sm:data-[size=default]:h-8", className)} aria-label={rotulo}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent alignItemWithTrigger={false}>
@@ -131,7 +131,7 @@ export function GradeProspects({
             <p className="text-muted-foreground text-[11px] font-medium tracking-[0.14em] uppercase">Prospects</p>
             <h1 className="text-texto-forte mt-1 text-2xl font-semibold tracking-tight">Growth Cycles</h1>
           </div>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
             {admin && <DialogoClienteTeste etapas={etapas} />}
             <DialogoNovoProspect />
           </div>
@@ -151,16 +151,21 @@ export function GradeProspects({
           </Empty>
         ) : (
           <>
-            <div className="flex flex-wrap items-center gap-2" role="search">
-              <Input className="w-64" aria-label="Buscar prospect" placeholder="Buscar prospect…" value={busca} onChange={(e) => setBusca(e.target.value)} />
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center" role="search">
+              <Input className="col-span-2 h-10 sm:h-8 sm:w-64" aria-label="Buscar prospect" placeholder="Buscar prospect…" value={busca} onChange={(e) => setBusca(e.target.value)} />
               {admin && <FiltroSelect rotulo="Analista" valor={analista} itens={itensAnalista} aoMudar={setAnalista} />}
-              <FiltroSelect rotulo="Etapa" valor={etapa} itens={itensEtapa} aoMudar={setEtapa} className="w-52" />
+              <FiltroSelect rotulo="Etapa" valor={etapa} itens={itensEtapa} aoMudar={setEtapa} className="sm:w-52" />
               {admin && (
-                <Button variant={soPendentes ? "secondary" : "outline"} size="sm" aria-pressed={soPendentes} onClick={() => setSoPendentes((v) => !v)}>
+                <Button
+                  variant={soPendentes ? "secondary" : "outline"}
+                  className="col-span-2 h-10 sm:h-8"
+                  aria-pressed={soPendentes}
+                  onClick={() => setSoPendentes((v) => !v)}
+                >
                   Com aprovação pendente
                 </Button>
               )}
-              <div className="ml-auto">
+              <div className={cn("sm:ml-auto", admin && "col-span-2 sm:col-span-1")}>
                 <FiltroSelect rotulo="Ordenar" valor={ordem} itens={ITENS_ORDEM} aoMudar={(v) => setOrdem(v as Ordem)} />
               </div>
             </div>
@@ -192,24 +197,26 @@ export function GradeProspects({
                   </h2>
                   {emAndamento.length === 0 ? <p className="text-muted-foreground text-sm">Nenhum prospect em andamento.</p> : cartoes(emAndamento)}
                 </section>
-                <section className="flex flex-col gap-3">
-                  <h2 className="text-base font-semibold">
-                    <button
-                      type="button"
-                      aria-expanded={concluidosAbertos}
-                      aria-controls={`${id}-concluidos`}
-                      onClick={() => setConcluidosAbertos((v) => !v)}
-                      className="text-texto-forte focus-visible:ring-ring/50 -ml-1 flex items-center gap-1 rounded-md px-1 outline-none focus-visible:ring-3"
-                    >
-                      <ChevronRightIcon className={cn("text-muted-foreground size-4 transition-transform", concluidosAbertos && "rotate-90")} aria-hidden="true" />
-                      Concluídos
-                      <Contador n={concluidos.length} />
-                    </button>
-                  </h2>
-                  <div id={`${id}-concluidos`} hidden={!concluidosAbertos}>
-                    {concluidosAbertos && (concluidos.length === 0 ? <p className="text-muted-foreground text-sm">Nenhum prospect concluído.</p> : cartoes(concluidos))}
-                  </div>
-                </section>
+                {concluidos.length > 0 && (
+                  <section className="flex flex-col gap-3">
+                    <h2 className="text-base font-semibold">
+                      <button
+                        type="button"
+                        aria-expanded={concluidosAbertos}
+                        aria-controls={`${id}-concluidos`}
+                        onClick={() => setConcluidosAbertos((v) => !v)}
+                        className="text-texto-forte border-input hover:bg-accent focus-visible:ring-ring/50 flex min-h-10 items-center gap-1.5 rounded-lg border px-3 outline-none focus-visible:ring-3 sm:min-h-8"
+                      >
+                        <ChevronRightIcon className={cn("text-muted-foreground size-4 transition-transform", concluidosAbertos && "rotate-90")} aria-hidden="true" />
+                        Concluídos
+                        <Contador n={concluidos.length} />
+                      </button>
+                    </h2>
+                    <div id={`${id}-concluidos`} hidden={!concluidosAbertos}>
+                      {concluidosAbertos && cartoes(concluidos)}
+                    </div>
+                  </section>
+                )}
               </>
             )}
           </>

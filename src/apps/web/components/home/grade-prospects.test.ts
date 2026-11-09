@@ -110,6 +110,23 @@ describe("GradeProspects: seções", () => {
     await desmontar()
   })
 
+  it("sem nenhum concluído a seção Concluídos nem aparece", async () => {
+    const { raiz, desmontar } = await montar("usuario", prospects.slice(0, 3))
+    expect(botao(raiz, "Concluídos")).toBeUndefined()
+    expect(raiz.textContent).not.toContain("Concluídos")
+    await desmontar()
+  })
+
+  it("o botão Concluídos é um alvo de toque de 40 px, com chevron, contagem e aria-expanded", async () => {
+    const { raiz, desmontar } = await montar("usuario")
+    const alternar = botao(raiz, "Concluídos")!
+    expect(alternar.className).toContain("min-h-10")
+    expect(alternar.querySelector("svg")).not.toBeNull()
+    expect(alternar.textContent).toContain("1")
+    expect(alternar.hasAttribute("aria-expanded")).toBe(true)
+    await desmontar()
+  })
+
   it("seção sem itens mostra o próprio estado vazio", async () => {
     const { raiz, desmontar } = await montar("usuario", [prospects[3]!])
     expect(raiz.textContent).toContain("Nenhum prospect em andamento")
@@ -185,6 +202,34 @@ describe("GradeProspects: filtros", () => {
     const { raiz, desmontar } = await montar("usuario")
     await escolher(raiz, "Ordenar", "Nome")
     expect(titulos(raiz)).toEqual(["Ilha", "Iszi", "Verdeluz"])
+    await desmontar()
+  })
+})
+
+describe("GradeProspects: celular", () => {
+  const busca = (raiz: HTMLElement) => raiz.querySelector('input[aria-label="Buscar prospect"]')!
+
+  it("a barra de filtros é uma grade de 2 colunas no celular e uma linha corrida de sm para cima", async () => {
+    const { raiz, desmontar } = await montar("admin")
+    const barra = raiz.querySelector('[role="search"]')!
+    expect(barra.className).toContain("grid-cols-2")
+    expect(barra.className).toContain("sm:flex")
+    expect(busca(raiz).className).toContain("col-span-2")
+    await desmontar()
+  })
+
+  it("busca, selects e botão de pendentes têm 40 px de altura no celular", async () => {
+    const { raiz, desmontar } = await montar("admin")
+    expect(busca(raiz).className).toContain("h-10")
+    for (const rotulo of ["Analista", "Etapa", "Ordenar"]) expect(raiz.querySelector(`[aria-label="${rotulo}"]`)!.className).toContain("data-[size=default]:h-10")
+    expect(botao(raiz, "Com aprovação pendente")!.className).toContain("h-10")
+    await desmontar()
+  })
+
+  it("os botões do cabeçalho quebram de linha em vez de estourar a largura", async () => {
+    const { raiz, desmontar } = await montar("admin")
+    const grupo = raiz.querySelector("header > div:last-child")!
+    expect(grupo.className).toContain("flex-wrap")
     await desmontar()
   })
 })

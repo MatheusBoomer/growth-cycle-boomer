@@ -92,7 +92,7 @@ describe("CardProspect: analista e etapa", () => {
 
   it("mostra a barra de etapas, o contador e os selos de aprovação e teste", async () => {
     const { raiz, desmontar } = await renderizar({ ...comDono, pendencias: 2, teste: true } as ResumoProspect, "usuario")
-    expect(raiz.querySelector('[role="img"]')?.getAttribute("aria-label")).toBe("2 de 8 etapas concluídas")
+    expect(raiz.querySelector('[role="img"]')?.getAttribute("aria-label")).toBe("2 de 8 etapas concluídas, etapa atual aguardando aprovação")
     expect(raiz.textContent).toContain("2 de 8 etapas")
     expect(raiz.textContent).toContain("2 aprovações pendentes")
     expect(raiz.textContent).toContain("Teste")
@@ -117,5 +117,30 @@ describe("CardProspect: analista e etapa", () => {
       if (fusoOriginal === undefined) delete process.env.TZ
       else process.env.TZ = fusoOriginal
     }
+  })
+})
+
+describe("CardProspect: layout e acessibilidade", () => {
+  const longo = { ...prospect, nome: "Café do Ponto Distribuidora de Bebidas e Mercearia Ltda", dono: "maria.eduarda.cavalcanti.de.albuquerque@boomer.com", concluidas: 1, totalEtapas: 8 } as unknown as ResumoProspect
+
+  it("o rodapé desce até a base do cartão (mt-auto) e o cartão ocupa a célula da grade", async () => {
+    const { raiz, desmontar } = await renderizar(longo, "admin")
+    expect(raiz.querySelector('[data-slot="card-footer"]')?.className).toContain("mt-auto")
+    expect(raiz.querySelector('[data-slot="card"]')?.className).toMatch(/\bh-full\b/)
+    await desmontar()
+  })
+
+  it("nome do prospect e do dono truncados trazem o texto inteiro no title", async () => {
+    const { raiz, desmontar } = await renderizar(longo, "admin")
+    expect(raiz.querySelector("a")?.getAttribute("title")).toBe(longo.nome)
+    const dono = [...raiz.querySelectorAll("span")].find((s) => s.className.includes("truncate") && s.textContent === "Maria Eduarda Cavalcanti De Albuquerque")
+    expect(dono?.getAttribute("title")).toBe("Maria Eduarda Cavalcanti De Albuquerque")
+    await desmontar()
+  })
+
+  it("o menu de ações tem área de toque de 40 px no celular", async () => {
+    const { raiz, desmontar } = await renderizar(longo, "usuario")
+    expect(raiz.querySelector('[aria-label^="Ações de"]')?.className).toContain("max-sm:size-10")
+    await desmontar()
   })
 })
