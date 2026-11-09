@@ -76,13 +76,18 @@ export function resumirProjeto(usos: LinhaUso[], presencas: LinhaPresenca[], lim
   let custoUsd = 0
   let estimado = false
 
-  for (const etapa of ORDEM_ETAPAS) {
-    const custo = custos.get(etapa)
+  // Os totais somam toda etapa que aparece nos dados, inclusive a arquivada (briefing-benchmark, fora de ORDEM_ETAPAS),
+  // para baterem com a soma por pessoa; o detalhe por etapa mostra só as etapas de ORDEM_ETAPAS.
+  const etapasNosDados = new Set<string>([...ORDEM_ETAPAS, ...custos.keys(), ...tempoEtapa.keys()])
+  for (const etapa of etapasNosDados) {
+    const custo = custos.get(etapa as EtapaId)
     const t = tempoEtapa.get(etapa)
     if (!custo && !t) continue
     const custoDaEtapa = custo ?? { usd: 0, estimado: false, turnos: 0, modelos: {} }
     const tempoDaEtapa = t ?? tempoZero()
-    porEtapa[etapa] = { custo: custoDaEtapa, tempo: tempoDaEtapa, temPresenca: comPresenca.has(etapa) }
+    if ((ORDEM_ETAPAS as readonly string[]).includes(etapa)) {
+      porEtapa[etapa as EtapaId] = { custo: custoDaEtapa, tempo: tempoDaEtapa, temPresenca: comPresenca.has(etapa) }
+    }
     custoUsd += custoDaEtapa.usd
     estimado ||= custoDaEtapa.estimado
     for (const chave of Object.keys(tempo) as Array<keyof TempoSegundos>) tempo[chave] += tempoDaEtapa[chave]

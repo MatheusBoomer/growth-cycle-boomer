@@ -106,6 +106,34 @@ describe("resumirProjeto", () => {
     expect(r.porPessoa.find((p) => p.email === "ana@agencia.com")?.custoUsd).toBe(1)
   })
 
+  it("etapa arquivada (briefing-benchmark) entra nos totais do projeto, mas não no detalhe por etapa", () => {
+    const arquivada = "briefing-benchmark" as EtapaId
+    const usos = [
+      uso({ etapa: "03", autor: "ana@agencia.com", custoTurnoUsd: 2, custoUsd: 2, modelos: { opus: 2 } }),
+      uso({
+        etapa: arquivada,
+        autor: "bia@agencia.com",
+        sessao: "s-bb",
+        custoTurnoUsd: 3,
+        custoUsd: 3,
+        modelos: { opus: 3 },
+        inicio: new Date(T0 + 600_000).toISOString(),
+        fim: new Date(T0 + 660_000).toISOString(),
+      }),
+    ]
+    const presencas = [
+      aviso({ etapa: arquivada, email: "bia@agencia.com", em: new Date(T0 + 900_000 + 5_000).toISOString() }),
+    ]
+    const r = resumirProjeto(usos, presencas, LIMITES)
+
+    expect(r.custoUsd).toBe(5)
+    expect(r.tempo).toEqual({ agente: 120, ativo: 30, ocioso: 0, descartado: 0 })
+    expect(Object.keys(r.porEtapa)).toEqual(["03"])
+    expect(r.porPessoa.reduce((s, p) => s + p.custoUsd, 0)).toBe(r.custoUsd)
+    expect(r.porPessoa.reduce((s, p) => s + p.tempo.ativo, 0)).toBe(r.tempo.ativo)
+    expect(r.porPessoa.reduce((s, p) => s + p.tempo.agente, 0)).toBe(r.tempo.agente)
+  })
+
   it("marca estimado quando há linha antiga", () => {
     const r = resumirProjeto([uso({ sessao: null, custoTurnoUsd: null, modelos: null, custoUsd: 4 })], [], LIMITES)
     expect(r.estimado).toBe(true)
