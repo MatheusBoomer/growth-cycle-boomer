@@ -3,7 +3,6 @@ import { ErroNaoAutenticado } from "@workspace/core/erros"
 
 const exigirAdmin = vi.hoisted(() => vi.fn())
 vi.mock("@/lib/sessao", () => ({ exigirAdmin }))
-vi.mock("@/lib/servidor", () => ({ servidor: () => ({ raiz: "/nao/existe/mesmo" }) }))
 
 // Registra cada comando chamado; `falham` lista os comandos que "não existem" na máquina do teste.
 const chamadas = vi.hoisted(() => [] as string[])
@@ -19,7 +18,7 @@ vi.mock("node:child_process", () => ({
 
 const { GET } = await import("./route")
 
-const VARIAVEIS = ["PLANEJAMENTO_EXECUTOR", "PLANEJAMENTO_DADOS", "ANTHROPIC_API_KEY", "APIFY_TOKEN"] as const
+const VARIAVEIS = ["PLANEJAMENTO_EXECUTOR", "PLANEJAMENTO_DADOS", "ANTHROPIC_API_KEY"] as const
 const antes = new Map<string, string | undefined>()
 const plataformaOriginal = Object.getOwnPropertyDescriptor(process, "platform")!
 

@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs"
 import path from "node:path"
 import { describe, expect, it } from "vitest"
 
-// Validação dos 13 fluxogramas do catálogo de skills: o parser do Mermaid (roda no jsdom) e, além dele, a validação
+// Validação dos 12 fluxogramas do catálogo de skills: o parser do Mermaid (roda no jsdom) e, além dele, a validação
 // estrutural, que também confere a convenção de checkpoint e a ausência de travessão, coisas que o parser não vê.
 
 const RAIZ = path.resolve(import.meta.dirname, "../../../..")
@@ -16,10 +16,9 @@ const FLUXOS = [
   ".claude/skills/04-unidade-economica/fluxo.mmd",
   ".claude/skills/05-solucoes/fluxo.mmd",
   ".claude/skills/06-metas-e-cenarios/fluxo.mmd",
-  ".claude/skills/07-briefing-e-benchmark/fluxo.mmd",
-  ".claude/skills/08-midia-paga/fluxo.mmd",
-  ".claude/skills/09-plano-de-acao/fluxo.mmd",
-  ".claude/skills/10-apresentacao-final/fluxo.mmd",
+  ".claude/skills/07-midia-paga/fluxo.mmd",
+  ".claude/skills/08-plano-de-acao/fluxo.mmd",
+  ".claude/skills/09-apresentacao-final/fluxo.mmd",
   ".claude/agents/analista-dados.fluxo.mmd",
   ".claude/agents/pesquisador-benchmark.fluxo.mmd",
 ]

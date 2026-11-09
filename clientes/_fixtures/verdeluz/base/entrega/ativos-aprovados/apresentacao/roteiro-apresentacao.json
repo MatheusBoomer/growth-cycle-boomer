@@ -617,7 +617,7 @@
         "Google sobe 51% e Meta 18% sobre o ano atual",
         "Pico de NOV: R$ 49,3 mil (14,4% do ano)"
       ],
-      "fonte": "secoes/08-midia-paga.md"
+      "fonte": "secoes/07-midia-paga.md"
     },
     {
       "tipo": "tabela_lateral",
@@ -629,14 +629,14 @@
         "Google a 48% nos vales, onde a intenção pesa mais",
         "Total de R$ 341.683 em 12 meses"
       ],
-      "fonte": "secoes/08-midia-paga.md"
+      "fonte": "secoes/07-midia-paga.md"
     },
     {
       "tipo": "imagem_larga",
       "titulo": "Mídia paga · Estratégia por Curva ABC",
       "imagem": "entrega/ativos-aprovados/graficos/tabela-curva-abc-estrategia.png",
       "texto": "A Curva C não recebe verba direta: uma venda paga custa R$ 109,90 e o preço médio é R$ 63,98.",
-      "fonte": "secoes/08-midia-paga.md"
+      "fonte": "secoes/07-midia-paga.md"
     },
     {
       "tipo": "tabela_lateral",
@@ -648,7 +648,7 @@
         "Escala em DEZ, ABR e SET; contenção em JAN e FEV",
         "Estoque de segurança vigiado antes de cada pico"
       ],
-      "fonte": "secoes/08-midia-paga.md"
+      "fonte": "secoes/07-midia-paga.md"
     },
     {
       "tipo": "grafico",
@@ -660,7 +660,7 @@
         "Google médio de 2,82x e Meta de 1,23x (GA4)",
         "Risco de compressão em JAN, FEV, ABR e JUN"
       ],
-      "fonte": "secoes/08-midia-paga.md"
+      "fonte": "secoes/07-midia-paga.md"
     },
     {
       "tipo": "bullets",
@@ -673,7 +673,7 @@
         "Marketplace fora do horizonte, pela premissa do cliente",
         "Sem a redução, a dependência vai a 58% e o ROAS a 2,56x"
       ],
-      "fonte": "secoes/08-midia-paga.md"
+      "fonte": "secoes/07-midia-paga.md"
     },
     {
       "tipo": "divisoria",

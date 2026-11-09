@@ -17,7 +17,6 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
 import {
   agruparPorEtapa,
-  agruparPorMarca,
   contarPorEtapa,
   FILTROS_INICIAIS,
   filtrarItens,
@@ -110,7 +109,7 @@ export function Biblioteca({
       <Empty>
         <EmptyHeader>
           <EmptyTitle>Nenhuma imagem ainda</EmptyTitle>
-          <EmptyDescription>Gráficos aprovados, anexos e o benchmark aparecem aqui.</EmptyDescription>
+          <EmptyDescription>Gráficos aprovados e anexos aparecem aqui.</EmptyDescription>
         </EmptyHeader>
       </Empty>
     )
@@ -128,16 +127,11 @@ export function Biblioteca({
         {agruparPorEtapa(visiveis).map((g) => (
           <section key={g.etapa} className="flex flex-col gap-3">
             <h3 className="text-sm font-semibold">{rotuloEtapa(catalogo, g.etapa)}</h3>
-            {agruparPorMarca(g.itens).map((m) => (
-              <div key={m.marca ?? ""} className="flex flex-col gap-2">
-                {m.marca && <h4 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">{m.marca}</h4>}
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3">
-                  {m.itens.map((i) => (
-                    <CardImagem key={i.id} slug={slug} item={i} aoAbrir={() => setAberto({ id: i.id, indice: indicePorId.get(i.id) ?? 0 })} />
-                  ))}
-                </div>
-              </div>
-            ))}
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3">
+              {g.itens.map((i) => (
+                <CardImagem key={i.id} slug={slug} item={i} aoAbrir={() => setAberto({ id: i.id, indice: indicePorId.get(i.id) ?? 0 })} />
+              ))}
+            </div>
           </section>
         ))}
       </div>

@@ -37,7 +37,7 @@ describe("destino do entregável aprovado", () => {
     expect(destinoAprovado({ tipo: "planilha", nomeFinal: "projecao-de-cenarios", etapa: "06" })).toBe(
       "entrega/ativos-aprovados/projecao/projecao-de-cenarios.xlsx",
     )
-    expect(destinoAprovado({ tipo: "documento", nomeFinal: "plano-de-acao-estrategico", etapa: "09" })).toBe(
+    expect(destinoAprovado({ tipo: "documento", nomeFinal: "plano-de-acao-estrategico", etapa: "08" })).toBe(
       "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.docx",
     )
     expect(destinoAprovado({ tipo: "html", nomeFinal: "benchmark", etapa: "07" })).toBe(

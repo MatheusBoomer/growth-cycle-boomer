@@ -140,11 +140,11 @@ describe("NuvemArmazenamento", () => {
       etapas: Record<string, unknown>
     }
     delete antigo.perguntas
-    delete antigo.etapas["09"]
+    delete antigo.etapas["08"]
     await repositorio.gravarEstado(SLUG, antigo as never, 0)
     const lido = await arm.lerEstado(SLUG)
     expect(lido?.perguntas).toEqual([])
-    expect(lido?.etapas["09"]?.status).toBe("bloqueada")
+    expect(lido?.etapas["08"]?.status).toBe("bloqueada")
   })
 
   it("gravar arquivo agenda sincronização", async () => {

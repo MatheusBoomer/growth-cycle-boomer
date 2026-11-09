@@ -1,6 +1,6 @@
-# Decisões da etapa 08 · Mídia paga
+# Decisões da etapa 07 · Mídia paga
 
-## 08 · Mídia paga: Verdeluz Cosméticos Veganos
+## 07 · Mídia paga: Verdeluz Cosméticos Veganos
 
 Seção aprovada (`midia-paga`), com o gráfico de alocação, as tabelas de alocação, de Curva ABC e de calendário, e o gráfico de ROAS esperado, todos conferidos contra o cenário Realista e o histórico.
 

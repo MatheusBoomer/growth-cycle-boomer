@@ -1,6 +1,6 @@
-# Decisões da etapa 09 · Plano de ação
+# Decisões da etapa 08 · Plano de ação
 
-## 09 · Plano de ação: Verdeluz Cosméticos Veganos
+## 08 · Plano de ação: Verdeluz Cosméticos Veganos
 
 Plano aprovado (`plano-de-acao-estrategico.docx`), montado pelo `scripts/preencher_plano_acao_docx.py` a partir do modelo da agência. `validar_solucoes.py --modo plano` sem erro: as 24 soluções do registro viraram ação.
 

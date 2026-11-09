@@ -27,6 +27,8 @@ const NOME_DO_CLIENTE = "Verdeluz Teste"
 const SITE = "https://www.verdeluz.example"
 const IGNORADOS = new Set(["README.md", "CLAUDE.md", "status-planejamento.md", ".DS_Store"])
 const PRIMEIRO = "2026-10-22T10:00:00.000Z"
+/** O benchmark de anúncios pertencia à antiga etapa 07, hoje desativada: o que o cliente de produção tiver dele não entra no fixture. */
+const NAO_COLHIDOS = ["dados/benchmark-meta/", "entrega/ativos-aprovados/benchmark/"]
 
 /** Etapa que produz cada gráfico ou tabela PNG, com o tipo e o título do entregável. */
 const GRAFICOS: Record<string, [EtapaId, "grafico" | "tabela", string]> = {
@@ -51,11 +53,11 @@ const GRAFICOS: Record<string, [EtapaId, "grafico" | "tabela", string]> = {
   "meta-realista-vs-ano-atual": ["06", "grafico", "Receita do ano atual vs. cenário Realista"],
   "cenarios-pessimista-realista-otimista": ["06", "grafico", "Cenários Pessimista, Realista e Otimista"],
   "tabela-cenarios-projecao": ["06", "tabela", "Tabela dos cenários de projeção"],
-  "alocacao-verba-plataforma": ["08", "grafico", "Alocação de verba por plataforma"],
-  "tabela-alocacao-verba-plataforma": ["08", "tabela", "Tabela de alocação de verba por plataforma"],
-  "tabela-curva-abc-estrategia": ["08", "tabela", "Estratégia de mídia por Curva ABC"],
-  "tabela-calendario-estrategico": ["08", "tabela", "Calendário estratégico de mídia"],
-  "roas-esperado-plataforma": ["08", "grafico", "ROAS esperado por plataforma"],
+  "alocacao-verba-plataforma": ["07", "grafico", "Alocação de verba por plataforma"],
+  "tabela-alocacao-verba-plataforma": ["07", "tabela", "Tabela de alocação de verba por plataforma"],
+  "tabela-curva-abc-estrategia": ["07", "tabela", "Estratégia de mídia por Curva ABC"],
+  "tabela-calendario-estrategico": ["07", "tabela", "Calendário estratégico de mídia"],
+  "roas-esperado-plataforma": ["07", "grafico", "ROAS esperado por plataforma"],
 }
 
 /** Insumos recebidos em cada etapa e o arquivo de destino de cada um. */
@@ -67,7 +69,7 @@ const INSUMOS: { etapa: EtapaId; id: string; arquivo: string; resumo: string }[]
   { etapa: "03", id: "produtos-curva-abc", arquivo: "dados/produtos-curva-abc.xlsx", resumo: "58 linhas de dados" },
   { etapa: "03", id: "quebra-pagamento", arquivo: "dados/quebra-pagamento.xlsx", resumo: "36 linhas de dados" },
   { etapa: "04", id: "clientes-historico", arquivo: "dados/clientes-historico.xlsx", resumo: "10400 linhas de dados" },
-  { etapa: "08", id: "prints-campanhas", arquivo: "contexto/brutos/prints-campanhas/print-01.png", resumo: "4 prints de campanha" },
+  { etapa: "07", id: "prints-campanhas", arquivo: "contexto/brutos/prints-campanhas/print-01.png", resumo: "4 prints de campanha" },
 ]
 
 /** Arquivos que o analista envia (kit de cada etapa). */
@@ -75,7 +77,7 @@ const KIT: Partial<Record<EtapaId, string[]>> = {
   "01": ["contexto/brutos/kickoff-transcricao-bruta.docx", "contexto/brutos/formulario-cliente.docx"],
   "03": ["dados/historico-mensal.xlsx", "dados/produtos-curva-abc.xlsx", "dados/quebra-pagamento.xlsx"],
   "04": ["dados/clientes-historico.xlsx"],
-  "08": [1, 2, 3, 4].map((n) => `contexto/brutos/prints-campanhas/print-0${n}.png`),
+  "07": [1, 2, 3, 4].map((n) => `contexto/brutos/prints-campanhas/print-0${n}.png`),
 }
 
 const emBarras = (p: string) => p.split(path.sep).join("/")
@@ -91,7 +93,7 @@ const momento = (etapa: EtapaId, minutos = 0) => {
 function etapaDoArquivo(rel: string): EtapaManifesto {
   if (rel === "contexto/site-referencia.md" || rel === "contexto/brutos/site-simulado.md") return "00"
   const decisao = rel.match(/^contexto\/decisoes\/(\d\d)-/)
-  if (decisao) return decisao[1] === "10" ? "final" : (decisao[1] as EtapaId)
+  if (decisao) return decisao[1] === "09" ? "final" : (decisao[1] as EtapaId)
   const secao = rel.match(/^entrega\/ativos-aprovados\/secoes\/(\d\d)-/)
   if (secao) return secao[1] as EtapaId
   const grafico = rel.match(/^entrega\/ativos-aprovados\/graficos\/(.+)\.png$/)
@@ -102,12 +104,11 @@ function etapaDoArquivo(rel: string): EtapaManifesto {
     "dados/historico-mensal.xlsx": "03", "dados/produtos-curva-abc.xlsx": "03", "dados/quebra-pagamento.xlsx": "03",
     "dados/clientes-historico.xlsx": "04", "contexto/solucoes.json": "05",
     "entrega/ativos-aprovados/projecao/projecao-de-cenarios.xlsx": "06",
-    "entrega/ativos-aprovados/benchmark/benchmark.html": "07", "dados/benchmark-meta/analise-benchmark.md": "07",
-    "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.docx": "09",
+    "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.docx": "08",
     "entrega/ativos-aprovados/apresentacao/roteiro-apresentacao.json": "final", "entrega/apresentacao-final.pptx": "final",
   }
   if (tabela[rel]) return tabela[rel]!
-  if (rel.startsWith("contexto/brutos/prints-campanhas/")) return "08"
+  if (rel.startsWith("contexto/brutos/prints-campanhas/")) return "07"
   throw new Error(`Arquivo do cliente de produção sem etapa definida: ${rel}`)
 }
 
@@ -120,7 +121,7 @@ async function listar(pasta: string, base = pasta): Promise<string[]> {
     if (i.isDirectory()) arquivos.push(...(await listar(abs, base)))
     else arquivos.push(emBarras(path.relative(base, abs)))
   }
-  return arquivos.sort()
+  return arquivos.filter((rel) => !NAO_COLHIDOS.some((p) => rel.startsWith(p))).sort()
 }
 
 async function copiar(origem: string, destino: string) {
@@ -140,9 +141,8 @@ function tipoDoAprovado(rel: string): { tipo: TipoEntregavel; etapa: EtapaId; no
     return { tipo, etapa, nomeFinal: grafico[1]!, titulo }
   }
   const unicos: Record<string, { tipo: TipoEntregavel; etapa: EtapaId; nomeFinal: string; titulo: string }> = {
-    "benchmark.html": { tipo: "html", etapa: "07", nomeFinal: "benchmark", titulo: "Relatório de benchmark (ilustrativo)" },
     "projecao-de-cenarios.xlsx": { tipo: "planilha", etapa: "06", nomeFinal: "projecao-de-cenarios", titulo: "Planilha de projeção de cenários" },
-    "plano-de-acao-estrategico.docx": { tipo: "documento", etapa: "09", nomeFinal: "plano-de-acao-estrategico", titulo: "Plano de ação estratégico" },
+    "plano-de-acao-estrategico.docx": { tipo: "documento", etapa: "08", nomeFinal: "plano-de-acao-estrategico", titulo: "Plano de ação estratégico" },
     "roteiro-apresentacao.json": { tipo: "roteiro", etapa: "final", nomeFinal: "roteiro-apresentacao", titulo: "Roteiro da apresentação final (60 slides)" },
     "apresentacao-final.pptx": { tipo: "apresentacao", etapa: "final", nomeFinal: "apresentacao", titulo: "Apresentação final (60 slides)" },
   }

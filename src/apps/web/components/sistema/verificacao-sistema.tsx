@@ -17,8 +17,6 @@ import { ehPaginaDeLogin } from "@/lib/login"
 interface Sistema {
   claude: { instalado: boolean; versao: string | null; logado: boolean; metodo: string | null; plano: string | null }
   python: { ok: boolean; detalhe: string | null }
-  ffmpeg: boolean
-  apify: boolean
   previa: boolean
   /** Ausentes numa resposta antiga: valem como modo local (cli). */
   executor?: "sdk" | "cli" | "demo"
@@ -56,11 +54,6 @@ export function VerificacaoSistema() {
   // No executor sdk não há Claude Code a instalar: só a chave da API e o Python do servidor contam.
   const bloqueado = comChaveDaApi ? semChave || !sistema.python.ok : !sistema.claude.instalado || !sistema.claude.logado || !sistema.python.ok
   const cobrado = !comChaveDaApi && sistema.claude.logado && sistema.claude.metodo !== "claude.ai"
-  const faltasBenchmark = [
-    !sistema.ffmpeg && (nuvem ? "o ffmpeg precisa ser configurado no servidor" : "instale o ffmpeg (brew install ffmpeg)"),
-    !sistema.apify &&
-      (nuvem ? "o APIFY_TOKEN precisa ser configurado no servidor" : "coloque o APIFY_TOKEN no arquivo .env da raiz do projeto (modelo em .env.example)"),
-  ].filter(Boolean) as string[]
   const semPrevia = !sistema.previa
 
   return (
@@ -106,19 +99,12 @@ export function VerificacaoSistema() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {(cobrado || faltasBenchmark.length > 0 || semPrevia) && (
+      {(cobrado || semPrevia) && (
         <div className="fixed right-4 bottom-4 z-50 flex max-w-sm flex-col gap-2">
           {cobrado && (
             <Alert className="bg-popover text-popover-foreground shadow-(--sombra-card)">
               <AlertDescription>
                 O Claude Code desta máquina está autenticado por chave de API ({sistema.claude.metodo}), não pela assinatura. O uso vai ser cobrado na API.
-              </AlertDescription>
-            </Alert>
-          )}
-          {faltasBenchmark.length > 0 && (
-            <Alert className="bg-popover text-popover-foreground shadow-(--sombra-card)">
-              <AlertDescription>
-                Para o benchmark de anúncios (etapa 07): {faltasBenchmark.join("; ")}. As outras etapas funcionam normalmente.
               </AlertDescription>
             </Alert>
           )}

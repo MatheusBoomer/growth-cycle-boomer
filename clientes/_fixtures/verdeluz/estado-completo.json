@@ -69,39 +69,28 @@
       "concluidaEm": "2026-10-22T15:55:00.000Z",
       "sinalizada": true,
       "resumoDecisoes": "## 06 · Metas e cenários: Verdeluz Cosméticos Veganos\n\nSeção aprovada (`metas-e-cenarios`), com gráficos, tabela dos cenários e planilha de projeção, todos aprovados. Cálculo feito por `scripts/projecao.py` (distribuição não flat e cadeia sessões, vendas e receita validada contra a meta de cada cenário).\n\n### Decisões do analista\n- **Base da meta:** receita captada do site, com linha de tradução para a receita aprovada (quebra de cada cenário).\n- **Meta Realista:** R$ 1.586.601 de receita captada em 12 meses, **+30,0%** sobre o ano atual (R$ 1.220.462). Em aprovada, R$ 1.499.338. Classificada como **agressiva**.\n- **A meta de 40% das sócias é o Otimista (teto).** A Luiza havia dito que a meta Realista poderia ficar em torno de 30% se a ruptura não fosse resolvida.\n- **Horizonte:** 12 meses, na mesma ordem do histórico (OUT a SET), posição a posição, com **entrada gradual** das melhorias (OUT/26 em +8,9% e SET/27 em +44,3% no Realista).\n- **MAR e ABR normalizados:** no Realista e no Otimista, a receita desses meses do ano atual foi dividida por 0,78 (queda de 22% declarada) antes dos pesos sazonais. No Pessimista a ruptura se repete.\n- **Disposição para mudanças estruturais:** plataforma não, frete e kits sim, preço só com conta feita (resposta da etapa 02). Premissa assumida: sem trocar a Nuvemshop.\n- **Apresentação ao prospect:** mostrar os três cenários, com o Realista em destaque.\n\n### Números aprovados (receita captada do site)\n- **Ano atual:** R$ 1.220.462 (aprovada R$ 1.141.132), investimento R$ 262.000, ROAS 4,66x, conversão 1,41%, 4 meses com R$ 100 mil ou mais.\n- **Pessimista:** R$ 1.098.416 (-10,0%), aprovada R$ 1.016.035 (quebra de 7,5%). Nenhuma solução executada. Investimento R$ 429.574 (+64%), ROAS 2,56x, conversão 1,35% (1,00% em ABR com nova ruptura), 3 meses com R$ 100 mil ou mais.\n- **Realista:** R$ 1.586.601 (+30,0%), aprovada R$ 1.499.338 (quebra de 5,5%). Investimento R$ 341.683 (+30,4%), ROAS 4,64x, conversão média 1,75%, ticket R$ 199,47, 7.954 vendas, 10 meses com R$ 100 mil ou mais. Soluções: P1.S1, P1.S3, P2.S1, P2.S3, P3.S1, P3.S2, P4.S1, P4.S2, P5.S1, P5.S2, mais P7.S1 e P7.S2 como pré-requisito de medição.\n- **Otimista:** R$ 1.708.647 (+40,0%), aprovada R$ 1.623.215 (quebra de 5,0%). Investimento R$ 335.849, ROAS 5,09x, conversão média 1,73%, ticket R$ 202,30, 8.446 vendas. Soma ao Realista: P1.S2, P2.S2, P3.S3, P4.S3, P5.S3, P8.S1, P8.S2 e P8.S3. É teto, não meta.\n- P6 e P7.S3 ficam fora dos cenários (sem impacto quantificado).\n\n### Premissas de construção\n- A conversão é a variável que fecha a meta de cada mês (um KPI compensa os outros). O investimento é derivado das sessões, do custo por sessão e da dependência.\n- Custo por sessão: Realista de R$ 1,60 para R$ 1,40, Otimista de R$ 1,55 para R$ 1,30, Pessimista de R$ 1,70 para R$ 1,90. Dependência de mídia paga: Realista de 54% para 45%, Otimista de 53% para 42%, Pessimista de 55% para 58%.\n- Planilha: o \"Período anterior\" do investimento e do custo por sessão cresce ao longo do ano atual, então a comparação mês a mês com o Realista distorce. A soma anual de cada aba bate com os cenários (diferença de R$ 0,00).\n\n### Ressalvas\n- Sazonalidade de um único ano de histórico (picos em NOV e MAI), com ruptura em MAR e ABR.\n- Premissas de agência a validar com o cliente: recompra de 5% a 10% (P3), ticket de +5% a +10% (P8), quebra por cenário e a normalização de MAR e ABR pela queda de 22% declarada.\n- A meta Realista só fecha se a conversão chegar perto de 1,8% no platô, se o CAC ficar sob o teto de R$ 80 e se a ruptura não se repetir. Sem a medição conciliada (P7.S1), nenhum cenário é verificável com precisão.\n- Os impactos das soluções se sobrepõem e não se somam.",
-      "handoff": "Nesta sessão, a meta e os cenários ficaram fechados. Não preciso de nada novo, só pensa numa lista de concorrentes que você quer que eu pesquise na próxima etapa.\n\nQuando estiver pronto, rode `/07-briefing-e-benchmark`.",
+      "handoff": "Nesta sessão, a meta e os cenários ficaram fechados. Não preciso de nada novo, só confirma se seguimos com o cenário Realista como base para a próxima etapa. Se quiser, pode me mandar prints de tela (imagens) das campanhas atuais das plataformas, mas isso é opcional.\n\nQuando estiver pronto, rode `/07-midia-paga`.",
       "origem": "app",
       "observacao": null
     },
     "07": {
       "status": "concluida",
       "sessionId": null,
-      "iniciadaEm": "2026-10-22T16:00:00.000Z",
-      "concluidaEm": "2026-10-22T16:55:00.000Z",
+      "iniciadaEm": "2026-10-22T17:00:00.000Z",
+      "concluidaEm": "2026-10-22T17:55:00.000Z",
       "sinalizada": true,
-      "resumoDecisoes": "## 07 · Briefing e benchmark: Verdeluz Cosméticos Veganos\n\nBriefing (`07-briefing`), relatório HTML (`benchmark`) e camada estratégica (`07-benchmark`) aprovados.\n\n### Decisões do analista\n- **Briefing:** consolida as etapas 01 a 06 com os números aprovados. A seção 8 traz os concorrentes com site, Instagram e o motivo da análise.\n- **Concorrentes:** Sallve, Simple Organic e Care Natural Beauty. O quarto concorrente fica a definir. O link da página de cada um na Biblioteca de Anúncios (com `view_all_page_id=`) é obtido com o analista antes da coleta real.\n- **Prospect:** a Verdeluz é fictícia e não tem página na Biblioteca. Foi registrada sem anúncios.\n- **Benchmark ilustrativo:** não houve coleta de anúncios (sem token da Apify neste ambiente). O relatório e a camada estratégica usam só informação pública dos sites e perfis das marcas, observada em 22/10/2026. Nenhuma contagem de anúncios nem criativo foi inventado, e o ranking de intensidade ficou como \"sem coleta\".\n- **Perguntas estratégicas:** as 7 padrão. As perguntas 4, 6 e 7 (formatos, funil e intensidade) ficaram sem resposta por falta de dados de anúncios.\n\n### Lições e testes aprovados\n- **Sallve (kit com desconto limitado e rotina guiada):** testar \"monte seu kit\" com até 15% na Black Friday no lugar de 35% (P6.S1 e P8.S1) e uma página de ordem de uso no pós-compra (P3.S1).\n- **Simple Organic (comunidade e revenda):** piloto de 10 embaixadoras com cupom e UTM próprios por 60 dias (P7.S2) e vitrine de best-sellers com os líderes e os kits (P8).\n- **Care Natural Beauty (selo e brinde):** brinde (nécessaire Verdeluz) acima de um valor mínimo na Black Friday (P6.S1) e bloco de selo vegano e avaliações nas páginas dos líderes (P5.S3).\n- **Destaques:** Sallve usa kit com desconto limitado e a Care aparece com brinde e cupom numa publicação associada, prova de confiança visível, programa estruturado de embaixadoras e a limitação de que sem dados de anúncios nada se afirma sobre formato, funil e intensidade.\n\n### Ressalvas\n- A coleta real da Biblioteca do Meta fica para o analista, com o token da Apify e os links das páginas.\n- O relatório é um esqueleto ilustrativo: não substitui a análise de criativos.\n- A origem de uma publicação de promoção da Care no Instagram deve ser confirmada na coleta real.",
-      "handoff": "Nesta sessão, o briefing e o benchmark ficaram consolidados. Não preciso de nada novo, só confirma se seguimos com o cenário Realista como base para a próxima etapa. Se quiser, pode me mandar prints de tela (imagens) das campanhas atuais das plataformas, mas isso é opcional.\n\nQuando estiver pronto, rode `/08-midia-paga`.",
+      "resumoDecisoes": "## 07 · Mídia paga: Verdeluz Cosméticos Veganos\n\nSeção aprovada (`midia-paga`), com o gráfico de alocação, as tabelas de alocação, de Curva ABC e de calendário, e o gráfico de ROAS esperado, todos conferidos contra o cenário Realista e o histórico.\n\n### Decisões do analista\n- **Cenário-base:** Realista (R$ 1.586.601 de receita captada, investimento de R$ 341.683).\n- **Alocação:** Google sobe de 38,2% para 44,1% da verba (R$ 150,7 mil, +51%) e Meta cai para 55,9% (R$ 191,0 mil, +18%). Não é flat: Meta a 62% em NOV e 60% em MAI, e a 52% nos vales.\n- **Curva ABC:** A com 70% da verba e ROAS mínimo de 4,5x, B com 25% e 4,0x, C sem campanha própria (5% só via kits e remarketing). Uma venda paga custa R$ 109,90, mais que o preço médio de um SKU da Curva C (R$ 63,98).\n- **Calendário:** 🔵 pico em NOV e MAI, 🟢 escala em DEZ, ABR e SET, 🔴 contenção em JAN e FEV, 🟡 manutenção nos demais.\n- **ROAS esperado:** global médio de 4,64x (de 3,70x para 5,96x), Google 2,82x e Meta 1,23x (GA4). Os ROAS por plataforma mantêm a relação do último trimestre do ano atual com o global (61% e 27%).\n- **Dependência de mídia paga:** meta de 45% em SET/27 (de 54,8%), com trajetória mensal de 54% a 45% e ações em CRM, conteúdo e influenciadoras. Marketplace fica fora do horizonte.\n- **Benchmarking de mercado:** quatro referências públicas (Beauty Pie, recompensas escalonadas, Black Friday como mês, cartão-presente) em forma de teste. Os trechos devem ser confirmados antes de uso na apresentação.\n- **Prints de campanha (opcional):** enviados e analisados. Sem proposta de criativo, copy ou público.\n\n### Números aprovados\n- **Verba por plataforma:** Meta R$ 190.952 e Google R$ 150.731. Pico de NOV: R$ 49,3 mil (14,4% do ano). Menor mês: AGO (R$ 23,6 mil).\n- **ROAS global:** menor em JAN (3,60x), maior em SET (5,96x). Meses de risco de compressão: JAN, FEV, ABR e JUN.\n- **Prints:** ROAS do Meta na plataforma de 3,61x contra 0,84x do GA4 em SET/26. Remarketing a 6,10x com 15% da verba. Google na plataforma a 4,08x contra 1,96x no GA4. Sérum com estoque baixo concentra 22% da verba do Google no mês.\n\n### Ressalvas\n- ROAS por plataforma usa o GA4 (último clique). Os prints usam o ROAS das plataformas. Só valem para tendência.\n- Os ROAS mínimos por curva são premissas de agência.\n- A prioridade de verba por curva é direcionamento, não orçamento por SKU.\n- No PNG do calendário, a classificação é marcada pela cor da célula, porque a fonte do gráfico não desenha emoji. Na seção de texto, os emojis aparecem.",
+      "handoff": "Nesta sessão, o planejamento de mídia paga ficou fechado. Não preciso de nada novo, só confirma comigo a data de hoje, se seguimos com o cenário Realista, e quais são as 2 ou 3 frentes mais urgentes que você quer priorizar no plano de ação.\n\nQuando estiver pronto, rode `/08-plano-de-acao`.",
       "origem": "app",
       "observacao": null
     },
     "08": {
       "status": "concluida",
       "sessionId": null,
-      "iniciadaEm": "2026-10-22T17:00:00.000Z",
-      "concluidaEm": "2026-10-22T17:55:00.000Z",
-      "sinalizada": true,
-      "resumoDecisoes": "## 08 · Mídia paga: Verdeluz Cosméticos Veganos\n\nSeção aprovada (`midia-paga`), com o gráfico de alocação, as tabelas de alocação, de Curva ABC e de calendário, e o gráfico de ROAS esperado, todos conferidos contra o cenário Realista e o histórico.\n\n### Decisões do analista\n- **Cenário-base:** Realista (R$ 1.586.601 de receita captada, investimento de R$ 341.683).\n- **Alocação:** Google sobe de 38,2% para 44,1% da verba (R$ 150,7 mil, +51%) e Meta cai para 55,9% (R$ 191,0 mil, +18%). Não é flat: Meta a 62% em NOV e 60% em MAI, e a 52% nos vales.\n- **Curva ABC:** A com 70% da verba e ROAS mínimo de 4,5x, B com 25% e 4,0x, C sem campanha própria (5% só via kits e remarketing). Uma venda paga custa R$ 109,90, mais que o preço médio de um SKU da Curva C (R$ 63,98).\n- **Calendário:** 🔵 pico em NOV e MAI, 🟢 escala em DEZ, ABR e SET, 🔴 contenção em JAN e FEV, 🟡 manutenção nos demais.\n- **ROAS esperado:** global médio de 4,64x (de 3,70x para 5,96x), Google 2,82x e Meta 1,23x (GA4). Os ROAS por plataforma mantêm a relação do último trimestre do ano atual com o global (61% e 27%).\n- **Dependência de mídia paga:** meta de 45% em SET/27 (de 54,8%), com trajetória mensal de 54% a 45% e ações em CRM, conteúdo e influenciadoras. Marketplace fica fora do horizonte.\n- **Benchmarking de mercado:** quatro referências públicas (Beauty Pie, recompensas escalonadas, Black Friday como mês, cartão-presente) em forma de teste. Os trechos devem ser confirmados antes de uso na apresentação.\n- **Prints de campanha (opcional):** enviados e analisados. Sem proposta de criativo, copy ou público.\n\n### Números aprovados\n- **Verba por plataforma:** Meta R$ 190.952 e Google R$ 150.731. Pico de NOV: R$ 49,3 mil (14,4% do ano). Menor mês: AGO (R$ 23,6 mil).\n- **ROAS global:** menor em JAN (3,60x), maior em SET (5,96x). Meses de risco de compressão: JAN, FEV, ABR e JUN.\n- **Prints:** ROAS do Meta na plataforma de 3,61x contra 0,84x do GA4 em SET/26. Remarketing a 6,10x com 15% da verba. Google na plataforma a 4,08x contra 1,96x no GA4. Sérum com estoque baixo concentra 22% da verba do Google no mês.\n\n### Ressalvas\n- ROAS por plataforma usa o GA4 (último clique). Os prints usam o ROAS das plataformas. Só valem para tendência.\n- Os ROAS mínimos por curva são premissas de agência.\n- A prioridade de verba por curva é direcionamento, não orçamento por SKU.\n- No PNG do calendário, a classificação é marcada pela cor da célula, porque a fonte do gráfico não desenha emoji. Na seção de texto, os emojis aparecem.",
-      "handoff": "Nesta sessão, o planejamento de mídia paga ficou fechado. Não preciso de nada novo, só confirma comigo a data de hoje, se seguimos com o cenário Realista, e quais são as 2 ou 3 frentes mais urgentes que você quer priorizar no plano de ação.\n\nQuando estiver pronto, rode `/09-plano-de-acao`.",
-      "origem": "app",
-      "observacao": null
-    },
-    "09": {
-      "status": "concluida",
-      "sessionId": null,
       "iniciadaEm": "2026-10-22T18:00:00.000Z",
       "concluidaEm": "2026-10-22T18:55:00.000Z",
       "sinalizada": true,
-      "resumoDecisoes": "## 09 · Plano de ação: Verdeluz Cosméticos Veganos\n\nPlano aprovado (`plano-de-acao-estrategico.docx`), montado pelo `scripts/preencher_plano_acao_docx.py` a partir do modelo da agência. `validar_solucoes.py --modo plano` sem erro: as 24 soluções do registro viraram ação.\n\n### Decisões do analista\n- **Data de hoje:** 22/10/2026. O plano começa na segunda-feira seguinte (26/10/2026), e nenhuma ação cai em período passado.\n- **Cenário-base:** Realista.\n- **Frentes mais urgentes** (viram o Horizonte 1): ruptura do sérum e estoque (P2), eficiência da mídia (P1) e recompra (P3), junto com a mensuração e a margem por SKU, que destravam os demais itens.\n- **Horizontes:** H1 Imediato (Semana 1: 26/10 a 30/10/2026), H2 Curto Prazo (02/11 a 27/11/2026, até a Black Friday, o primeiro pico) e H3 Médio Prazo (DEZ/2026 a MAI/2027, até o Dia das Mães).\n- **Responsáveis:** uma ação tem sempre um responsável principal nomeado no campo \"como\" (Marina e Luiza pelo cliente, Bruna na operação do site, Caio no conteúdo, Rafael nas campanhas, Agência no desenho e na medição).\n\n### O que o plano traz\n- **25 ações:** 6 no Imediato, 11 no Curto Prazo e 8 no Médio Prazo. Duas são de governança, sem solução do registro (envio da margem por SKU e cadência mensal de resultados).\n- **Cobertura das frentes:** Mídia Paga / Canal Principal (3 ações), Eficiência Operacional (6), Produto / Mix / Portfólio (6), Redução de Dependências (5) e Monitoramento e Governança (5, contando a margem e a cadência).\n- **Marcos do Horizonte 1:** teto de CAC e regra de escala (P1.S1), estoque de segurança dos três líderes (P2.S1), alerta de estoque ligado à mídia (P2.S3), painel único de KPIs (P7.S1), margem por SKU da Curva A e cupom e UTM por influenciadora (P7.S2).\n- **Marcos do Horizonte 2:** Black Friday com brinde e lista de espera (P6.S1 e P6.S2), recuperação de carrinho em 3 toques (P5.S1), antifraude e lembrete de PIX (P4.S1 e P4.S2) e régua de reposição (P3.S1).\n- **Marcos do Horizonte 3:** reativação dos 7.176 clientes de compra única em JAN e FEV (P3.S2), novos kits (P8.S1) e revisão da Curva C (P8.S2), antes do pré-aquecimento do Dia das Mães.\n\n### Ressalvas\n- A Black Friday (27/11/2026) cai no fim do Horizonte 2. As ações de estoque (P2.S1) precisam estar prontas antes da abertura da lista de espera (02/11).\n- Os impactos das soluções se sobrepõem e não se somam.\n- As datas dos novos kits e das datas menores dependem da margem por SKU, que a Luiza envia na Semana 1.\n- O título do `.docx` usa o travessão que o modelo da agência já traz.",
+      "resumoDecisoes": "## 08 · Plano de ação: Verdeluz Cosméticos Veganos\n\nPlano aprovado (`plano-de-acao-estrategico.docx`), montado pelo `scripts/preencher_plano_acao_docx.py` a partir do modelo da agência. `validar_solucoes.py --modo plano` sem erro: as 24 soluções do registro viraram ação.\n\n### Decisões do analista\n- **Data de hoje:** 22/10/2026. O plano começa na segunda-feira seguinte (26/10/2026), e nenhuma ação cai em período passado.\n- **Cenário-base:** Realista.\n- **Frentes mais urgentes** (viram o Horizonte 1): ruptura do sérum e estoque (P2), eficiência da mídia (P1) e recompra (P3), junto com a mensuração e a margem por SKU, que destravam os demais itens.\n- **Horizontes:** H1 Imediato (Semana 1: 26/10 a 30/10/2026), H2 Curto Prazo (02/11 a 27/11/2026, até a Black Friday, o primeiro pico) e H3 Médio Prazo (DEZ/2026 a MAI/2027, até o Dia das Mães).\n- **Responsáveis:** uma ação tem sempre um responsável principal nomeado no campo \"como\" (Marina e Luiza pelo cliente, Bruna na operação do site, Caio no conteúdo, Rafael nas campanhas, Agência no desenho e na medição).\n\n### O que o plano traz\n- **25 ações:** 6 no Imediato, 11 no Curto Prazo e 8 no Médio Prazo. Duas são de governança, sem solução do registro (envio da margem por SKU e cadência mensal de resultados).\n- **Cobertura das frentes:** Mídia Paga / Canal Principal (3 ações), Eficiência Operacional (6), Produto / Mix / Portfólio (6), Redução de Dependências (5) e Monitoramento e Governança (5, contando a margem e a cadência).\n- **Marcos do Horizonte 1:** teto de CAC e regra de escala (P1.S1), estoque de segurança dos três líderes (P2.S1), alerta de estoque ligado à mídia (P2.S3), painel único de KPIs (P7.S1), margem por SKU da Curva A e cupom e UTM por influenciadora (P7.S2).\n- **Marcos do Horizonte 2:** Black Friday com brinde e lista de espera (P6.S1 e P6.S2), recuperação de carrinho em 3 toques (P5.S1), antifraude e lembrete de PIX (P4.S1 e P4.S2) e régua de reposição (P3.S1).\n- **Marcos do Horizonte 3:** reativação dos 7.176 clientes de compra única em JAN e FEV (P3.S2), novos kits (P8.S1) e revisão da Curva C (P8.S2), antes do pré-aquecimento do Dia das Mães.\n\n### Ressalvas\n- A Black Friday (27/11/2026) cai no fim do Horizonte 2. As ações de estoque (P2.S1) precisam estar prontas antes da abertura da lista de espera (02/11).\n- Os impactos das soluções se sobrepõem e não se somam.\n- As datas dos novos kits e das datas menores dependem da margem por SKU, que a Luiza envia na Semana 1.\n- O título do `.docx` usa o travessão que o modelo da agência já traz.",
       "handoff": "Nesta sessão, o plano de ação ficou fechado, e esta era a última etapa de conteúdo! Não preciso de nada novo. O próximo passo é montar a apresentação final, um arquivo .pptx editável no molde da agência, com o roteiro slide a slide para você aprovar antes.\n\nQuando estiver pronto, rode `/apresentacao-final`.",
       "origem": "app",
       "observacao": null
@@ -144,20 +133,8 @@
       "decididoEm": "2026-10-22T19:50:00.000Z"
     },
     {
-      "id": "2d93eb5d-c8bc-dfb4-a992-aaaf27660f3e",
-      "etapa": "07",
-      "tipo": "html",
-      "titulo": "Relatório de benchmark (ilustrativo)",
-      "arquivoRascunho": ".app/propostas/2d93eb5d-c8bc-dfb4-a992-aaaf27660f3e.html",
-      "nomeFinal": "benchmark",
-      "status": "aprovado",
-      "ajustePedido": null,
-      "criadoEm": "2026-10-22T16:30:00.000Z",
-      "decididoEm": "2026-10-22T16:50:00.000Z"
-    },
-    {
       "id": "ac546965-f3e1-eb97-2ff4-6e500dbe066c",
-      "etapa": "08",
+      "etapa": "07",
       "tipo": "grafico",
       "titulo": "Alocação de verba por plataforma",
       "arquivoRascunho": ".app/propostas/ac546965-f3e1-eb97-2ff4-6e500dbe066c.png",
@@ -313,7 +290,7 @@
     },
     {
       "id": "0d7de19d-0c37-836c-02c5-cdd6674d6dce",
-      "etapa": "08",
+      "etapa": "07",
       "tipo": "grafico",
       "titulo": "ROAS esperado por plataforma",
       "arquivoRascunho": ".app/propostas/0d7de19d-0c37-836c-02c5-cdd6674d6dce.png",
@@ -361,7 +338,7 @@
     },
     {
       "id": "f2b4aabb-97aa-a217-d2ad-1be2806e673e",
-      "etapa": "08",
+      "etapa": "07",
       "tipo": "tabela",
       "titulo": "Tabela de alocação de verba por plataforma",
       "arquivoRascunho": ".app/propostas/f2b4aabb-97aa-a217-d2ad-1be2806e673e.png",
@@ -373,7 +350,7 @@
     },
     {
       "id": "da2127bc-c96f-aa32-b521-7691da0a7515",
-      "etapa": "08",
+      "etapa": "07",
       "tipo": "tabela",
       "titulo": "Calendário estratégico de mídia",
       "arquivoRascunho": ".app/propostas/da2127bc-c96f-aa32-b521-7691da0a7515.png",
@@ -433,7 +410,7 @@
     },
     {
       "id": "0d13f026-0a38-8d0e-6d49-ea1f3b6ea3ed",
-      "etapa": "08",
+      "etapa": "07",
       "tipo": "tabela",
       "titulo": "Estratégia de mídia por Curva ABC",
       "arquivoRascunho": ".app/propostas/0d13f026-0a38-8d0e-6d49-ea1f3b6ea3ed.png",
@@ -469,7 +446,7 @@
     },
     {
       "id": "7e587276-9c22-4711-cdcc-1ce930aac9f3",
-      "etapa": "09",
+      "etapa": "08",
       "tipo": "documento",
       "titulo": "Plano de ação estratégico",
       "arquivoRascunho": ".app/propostas/7e587276-9c22-4711-cdcc-1ce930aac9f3.docx",
@@ -576,32 +553,8 @@
       "decididoEm": "2026-10-22T15:50:00.000Z"
     },
     {
-      "id": "622f6f59-c37d-fb49-f40f-6922fd83b5fe",
-      "etapa": "07",
-      "tipo": "secao",
-      "titulo": "Benchmark de concorrentes: camada estratégica (Verdeluz)",
-      "arquivoRascunho": ".app/propostas/622f6f59-c37d-fb49-f40f-6922fd83b5fe.md",
-      "nomeFinal": "benchmark",
-      "status": "aprovado",
-      "ajustePedido": null,
-      "criadoEm": "2026-10-22T16:30:00.000Z",
-      "decididoEm": "2026-10-22T16:50:00.000Z"
-    },
-    {
-      "id": "47ccb510-e1af-1b92-fc9f-a1262aaebd5b",
-      "etapa": "07",
-      "tipo": "secao",
-      "titulo": "Briefing do Cliente: Verdeluz Cosméticos Veganos",
-      "arquivoRascunho": ".app/propostas/47ccb510-e1af-1b92-fc9f-a1262aaebd5b.md",
-      "nomeFinal": "briefing",
-      "status": "aprovado",
-      "ajustePedido": null,
-      "criadoEm": "2026-10-22T16:30:00.000Z",
-      "decididoEm": "2026-10-22T16:50:00.000Z"
-    },
-    {
       "id": "d2544efa-51b4-4c3e-a7d5-2ef5dc1003fb",
-      "etapa": "08",
+      "etapa": "07",
       "tipo": "secao",
       "titulo": "Planejamento de mídia paga (cenário Realista, OUT/26 a SET/27)",
       "arquivoRascunho": ".app/propostas/d2544efa-51b4-4c3e-a7d5-2ef5dc1003fb.md",
@@ -684,7 +637,7 @@
       "atualizadoEm": "2026-10-22T13:05:00.000Z"
     },
     {
-      "etapa": "08",
+      "etapa": "07",
       "insumoId": "prints-campanhas",
       "status": "valido",
       "problemas": [],
@@ -696,5 +649,6 @@
   ],
   "perguntas": [],
   "filaAutomatica": [],
-  "atualizadoEm": "2026-10-22T19:55:00.000Z"
+  "atualizadoEm": "2026-10-22T19:55:00.000Z",
+  "versaoEtapas": 2
 }

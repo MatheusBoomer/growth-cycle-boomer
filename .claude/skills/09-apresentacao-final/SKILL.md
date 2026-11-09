@@ -1,5 +1,5 @@
 ---
-name: 10-apresentacao-final
+name: 09-apresentacao-final
 description: Monta a apresentação final do planejamento para o prospect, no padrão visual da agência, como um .pptx editável. Escreve o roteiro slide a slide a partir do que foi aprovado (gráficos e seções), passa pela aprovação do analista e gera o arquivo com scripts/gerar_apresentacao.py. Use depois da Skill 09 (plano-de-acao) concluída, quando o analista pedir a apresentação final.
 ---
 

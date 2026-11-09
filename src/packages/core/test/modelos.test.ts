@@ -19,7 +19,7 @@ import { catalogoReal } from "./ajuda"
 
 describe("alvosDaEtapa", () => {
   it("lista o principal e os subagentes da etapa", () => {
-    expect(alvosDaEtapa(catalogoReal(), "08")).toEqual(["principal", "analista-dados", "pesquisador-benchmark"])
+    expect(alvosDaEtapa(catalogoReal(), "07")).toEqual(["principal", "analista-dados", "pesquisador-benchmark"])
     expect(alvosDaEtapa(catalogoReal(), "01")).toEqual(["principal"])
   })
 })

@@ -40,7 +40,7 @@ describe("VerificacaoSistema", () => {
 
   it("fora do login chama /api/sistema", async () => {
     caminho = "/"
-    fetchFalso.mockResolvedValue(Response.json({ claude: { instalado: true, logado: true, metodo: "claude.ai" }, python: { ok: true }, ffmpeg: true, apify: true, previa: true }))
+    fetchFalso.mockResolvedValue(Response.json({ claude: { instalado: true, logado: true, metodo: "claude.ai" }, python: { ok: true }, previa: true }))
     const { desmontar } = await montar()
     expect(fetchFalso).toHaveBeenCalledOnce()
     await desmontar()
@@ -56,7 +56,7 @@ describe("VerificacaoSistema", () => {
   })
 
   describe("na nuvem (executor sdk)", () => {
-    const base = { claude: { instalado: false, versao: null, logado: false, metodo: null, plano: null }, python: { ok: true }, ffmpeg: true, apify: true, previa: true, executor: "sdk", nuvem: true }
+    const base = { claude: { instalado: false, versao: null, logado: false, metodo: null, plano: null }, python: { ok: true }, previa: true, executor: "sdk", nuvem: true }
 
     it("sem a chave da API mostra o aviso e não pede para instalar o Claude Code", async () => {
       caminho = "/"
@@ -78,15 +78,14 @@ describe("VerificacaoSistema", () => {
       await desmontar()
     })
 
-    it("ffmpeg e Apify faltando: manda configurar no servidor, sem brew nem .env da raiz", async () => {
+    it("ffmpeg e Apify não são mais verificados: mesmo ausentes na resposta, nenhum aviso de benchmark", async () => {
       caminho = "/"
       fetchFalso.mockResolvedValue(Response.json({ ...base, chaveApi: true, ffmpeg: false, apify: false }))
       const { desmontar } = await montar()
       const texto = document.body.textContent ?? ""
-      expect(texto).toContain("benchmark de anúncios")
-      expect(texto).toContain("servidor")
-      expect(texto).not.toContain("brew")
-      expect(texto).not.toContain(".env da raiz")
+      expect(texto).not.toContain("benchmark")
+      expect(texto).not.toContain("ffmpeg")
+      expect(texto).not.toContain("APIFY_TOKEN")
       await desmontar()
     })
   })
@@ -95,14 +94,12 @@ describe("VerificacaoSistema", () => {
     it("sem Claude Code pede para instalar e bloqueia, como antes", async () => {
       caminho = "/"
       fetchFalso.mockResolvedValue(
-        Response.json({ claude: { instalado: false, versao: null, logado: false, metodo: null, plano: null }, python: { ok: true }, ffmpeg: false, apify: false, previa: true, executor: "cli", nuvem: false, chaveApi: false }),
+        Response.json({ claude: { instalado: false, versao: null, logado: false, metodo: null, plano: null }, python: { ok: true }, previa: true, executor: "cli", nuvem: false, chaveApi: false }),
       )
       const { desmontar } = await montar()
       const texto = document.body.textContent ?? ""
       expect(texto).toContain("Instale o Claude Code")
       expect(texto).not.toContain("ANTHROPIC_API_KEY")
-      expect(texto).toContain("brew install ffmpeg")
-      expect(texto).toContain(".env da raiz")
       await desmontar()
     })
   })

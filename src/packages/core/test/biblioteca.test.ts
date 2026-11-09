@@ -104,32 +104,14 @@ describe("anexos e insumos", () => {
 
   it("imagem na pasta de um insumo do catálogo fica na etapa dona do insumo", () => {
     const itens = classificar([arq("contexto/brutos/prints-campanhas/meta.jpg"), arq("contexto/brutos/prints-campanhas/relatorio.pdf")])
-    expect(itens.map((i) => [i.caminho, i.origem, i.etapa])).toEqual([["contexto/brutos/prints-campanhas/meta.jpg", "insumo", "08"]])
+    expect(itens.map((i) => [i.caminho, i.origem, i.etapa])).toEqual([["contexto/brutos/prints-campanhas/meta.jpg", "insumo", "07"]])
   })
 })
 
-describe("benchmark", () => {
-  it("um item por anúncio, capa primeiro, etapa 07; pasta sem imagem não gera item", () => {
+describe("anúncios do benchmark", () => {
+  it("o benchmark de anúncios deixou de existir: as imagens dele não geram item", () => {
     const base = "dados/benchmark-meta/insider/midia"
-    const itens = classificar([
-      arq(`${base}/123/video-1-quadro-1.jpg`),
-      arq(`${base}/123/video-1-capa.jpg`, DEPOIS),
-      arq(`${base}/456/imagem-1.jpg`),
-      arq(`${base}/789/video.mp4`),
-    ])
-    expect(itens).toHaveLength(2)
-    const anuncio = itens.find((i) => i.caminho === `${base}/123`)!
-    expect(anuncio).toMatchObject({
-      origem: "benchmark",
-      etapa: "07",
-      titulo: "insider · anúncio 123",
-      nomeArquivo: "123",
-      grupo: { tipo: "anuncio", marca: "insider" },
-      capa: `${base}/123/video-1-capa.jpg`,
-      imagens: [`${base}/123/video-1-capa.jpg`, `${base}/123/video-1-quadro-1.jpg`],
-      modificadoEm: DEPOIS,
-    })
-    expect(itens.find((i) => i.caminho === `${base}/456`)!.capa).toBe(`${base}/456/imagem-1.jpg`)
+    expect(classificar([arq(`${base}/123/video-1-capa.jpg`), arq(`${base}/456/imagem-1.jpg`)])).toEqual([])
   })
 })
 

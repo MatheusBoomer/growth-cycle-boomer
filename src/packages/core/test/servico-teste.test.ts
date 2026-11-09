@@ -93,9 +93,9 @@ describe("reposicionarNoFixture", () => {
     expect(novo.insumos.map((i) => i.insumoId)).toEqual(["site"])
   })
 
-  it("etapa final: 01 a 09 concluídas, final liberada, sem kit de arquivos", async () => {
+  it("etapa final: 01 a 08 concluídas, final liberada, sem kit de arquivos", async () => {
     const novo = await reposicionarNoFixture(arm, fixture, atual, "final", AGORA)
-    expect(novo.etapas["09"].status).toBe("concluida")
+    expect(novo.etapas["08"].status).toBe("concluida")
     expect(novo.etapas["final"].status).toBe("liberada")
     expect(novo.insumos.map((i) => i.insumoId).sort()).toEqual(["historico-mensal", "kickoff-transcricao", "site"])
     expect(await existe("dados/historico-mensal.xlsx")).toBe(true)

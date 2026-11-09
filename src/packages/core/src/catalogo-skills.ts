@@ -23,7 +23,7 @@ const lerDoDisco: LeitorArquivo = (caminho) => {
 }
 
 const RESUMO_VISAO_GERAL =
-  "Como as 10 etapas se encadeiam, o que cada uma entrega para a seguinte e onde entram os subagentes."
+  "Como as 9 etapas se encadeiam, o que cada uma entrega para a seguinte e onde entram os subagentes."
 const RESUMO_REGRA: Record<string, string> = {
   "regra:padrao-visual": "Cores, tipografia e formato de gráficos e tabelas que toda etapa segue.",
   "regra:regras-de-validacao": "Rituais de checagem, checkpoints e handoff que toda etapa cumpre.",

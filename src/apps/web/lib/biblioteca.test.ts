@@ -3,7 +3,6 @@ import type { ItemBiblioteca } from "@workspace/core/biblioteca"
 import type { Catalogo } from "@workspace/core/tipos"
 import {
   agruparPorEtapa,
-  agruparPorMarca,
   contarPorEtapa,
   FILTROS_INICIAIS,
   filtrarItens,
@@ -28,20 +27,18 @@ function item(p: Partial<ItemBiblioteca> & Pick<ItemBiblioteca, "caminho">): Ite
 }
 
 const cac = item({ caminho: "g/cac-mensal.png", titulo: "CAC mensal", etapa: "04" })
-const acao = item({ caminho: "g/acao.png", titulo: "Ação de mídia", etapa: "08", origem: "anexo" })
+const acao = item({ caminho: "g/acao.png", titulo: "Ação de mídia", etapa: "07", origem: "anexo" })
 const velho = item({ caminho: "p/velho.png", titulo: "Cenários antigos", etapa: "06", origem: "substituido" })
 const pendente = item({ caminho: "p/novo.png", titulo: "Cenários", etapa: "06", origem: "proposta" })
-const insider = item({ caminho: "b/insider/1", etapa: "07", origem: "benchmark", grupo: { tipo: "anuncio", marca: "insider" } })
-const alpha = item({ caminho: "b/alpha/1", etapa: "07", origem: "benchmark", grupo: { tipo: "anuncio", marca: "alpha" } })
 const solto = item({ caminho: "x/solto.png", etapa: "sem-etapa" })
-const todos = [cac, acao, velho, pendente, insider, alpha, solto]
+const todos = [cac, acao, velho, pendente, solto]
 
 const com = (f: Partial<FiltrosBiblioteca>): FiltrosBiblioteca => ({ ...FILTROS_INICIAIS, ...f })
 
 describe("filtros da biblioteca", () => {
   it("por padrão esconde versões antigas e mostra o resto", () => {
     expect(filtrarItens(todos, FILTROS_INICIAIS)).not.toContain(velho)
-    expect(filtrarItens(todos, FILTROS_INICIAIS)).toHaveLength(6)
+    expect(filtrarItens(todos, FILTROS_INICIAIS)).toHaveLength(4)
     expect(filtrarItens(todos, com({ versoesAntigas: true }))).toContain(velho)
   })
 
@@ -50,7 +47,7 @@ describe("filtros da biblioteca", () => {
   })
 
   it("filtra por etapa e por origem", () => {
-    expect(filtrarItens(todos, com({ etapa: "07" }))).toEqual([insider, alpha])
+    expect(filtrarItens(todos, com({ etapa: "07" }))).toEqual([acao])
     expect(filtrarItens(todos, com({ origens: new Set(["anexo"]) }))).toEqual([acao])
   })
 
@@ -61,33 +58,25 @@ describe("filtros da biblioteca", () => {
 
   it("contagem por etapa respeita busca e origem, mas não a etapa escolhida", () => {
     const c = contarPorEtapa(todos, com({ etapa: "04" }))
-    expect(c.todas).toBe(6)
-    expect(c["07"]).toBe(2)
+    expect(c.todas).toBe(4)
+    expect(c["07"]).toBe(1)
     expect(c["06"]).toBe(1)
     expect(c["01"]).toBe(0)
     expect(c["sem-etapa"]).toBe(1)
   })
 
   it("total da trilha não conta versões antigas", () => {
-    expect(totalVisivel(todos)).toBe(6)
+    expect(totalVisivel(todos)).toBe(4)
   })
 })
 
 describe("agrupamentos", () => {
   it("por etapa na ordem do planejamento, sem etapa no fim, grupos vazios fora", () => {
-    expect(agruparPorEtapa([solto, cac, insider]).map((g) => g.etapa)).toEqual(["04", "07", "sem-etapa"])
+    expect(agruparPorEtapa([solto, cac, acao]).map((g) => g.etapa)).toEqual(["04", "07", "sem-etapa"])
   })
 
-  it("por marca: soltos primeiro, depois marcas em ordem alfabética", () => {
-    expect(agruparPorMarca([insider, cac, alpha])).toEqual([
-      { marca: null, itens: [cac] },
-      { marca: "alpha", itens: [alpha] },
-      { marca: "insider", itens: [insider] },
-    ])
-  })
-
-  it("ordem de exibição segue os agrupamentos (é a ordem das setas na imagem ampliada)", () => {
-    expect(ordemDeExibicao([solto, insider, cac, alpha])).toEqual([cac, alpha, insider, solto])
+  it("ordem de exibição segue o agrupamento por etapa (é a ordem das setas na imagem ampliada)", () => {
+    expect(ordemDeExibicao([solto, acao, cac])).toEqual([cac, acao, solto])
   })
 })
 

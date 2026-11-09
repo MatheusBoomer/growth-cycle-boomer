@@ -75,7 +75,7 @@ Referências levantadas em fontes públicas em 22/10/2026 (trechos, para confirm
 - **Internacional, recompensas escalonadas:** a fonte https://getrecharge.com/blog/4-customer-retention-strategies-to-extend-subscriptions-build-customer-loyalty/ descreve programas com brindes em marcos de pedidos, e cita skincare como categoria em que o resultado leva tempo. Aplicação: brinde a partir da terceira reposição, dentro da régua (P3.S1).
 - **Nacional, Black Friday como mês inteiro:** a fonte https://negociosdebeleza.beautyfair.com.br/ideias-para-black-friday-estrategias-para-marcas-e-profissionais-de-beleza/ trata o período como um mês de oportunidades, não um dia de desconto. Aplicação: lista de espera, pré-venda e brinde distribuídos ao longo de NOV (P6.S1 e P6.S2).
 - **Nacional, cartão-presente e indicação:** publicação de Instagram em https://www.instagram.com/reel/DQMOnk0EdPN/ sugere cartão-presente e "leve uma amiga" na Black Friday da beleza. Aplicação: o cartão-presente já existe no catálogo da Verdeluz (R$ 100) e pode entrar na campanha de NOV, sem desconto profundo.
-- **Concorrentes brasileiros:** ver o benchmark da etapa 07 (Sallve: kit com desconto limitado; Simple Organic: programa de embaixadoras; Care: brinde e cupom em uma publicação associada).
+- **Concorrentes brasileiros:** referências públicas dos concorrentes (Sallve: kit com desconto limitado; Simple Organic: programa de embaixadoras; Care: brinde e cupom em uma publicação associada).
 
 ## Análise da estrutura de campanha (prints, setembro de 2026)
 

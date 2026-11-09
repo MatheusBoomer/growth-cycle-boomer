@@ -2,7 +2,7 @@ import { ORDEM_BIBLIOTECA, type EtapaBiblioteca, type ItemBiblioteca, type Orige
 import type { Catalogo } from "@workspace/core/tipos"
 
 /** "substituido" não tem filtro próprio: aparece com "Mostrar versões antigas" e segue o filtro de Pendentes. */
-export const ORIGENS_FILTRO = ["aprovado", "proposta", "anexo", "insumo", "benchmark", "previa"] as const
+export const ORIGENS_FILTRO = ["aprovado", "proposta", "anexo", "insumo", "previa"] as const
 export type OrigemFiltro = (typeof ORIGENS_FILTRO)[number]
 
 export const ROTULO_ORIGEM: Record<OrigemImagem, string> = {
@@ -11,7 +11,6 @@ export const ROTULO_ORIGEM: Record<OrigemImagem, string> = {
   substituido: "Substituído",
   anexo: "Anexo",
   insumo: "Insumo",
-  benchmark: "Benchmark",
   previa: "Prévia",
 }
 
@@ -20,7 +19,6 @@ export const ROTULO_FILTRO_ORIGEM: Record<OrigemFiltro, string> = {
   proposta: "Pendentes",
   anexo: "Anexos",
   insumo: "Insumos",
-  benchmark: "Benchmark",
   previa: "Prévias",
 }
 
@@ -73,20 +71,9 @@ export function agruparPorEtapa(itens: ItemBiblioteca[]): { etapa: EtapaBibliote
   return ORDEM_BIBLIOTECA.map((etapa) => ({ etapa, itens: itens.filter((i) => i.etapa === etapa) })).filter((g) => g.itens.length > 0)
 }
 
-export function agruparPorMarca(itens: ItemBiblioteca[]): { marca: string | null; itens: ItemBiblioteca[] }[] {
-  const soltos = itens.filter((i) => i.grupo?.tipo !== "anuncio")
-  const marcas = new Map<string, ItemBiblioteca[]>()
-  for (const i of itens) {
-    if (i.grupo?.tipo === "anuncio") marcas.set(i.grupo.marca, [...(marcas.get(i.grupo.marca) ?? []), i])
-  }
-  const grupos: { marca: string | null; itens: ItemBiblioteca[] }[] = soltos.length ? [{ marca: null, itens: soltos }] : []
-  for (const marca of [...marcas.keys()].sort((a, b) => a.localeCompare(b))) grupos.push({ marca, itens: marcas.get(marca)! })
-  return grupos
-}
-
 /** A mesma ordem em que a grade desenha os cards. */
 export function ordemDeExibicao(itens: ItemBiblioteca[]): ItemBiblioteca[] {
-  return agruparPorEtapa(itens).flatMap((g) => agruparPorMarca(g.itens).flatMap((m) => m.itens))
+  return agruparPorEtapa(itens).flatMap((g) => g.itens)
 }
 
 export function rotuloEtapa(catalogo: Catalogo, etapa: EtapaBiblioteca, curto = false): string {

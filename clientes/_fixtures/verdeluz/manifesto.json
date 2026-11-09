@@ -4,7 +4,7 @@
     "nome": "Verdeluz Teste",
     "site": "https://www.verdeluz.example"
   },
-  "overrides": "Este é um cliente de teste com dados 100% fictícios. O site https://www.verdeluz.example não existe: não tente acessá-lo nem raspá-lo. Leia o texto das páginas em `contexto/brutos/site-simulado.md` (home, duas páginas de produto e frete e trocas) no lugar da leitura do site. Os concorrentes citados (Sallve, Simple Organic, Care Natural Beauty) são marcas reais, e os dados do cliente sobre elas valem só como contexto. Como a Verdeluz é fictícia, ela não tem página na Biblioteca de Anúncios do Meta: na etapa 07, não peça o link dela, registre o prospect como sem anúncios e analise só os concorrentes.",
+  "overrides": "Este é um cliente de teste com dados 100% fictícios. O site https://www.verdeluz.example não existe: não tente acessá-lo nem raspá-lo. Leia o texto das páginas em `contexto/brutos/site-simulado.md` (home, duas páginas de produto e frete e trocas) no lugar da leitura do site. Os concorrentes citados (Sallve, Simple Organic, Care Natural Beauty) são marcas reais, e os dados do cliente sobre elas valem só como contexto.",
   "arquivos": [
     {
       "caminho": "contexto/brutos/formulario-cliente.docx",
@@ -16,19 +16,19 @@
     },
     {
       "caminho": "contexto/brutos/prints-campanhas/print-01.png",
-      "etapa": "08"
+      "etapa": "07"
     },
     {
       "caminho": "contexto/brutos/prints-campanhas/print-02.png",
-      "etapa": "08"
+      "etapa": "07"
     },
     {
       "caminho": "contexto/brutos/prints-campanhas/print-03.png",
-      "etapa": "08"
+      "etapa": "07"
     },
     {
       "caminho": "contexto/brutos/prints-campanhas/print-04.png",
-      "etapa": "08"
+      "etapa": "07"
     },
     {
       "caminho": "contexto/brutos/site-simulado.md",
@@ -63,19 +63,15 @@
       "etapa": "06"
     },
     {
-      "caminho": "contexto/decisoes/07-briefing-e-benchmark.md",
+      "caminho": "contexto/decisoes/07-midia-paga.md",
       "etapa": "07"
     },
     {
-      "caminho": "contexto/decisoes/08-midia-paga.md",
+      "caminho": "contexto/decisoes/08-plano-de-acao.md",
       "etapa": "08"
     },
     {
-      "caminho": "contexto/decisoes/09-plano-de-acao.md",
-      "etapa": "09"
-    },
-    {
-      "caminho": "contexto/decisoes/10-apresentacao-final.md",
+      "caminho": "contexto/decisoes/09-apresentacao-final.md",
       "etapa": "final"
     },
     {
@@ -89,10 +85,6 @@
     {
       "caminho": "contexto/solucoes.json",
       "etapa": "05"
-    },
-    {
-      "caminho": "dados/benchmark-meta/analise-benchmark.md",
-      "etapa": "07"
     },
     {
       "caminho": "dados/clientes-historico.xlsx",
@@ -127,20 +119,12 @@
       "etapa": "final"
     },
     {
-      "caminho": "entrega/ativos-aprovados/benchmark/benchmark.html",
-      "etapa": "07"
-    },
-    {
-      "caminho": ".app/propostas/2d93eb5d-c8bc-dfb4-a992-aaaf27660f3e.html",
-      "etapa": "07"
-    },
-    {
       "caminho": "entrega/ativos-aprovados/graficos/alocacao-verba-plataforma.png",
-      "etapa": "08"
+      "etapa": "07"
     },
     {
       "caminho": ".app/propostas/ac546965-f3e1-eb97-2ff4-6e500dbe066c.png",
-      "etapa": "08"
+      "etapa": "07"
     },
     {
       "caminho": "entrega/ativos-aprovados/graficos/cac-mensal.png",
@@ -240,11 +224,11 @@
     },
     {
       "caminho": "entrega/ativos-aprovados/graficos/roas-esperado-plataforma.png",
-      "etapa": "08"
+      "etapa": "07"
     },
     {
       "caminho": ".app/propostas/0d7de19d-0c37-836c-02c5-cdd6674d6dce.png",
-      "etapa": "08"
+      "etapa": "07"
     },
     {
       "caminho": "entrega/ativos-aprovados/graficos/roas-global.png",
@@ -272,19 +256,19 @@
     },
     {
       "caminho": "entrega/ativos-aprovados/graficos/tabela-alocacao-verba-plataforma.png",
-      "etapa": "08"
+      "etapa": "07"
     },
     {
       "caminho": ".app/propostas/f2b4aabb-97aa-a217-d2ad-1be2806e673e.png",
-      "etapa": "08"
+      "etapa": "07"
     },
     {
       "caminho": "entrega/ativos-aprovados/graficos/tabela-calendario-estrategico.png",
-      "etapa": "08"
+      "etapa": "07"
     },
     {
       "caminho": ".app/propostas/da2127bc-c96f-aa32-b521-7691da0a7515.png",
-      "etapa": "08"
+      "etapa": "07"
     },
     {
       "caminho": "entrega/ativos-aprovados/graficos/tabela-cenarios-projecao.png",
@@ -320,11 +304,11 @@
     },
     {
       "caminho": "entrega/ativos-aprovados/graficos/tabela-curva-abc-estrategia.png",
-      "etapa": "08"
+      "etapa": "07"
     },
     {
       "caminho": ".app/propostas/0d13f026-0a38-8d0e-6d49-ea1f3b6ea3ed.png",
-      "etapa": "08"
+      "etapa": "07"
     },
     {
       "caminho": "entrega/ativos-aprovados/graficos/taxa-quebra-mensal.png",
@@ -344,11 +328,11 @@
     },
     {
       "caminho": "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.docx",
-      "etapa": "09"
+      "etapa": "08"
     },
     {
       "caminho": ".app/propostas/7e587276-9c22-4711-cdcc-1ce930aac9f3.docx",
-      "etapa": "09"
+      "etapa": "08"
     },
     {
       "caminho": "entrega/ativos-aprovados/projecao/projecao-de-cenarios.xlsx",
@@ -415,28 +399,12 @@
       "etapa": "06"
     },
     {
-      "caminho": "entrega/ativos-aprovados/secoes/07-benchmark.md",
+      "caminho": "entrega/ativos-aprovados/secoes/07-midia-paga.md",
       "etapa": "07"
-    },
-    {
-      "caminho": ".app/propostas/622f6f59-c37d-fb49-f40f-6922fd83b5fe.md",
-      "etapa": "07"
-    },
-    {
-      "caminho": "entrega/ativos-aprovados/secoes/07-briefing.md",
-      "etapa": "07"
-    },
-    {
-      "caminho": ".app/propostas/47ccb510-e1af-1b92-fc9f-a1262aaebd5b.md",
-      "etapa": "07"
-    },
-    {
-      "caminho": "entrega/ativos-aprovados/secoes/08-midia-paga.md",
-      "etapa": "08"
     },
     {
       "caminho": ".app/propostas/d2544efa-51b4-4c3e-a7d5-2ef5dc1003fb.md",
-      "etapa": "08"
+      "etapa": "07"
     }
   ],
   "kit": {
@@ -452,7 +420,7 @@
     "04": [
       "dados/clientes-historico.xlsx"
     ],
-    "08": [
+    "07": [
       "contexto/brutos/prints-campanhas/print-01.png",
       "contexto/brutos/prints-campanhas/print-02.png",
       "contexto/brutos/prints-campanhas/print-03.png",

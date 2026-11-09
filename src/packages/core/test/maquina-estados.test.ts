@@ -146,13 +146,13 @@ describe("máquina de estados", () => {
   })
 
   it("a apresentação final só libera sem nenhuma etapa desatualizada", () => {
-    let e = concluirAte("09")
+    let e = concluirAte("08")
     expect(e.etapas.final.status).toBe("liberada")
     e = reabrirEtapa(e, "03", EM).estado
     expect(e.etapas.final.status).toBe("bloqueada")
     e = concluir(e, "03")
     expect(e.etapas.final.status).toBe("bloqueada")
-    for (const id of ["04", "05", "06", "07", "08", "09"] as const) e = confirmarValida(e, id, EM)
+    for (const id of ["04", "05", "06", "07", "08"] as const) e = confirmarValida(e, id, EM)
     expect(e.etapas.final.status).toBe("liberada")
   })
 })

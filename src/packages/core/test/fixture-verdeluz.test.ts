@@ -13,7 +13,7 @@ import { ServicoPlanejamento } from "../src/servico-planejamento"
 import { ORDEM_ETAPAS, type EtapaId } from "../src/tipos"
 import { catalogoReal, raizTemporaria, RAIZ } from "./ajuda"
 
-const KIT_ESPERADO: Partial<Record<EtapaId, number>> = { "01": 2, "03": 3, "04": 1, "08": 4 }
+const KIT_ESPERADO: Partial<Record<EtapaId, number>> = { "01": 2, "03": 3, "04": 1, "07": 4 }
 let fixture: Fixture
 
 beforeAll(async () => {
@@ -49,13 +49,13 @@ async function clienteNaEtapa(etapa: EtapaId) {
 describe("fixture real da Verdeluz", () => {
   it("carrega (manifesto, estado e arquivos coerentes)", () => {
     expect(fixture.manifesto.fixture).toBe("verdeluz")
-    expect(fixture.manifesto.overrides).toContain("Biblioteca de Anúncios")
+    expect(fixture.manifesto.overrides).toContain("site-simulado")
     expect(fixture.manifesto.prospect.nome).toBe("Verdeluz Teste")
   })
 
   it("todo entregável aprovado aponta para o destino aprovado que existe no manifesto", () => {
     const caminhos = new Set(fixture.manifesto.arquivos.map((a) => a.caminho))
-    expect(fixture.estadoCompleto.entregaveis.length).toBeGreaterThanOrEqual(40)
+    expect(fixture.estadoCompleto.entregaveis.length).toBeGreaterThanOrEqual(38)
     for (const e of fixture.estadoCompleto.entregaveis) {
       expect(e.status).toBe("aprovado")
       expect(caminhos.has(destinoAprovado(e)), destinoAprovado(e)).toBe(true)
@@ -86,7 +86,7 @@ describe("fixture real da Verdeluz", () => {
       expect(dossie).toContain(`#### ${anterior.rotuloStatus}`)
       expect(dossie).toContain((estado.etapas[anterior.id].resumoDecisoes ?? "").slice(0, 60))
     }
-    expect(dossie, "o aviso do site simulado chega ao agente").toContain("Biblioteca de Anúncios")
+    expect(dossie, "o aviso do site simulado chega ao agente").toContain("site-simulado")
 
     const resposta = await servico.respostaEstado(slug, null)
     expect(resposta.aprovadosForaDaInterface).toEqual([])
@@ -126,14 +126,14 @@ describe("fixture real da Verdeluz", () => {
   it("os textos do fixture não têm travessão fora de intervalo numérico", async () => {
     const proibido = /(?<!\d)\s*—|—\s*(?!\d)/
     for (const { rel, texto } of await arquivosDeTexto(fixture.pasta)) {
-      if (rel.endsWith("benchmark.html") || rel.endsWith("manifesto.json") || rel.endsWith("estado-completo.json") || rel.endsWith("roteiro-apresentacao.json") || /\.md$/.test(rel)) {
+      if (rel.endsWith("manifesto.json") || rel.endsWith("estado-completo.json") || rel.endsWith("roteiro-apresentacao.json") || /\.md$/.test(rel)) {
         const linha = texto.split("\n").findIndex((l) => proibido.test(l))
         expect(linha, `${rel}:${linha + 1}`).toBe(-1)
       }
     }
   })
 
-  it("todo kit tem roteiro, e todas as 10 etapas têm roteiro", async () => {
+  it("todo kit tem roteiro, e todas as 9 etapas têm roteiro", async () => {
     for (const id of ORDEM_ETAPAS) {
       const texto = await readFile(path.join(fixture.pasta, "roteiros", `${id}.md`), "utf8")
       expect(texto).toContain("## O que enviar")
@@ -163,16 +163,6 @@ describe("fixture real da Verdeluz", () => {
       const n = Number(execFileSync("python3", ["-c", script, caminhoNaBase(fixture, rel)], { encoding: "utf8" }).trim())
       expect(n, rel).toBeGreaterThan(0)
     }
-  })
-
-  it("o benchmark não generaliza além do que foi observado e qualifica as autodeclarações", async () => {
-    const textos = await arquivosDeTexto(fixture.pasta)
-    for (const { rel, texto } of textos) {
-      expect(texto, rel).not.toContain("Os três concorrentes observados oferecem")
-      expect(texto, rel).not.toContain("Concorrentes usam kit e brinde antes de desconto profundo")
-    }
-    const html = textos.find((t) => t.rel.endsWith("benchmark/benchmark.html"))!.texto
-    expect(html).toContain("autodeclarad")
   })
 
   it("o roteiro da etapa 06 diz o mesmo que o fixture sobre P7 nos cenários", async () => {

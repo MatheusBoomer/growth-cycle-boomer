@@ -1,10 +1,7 @@
 import { execFile } from "node:child_process"
-import { readFile } from "node:fs/promises"
-import path from "node:path"
 import { promisify } from "node:util"
-import { chaveApiConfigurada, dadosNaNuvem, executorDoAmbiente, tokenApifyConfigurado } from "@workspace/core/sistema"
+import { chaveApiConfigurada, dadosNaNuvem, executorDoAmbiente } from "@workspace/core/sistema"
 import { respostaDeErro } from "@/lib/http"
-import { servidor } from "@/lib/servidor"
 import { exigirAdmin } from "@/lib/sessao"
 
 const exec = promisify(execFile)
@@ -62,19 +59,6 @@ export async function GET() {
   } catch {
     python = { ok: false, detalhe: "Python 3 com openpyxl, pandas e matplotlib não foi encontrado." }
   }
-  let ffmpeg = true
-  try {
-    await exec("ffmpeg", ["-version"], { timeout: 10_000 })
-  } catch {
-    ffmpeg = false
-  }
-  let conteudoEnv: string | null = null
-  try {
-    conteudoEnv = await readFile(path.join(servidor().raiz, ".env"), "utf-8")
-  } catch {
-    // sem .env: vale só o ambiente
-  }
-  const apify = tokenApifyConfigurado(process.env, conteudoEnv)
   const soffice = await (async () => {
     // O caminho do aplicativo só existe no macOS; no contêiner Linux vale apenas o soffice do PATH.
     const comandos = process.platform === "darwin" ? ["soffice", "/Applications/LibreOffice.app/Contents/MacOS/soffice"] : ["soffice"]
@@ -97,8 +81,6 @@ export async function GET() {
   return Response.json({
     claude,
     python,
-    ffmpeg,
-    apify,
     previa: soffice && poppler,
     executor,
     chaveApi: chaveApiConfigurada(process.env),

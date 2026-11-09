@@ -4,12 +4,14 @@ import type { Catalogo } from "../src/tipos"
 import { catalogoReal } from "./ajuda"
 
 describe("catálogo", () => {
-  it("carrega o etapas.json real com as 10 etapas na ordem", () => {
+  it("carrega o etapas.json real com as 9 etapas na ordem", () => {
     const c = catalogoReal()
-    expect(c.etapas.map((e) => e.id)).toEqual(["01", "02", "03", "04", "05", "06", "07", "08", "09", "final"])
+    expect(c.etapas.map((e) => e.id)).toEqual(["01", "02", "03", "04", "05", "06", "07", "08", "final"])
     expect(etapaDoCatalogo(c, "03").skill).toBe("03-diagnostico-performance")
     expect(etapaDoCatalogo(c, "05").skill).toBe("05-solucoes")
-    expect(etapaDoCatalogo(c, "09").skill).toBe("09-plano-de-acao")
+    expect(etapaDoCatalogo(c, "07").skill).toBe("07-midia-paga")
+    expect(etapaDoCatalogo(c, "08").skill).toBe("08-plano-de-acao")
+    expect(etapaDoCatalogo(c, "final").skill).toBe("09-apresentacao-final")
     expect(insumoDoCatalogo(c, "clientes-historico").sensivel).toBe(true)
   })
 
@@ -45,9 +47,10 @@ describe("catálogo", () => {
 
   it("navega entre etapas", () => {
     expect(etapaAnterior("01")).toBeNull()
-    expect(etapaAnterior("final")).toBe("09")
-    expect(proximaEtapa("08")).toBe("09")
-    expect(proximaEtapa("09")).toBe("final")
+    expect(etapaAnterior("final")).toBe("08")
+    expect(proximaEtapa("06")).toBe("07")
+    expect(proximaEtapa("07")).toBe("08")
+    expect(proximaEtapa("08")).toBe("final")
     expect(proximaEtapa("final")).toBeNull()
   })
 

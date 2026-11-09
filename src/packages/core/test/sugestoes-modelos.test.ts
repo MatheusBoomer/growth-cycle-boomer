@@ -19,7 +19,7 @@ describe("sugestões de modelo", () => {
     const s = carregarSugestoes(RAIZ, catalogoReal())
     const e06 = s.find((x) => x.etapa === "06" && x.alvo === "analista-dados")
     expect(e06?.modelo).toBe("sonnet")
-    expect(s.filter((x) => x.alvo === "pesquisador-benchmark").map((x) => x.etapa)).toEqual(["02", "05", "08"])
+    expect(s.filter((x) => x.alvo === "pesquisador-benchmark").map((x) => x.etapa)).toEqual(["02", "05", "07"])
     expect(s.every((x) => x.motivo.length > 0)).toBe(true)
   })
 

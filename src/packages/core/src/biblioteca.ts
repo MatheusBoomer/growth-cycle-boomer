@@ -5,13 +5,13 @@ export const SEM_ETAPA = "sem-etapa"
 export type EtapaBiblioteca = EtapaId | typeof SEM_ETAPA
 export const ORDEM_BIBLIOTECA: readonly EtapaBiblioteca[] = [...ORDEM_ETAPAS, SEM_ETAPA]
 
-export type OrigemImagem = "aprovado" | "proposta" | "substituido" | "anexo" | "insumo" | "benchmark" | "previa"
-export type GrupoImagem = { tipo: "anuncio"; marca: string } | { tipo: "previa" }
+export type OrigemImagem = "aprovado" | "proposta" | "substituido" | "anexo" | "insumo" | "previa"
+export type GrupoImagem = { tipo: "previa" }
 
 export interface ItemBiblioteca {
   /** = caminho: estável entre recargas. */
   id: string
-  /** Relativo à pasta do prospect; num grupo (anúncio, prévia), a pasta do grupo. */
+  /** Relativo à pasta do prospect; num grupo (prévia), a pasta do grupo. */
   caminho: string
   origem: OrigemImagem
   etapa: EtapaBiblioteca
@@ -36,7 +36,6 @@ export interface ArquivoBiblioteca {
 }
 
 const IMAGEM = /\.(png|jpe?g|webp|gif)$/i
-const BENCHMARK = /^dados\/benchmark-meta\/([^/]+)\/midia\/([^/]+)\/[^/]+$/
 const PREVIA = /^\.app\/previas\/([^/]+)\/slide-\d+\.png$/i
 
 export function ehImagem(caminho: string): boolean {
@@ -89,7 +88,6 @@ export function classificarBiblioteca({
   }
   const pastasInsumo = pastasDeInsumoComImagem(catalogo)
   const itens: ItemBiblioteca[] = []
-  const anuncios = new Map<string, { marca: string; anuncio: string; arquivos: ArquivoBiblioteca[] }>()
   const previas = new Map<string, ArquivoBiblioteca[]>()
 
   for (const a of arquivos) {
@@ -99,7 +97,6 @@ export function classificarBiblioteca({
     const simples = (origem: OrigemImagem, etapa: EtapaBiblioteca, titulo?: string) =>
       itens.push({ id: c, caminho: c, origem, etapa, titulo: titulo ?? tituloLegivel(nome), nomeArquivo: nome, imagens: [c], capa: c, modificadoEm: a.modificadoEm })
 
-    const anuncio = BENCHMARK.exec(c)
     const previa = PREVIA.exec(c)
     if (c.startsWith("entrega/ativos-aprovados/")) {
       const e = aprovados.get(c)
@@ -113,12 +110,6 @@ export function classificarBiblioteca({
       const partes = c.split("/")
       const pasta = partes.length === 4 ? partes[2]! : ""
       simples("anexo", (ORDEM_ETAPAS as readonly string[]).includes(pasta) ? (pasta as EtapaId) : SEM_ETAPA)
-    } else if (anuncio) {
-      const [, marca, id] = anuncio
-      const pasta = `dados/benchmark-meta/${marca}/midia/${id}`
-      const grupo = anuncios.get(pasta) ?? { marca: marca!, anuncio: id!, arquivos: [] }
-      grupo.arquivos.push(a)
-      anuncios.set(pasta, grupo)
     } else if (previa) {
       const id = previa[1]!
       previas.set(id, [...(previas.get(id) ?? []), a])
@@ -126,23 +117,6 @@ export function classificarBiblioteca({
       const insumo = pastasInsumo.find((p) => c.startsWith(p.pasta))
       if (insumo) simples("insumo", insumo.etapa)
     }
-  }
-
-  for (const [pasta, g] of anuncios) {
-    const ordenadas = g.arquivos.map((x) => x.caminho).sort()
-    const capa = ordenadas.find((x) => nomeDe(x).toLowerCase().includes("capa")) ?? ordenadas[0]!
-    itens.push({
-      id: pasta,
-      caminho: pasta,
-      origem: "benchmark",
-      etapa: "07",
-      titulo: `${g.marca} · anúncio ${g.anuncio}`,
-      nomeArquivo: g.anuncio,
-      grupo: { tipo: "anuncio", marca: g.marca },
-      imagens: [capa, ...ordenadas.filter((x) => x !== capa)],
-      capa,
-      modificadoEm: maisRecente(g.arquivos),
-    })
   }
 
   const apresentacao = estado.entregaveis

@@ -107,8 +107,8 @@ describe("antesDe", () => {
     expect(antesDe("00", "01")).toBe(true)
     expect(antesDe("02", "03")).toBe(true)
     expect(antesDe("03", "03")).toBe(false)
-    expect(antesDe("final", "09")).toBe(false)
-    expect(antesDe("09", "final")).toBe(true)
+    expect(antesDe("final", "08")).toBe(false)
+    expect(antesDe("08", "final")).toBe(true)
   })
 })
 

@@ -18,9 +18,8 @@ const MD_TERMINAL = `# Status do Planejamento — Adda
 | 04 · Unidade econômica | ⬜ | | |
 | 05 · Soluções | ⬜ | | |
 | 06 · Metas e cenários | ⬜ | | |
-| 07 · Briefing e benchmark | ⬜ | | |
-| 08 · Mídia paga | ⬜ | | |
-| 09 · Plano de ação | ⬜ | | |
+| 07 · Mídia paga | ⬜ | | |
+| 08 · Plano de ação | ⬜ | | |
 | Apresentação final | ⬜ | | |
 
 ## Próximo passo
