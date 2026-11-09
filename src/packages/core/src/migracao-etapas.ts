@@ -134,7 +134,10 @@ function movimento(caminho: string): (MovimentoArquivo & { fase: number }) | nul
   return null
 }
 
-/** Caminhos (relativos à pasta do prospect) que mudam na renumeração, na ordem em que podem ser movidos sem sobrescrever nada. */
+/**
+ * Caminhos (relativos à pasta do prospect) que mudam na renumeração, na ordem em que podem ser movidos sem sobrescrever nada.
+ * Não é idempotente: sobre uma pasta já migrada ela renumeraria de novo. Quem chama só pode usá-la com `classificarNumeracao(estado) === "atual"`.
+ */
 export function planoDeArquivos(caminhos: string[]): MovimentoArquivo[] {
   return caminhos
     .map(movimento)
@@ -143,6 +146,7 @@ export function planoDeArquivos(caminhos: string[]): MovimentoArquivo[] {
     .map(({ de, para }) => ({ de, para }))
 }
 
+/** Não é idempotente (remapeia as etapas de novo se o manifesto já está migrado): chamar só quando `classificarNumeracao(estado) === "atual"`. */
 export function migrarManifesto(m: ManifestoMigravel): ManifestoMigravel {
   const kit: Record<string, string[]> = {}
   for (const [etapa, arquivos] of Object.entries(m.kit)) {

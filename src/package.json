@@ -11,7 +11,8 @@
     "test": "turbo test",
     "dev:comentarios": "node apps/web/scripts/dev-comentarios.ts",
     "cliente-teste": "tsx packages/core/scripts/cliente-teste.ts",
-    "montar-fixture": "tsx packages/core/scripts/montar-fixture.ts"
+    "montar-fixture": "tsx packages/core/scripts/montar-fixture.ts",
+    "migrar-etapas": "tsx packages/core/scripts/migrar-etapas.ts"
   },
   "devDependencies": {
     "@workspace/eslint-config": "*",

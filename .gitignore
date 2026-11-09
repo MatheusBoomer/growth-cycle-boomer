@@ -29,6 +29,9 @@ clientes/*
 # Estado local do app (chats, rascunhos) — por prospect
 clientes/**/.app/
 
+# Backups do script de migração de etapas (copias inteiras de prospects reais)
+/.backup-migracao-etapas/
+
 # Gerados pelo next dev e pelo turbo (regras para agentes)
 /AGENTS.md
 src/apps/web/AGENTS.md
