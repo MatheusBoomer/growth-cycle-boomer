@@ -9,11 +9,13 @@ import { nomeCurto } from "@workspace/core/autenticacao"
 import type { ResumoProspect } from "@workspace/core/tipos"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
-import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@workspace/ui/components/card"
+import { Card, CardAction, CardContent, CardFooter, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@workspace/ui/components/dropdown-menu"
-import { Progress } from "@workspace/ui/components/progress"
+import { cn } from "@workspace/ui/lib/utils"
+import { AvatarPessoa } from "@/components/marca/avatar-pessoa"
 import { useAmbiente, usePapel } from "@/components/marca/conta-contexto"
 import { api, mensagemDeErro } from "@/lib/api"
+import { BarraEtapas } from "./barra-etapas"
 import { DialogoExcluirProspect } from "./dialogo-excluir-prospect"
 import { DialogoTrocarDono } from "./dialogo-trocar-dono"
 
@@ -22,7 +24,8 @@ function quando(iso: string): string {
   return Number.isNaN(d.getTime()) ? "" : d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
 }
 
-export function CardProspect({ prospect: p }: { prospect: ResumoProspect }) {
+/** `fotoUrl` é a foto do dono (só o admin vê o analista no cartão). */
+export function CardProspect({ prospect: p, fotoUrl }: { prospect: ResumoProspect; fotoUrl?: string | null }) {
   const router = useRouter()
   const { nuvem } = useAmbiente()
   const admin = usePapel() === "admin"
@@ -34,12 +37,17 @@ export function CardProspect({ prospect: p }: { prospect: ResumoProspect }) {
     // O link do nome se estica sobre o card inteiro (::after); só o menu ⋯ fica por cima dele.
     <Card className="has-[a:focus-visible]:ring-ring relative transition duration-300 hover:border-foreground/15 has-[a:focus-visible]:ring-2">
       <CardHeader>
-        <CardTitle className="text-texto-forte">
+        <CardTitle className="text-texto-forte truncate">
           <Link href={`/prospects/${p.slug}`} className="after:absolute after:inset-0 after:rounded-[inherit] focus-visible:outline-none">
             {p.nome}
           </Link>
         </CardTitle>
-        <CardDescription>{p.rotuloEtapaAtual}</CardDescription>
+        {admin && (
+          <div className="text-muted-foreground flex min-w-0 items-center gap-1.5 text-xs">
+            <AvatarPessoa email={p.dono} nome={p.dono ? nomeCurto(p.dono) : "Sem dono"} fotoUrl={fotoUrl} tamanho="sm" />
+            <span className="truncate">{p.dono ? nomeCurto(p.dono) : "Sem dono"}</span>
+          </div>
+        )}
         <CardAction className="relative z-10">
           <DropdownMenu>
             <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label={`Ações de ${p.nome}`} />}>
@@ -61,23 +69,26 @@ export function CardProspect({ prospect: p }: { prospect: ResumoProspect }) {
           </DropdownMenu>
         </CardAction>
       </CardHeader>
-      <CardContent className="space-y-2">
-        <Progress value={(p.concluidas / p.totalEtapas) * 100} aria-label={`${p.concluidas} de ${p.totalEtapas} etapas`} />
-        <div className="flex flex-wrap gap-1.5">
-          <Badge variant={concluido ? "sucesso" : "secondary"}>
-            {p.concluidas} de {p.totalEtapas}
-          </Badge>
-          {p.teste && <Badge variant="outline">Teste</Badge>}
-          {p.pendencias > 0 && (
-            <Badge variant="aviso">
-              {p.pendencias} aprovaç{p.pendencias === 1 ? "ão pendente" : "ões pendentes"}
-            </Badge>
-          )}
-        </div>
+      <CardContent className="space-y-2.5">
+        <p className={cn("truncate text-sm font-medium", concluido ? "text-sucesso" : "text-texto-forte")}>
+          {concluido ? "Concluído" : p.rotuloEtapaAtual}
+        </p>
+        <BarraEtapas concluidas={p.concluidas} total={p.totalEtapas} atual={!concluido} />
+        {(p.teste || p.pendencias > 0) && (
+          <div className="flex flex-wrap gap-1.5">
+            {p.teste && <Badge variant="outline">Teste</Badge>}
+            {p.pendencias > 0 && (
+              <Badge variant="aviso">
+                {p.pendencias} aprovaç{p.pendencias === 1 ? "ão pendente" : "ões pendentes"}
+              </Badge>
+            )}
+          </div>
+        )}
       </CardContent>
-      <CardFooter className="text-muted-foreground flex-wrap gap-x-2 text-[11px]">
-        {admin && <span>{p.dono ? nomeCurto(p.dono) : "Sem dono"} ·</span>}
-        <span>Atualizado em {quando(p.atualizadoEm)}</span>
+      <CardFooter className="text-muted-foreground text-[11px]">
+        <span className="truncate">
+          {p.concluidas} de {p.totalEtapas} etapas · atualizado em {quando(p.atualizadoEm)}
+        </span>
       </CardFooter>
       <DialogoExcluirProspect prospect={p} aberto={excluindo} aoMudar={setExcluindo} />
       {admin && nuvem && <DialogoTrocarDono prospect={p} aberto={trocandoDono} aoMudar={setTrocandoDono} />}
