@@ -6,18 +6,20 @@ import { usuarioDeClaims } from "@/lib/sessao"
 export const dynamic = "force-dynamic"
 
 /**
- * Guarda a foto do Google de quem acabou de entrar. A foto nunca pode atrapalhar o login: qualquer falha
- * (banco fora, repositório indisponível) é ignorada. Sem foto válida ou no modo disco, não faz nada.
+ * Garante a linha de quem acabou de entrar e guarda a foto do Google. A foto nunca pode atrapalhar o login:
+ * qualquer falha (banco fora, repositório indisponível) é ignorada. No modo disco não faz nada.
  */
 async function guardarFoto(email: string, claims: Record<string, unknown>): Promise<void> {
   try {
-    const avatar = avatarDeClaims(claims)
-    if (avatar === null) return
-    // Import tardio, como em sessao.ts: o grafo do servidor só carrega quando há o que gravar.
+    // Import tardio, como em sessao.ts: o proxy e as rotas de login não devem carregar o grafo do servidor à toa.
     const { servidor } = await import("@/lib/servidor")
     const { usuarios } = servidor()
     if (usuarios === null) return
-    await usuarios.registrarAvatar(email, avatar)
+    // Idempotente (só atualiza ultimo_acesso depois de 1 h). No primeiro login a linha ainda não existe, e
+    // registrarAvatar só atualiza quem já está registrado.
+    await usuarios.registrarAcesso(email)
+    const avatar = avatarDeClaims(claims)
+    if (avatar !== null) await usuarios.registrarAvatar(email, avatar)
   } catch (e) {
     console.error("[auth] falha ao guardar a foto do Google", e)
   }
