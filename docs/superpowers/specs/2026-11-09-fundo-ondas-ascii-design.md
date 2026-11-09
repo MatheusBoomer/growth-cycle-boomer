@@ -35,7 +35,7 @@ Três unidades, cada uma com um propósito.
 - Renderiza um `<canvas>` fixo (`fixed inset-0 -z-10`), `aria-hidden` e `pointer-events-none`.
 - Aplica `mask-image: linear-gradient(to bottom, #000, transparent)` para o degradê. O fade custa zero de CPU.
 - Lê o tema pelo `ThemeProvider` já existente e troca a paleta sem recarregar.
-- Cuida do loop de animação, do redimensionamento (`ResizeObserver`) e do `devicePixelRatio`.
+- Cuida do loop de animação, do redimensionamento (o canvas ocupa a janela toda: mede `window.innerWidth/innerHeight` e ouve `resize`) e do `devicePixelRatio`.
 - Fonte: Geist Mono, que o app já carrega (`--font-mono`).
 
 ### `FundoBoomer` (seletor por rota)
