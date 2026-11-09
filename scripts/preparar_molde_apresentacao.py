@@ -137,6 +137,57 @@ def preparar(original: Path, saida: Path) -> None:
         saida.parent.mkdir(parents=True, exist_ok=True)
         prs.save(saida)
     adicionar_modelo_desafio.adicionar(saida)
+    ajustar_jornada(saida)
+
+
+SLIDE_JORNADA = "ppt/slides/slide2.xml"
+ITEM_REMOVIDO_DA_JORNADA = "Benchmarking"
+# Geometria da jornada no deck de referência: 6 itens com espaçamento de linha de 200%
+# e 6 setas (homePlate) de 1387100 a 3525063 EMU. Com 5 itens, o espaçamento sobe
+# para 250% e as setas ficam a cada 533400 EMU (14 pt x 1,2 x 2,5), na mesma faixa.
+JORNADA_LNSPC_ANTES, JORNADA_LNSPC_DEPOIS = 'val="200000"', 'val="250000"'
+JORNADA_PRIMEIRA_SETA, JORNADA_PASSO = 1387100, 533400
+JORNADA_CAIXA_ANTES = '<a:off x="645500" y="1294200"/><a:ext cx="7705800" cy="2555100"/>'
+# a caixa sobe o acréscimo de espaçamento da 1ª linha (0,5 x 213360) para o 1º item não sair do lugar
+JORNADA_CAIXA_DEPOIS = '<a:off x="645500" y="1187520"/><a:ext cx="7705800" cy="2661780"/>'
+
+
+def ajustar_jornada(molde: Path) -> bool:
+    """Tira "Benchmarking" da jornada (slide 2) e redistribui as 5 seções restantes.
+
+    Edita só o XML do slide 2; as demais partes do pacote são copiadas sem alteração.
+    Idempotente: devolve False se a jornada já está sem o item."""
+    import re
+    import zipfile
+
+    with zipfile.ZipFile(molde) as z:
+        infos = z.infolist()
+        partes = {i.filename: z.read(i.filename) for i in infos}
+    xml = partes[SLIDE_JORNADA].decode("utf-8")
+    if ITEM_REMOVIDO_DA_JORNADA not in xml:
+        return False
+    paragrafos = re.findall(r"<a:p>.*?</a:p>", xml)
+    alvo = [p for p in paragrafos if f"<a:t>{ITEM_REMOVIDO_DA_JORNADA}</a:t>" in p]
+    if len(alvo) != 1 or JORNADA_CAIXA_ANTES not in xml:
+        raise ValueError("slide 2 do molde não tem a jornada esperada; ajuste à mão")
+    xml = xml.replace(alvo[0], "", 1)
+    lista = re.search(r'<p:sp><p:nvSpPr><p:cNvPr id="66".*?</p:sp>', xml).group(0)
+    xml = xml.replace(lista, lista.replace(JORNADA_LNSPC_ANTES, JORNADA_LNSPC_DEPOIS), 1)
+    xml = xml.replace(JORNADA_CAIXA_ANTES, JORNADA_CAIXA_DEPOIS, 1)
+    setas = re.findall(r'<p:sp><p:nvSpPr><p:cNvPr id="\d+" name="[^"]*"/><p:cNvSpPr/>.*?prst="homePlate".*?</p:sp>', xml)
+    for indice, seta in enumerate(setas):
+        if indice >= 5:
+            xml = xml.replace(seta, "", 1)
+            continue
+        nova = re.sub(r'<a:off x="0" y="\d+"/>', f'<a:off x="0" y="{JORNADA_PRIMEIRA_SETA + indice * JORNADA_PASSO}"/>', seta, count=1)
+        xml = xml.replace(seta, nova, 1)
+    partes[SLIDE_JORNADA] = xml.encode("utf-8")
+    temporario = molde.with_suffix(".tmp.pptx")
+    with zipfile.ZipFile(temporario, "w") as z:
+        for info in infos:
+            z.writestr(info, partes[info.filename])
+    temporario.replace(molde)
+    return True
 
 
 def main(argv=None) -> int:

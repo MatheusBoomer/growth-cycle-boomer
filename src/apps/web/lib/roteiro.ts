@@ -23,6 +23,7 @@ export function resumoDoSlide(s: SlideRoteiro): { titulo: string; linhas: string
     return { titulo: "Análises", linhas: [...coluna(s.esquerda), ...coluna(s.direita)], imagens }
   }
   const titulo = [semNegrito(s.titulo), semNegrito(s.subtitulo)].filter(Boolean).join(" · ") || NOMES[s.tipo] || s.tipo
+  // "benchmark": tipo reservado, sem uso no roteiro padrão (o deck de 5 seções não tem benchmarking)
   const prefixo = s.tipo === "benchmark" && s.concorrente ? `${semNegrito(s.concorrente)}: ` : ""
   const linhas = [...lista(s.conclusoes), ...lista(s.itens), ...lista(s.cartoes), ...(typeof s.texto === "string" ? [semNegrito(s.texto)] : [])]
   return { titulo: prefixo + titulo, linhas, imagens }

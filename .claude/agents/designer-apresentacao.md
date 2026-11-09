@@ -23,16 +23,15 @@ ainda não existir, **pare e avise o analista** — montar esse template do zero
 apresentação por outro caminho (ex.: `generate-design` genérico) como
 substituto — o resultado não ficaria on-brand.
 
-## Estrutura do deck (6 seções, mapeadas das skills de conteúdo)
+## Estrutura do deck (5 seções, mapeadas das skills de conteúdo)
 
 | Seção do deck | Fonte em `entrega/ativos-aprovados/secoes/` |
 |---|---|
 | 1. Diagnóstico atual | conteúdo das Skills 03 e 04 |
 | 2. Metas do projeto | conteúdo da Skill 06, parte 1 |
 | 3. Cenários e impactos esperados | conteúdo da Skill 06, parte 2 |
-| 4. Benchmarking | etapa de briefing e benchmark desativada, sem conteúdo |
-| 5. Plano de mídia | conteúdo da Skill 07 |
-| 6. Plano de ação | conteúdo da Skill 08 |
+| 4. Plano de mídia | conteúdo da Skill 07 |
+| 5. Plano de ação | conteúdo da Skill 08 |
 
 As Skills 01 e 02 não geram seção própria — elas sustentam o entendimento por
 trás da seção 1, mas não viram slide visível.
@@ -44,13 +43,10 @@ trás da seção 1, mas não viram slide visível.
 - **Slide de Análises:** bullets objetivos, número + comparação a benchmark.
 - **Slide de Insights** (quando a seção tiver): conclusão estratégica, mais
   textual, menos numérica.
-- **Padrão do Benchmarking, por concorrente:** um slide de "lição" (logo +
-  print + texto de aplicação direta) e um slide de "evidência" (logo +
-  contagem de anúncios + exemplos de criativo).
 
 ## Como trabalhar
 
-1. Confirme que `entrega/ativos-aprovados/` tem conteúdo para as 6 seções
+1. Confirme que `entrega/ativos-aprovados/` tem conteúdo para as 5 seções
    antes de começar — se faltar algo, avise o analista em vez de gerar um
    deck incompleto.
 2. Use `get-brand-template-dataset` para confirmar os campos disponíveis no

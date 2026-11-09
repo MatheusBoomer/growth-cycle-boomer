@@ -317,3 +317,39 @@ def test_problema_id_nao_texto_nao_derruba_a_checagem_de_cobertura(prospect):
     avisos = []
     ga._problemas_fora_do_roteiro(roteiro, prospect, avisos)
     assert any("P1" in a for a in avisos), avisos
+
+
+ROTEIRO_FIXTURE = RAIZ / "clientes/_fixtures/verdeluz/base/entrega/ativos-aprovados/apresentacao/roteiro-apresentacao.json"
+DIVISORIAS_ESPERADAS = [
+    ("01.", "CENÁRIO **ATUAL**"),
+    ("02.", "DESAFIOS"),
+    ("03.", "**METAS**"),
+    ("04.", "**CENÁRIOS** E IMPACTOS **ESPERADOS**"),
+    ("05.", "PLANO **DE AÇÃO**"),
+]
+
+
+def _roteiro_referencia():
+    sys.path.insert(0, str(RAIZ / "scripts/fixture_verdeluz"))
+    import roteiro_09  # noqa: E402
+
+    return roteiro_09.montar()
+
+
+def test_roteiro_de_referencia_tem_cinco_secoes_sem_benchmarking():
+    roteiro = _roteiro_referencia()
+    slides = roteiro["slides"]
+    assert [s["tipo"] for s in slides[:2]] == ["capa", "jornada"]
+    assert slides[2]["tipo"] == "divisoria" and slides[-1]["tipo"] == "obrigado"
+    divisorias = [(s["numero"], s["titulo"]) for s in slides if s["tipo"] == "divisoria"]
+    assert divisorias == DIVISORIAS_ESPERADAS
+    texto = json.dumps(roteiro, ensure_ascii=False).lower()
+    assert "benchmarking" not in texto and "07-benchmark" not in texto
+    assert all(s["tipo"] != "benchmark" for s in slides)
+
+
+def test_roteiro_do_fixture_e_o_de_referencia_e_valida():
+    roteiro = json.loads(ROTEIRO_FIXTURE.read_text(encoding="utf-8"))
+    assert roteiro == _roteiro_referencia()
+    erros, _ = ga.validar_roteiro(roteiro, ROTEIRO_FIXTURE.parents[3], tipos_molde())
+    assert erros == []

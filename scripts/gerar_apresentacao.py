@@ -44,6 +44,7 @@ ESQUEMA: Dict[str, Dict[str, tuple]] = {
     "analises_2_colunas": {"esquerda": ("bloco", 1, 4), "direita": ("bloco", 1, 4)},
     "bullets": {"titulo": ("texto", 1, 1), "subtitulo": ("texto", 1, 1), "itens": ("lista", 1, 6)},
     "cartoes": {"titulo": ("texto", 1, 1), "subtitulo": ("texto", 1, 1), "cartoes": ("lista", 3, 3)},
+    # tipo reservado, sem uso no roteiro padrão (o deck de 5 seções não tem benchmarking)
     "benchmark": {
         "titulo": ("texto", 1, 1), "subtitulo": ("texto", 1, 1), "concorrente": ("texto", 1, 1),
         "imagens": ("imagens", 1, 3), "conclusoes": ("lista", 1, 3), "link": ("link", 1, 1),

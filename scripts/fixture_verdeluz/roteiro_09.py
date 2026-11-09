@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Monta o roteiro da apresentação final da Verdeluz (cliente de teste) a partir do que foi aprovado nas etapas 01 a 09 e grava
+Monta o roteiro da apresentação final da Verdeluz (cliente de teste) a partir do que foi aprovado nas etapas 01 a 08 e grava
 `entrega/ativos-aprovados/apresentacao/roteiro-apresentacao.json`. Todo texto condensa as seções aprovadas; nenhum número é novo.
 
-    python3 scripts/fixture_verdeluz/roteiro_10.py --cliente clientes/verdeluz-producao
+    python3 scripts/fixture_verdeluz/roteiro_09.py --cliente clientes/verdeluz-producao
 """
 
 from __future__ import annotations
@@ -139,25 +139,8 @@ def montar() -> dict:
                  "Retenção: régua de reposição e reativação da compra única", "Retenção: painel único de KPIs e cupom por influenciadora"], "plano-de-acao/plano-de-acao-estrategico.docx"),
     ]
 
-    # 03. Benchmarking
-    s.append(divisoria("03.", "ANÁLISE DE **BENCHMARKING**"))
-    s += [
-        bullets("Benchmarking · Sallve", "Kit com desconto **limitado** e rotina guiada",
-                ["Lição: oferta de kit montado (até 15% OFF) e ordem de uso no blog", "Evidência: site e blog da marca, observados em 22/10/2026 (sem coleta de anúncios)",
-                 "Testar: Black Friday com kit montado de até 15% no lugar de 35% (P6 e P8)", "Testar: página de ordem de uso no pós-compra (P3)"], "secoes/07-benchmark.md"),
-        bullets("Benchmarking · Simple Organic", "Comunidade e **revenda**",
-                ["Lição: programa aberto de comunidade e presença em varejista online", "Evidência: perfil e site da marca, observados em 22/10/2026 (sem coleta de anúncios)",
-                 "Testar: piloto de 10 embaixadoras com cupom e UTM por 60 dias (P7)", "Testar: vitrine de best-sellers com os líderes e os kits (P8)"], "secoes/07-benchmark.md"),
-        bullets("Benchmarking · Care Natural Beauty", "Selo de confiança e **brinde**",
-                ["Lição: selo de terceiros autodeclarado como prova e publicação associada com brinde", "Evidência: perfil e site da marca, observados em 22/10/2026 (sem coleta de anúncios)",
-                 "Testar: nécessaire Verdeluz como brinde acima de um valor mínimo (P6)", "Testar: selo vegano e avaliações nas páginas dos líderes (P5)"], "secoes/07-benchmark.md"),
-        bullets("Benchmarking · Análises", "Quatro **destaques** para a Verdeluz",
-                ["Sallve usa kit com desconto limitado; a Care aparece com brinde e cupom", "Prova de confiança visível faz parte do argumento de venda",
-                 "Programa estruturado de embaixadoras transforma influência em número", "Sem coleta de anúncios: formato, funil e intensidade ficam para a coleta real"], "secoes/07-benchmark.md"),
-    ]
-
-    # 04. Metas
-    s.append(divisoria("04.", "**METAS**"))
+    # 03. Metas
+    s.append(divisoria("03.", "**METAS**"))
     s += [
         grafico("tabela-cenarios-projecao.png", "Metas · Cenários", "Meta Realista de **R$ 1,59 mi** (+30,0%)",
                 ["Pessimista R$ 1,10 mi (-10,0%), Realista R$ 1,59 mi (+30,0%)", "Otimista R$ 1,71 mi (+40,0%): a meta das sócias é o teto", "Meta agressiva: depende de não repetir a ruptura"], "secoes/06-metas-e-cenarios.md", "tabela_lateral"),
@@ -167,8 +150,8 @@ def montar() -> dict:
                 ["Pessimista: nada muda e a receita cai 10%", "Realista: eficiência e retenção sustentam +30%", "Otimista: todas as alavancas, +40%"], "secoes/06-metas-e-cenarios.md"),
     ]
 
-    # 05. Cenários e impactos
-    s.append(divisoria("05.", "**CENÁRIOS** E IMPACTOS **ESPERADOS**"))
+    # 04. Cenários e impactos
+    s.append(divisoria("04.", "**CENÁRIOS** E IMPACTOS **ESPERADOS**"))
     s += [
         bullets("Cenários · Metodologia", "Sessões, vendas e receita **calculadas** pelos KPIs influenciadores",
                 ["KPIs influenciadores: investimento, ticket, conversão, custo por sessão e dependência", "KPIs de resultado: sessões, vendas e receita, calculados pela cadeia",
@@ -177,22 +160,22 @@ def montar() -> dict:
                 ["Investimento de R$ 341,7 mil (+30,4%) e ROAS médio de 4,64x", "Conversão média de 1,75% e dependência de 54% para 45%", "Quebra de 6,5% para 5,5% e ticket de R$ 199,47",
                  "Risco: ruptura do sérum, CAC fora do teto e conversão abaixo de 1,8%", "Alavanca principal: recuperação de carrinho, recompra e estoque"], "secoes/06-metas-e-cenarios.md"),
         grafico("alocacao-verba-plataforma.png", "Mídia paga · Alocação de verba", "Verba de **R$ 341,7 mil** por plataforma",
-                ["Meta R$ 191 mil (55,9%) e Google R$ 150,7 mil (44,1%)", "Google sobe 51% e Meta 18% sobre o ano atual", "Pico de NOV: R$ 49,3 mil (14,4% do ano)"], "secoes/08-midia-paga.md"),
+                ["Meta R$ 191 mil (55,9%) e Google R$ 150,7 mil (44,1%)", "Google sobe 51% e Meta 18% sobre o ano atual", "Pico de NOV: R$ 49,3 mil (14,4% do ano)"], "secoes/07-midia-paga.md"),
         grafico("tabela-alocacao-verba-plataforma.png", "Mídia paga · Alocação mensal", "Cada mês com a sua **justificativa**",
-                ["Meta a 62% em NOV e 60% em MAI, para ganhar alcance", "Google a 48% nos vales, onde a intenção pesa mais", "Total de R$ 341.683 em 12 meses"], "secoes/08-midia-paga.md", "tabela_lateral"),
+                ["Meta a 62% em NOV e 60% em MAI, para ganhar alcance", "Google a 48% nos vales, onde a intenção pesa mais", "Total de R$ 341.683 em 12 meses"], "secoes/07-midia-paga.md", "tabela_lateral"),
         {"tipo": "imagem_larga", "titulo": "Mídia paga · Estratégia por Curva ABC", "imagem": G + "tabela-curva-abc-estrategia.png",
-         "texto": "A Curva C não recebe verba direta: uma venda paga custa R$ 109,90 e o preço médio é R$ 63,98.", "fonte": "secoes/08-midia-paga.md"},
+         "texto": "A Curva C não recebe verba direta: uma venda paga custa R$ 109,90 e o preço médio é R$ 63,98.", "fonte": "secoes/07-midia-paga.md"},
         grafico("tabela-calendario-estrategico.png", "Mídia paga · Calendário estratégico", "Dois **picos**, três escalas e dois vales",
-                ["Picos em NOV (Black Friday) e MAI (Dia das Mães)", "Escala em DEZ, ABR e SET; contenção em JAN e FEV", "Estoque de segurança vigiado antes de cada pico"], "secoes/08-midia-paga.md", "tabela_lateral"),
+                ["Picos em NOV (Black Friday) e MAI (Dia das Mães)", "Escala em DEZ, ABR e SET; contenção em JAN e FEV", "Estoque de segurança vigiado antes de cada pico"], "secoes/07-midia-paga.md", "tabela_lateral"),
         grafico("roas-esperado-plataforma.png", "Mídia paga · ROAS esperado", "ROAS global médio de **4,64x** no Realista",
-                ["De 3,70x (OUT) para 5,96x (SET), com entrada gradual", "Google médio de 2,82x e Meta de 1,23x (GA4)", "Risco de compressão em JAN, FEV, ABR e JUN"], "secoes/08-midia-paga.md"),
+                ["De 3,70x (OUT) para 5,96x (SET), com entrada gradual", "Google médio de 2,82x e Meta de 1,23x (GA4)", "Risco de compressão em JAN, FEV, ABR e JUN"], "secoes/07-midia-paga.md"),
         bullets("Mídia paga · Dependência", "Sessões pagas de **54,8%** para **45%**",
                 ["Meta de 45% das sessões pagas em SET/27, de 54% em OUT/26", "CRM: régua de reposição e reativação de 7.176 clientes", "Conteúdo de rotina ligado aos kits e programa de embaixadoras",
-                 "Marketplace fora do horizonte, pela premissa do cliente", "Sem a redução, a dependência vai a 58% e o ROAS a 2,56x"], "secoes/08-midia-paga.md"),
+                 "Marketplace fora do horizonte, pela premissa do cliente", "Sem a redução, a dependência vai a 58% e o ROAS a 2,56x"], "secoes/07-midia-paga.md"),
     ]
 
-    # 06. Plano de ação
-    s.append(divisoria("06.", "PLANO **DE AÇÃO**"))
+    # 05. Plano de ação
+    s.append(divisoria("05.", "PLANO **DE AÇÃO**"))
     s += [
         bullets("Plano de ação · Horizonte 1", "Imediato: **26/10 a 30/10/2026**",
                 ["Teto de CAC de R$ 80 e regra de escala da verba (Agência)", "Estoque de segurança de 60 dias e alerta de cobertura (Agência e Cliente)",

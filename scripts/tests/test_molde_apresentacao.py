@@ -83,3 +83,38 @@ def test_molde_nao_leva_metadados_internos_ao_prospect():
     with zipfile.ZipFile(MOLDE) as z:
         nomes = z.namelist()
     assert not any("commentAuthors" in n or n.startswith("ppt/comments/") for n in nomes), [n for n in nomes if "comment" in n]
+
+
+SECOES_JORNADA = ["Cenário atual", "Desafios", "Metas", "Cenários e Impactos Esperados", "Plano de ação"]
+
+
+def _jornada_xml() -> str:
+    import zipfile
+
+    with zipfile.ZipFile(MOLDE) as z:
+        return z.read("ppt/slides/slide2.xml").decode("utf-8")
+
+
+def test_jornada_tem_as_cinco_secoes_sem_benchmarking():
+    import re
+
+    xml = _jornada_xml()
+    assert "Benchmarking" not in xml
+    assert "JORNADA" in xml
+    paragrafos = ["".join(re.findall(r"<a:t>([^<]*)</a:t>", p)) for p in re.findall(r"<a:p>(.*?)</a:p>", xml)]
+    itens = [p for p in paragrafos if p and p != "JORNADA"]
+    assert itens == SECOES_JORNADA
+
+
+def test_jornada_tem_uma_seta_por_secao_no_mesmo_espaco_do_original():
+    import re
+
+    xml = _jornada_xml()
+    setas = re.findall(r'<a:off x="0" y="(\d+)"/><a:ext cx="695400" cy="210900"/></a:xfrm><a:prstGeom prst="homePlate"', xml)
+    ys = [int(y) for y in setas]
+    assert len(ys) == len(SECOES_JORNADA)
+    passos = {b - a for a, b in zip(ys, ys[1:])}
+    assert max(passos) - min(passos) <= 1, passos  # espaçamento uniforme
+    # mesma faixa vertical que as 6 setas do deck de referência ocupavam (1387100 a 3525063)
+    assert ys[0] == 1387100
+    assert abs(ys[-1] - 3525063) < 10000

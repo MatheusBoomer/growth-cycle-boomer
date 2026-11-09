@@ -12,16 +12,15 @@ gráfico novo: organiza, condensa e monta.
 
 ## Antes de começar
 
-Confira que existe material das 6 seções do deck em `entrega/ativos-aprovados/`:
+Confira que existe material das 5 seções do deck em `entrega/ativos-aprovados/`:
 
 | Seção do deck | Onde está | Etapa de origem |
 |---|---|---|
 | 01. Cenário atual | `graficos/*`, `secoes/03-*.md`, `secoes/04-*.md` | 03 e 04 |
 | 02. Desafios | `contexto/solucoes.json`, `secoes/05-solucoes.md` | 05 |
-| 03. Benchmarking | `secoes/07-benchmark.md`, `dados/benchmark-meta/<marca>/` | 07 |
-| 04. Metas | `graficos/cenarios-*`, `graficos/tabela-cenarios-*`, `secoes/06-*.md` | 06 |
-| 05. Cenários e impactos | `secoes/06-*.md`, `secoes/07-midia-paga.md`, `graficos/tabela-*` | 06 e 07 |
-| 06. Plano de ação | `plano-de-acao/*.docx`, `secoes/08-*.md` | 08 |
+| 03. Metas | `graficos/cenarios-*`, `graficos/tabela-cenarios-*`, `secoes/06-*.md` | 06 |
+| 04. Cenários e impactos | `secoes/06-*.md`, `secoes/07-midia-paga.md`, `graficos/tabela-*` | 06 e 07 |
+| 05. Plano de ação | `plano-de-acao/*.docx`, `secoes/08-*.md` | 08 |
 
 Faltando material de uma seção, diga ao analista o que falta e de qual etapa
 vem; não monte um deck incompleto em silêncio.
@@ -45,30 +44,30 @@ dos campos é o `ESQUEMA` em `scripts/gerar_apresentacao.py`:
 | `bullets` | `titulo`, `subtitulo`, `itens` (1 a 6) |
 | `cartoes` | `titulo`, `subtitulo`, `cartoes` (exatamente 3) |
 | `desafio` | `titulo`, `problema`, `hipoteses` (1 a 5), `solucoes` (1 a 3), `impacto`; `problema_id` obrigatório quando houver registro |
-| `benchmark` | `titulo`, `subtitulo`, `concorrente`, `imagens` (1 a 3), `conclusoes` (1 a 3), `link` |
+| `benchmark` | `titulo`, `subtitulo`, `concorrente`, `imagens` (1 a 3), `conclusoes` (1 a 3), `link` (tipo reservado, sem uso no roteiro padrão) |
 | `obrigado` | nenhum |
 
 Opcionais em qualquer slide: `fonte` e `pendencia`. Imagens: caminhos relativos
 à pasta do prospect (png ou jpg).
 
-Estrutura de referência (deck de 61 slides entregue à Sottile Jalecos; siga
-esta espinha e adapte ao material de cada prospect):
+Estrutura de referência (deck de 61 slides entregue à Sottile Jalecos, que
+incluía uma seção de benchmark que não se aplica mais; siga esta espinha e
+adapte ao material de cada prospect):
 
 | Seção | Slides, na ordem |
 |---|---|
-| Abertura | capa · jornada (6 seções) |
+| Abertura | capa · jornada (5 seções) |
 | 01. Cenário atual | divisória · um `grafico` por gráfico do diagnóstico (investimento, receita captada x aprovada, taxa de quebra, ROAS global, ROAS por plataforma, sessões, dependência de mídia, conversão global, funil de eventos, conversão por plataforma, Curva ABC, top 10 produtos, CAC, novos x recorrentes) com 1 a 3 conclusões · `analises_2_colunas` depois de cada bloco (investimento e receita; conversão) · `tabela_lateral` por curva (A, B, C) · análise de criativos do próprio prospect quando houver imagem aprovada |
 | 02. Desafios | divisória · `bullets` com a lista de desafios (título e impacto de cada problema) · um `desafio` por problema do registro, na ordem de prioridade, com `problema_id` · `cartoes` com os 3 pilares · um `bullets` por iniciativa de cada pilar (pilares e iniciativas vêm do analista; ver regras) |
-| 03. Benchmarking | divisória · um `benchmark` por concorrente (3 criativos, conclusões, link da página) · `bullets` com as análises de benchmarking |
-| 04. Metas | divisória · `imagem_larga` com a tabela de metas e os 3 cenários · `grafico` com as curvas dos cenários |
-| 05. Cenários e impactos | divisória · `bullets` com a metodologia (KPIs influenciadores e de resultado) · `imagem_larga` com as tabelas de projeção e de KPIs · `bullets` com as considerações · alocação de verba (`grafico` e `imagem_larga`) · estratégia por Curva ABC · calendário de mídia · ROAS esperado · dependência de mídia paga |
-| 06. Plano de ação | divisória · estrutura de campanhas (imagem aprovada, se houver) · `bullets` sobre as campanhas · `imagem_larga` com os planos de ação (B2C, B2B) |
+| 03. Metas | divisória · `imagem_larga` com a tabela de metas e os 3 cenários · `grafico` com as curvas dos cenários |
+| 04. Cenários e impactos | divisória · `bullets` com a metodologia (KPIs influenciadores e de resultado) · `imagem_larga` com as tabelas de projeção e de KPIs · `bullets` com as considerações · alocação de verba (`grafico` e `imagem_larga`) · estratégia por Curva ABC · calendário de mídia · ROAS esperado · dependência de mídia paga |
+| 05. Plano de ação | divisória · estrutura de campanhas (imagem aprovada, se houver) · `bullets` sobre as campanhas · `imagem_larga` com os planos de ação (B2C, B2B) |
 | Fechamento | obrigado |
 
 Regras:
-- Ordem: capa → jornada → divisória 01 + slides → … → divisória 06 + slides → obrigado.
-  Divisórias: "CENÁRIO **ATUAL**", "DESAFIOS", "ANÁLISE DE **BENCHMARKING**",
-  "**METAS**", "**CENÁRIOS** E IMPACTOS **ESPERADOS**", "PLANO **DE AÇÃO**".
+- Ordem: capa → jornada (5 seções) → divisória 01 + slides → … → divisória 05 + slides → obrigado.
+  Divisórias: "01." "CENÁRIO **ATUAL**", "02." "DESAFIOS", "03." "**METAS**",
+  "04." "**CENÁRIOS** E IMPACTOS **ESPERADOS**", "05." "PLANO **DE AÇÃO**".
 - **Cobertura obrigatória:** todo gráfico e toda tabela de
   `entrega/ativos-aprovados/graficos/` entra no deck, um slide cada (`grafico`;
   tabelas em `tabela_lateral` quando altas ou `imagem_larga` quando largas). Só
@@ -95,7 +94,8 @@ Regras:
 - **Lista de desafios (`bullets`):** no máximo 6 itens; com mais de 6
   problemas, divida em dois slides de lista. A ordem é a do array `problemas`
   de `contexto/solucoes.json` (a Skill 05 grava por prioridade).
-- **Escala esperada:** 40 a 60 slides, como o deck de referência. Um deck
+- **Escala esperada:** 40 a 60 slides (o deck de referência tinha 61 com a
+  seção de benchmark, que não se aplica mais). Um deck
   muito menor indica que faltou material ou cobertura; diga ao analista o que
   falta em vez de enxugar.
 - Títulos curtos no padrão do deck ("Cenário Atual", "Metas do projeto"…);
@@ -103,15 +103,11 @@ Regras:
 - Conclusões: no máximo 3 por slide, frases curtas (até ~90 caracteres),
   condensando as seções aprovadas, com número e comparação quando houver.
   Registre a seção de origem em `fonte`. Nunca invente número ou análise.
-- Benchmark: um slide `benchmark` por concorrente, com até 3 criativos de
-  `dados/benchmark-meta/<marca>/midia/` (prefira o quadro mais representativo
-  de cada vídeo), conclusões da camada Lição + Evidência e o link da página na
-  Biblioteca (`resumo.md`, "Página na Biblioteca").
 - Slide sem material: `{"tipo": "...", "pendencia": "o que falta e de qual etapa"}`.
 - PII: as regras do `CLAUDE.md` raiz valem para o deck.
 
 Antes de propor o deck, apresente ao analista o checklist da Regra 8 de
-`_shared/regras-de-validacao.md` (os 5 itens), cada um marcado como atendido
+`_shared/regras-de-validacao.md` (os 4 itens), cada um marcado como atendido
 ou com o que falta.
 
 Interface: `propor_entregavel` tipo `roteiro`, `nome_final` `roteiro-apresentacao`.
@@ -140,7 +136,7 @@ estruturada que o app monta a partir dos comentários do analista, no formato:
     Ajustes em "Apresentação final" (2):
     1. Slide 12 · "Cenário Atual · ROAS Global" · região: conclusoes (recorte: clientes/<slug>/.app/comentarios/<id>/c1.png)
        "a 2ª conclusão está errada, a média é 0,40%"
-    2. Slide 18 · "Benchmarking · Baunni" · slide inteiro
+    2. Slide 44 · "Mídia paga · Calendário estratégico" · slide inteiro
        "esse slide pode sair"
 
 - Abra cada recorte com Read antes de corrigir: ele mostra a área marcada
