@@ -47,6 +47,14 @@ async function montar(parcial: { filtro?: Partial<FiltroPainel>; periodo?: Perio
   return { raiz, aoMudar, aoAtualizar, aoExportar, botao, clicar, desmontar: () => act(async () => r.unmount()) }
 }
 
+async function clicar(el: Element) {
+  await act(async () => {
+    el.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true }))
+    el.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }))
+    ;(el as HTMLElement).click()
+  })
+}
+
 afterEach(() => {
   document.body.innerHTML = ""
 })
@@ -167,6 +175,18 @@ describe("BarraFiltros: chips, limpar e ações", () => {
     await m.clicar(m.botao("Exportar CSV"))
     expect(m.aoAtualizar).toHaveBeenCalledTimes(1)
     expect(m.aoExportar).toHaveBeenCalledTimes(1)
+    await m.desmontar()
+  })
+
+  it("escolher um analista no select produz donos na URL, mantendo o período", async () => {
+    const m = await montar({ periodo: "90d" })
+    await clicar(m.raiz.querySelector('[aria-label="Analista"]')!)
+    const item = [...document.querySelectorAll('[role="option"]')].find((o) => o.textContent?.includes("Bia"))!
+    await clicar(item)
+    expect(m.aoMudar).toHaveBeenCalledTimes(1)
+    const p = m.aoMudar.mock.calls[0]![0]
+    expect(p.get("donos")).toBe("bia@boomer.com.br")
+    expect(p.get("periodo")).toBe("90d")
     await m.desmontar()
   })
 

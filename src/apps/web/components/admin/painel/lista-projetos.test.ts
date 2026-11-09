@@ -26,6 +26,7 @@ function linha(parcial: Partial<Linha>): Linha {
     ativo: true,
     concluidoEm: null,
     pendencias: 0,
+    teste: false,
     ...parcial,
   }
 }
@@ -165,6 +166,18 @@ describe("ListaProjetos: busca, ordenação e linha", () => {
     expect(texto).toContain("US$ 30,00")
     expect(texto).toContain("1h00")
     expect(texto).toContain("2 pendências")
+    await m.desmontar()
+  })
+
+  it("projeto de teste leva o selo 'teste' sem quebrar o truncamento do nome; os demais não", async () => {
+    const m = await montar([linha({ slug: "t", nome: "Cliente teste muito comprido", teste: true }), linha({ slug: "real", nome: "Real" })])
+    const selos = [...m.raiz.querySelectorAll('[data-slot="badge"]')].filter((b) => b.textContent === "teste")
+    expect(selos).toHaveLength(1)
+    const link = m.raiz.querySelector('a[href="/admin/projetos/t"]')!
+    expect(link.closest("tr")!.querySelector('[data-slot="badge"]')?.textContent).toBe("teste")
+    expect(m.raiz.querySelector('a[href="/admin/projetos/real"]')!.closest("tr")!.textContent).not.toContain("teste")
+    expect(link.className).toContain("truncate")
+    expect(link.parentElement!.className).toContain("min-w-0")
     await m.desmontar()
   })
 

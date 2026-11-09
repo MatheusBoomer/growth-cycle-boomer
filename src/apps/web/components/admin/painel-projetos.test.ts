@@ -74,7 +74,7 @@ function painel(parcial: Partial<PainelMetricas> = {}): PainelMetricas {
     serie: [],
     porEtapa: [],
     porProjeto: [
-      { slug: "verdeluz", nome: "Verdeluz", dono: "ana@boomer.com.br", usd: 12, porFase: {}, tempoUtilSeg: 3600, ultimaAtividade: "2026-11-05T12:00:00Z", etapaAtual: "03", ativo: true, concluidoEm: null, pendencias: 0 },
+      { slug: "verdeluz", nome: "Verdeluz", dono: "ana@boomer.com.br", usd: 12, porFase: {}, tempoUtilSeg: 3600, ultimaAtividade: "2026-11-05T12:00:00Z", etapaAtual: "03", ativo: true, concluidoEm: null, pendencias: 0, teste: false },
     ],
     tempoPorPessoa: [],
     tempoIgnoraModelo: false,
@@ -172,6 +172,20 @@ describe("PainelProjetos", () => {
     const m = await montar()
     const alerta = m.raiz.querySelector('[data-slot="alert"]')
     expect(alerta?.textContent).toContain("Sem permissão")
+    await m.desmontar()
+  })
+
+  it("durante a recarga o conteúdo esmaecido fica com aria-busy true, e volta a false ao terminar", async () => {
+    painelMetricas.mockResolvedValue(resposta())
+    const m = await montar()
+    const embrulho = () => m.raiz.querySelector("[aria-busy]")!
+    expect(embrulho().getAttribute("aria-busy")).toBe("false")
+    let liberar!: (r: RespostaPainel) => void
+    painelMetricas.mockReturnValue(new Promise((ok) => (liberar = ok)))
+    await act(async () => m.botao("Atualizar")!.click())
+    expect(embrulho().getAttribute("aria-busy")).toBe("true")
+    await act(async () => liberar(resposta()))
+    expect(embrulho().getAttribute("aria-busy")).toBe("false")
     await m.desmontar()
   })
 

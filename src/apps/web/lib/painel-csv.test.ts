@@ -17,6 +17,7 @@ function linha(parcial: Partial<Linha>): Linha {
     ativo: true,
     concluidoEm: null,
     pendencias: 0,
+    teste: false,
     ...parcial,
   }
 }

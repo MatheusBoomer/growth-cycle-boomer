@@ -418,6 +418,7 @@ describe("agregarPainel: totais, tempo e listas", () => {
       ativo: true,
       concluidoEm: null,
       pendencias: 0,
+      teste: false,
     })
   })
 
@@ -573,6 +574,14 @@ describe("agregarPainel: porProjeto lista todos os projetos visíveis", () => {
     const p = agregar({ projetos })
     expect(p.porProjeto.find((e) => e.slug === "ativo")).toMatchObject({ etapaAtual: "04", ativo: true, concluidoEm: null, pendencias: 2 })
     expect(p.porProjeto.find((e) => e.slug === "fim")).toMatchObject({ etapaAtual: null, ativo: false, concluidoEm: "2026-11-05T12:00:00Z", pendencias: 0 })
+  })
+
+  it("teste vem de EntradaProjeto: projeto de teste aparece com teste: true só com incluirTestes", () => {
+    const projetos = [projeto({ slug: "a", nome: "A" }), projeto({ slug: "t", nome: "T", teste: true })]
+    const com = agregar({ projetos }, filtro({ incluirTestes: true }))
+    expect(com.porProjeto.find((e) => e.slug === "t")?.teste).toBe(true)
+    expect(com.porProjeto.find((e) => e.slug === "a")?.teste).toBe(false)
+    expect(agregar({ projetos }, filtro({ incluirTestes: false })).porProjeto.map((e) => e.slug)).toEqual(["a"])
   })
 
   it("projeto sem uso no período aparece com usd 0; empate de custo desempata pelo nome", () => {

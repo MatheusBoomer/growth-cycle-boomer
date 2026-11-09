@@ -65,6 +65,7 @@ export interface PainelMetricas {
     ativo: boolean
     concluidoEm: string | null
     pendencias: number
+    teste: boolean
   }>
   tempoPorPessoa: Array<{ email: string; agenteSeg: number; ativoSeg: number; ociosoSeg: number }>
   tempoIgnoraModelo: boolean
@@ -354,6 +355,7 @@ export function agregarPainel(
           ativo: p.ativo,
           concluidoEm: p.concluidoEm,
           pendencias: p.pendencias,
+          teste: p.teste,
         }
       })
       .sort(

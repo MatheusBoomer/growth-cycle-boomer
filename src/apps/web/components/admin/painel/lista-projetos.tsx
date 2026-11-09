@@ -141,7 +141,7 @@ export function ListaProjetos({ projetos, etapas, avatares }: Props) {
             return (
               <TableRow key={p.slug} className="cursor-pointer" onClick={() => ir(p.slug)}>
                 <TableCell className="font-medium">
-                  <div className="flex items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
                     <Link
                       href={`/admin/projetos/${encodeURIComponent(p.slug)}`}
                       onClick={(ev) => ev.stopPropagation()}
@@ -150,7 +150,12 @@ export function ListaProjetos({ projetos, etapas, avatares }: Props) {
                     >
                       {p.nome}
                     </Link>
-                    {p.pendencias > 0 && <Badge variant="aviso">{p.pendencias === 1 ? "1 pendência" : `${p.pendencias} pendências`}</Badge>}
+                    {p.teste && (
+                      <Badge variant="secondary" className="shrink-0">
+                        teste
+                      </Badge>
+                    )}
+                    {p.pendencias > 0 && <Badge variant="aviso" className="shrink-0">{p.pendencias === 1 ? "1 pendência" : `${p.pendencias} pendências`}</Badge>}
                   </div>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
