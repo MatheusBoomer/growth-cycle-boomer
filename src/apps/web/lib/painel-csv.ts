@@ -4,9 +4,9 @@ import type { RespostaPainel } from "@/lib/api"
 const BOM = "﻿"
 const CABECALHO = ["Projeto", "Analista", "Custo (US$)", "Tempo útil (s)", "Última atividade (ISO)"]
 
-/** Texto que o Excel abriria como fórmula ganha uma aspa simples na frente; depois vem o escape do CSV. */
+/** Texto que o Excel abriria como fórmula (começa com `= + - @`, tabulação ou retorno de carro) ganha uma aspa simples na frente; depois vem o escape do CSV. */
 function campo(texto: string): string {
-  const seguro = /^[=+\-@]/.test(texto) ? `'${texto}` : texto
+  const seguro = /^[=+\-@\t\r]/.test(texto) ? `'${texto}` : texto
   return /[;"\n\r]/.test(seguro) ? `"${seguro.replace(/"/g, '""')}"` : seguro
 }
 

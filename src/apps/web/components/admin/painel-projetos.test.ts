@@ -19,6 +19,15 @@ vi.mock("@/lib/api", async (original) => ({
   api: { painelMetricas: (p: URLSearchParams) => painelMetricas(p) },
 }))
 
+// A 7b troca o stub pelos gráficos; aqui só se captura o que o painel entrega a eles.
+let propsGraficos: import("./painel/graficos-painel").PropsGraficosPainel | null = null
+vi.mock("./painel/graficos-painel", () => ({
+  GraficosPainel: (props: import("./painel/graficos-painel").PropsGraficosPainel) => {
+    propsGraficos = props
+    return null
+  },
+}))
+
 const { PainelProjetos, filtrarPorNome, ordenarPorAtividade, ROTULO_BASE_PEQUENA, MarcaEstimado, formatarDataHora } = await import("./painel-projetos")
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
@@ -97,13 +106,16 @@ async function montar() {
   const raiz = document.createElement("div")
   document.body.append(raiz)
   const r = createRoot(raiz)
-  await act(async () => r.render(createElement(PainelProjetos, { etapas: ETAPAS })))
+  const desenhar = () => act(async () => r.render(createElement(PainelProjetos, { etapas: ETAPAS })))
+  await desenhar()
   const botao = (texto: string) => [...raiz.querySelectorAll<HTMLButtonElement>("button")].find((b) => b.textContent?.trim() === texto)
-  return { raiz, botao, desmontar: () => act(async () => r.unmount()) }
+  /** Redesenha com a `busca` atual, como o Next faz depois de um `router.replace`. */
+  return { raiz, botao, redesenhar: desenhar, desmontar: () => act(async () => r.unmount()) }
 }
 
 beforeEach(() => {
   busca = ""
+  propsGraficos = null
   painelMetricas.mockReset()
 })
 
@@ -186,6 +198,95 @@ describe("PainelProjetos", () => {
     expect(embrulho().getAttribute("aria-busy")).toBe("true")
     await act(async () => liberar(resposta()))
     expect(embrulho().getAttribute("aria-busy")).toBe("false")
+    await m.desmontar()
+  })
+
+  it("primeira carga com erro mostra o Alert com 'Tentar de novo', e o botão pede com atualizar=1", async () => {
+    painelMetricas.mockRejectedValueOnce(new Error("Falha de rede"))
+    const m = await montar()
+    expect(m.raiz.querySelector('[data-slot="alert"]')?.textContent).toContain("Falha de rede")
+    expect(m.raiz.querySelector('[aria-label="Filtros do painel"]')).toBeNull()
+    painelMetricas.mockResolvedValue(resposta())
+    await act(async () => m.botao("Tentar de novo")!.click())
+    expect(painelMetricas.mock.calls[1]![0].get("atualizar")).toBe("1")
+    expect(m.raiz.querySelector('[data-slot="alert"]')).toBeNull()
+    expect(m.raiz.querySelector('[aria-label="Filtros do painel"]')).not.toBeNull()
+    await m.desmontar()
+  })
+
+  it("erro depois de uma carga boa mantém filtros e conteúdo, com o Alert em linha e o botão de tentar de novo", async () => {
+    busca = "periodo=90d&modelos=outros"
+    painelMetricas.mockResolvedValueOnce(resposta())
+    const m = await montar()
+    painelMetricas.mockRejectedValueOnce(new Error("Erro 503"))
+    await act(async () => m.botao("Atualizar")!.click())
+    expect(m.raiz.querySelector('[data-slot="alert"]')?.textContent).toContain("Erro 503")
+    expect(m.botao("Tentar de novo")).toBeTruthy()
+    expect(m.botao("Atualizar")).toBeTruthy()
+    expect(m.botao("Limpar")).toBeTruthy()
+    expect(m.raiz.querySelector('[aria-label="Filtros do painel"]')).not.toBeNull()
+    expect(m.raiz.textContent).toContain("US$ 12,00")
+    expect(m.raiz.textContent).toContain("Verdeluz")
+    await m.desmontar()
+  })
+
+  it("'Tentar de novo' pede com atualizar=1 e, ao dar certo, o Alert some", async () => {
+    painelMetricas.mockResolvedValueOnce(resposta())
+    const m = await montar()
+    painelMetricas.mockRejectedValueOnce(new Error("Erro 503"))
+    await act(async () => m.botao("Atualizar")!.click())
+    painelMetricas.mockResolvedValueOnce(resposta())
+    await act(async () => m.botao("Tentar de novo")!.click())
+    expect(painelMetricas).toHaveBeenCalledTimes(3)
+    expect(painelMetricas.mock.calls[2]![0].get("atualizar")).toBe("1")
+    expect(m.raiz.querySelector('[data-slot="alert"]')).toBeNull()
+    expect(m.botao("Tentar de novo")).toBeUndefined()
+    await m.desmontar()
+  })
+
+  it("mudar o filtro com o Alert na tela limpa o erro assim que o novo pedido começa", async () => {
+    painelMetricas.mockResolvedValueOnce(resposta())
+    const m = await montar()
+    painelMetricas.mockRejectedValueOnce(new Error("Erro 503"))
+    await act(async () => m.botao("Atualizar")!.click())
+    expect(m.raiz.querySelector('[data-slot="alert"]')).not.toBeNull()
+    painelMetricas.mockReturnValueOnce(new Promise(() => {}))
+    busca = "periodo=7d"
+    await m.redesenhar()
+    expect(painelMetricas).toHaveBeenCalledTimes(3)
+    expect(painelMetricas.mock.calls[2]![0].get("periodo")).toBe("7d")
+    expect(m.raiz.querySelector('[data-slot="alert"]')).toBeNull()
+    await m.desmontar()
+  })
+
+  it("aoFiltrar alterna etapa e projeto na URL e preserva período, analista e os outros filtros", async () => {
+    painelMetricas.mockResolvedValue(resposta())
+    busca = "periodo=90d&donos=ana@boomer.com.br"
+    const m = await montar()
+    const aplicar = async (f: { etapa?: string; projeto?: string }) => {
+      await act(async () => propsGraficos!.aoFiltrar(f))
+      const [url, opcoes] = replace.mock.calls.at(-1)!
+      expect(opcoes).toEqual({ scroll: false })
+      busca = String(url).split("?")[1]!
+      await m.redesenhar()
+      return new URLSearchParams(busca)
+    }
+
+    const comEtapa = await aplicar({ etapa: "03" })
+    expect(comEtapa.get("etapas")).toBe("03")
+    expect(comEtapa.get("periodo")).toBe("90d")
+    expect(comEtapa.get("donos")).toBe("ana@boomer.com.br")
+
+    const comProjeto = await aplicar({ projeto: "slug-x" })
+    expect(comProjeto.get("projetos")).toBe("slug-x")
+    expect(comProjeto.get("etapas")).toBe("03")
+    expect(comProjeto.get("periodo")).toBe("90d")
+    expect(comProjeto.get("donos")).toBe("ana@boomer.com.br")
+
+    const semEtapa = await aplicar({ etapa: "03" })
+    expect(semEtapa.has("etapas")).toBe(false)
+    expect(semEtapa.get("projetos")).toBe("slug-x")
+    expect(semEtapa.get("donos")).toBe("ana@boomer.com.br")
     await m.desmontar()
   })
 

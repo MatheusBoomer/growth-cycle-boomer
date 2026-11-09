@@ -53,4 +53,11 @@ describe("painelParaCsv", () => {
     const csv = painelParaCsv(resposta([linha({ nome: "=SOMA(A1)" })]))
     expect(csv.split("\n")[1]).toMatch(/^'=SOMA\(A1\);/)
   })
+
+  it("também neutraliza nome que começa com tabulação ou retorno de carro", () => {
+    const tab = painelParaCsv(resposta([linha({ nome: "\t=SOMA(A1)" })]))
+    expect(tab.split("\n")[1]).toMatch(/^'\t=SOMA\(A1\);/)
+    const cr = painelParaCsv(resposta([linha({ nome: "\r=SOMA(A1)" })]))
+    expect(cr).toContain("\n\"'\r=SOMA(A1)\";Ana Souza")
+  })
 })

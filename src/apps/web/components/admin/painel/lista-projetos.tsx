@@ -84,10 +84,12 @@ interface Props {
   etapas: EtapaRotulada[]
   /** Foto de cada dono, pelo e-mail em minúsculas. */
   avatares: Record<string, string>
+  /** Há filtro de analista, projeto, etapa ou modelo no painel: a mensagem de lista vazia fala dos filtros. */
+  filtrado?: boolean
 }
 
 /** Lista de projetos do painel, em abas, com busca e ordenação; a linha leva ao detalhe do projeto. */
-export function ListaProjetos({ projetos, etapas, avatares }: Props) {
+export function ListaProjetos({ projetos, etapas, avatares, filtrado = false }: Props) {
   const roteador = useRouter()
   const [aba, setAba] = useState<Aba>("andamento")
   const [busca, setBusca] = useState("")
@@ -112,7 +114,9 @@ export function ListaProjetos({ projetos, etapas, avatares }: Props) {
 
   const tabela = (linhas: Linha[]) => {
     if (linhas.length === 0) {
-      return <p className="text-muted-foreground py-6 text-sm">{projetos.length === 0 ? "Nenhum projeto ainda." : termo !== "" ? "Nenhum projeto com esse nome." : "Nenhum projeto nesta aba."}</p>
+      const comFiltro = filtrado || termo !== ""
+      const mensagem = comFiltro ? "Nenhum projeto com esses filtros." : projetos.length === 0 ? "Nenhum projeto ainda." : "Nenhum projeto nesta aba."
+      return <p className="text-muted-foreground py-6 text-sm">{mensagem}</p>
     }
     return (
       <Table>

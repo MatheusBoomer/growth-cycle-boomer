@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { FiltroPainel } from "@workspace/core/metricas/painel"
 import { Alert, AlertDescription } from "@workspace/ui/components/alert"
+import { Button } from "@workspace/ui/components/button"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@workspace/ui/components/empty"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { api, mensagemDeErro, type ProjetoComMetricas, type RespostaPainel } from "@/lib/api"
@@ -92,12 +93,11 @@ export function PainelProjetos({ etapas }: { etapas: EtapaRotulada[] }) {
       forcarAtualizacao.current = false
     }
     setCarregando(true)
+    setErro(null)
     api
       .painelMetricas(pedido)
       .then((r) => {
-        if (!ativo) return
-        setResposta(r)
-        setErro(null)
+        if (ativo) setResposta(r)
       })
       .catch((e: unknown) => {
         if (ativo) setErro(mensagemDeErro(e))
@@ -130,16 +130,21 @@ export function PainelProjetos({ etapas }: { etapas: EtapaRotulada[] }) {
     [filtro, periodo, gravarNaUrl],
   )
 
-  if (erro) {
-    return (
-      <Alert>
-        <AlertDescription>{erro}</AlertDescription>
-      </Alert>
-    )
-  }
-  if (!resposta) return <Skeleton className="h-64 w-full" />
+  const alertaDeErro = erro !== null && (
+    <Alert>
+      <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
+        <span>{erro}</span>
+        <Button type="button" variant="outline" size="sm" onClick={atualizar}>
+          Tentar de novo
+        </Button>
+      </AlertDescription>
+    </Alert>
+  )
+  // Sem nenhuma resposta ainda não há filtros para mostrar: só o erro (com a nova tentativa) ou o esqueleto.
+  if (!resposta) return alertaDeErro || <Skeleton className="h-64 w-full" />
 
   const { painel, opcoes, avatares } = resposta
+  const filtrado = filtro.donos.length + filtro.projetos.length + filtro.etapas.length + filtro.modelos.length > 0
   const semUso = painel.totais.custoUsd === 0 && painel.totais.tempoUtilSeg === 0 && painel.porProjeto.every((p) => p.usd === 0 && p.tempoUtilSeg === 0)
 
   return (
@@ -154,7 +159,8 @@ export function PainelProjetos({ etapas }: { etapas: EtapaRotulada[] }) {
         aoExportar={() => baixarCsv(resposta)}
         atualizando={carregando}
       />
-      <div className={carregando ? "flex flex-col gap-6 opacity-60 transition-opacity" : "flex flex-col gap-6"}>
+      {alertaDeErro}
+      <div className={carregando ?"flex flex-col gap-6 opacity-60 transition-opacity" : "flex flex-col gap-6"}>
         {semUso ? (
           <Empty>
             <EmptyHeader>
@@ -168,7 +174,7 @@ export function PainelProjetos({ etapas }: { etapas: EtapaRotulada[] }) {
             <GraficosPainel painel={painel} avatares={avatares} filtro={filtro} aoFiltrar={aoFiltrar} />
           </>
         )}
-        <ListaProjetos projetos={painel.porProjeto} etapas={etapas} avatares={avatares} />
+        <ListaProjetos projetos={painel.porProjeto} etapas={etapas} avatares={avatares} filtrado={filtrado} />
       </div>
     </div>
   )

@@ -44,11 +44,11 @@ const PROJETOS: Linha[] = [
   linha({ slug: "antiga", nome: "Antiga", usd: 5, ativo: false, etapaAtual: null, concluidoEm: "2026-10-20T12:00:00.000Z", ultimaAtividade: "2026-10-20T12:00:00.000Z" }),
 ]
 
-async function montar(projetos: Linha[] = PROJETOS, avatares: Record<string, string> = {}) {
+async function montar(projetos: Linha[] = PROJETOS, avatares: Record<string, string> = {}, filtrado = false) {
   const raiz = document.createElement("div")
   document.body.append(raiz)
   const r = createRoot(raiz)
-  await act(async () => r.render(createElement(ListaProjetos, { projetos, etapas: ETAPAS, avatares })))
+  await act(async () => r.render(createElement(ListaProjetos, { projetos, etapas: ETAPAS, avatares, filtrado })))
   const nomes = () => [...raiz.querySelectorAll("tbody tr")].map((tr) => tr.querySelector("a")?.textContent ?? tr.textContent)
   const clicar = (el: Element | null | undefined) => act(async () => (el as HTMLElement).click())
   const aba = (texto: string) => [...raiz.querySelectorAll<HTMLElement>('[role="tab"]')].find((t) => t.textContent?.startsWith(texto))
@@ -91,7 +91,14 @@ describe("ListaProjetos: abas", () => {
   it("sem nenhum projeto mostra uma mensagem em vez da tabela", async () => {
     const m = await montar([])
     expect(m.raiz.querySelector("table")).toBeNull()
-    expect(m.raiz.textContent).toContain("Nenhum projeto")
+    expect(m.raiz.textContent).toContain("Nenhum projeto ainda.")
+    await m.desmontar()
+  })
+
+  it("com filtros do painel ativos e nenhum projeto, a mensagem fala dos filtros, não de 'ainda'", async () => {
+    const m = await montar([], {}, true)
+    expect(m.raiz.textContent).toContain("Nenhum projeto com esses filtros.")
+    expect(m.raiz.textContent).not.toContain("ainda")
     await m.desmontar()
   })
 })
@@ -116,7 +123,7 @@ describe("ListaProjetos: busca, ordenação e linha", () => {
       Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(campo, "zzz")
       campo.dispatchEvent(new Event("input", { bubbles: true }))
     })
-    expect(m.raiz.textContent).toContain("Nenhum projeto com esse nome")
+    expect(m.raiz.textContent).toContain("Nenhum projeto com esses filtros.")
     await m.desmontar()
   })
 
@@ -189,9 +196,15 @@ describe("ListaProjetos: busca, ordenação e linha", () => {
   })
 
   it("a foto do analista vem de avatares pelo e-mail normalizado", async () => {
-    const m = await montar([linha({ dono: "Ana.Souza@Boomer.com.br" })], { "ana.souza@boomer.com.br": "https://lh3.googleusercontent.com/a/x=s96" })
-    // A imagem só monta quando o navegador carrega; o que importa é que a bolinha não caiu no neutro por falta de e-mail.
-    expect(m.raiz.querySelector("tbody")!.textContent).toContain("Ana Souza")
+    const foto = "https://lh3.googleusercontent.com/a/x=s96"
+    const m = await montar(
+      [linha({ slug: "com-foto", nome: "Com foto", dono: "Ana.Souza@Boomer.com.br" }), linha({ slug: "sem-foto", nome: "Sem foto", dono: "bia@boomer.com.br" })],
+      { "ana.souza@boomer.com.br": foto },
+    )
+    const linhaDe = (slug: string) => m.raiz.querySelector(`a[href="/admin/projetos/${slug}"]`)!.closest("tr")!
+    expect(linhaDe("com-foto").querySelector("img")?.getAttribute("src")).toBe(foto)
+    expect(linhaDe("sem-foto").querySelector("img")).toBeNull()
+    expect(linhaDe("sem-foto").querySelector('[data-slot="avatar-fallback"]')?.textContent).toBe("B")
     await m.desmontar()
   })
 })

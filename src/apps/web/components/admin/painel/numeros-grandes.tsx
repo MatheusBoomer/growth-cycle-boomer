@@ -60,7 +60,7 @@ export function NumerosGrandes({ painel }: { painel: PainelMetricas }) {
       <Numero
         rotulo="Projetos"
         valor={`${contagem.ativos} ${contagem.ativos === 1 ? "ativo" : "ativos"}`}
-        detalhe={`${contagem.concluidos} ${contagem.concluidos === 1 ? "concluído" : "concluídos"} · ${contagem.comPendencia} com pendências`}
+        detalhe={`${contagem.concluidos} ${contagem.concluidos === 1 ? "concluído" : "concluídos"} · ${contagem.comPendencia} com ${contagem.comPendencia === 1 ? "pendência" : "pendências"}`}
       />
     </section>
   )
