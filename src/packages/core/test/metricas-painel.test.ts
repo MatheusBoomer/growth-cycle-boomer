@@ -23,6 +23,7 @@ function projeto(parcial: Partial<EntradaProjeto>): EntradaProjeto {
     dono: "ana@x.com",
     teste: false,
     ativo: true,
+    etapaAtual: "03",
     concluidoEm: null,
     pendencias: 0,
     ...parcial,
@@ -405,7 +406,19 @@ describe("agregarPainel: totais, tempo e listas", () => {
     expect(p.porProjeto.map((e) => e.slug)).toEqual(["b", "a", "c"])
     expect(p.porProjeto[1]?.porFase).toEqual({ Contexto: 0.3 })
     expect(p.porProjeto[0]?.porFase).toEqual({ Diagnóstico: 1, "Soluções e metas": 0.5 })
-    expect(p.porProjeto[2]).toEqual({ slug: "c", nome: "C", dono: "ana@x.com", usd: 0, porFase: {}, tempoUtilSeg: 0, ultimaAtividade: null })
+    expect(p.porProjeto[2]).toEqual({
+      slug: "c",
+      nome: "C",
+      dono: "ana@x.com",
+      usd: 0,
+      porFase: {},
+      tempoUtilSeg: 0,
+      ultimaAtividade: null,
+      etapaAtual: "03",
+      ativo: true,
+      concluidoEm: null,
+      pendencias: 0,
+    })
   })
 
   it("ultimaAtividade é o turno ou aviso mais recente do projeto", () => {
@@ -548,5 +561,46 @@ describe("agregarPainel: parcelas reais de custoDoTurno", () => {
     ]
     expect(agregar({ usos }).totais.estimado).toBe(true)
     expect(agregar({ usos }, filtro({ modelos: ["haiku"] })).totais.estimado).toBe(false)
+  })
+})
+
+describe("agregarPainel: porProjeto lista todos os projetos visíveis", () => {
+  it("copia etapaAtual, ativo, concluidoEm e pendencias de cada projeto", () => {
+    const projetos = [
+      projeto({ slug: "ativo", nome: "Ativo", etapaAtual: "04", ativo: true, pendencias: 2 }),
+      projeto({ slug: "fim", nome: "Fim", etapaAtual: null, ativo: false, concluidoEm: "2026-11-05T12:00:00Z" }),
+    ]
+    const p = agregar({ projetos })
+    expect(p.porProjeto.find((e) => e.slug === "ativo")).toMatchObject({ etapaAtual: "04", ativo: true, concluidoEm: null, pendencias: 2 })
+    expect(p.porProjeto.find((e) => e.slug === "fim")).toMatchObject({ etapaAtual: null, ativo: false, concluidoEm: "2026-11-05T12:00:00Z", pendencias: 0 })
+  })
+
+  it("projeto sem uso no período aparece com usd 0; empate de custo desempata pelo nome", () => {
+    const projetos = [
+      projeto({ slug: "z", nome: "Zeta", etapaAtual: "05" }),
+      projeto({ slug: "a", nome: "Alfa", etapaAtual: "01" }),
+      projeto({ slug: "g", nome: "Gasto" }),
+    ]
+    const p = agregar({ projetos, usos: [uso({ slug: "g", custoTurnoUsd: 1 })] })
+    expect(p.porProjeto.map((e) => e.slug)).toEqual(["g", "a", "z"])
+    expect(p.porProjeto[1]).toMatchObject({ usd: 0, etapaAtual: "01", ativo: true })
+  })
+
+  it("filtros de dono, projeto e teste tiram o projeto da lista; etapa e modelo só restringem o custo", () => {
+    const projetos = [
+      projeto({ slug: "a", nome: "A", dono: "ana@x.com" }),
+      projeto({ slug: "b", nome: "B", dono: "bia@x.com" }),
+      projeto({ slug: "t", nome: "T", dono: "ana@x.com", teste: true }),
+    ]
+    const usos = [uso({ slug: "a", etapa: "03", custoTurnoUsd: 1 })]
+    expect(agregar({ projetos, usos }, filtro({ donos: ["ana@x.com"] })).porProjeto.map((e) => e.slug)).toEqual(["a"])
+    expect(agregar({ projetos, usos }, filtro({ projetos: ["b"] })).porProjeto.map((e) => e.slug)).toEqual(["b"])
+    expect(agregar({ projetos, usos }, filtro({ incluirTestes: false })).porProjeto.map((e) => e.slug)).toEqual(["a", "b"])
+    expect(agregar({ projetos, usos }, filtro({ incluirTestes: true })).porProjeto.map((e) => e.slug)).toEqual(["a", "b", "t"])
+    const porEtapa = agregar({ projetos, usos }, filtro({ etapas: ["05"] }))
+    expect(porEtapa.porProjeto.map((e) => e.slug)).toEqual(["a", "b"])
+    expect(porEtapa.porProjeto.every((e) => e.usd === 0)).toBe(true)
+    const porModelo = agregar({ projetos, usos }, filtro({ modelos: ["inexistente"] }))
+    expect(porModelo.porProjeto.map((e) => e.slug)).toEqual(["a", "b"])
   })
 })

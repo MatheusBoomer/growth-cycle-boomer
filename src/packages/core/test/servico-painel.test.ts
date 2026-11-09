@@ -66,6 +66,9 @@ describe("painelDeMetricas (dados na nuvem)", () => {
     expect(r.painel.totais.custoUsd).toBe(4)
     expect(Object.fromEntries(r.painel.porProjeto.map((p) => [p.slug, p.usd]))).toEqual({ alfa: 2, "sem-dono": 0, zeta: 2 })
     expect(r.painel.contagem.ativos).toBe(3)
+    const zeta = r.painel.porProjeto.find((p) => p.slug === "zeta")
+    expect(zeta).toMatchObject({ ativo: true, concluidoEm: null, pendencias: 0 })
+    expect(typeof zeta?.etapaAtual).toBe("string")
     expect(r.opcoes.donos).toEqual(["ana.souza@boomer.com.br", "bia@boomer.com.br"])
     expect(r.opcoes.projetos).toEqual([
       { slug: "alfa", nome: "Alfa" },

@@ -404,6 +404,7 @@ export class ServicoPlanejamento {
           dono,
           teste: resumo.teste,
           ativo: resumo.etapaAtual !== null,
+          etapaAtual: resumo.etapaAtual,
           concluidoEm: estado.etapas.final.concluidaEm,
           pendencias: resumo.pendencias,
         })

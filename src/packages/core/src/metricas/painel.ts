@@ -1,5 +1,6 @@
 /** Agregação do painel de métricas: série no tempo, custo por etapa, por projeto e tempo por pessoa. Sem I/O. */
 import { normalizarEmail } from "../papeis"
+import type { EtapaId } from "../tipos"
 import { custosPorTurno } from "./custo"
 import { classificarTempo } from "./tempo"
 import type { Limites, LinhaPresenca, LinhaUso } from "./tipos"
@@ -26,6 +27,8 @@ export interface EntradaProjeto {
   dono: string | null
   teste: boolean
   ativo: boolean
+  /** Etapa em andamento hoje (`null` quando o projeto já foi concluído). */
+  etapaAtual: EtapaId | null
   concluidoEm: string | null
   pendencias: number
 }
@@ -57,6 +60,11 @@ export interface PainelMetricas {
     porFase: Record<string, number>
     tempoUtilSeg: number
     ultimaAtividade: string | null
+    /** Estado de hoje do projeto, copiado de `EntradaProjeto`: não depende do período nem dos filtros de etapa e modelo. */
+    etapaAtual: EtapaId | null
+    ativo: boolean
+    concluidoEm: string | null
+    pendencias: number
   }>
   tempoPorPessoa: Array<{ email: string; agenteSeg: number; ativoSeg: number; ociosoSeg: number }>
   tempoIgnoraModelo: boolean
@@ -342,9 +350,18 @@ export function agregarPainel(
           porFase: arredondarValores(m.porFase),
           tempoUtilSeg: m.tempoUtilSeg,
           ultimaAtividade: m.ultimaAtividade,
+          etapaAtual: p.etapaAtual,
+          ativo: p.ativo,
+          concluidoEm: p.concluidoEm,
+          pendencias: p.pendencias,
         }
       })
-      .sort((a, b) => b.usd - a.usd || (a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0)),
+      .sort(
+        (a, b) =>
+          b.usd - a.usd ||
+          a.nome.localeCompare(b.nome, "pt-BR") ||
+          (a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0),
+      ),
     tempoPorPessoa: [...pessoas]
       .map(([email, t]) => ({ email, ...t }))
       .sort(
