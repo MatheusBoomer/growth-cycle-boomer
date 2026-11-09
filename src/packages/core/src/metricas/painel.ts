@@ -31,6 +31,7 @@ export interface EntradaProjeto {
 }
 
 export interface PontoSerie {
+  /** Começo do bucket. No modo semanal, o `inicio` do primeiro pode cair antes de `filtro.de` (só soma custo do período). */
   inicio: string
   total: number
   /** Ids crus de `LinhaUso.modelos`, mais `"outros"` (CHAVE_OUTROS) para o custo sem modelo; soma `total`. */
@@ -135,14 +136,36 @@ function indiceDoBucket(inicios: number[], ms: number): number {
   return achado
 }
 
+/** Chave da maior parcela; empate vai para o menor nome. */
+function maiorChave(parcelas: Record<string, number>): string {
+  return Object.entries(parcelas).reduce((a, b) => (b[1] > a[1] || (b[1] === a[1] && b[0] < a[0]) ? b : a))[0]
+}
+
 /**
- * Completa o custo por modelo de um bucket com a chave `"outros"`: o custo de turnos cujo `modelos` é nulo ou não cobre
- * todo o `usd` (por exemplo, linhas antigas). Só entra quando o resto passa de 1e-9; ruído de ponto flutuante e resto
- * negativo (modelos somando mais que o turno) não geram chave.
+ * Divide o custo de um turno entre os modelos de forma que as parcelas (4 casas) somem exatamente `usd`.
+ * `custoDoTurno` arredonda o total e cada modelo em separado e reinicia a contagem por chave, então os modelos podem
+ * somar mais ou menos que o turno. Se somam mais, são reduzidos na proporção e o resto do arredondamento vai para a
+ * maior parcela (empate: menor nome). Se somam menos (ou `modelos` é nulo, como nas linhas antigas), o que falta vai
+ * para `"outros"` (só acima de 1e-9). Parcelas zeradas ou negativas são descartadas; custo zero não tem parcelas.
  */
-function porModeloComOutros(total: number, porModelo: Record<string, number>): Record<string, number> {
-  const resto = arredondar(total - Object.values(porModelo).reduce((s, v) => s + v, 0))
-  return resto > 1e-9 ? { ...porModelo, [CHAVE_OUTROS]: resto } : porModelo
+export function normalizarParcelas(usd: number, modelos: Record<string, number> | null): Record<string, number> {
+  const alvo = arredondar(usd)
+  if (alvo <= 0) return {}
+  const brutas = Object.entries(modelos ?? {}).filter(([, v]) => v > 0)
+  const arredondadas = Object.fromEntries(brutas.map(([m, v]) => [m, arredondar(v)]))
+  const somaArredondada = Object.values(arredondadas).reduce((s, v) => s + v, 0)
+
+  if (somaArredondada <= alvo + 1e-9) {
+    const resto = arredondar(alvo - somaArredondada)
+    return resto > 1e-9 ? { ...arredondadas, [CHAVE_OUTROS]: resto } : arredondadas
+  }
+
+  const somaBruta = brutas.reduce((s, [, v]) => s + v, 0)
+  const reduzidas = Object.fromEntries(brutas.map(([m, v]) => [m, arredondar((v * alvo) / somaBruta)]))
+  const chave = maiorChave(reduzidas)
+  const resto = alvo - Object.values(reduzidas).reduce((s, v) => s + v, 0)
+  reduzidas[chave] = arredondar(reduzidas[chave]! + resto)
+  return Object.fromEntries(Object.entries(reduzidas).filter(([, v]) => v > 1e-9))
 }
 
 function mediana(valores: number[]): number | null {
@@ -229,24 +252,23 @@ export function agregarPainel(
   const porEtapa = new Map<string, number>()
   for (const c of custosPorTurno(usos)) {
     if (!etapaVale(c.etapa)) continue
-    // Valores por modelo arredondados por turno: com filtro de modelo, o custo do turno é exatamente a soma deles.
-    const parcela = Object.fromEntries(
-      Object.entries(c.modelos)
-        .filter(([m]) => modelos.size === 0 || modelos.has(m))
-        .map(([m, v]) => [m, arredondar(v)]),
-    )
-    const valor = arredondar(modelos.size === 0 ? c.usd : Object.values(parcela).reduce((s, v) => s + v, 0))
+    // A divisão por modelo é normalizada antes do filtro: soma exatamente o custo do turno, então a parcela filtrada
+    // nunca passa do custo sem filtro, e o custo do turno com filtro é exatamente a soma das parcelas escolhidas.
+    const usd = arredondar(c.usd)
+    const divisao = normalizarParcelas(usd, c.modelos)
+    const parcela =
+      modelos.size === 0 ? divisao : Object.fromEntries(Object.entries(divisao).filter(([m]) => modelos.has(m)))
+    const valor = modelos.size === 0 ? usd : arredondar(Object.values(parcela).reduce((s, v) => s + v, 0))
     const projeto = projetos.get(c.slug)!
     projeto.vida += valor
     const ms = Date.parse(c.quando)
     if (ms >= anteriorMs && ms < inicioMs) custoAnteriorUsd += valor
-    if (!(ms >= inicioMs && ms < fimMs)) continue
+    if (!(ms >= inicioMs && ms < fimMs) || valor === 0) continue
     estimado ||= c.estimado
-    if (valor === 0) continue
     custoUsd += valor
     const ponto = serie[indiceDoBucket(inicios, ms)]!
     ponto.total += valor
-    for (const [modelo, v] of Object.entries(parcela)) if (v !== 0) somar(ponto.porModelo, modelo, v)
+    for (const [modelo, v] of Object.entries(parcela)) somar(ponto.porModelo, modelo, v)
     somar(porEtapa, c.etapa, valor)
     projeto.usd += valor
     somar(projeto.porFase, entrada.faseDaEtapa(c.etapa), valor)
@@ -304,7 +326,7 @@ export function agregarPainel(
     serie: serie.map((s, i) => ({
       inicio: new Date(inicios[i]!).toISOString(),
       total: arredondar(s.total),
-      porModelo: porModeloComOutros(arredondar(s.total), arredondarValores(s.porModelo)),
+      porModelo: arredondarValores(s.porModelo),
     })),
     porEtapa: [...porEtapa]
       .map(([etapa, usd]) => ({ etapa, fase: entrada.faseDaEtapa(etapa), usd: arredondar(usd) }))

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { agregarPainel } from "../src/metricas/painel"
+import { custoDoTurno } from "../src/metricas/custo"
+import { agregarPainel, normalizarParcelas } from "../src/metricas/painel"
 import type { EntradaProjeto, FiltroPainel, PainelMetricas } from "../src/metricas/painel"
 import type { LinhaPresenca, LinhaUso } from "../src/metricas/tipos"
 
@@ -458,8 +459,94 @@ describe("agregarPainel: totais, tempo e listas", () => {
   })
 
   it("período inválido lança erro em vez de devolver NaN", () => {
-    expect(() => agregar({}, filtro({ de: "ontem" }))).toThrow()
-    expect(() => agregar({}, filtro({ de: "2026-11-09", ate: "2026-11-03" }))).toThrow()
-    expect(() => agregar({}, filtro({ de: "2026-02-30" }))).toThrow()
+    expect(() => agregar({}, filtro({ de: "ontem" }))).toThrow(RangeError)
+    expect(() => agregar({}, filtro({ de: "2026-11-09", ate: "2026-11-03" }))).toThrow(RangeError)
+    expect(() => agregar({}, filtro({ de: "2026-02-30" }))).toThrow(RangeError)
+  })
+})
+
+describe("normalizarParcelas", () => {
+  it("modelos que somam mais que o turno são reduzidos na proporção e somam o custo exato", () => {
+    expect(normalizarParcelas(0.5, { haiku: 1.5 })).toEqual({ haiku: 0.5 })
+    const r = normalizarParcelas(0.2469, { opus: 0.1235, haiku: 0.1235 })
+    expect(soma(Object.values(r))).toBeCloseTo(0.2469, 10)
+    expect(Object.keys(r).sort()).toEqual(["haiku", "opus"])
+    expect(Object.values(r).sort()).toEqual([0.1234, 0.1235])
+  })
+
+  it("modelos que somam menos que o turno deixam o resto em outros", () => {
+    expect(normalizarParcelas(1, { opus: 0.7 })).toEqual({ opus: 0.7, outros: 0.3 })
+  })
+
+  it("modelos nulos ou vazios viram tudo outros", () => {
+    expect(normalizarParcelas(0.6, null)).toEqual({ outros: 0.6 })
+    expect(normalizarParcelas(0.6, {})).toEqual({ outros: 0.6 })
+  })
+
+  it("um modelo só que cobre o turno fica igual, sem outros", () => {
+    expect(normalizarParcelas(0.25, { sonnet: 0.25 })).toEqual({ sonnet: 0.25 })
+  })
+
+  it("empate no arredondamento: o resto vai para a maior parcela, desempatando pelo nome", () => {
+    expect(normalizarParcelas(0.1, { c: 1, a: 1, b: 1 })).toEqual({ a: 0.0334, b: 0.0333, c: 0.0333 })
+  })
+
+  it("custo zero não tem parcelas", () => {
+    expect(normalizarParcelas(0, { opus: 0.3 })).toEqual({})
+    expect(normalizarParcelas(0, null)).toEqual({})
+  })
+})
+
+describe("agregarPainel: parcelas reais de custoDoTurno", () => {
+  /** Uma linha de uso montada com a saída real de custoDoTurno. */
+  function usoDoTurno(
+    atual: { custoUsd: number; modelos: Record<string, number> },
+    anterior: { custoUsd: number; modelos: Record<string, number> } | null,
+    parcial: Partial<LinhaUso> = {},
+  ): LinhaUso {
+    const turno = custoDoTurno(atual, anterior)
+    return uso({ custoUsd: atual.custoUsd, custoTurnoUsd: turno.custoTurnoUsd, modelos: turno.modelos, ...parcial })
+  }
+
+  it("caso A: arredondamento por modelo que passa do total não desequilibra a série", () => {
+    const usos = [
+      usoDoTurno({ custoUsd: 0.24692, modelos: { opus: 0.12346, haiku: 0.12346 } }, null, { sessao: "a1" }),
+      usoDoTurno({ custoUsd: 0.24692, modelos: { opus: 0.12346, haiku: 0.12346 } }, null, { sessao: "a2" }),
+      usoDoTurno({ custoUsd: 0.24688, modelos: { opus: 0.12344, haiku: 0.12344 } }, null, { sessao: "a3" }),
+    ]
+    expect(usos[0]?.custoTurnoUsd).toBe(0.2469)
+    expect(usos[0]?.modelos).toEqual({ opus: 0.1235, haiku: 0.1235 })
+    const p = agregar({ usos })
+    conferirSomas(p)
+    conferirSomas(agregar({ usos }, filtro({ modelos: ["haiku"] })))
+  })
+
+  it("caso B: conversa reiniciada com outro modelo; o filtro nunca passa do custo sem filtro", () => {
+    const primeiro = { custoUsd: 1, modelos: { opus: 1 } }
+    const segundo = { custoUsd: 1.5, modelos: { haiku: 1.5 } }
+    const usos = [
+      usoDoTurno(primeiro, null, { fim: "2026-11-05T12:00:00Z" }),
+      usoDoTurno(segundo, primeiro, { fim: "2026-11-05T13:00:00Z" }),
+    ]
+    expect(usos[1]?.custoTurnoUsd).toBe(0.5)
+    expect(usos[1]?.modelos).toEqual({ haiku: 1.5 })
+    const sem = agregar({ usos })
+    const com = agregar({ usos }, filtro({ modelos: ["haiku"] }))
+    conferirSomas(sem)
+    conferirSomas(com)
+    expect(sem.totais.custoUsd).toBe(1.5)
+    expect(sem.serie[2]?.porModelo).toEqual({ opus: 1, haiku: 0.5 })
+    expect(com.totais.custoUsd).toBe(0.5)
+    expect(com.totais.custoUsd).toBeLessThanOrEqual(sem.totais.custoUsd)
+    for (const [i, ponto] of com.serie.entries()) expect(ponto.total).toBeLessThanOrEqual(sem.serie[i]!.total)
+  })
+
+  it("estimado só liga quando a linha antiga contribui com custo depois dos filtros", () => {
+    const usos = [
+      uso({ sessao: null, custoTurnoUsd: null, custoUsd: 0.6, modelos: { opus: 0.6 } }),
+      uso({ sessao: "s2", custoTurnoUsd: 0.25, modelos: { haiku: 0.25 } }),
+    ]
+    expect(agregar({ usos }).totais.estimado).toBe(true)
+    expect(agregar({ usos }, filtro({ modelos: ["haiku"] })).totais.estimado).toBe(false)
   })
 })
