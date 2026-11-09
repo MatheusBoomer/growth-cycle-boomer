@@ -37,6 +37,11 @@ describe("superfícies e texto no tema Boomer", () => {
     expect(alfa(escuro, 2)).toBeGreaterThanOrEqual(0.88)
   })
 
+  it("o conteúdo da administração fica num painel de fundo sólido (tabelas não têm fundo próprio)", () => {
+    const layout = readFileSync(path.resolve(import.meta.dirname, "../app/admin/layout.tsx"), "utf-8")
+    expect(layout).toMatch(/className="[^"]*\bbg-popover\b[^"]*"/)
+  })
+
   it("avisos fixos do sistema têm fundo sólido", () => {
     const alertas = [...ler("sistema/verificacao-sistema.tsx").matchAll(/<Alert\b[^>]*>/g)].map((m) => m[0])
     expect(alertas.length).toBeGreaterThan(0)
