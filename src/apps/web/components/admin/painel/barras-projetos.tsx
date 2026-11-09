@@ -6,9 +6,9 @@ import { formatarUsd } from "@workspace/core/metricas/formato"
 import type { PainelMetricas } from "@workspace/core/metricas/painel"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@workspace/ui/components/chart"
 import { cn } from "@workspace/ui/lib/utils"
-import { MarcaEstimado } from "./comuns"
+import { MarcaEstimado, useEtapasPainel } from "./comuns"
 import { GraficoVazio } from "./grafico-vazio"
-import { ALTURA_EIXO, ALTURA_LINHA, alturaBarras, corDaFase, FASE_ARQUIVADA, fasesOrdenadas, ROTULO_ARQUIVADA, topProjetos } from "./graficos-dados"
+import { ALTURA_EIXO, ALTURA_LINHA, alturaBarras, corDaFase, FASE_ARQUIVADA, fasesOrdenadas, ordemDasFases, ROTULO_ARQUIVADA, topProjetos } from "./graficos-dados"
 
 const TICK = { fontSize: 12 }
 /** Altura do eixo X; o resto de ALTURA_EIXO fica de margem embaixo. A faixa de cada barra fica com ALTURA_LINHA px. */
@@ -34,11 +34,16 @@ function rotuloEixoUsd(v: number): string {
  * de largura fixa, alinhados às barras (cada faixa tem 36 px); clicar no nome ou na barra filtra pelo projeto.
  */
 export function BarrasProjetos({ projetos, projetosSelecionados, aoFiltrarProjeto }: PropsBarrasProjetos) {
+  const catalogo = useEtapasPainel()
+  const ordem = useMemo(() => ordemDasFases(catalogo), [catalogo])
   const { linhas, aMais } = useMemo(() => topProjetos(projetos), [projetos])
-  const fases = useMemo(() => fasesOrdenadas(linhas.flatMap((p) => Object.keys(p.porFase).filter((f) => (p.porFase[f] ?? 0) > 0))), [linhas])
+  const fases = useMemo(
+    () => fasesOrdenadas(linhas.flatMap((p) => Object.keys(p.porFase).filter((f) => (p.porFase[f] ?? 0) > 0)), ordem),
+    [linhas, ordem],
+  )
   const config = useMemo(
-    () => Object.fromEntries(fases.map((f, i) => [`f${i}`, { label: f === FASE_ARQUIVADA ? ROTULO_ARQUIVADA : f, color: corDaFase(f) }])) satisfies ChartConfig,
-    [fases],
+    () => Object.fromEntries(fases.map((f, i) => [`f${i}`, { label: f === FASE_ARQUIVADA ? ROTULO_ARQUIVADA : f, color: corDaFase(f, ordem) }])) satisfies ChartConfig,
+    [fases, ordem],
   )
   const dados = useMemo(
     () => linhas.map((p) => ({ slug: p.slug, nome: p.nome, usd: p.usd, estimado: p.estimado, ...Object.fromEntries(fases.map((f, i) => [`f${i}`, p.porFase[f] ?? 0])) })),
@@ -142,7 +147,7 @@ export function BarrasProjetos({ projetos, projetosSelecionados, aoFiltrarProjet
       <ul aria-label="Fases" className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs">
         {fases.map((f, i) => (
           <li key={f} className="flex items-center gap-1.5">
-            <span aria-hidden="true" className="size-2.5 shrink-0 rounded-[2px]" style={{ background: corDaFase(f) }} />
+            <span aria-hidden="true" className="size-2.5 shrink-0 rounded-[2px]" style={{ background: corDaFase(f, ordem) }} />
             {config[`f${i}`]?.label}
           </li>
         ))}

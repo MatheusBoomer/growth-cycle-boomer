@@ -7,7 +7,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest"
 import type { FiltroPainel } from "@workspace/core/metricas/painel"
 import { BarrasPessoas } from "./barras-pessoas"
 import { BarrasProjetos } from "./barras-projetos"
-import { TEXTO_SEM_USO } from "./comuns"
+import { EtapasPainelContext, TEXTO_SEM_USO } from "./comuns"
 import { fixturePainel } from "./fixture-painel"
 import { GraficoCustoTempo } from "./grafico-custo-tempo"
 import { GraficosPainel } from "./graficos-painel"
@@ -35,6 +35,7 @@ async function montar(el: ReactElement) {
   await act(async () => r.render(el))
   return {
     raiz,
+    redesenhar: (novo: ReactElement) => act(async () => r.render(novo)),
     texto: () => raiz.textContent ?? "",
     botao: (nome: string | RegExp) =>
       [...raiz.querySelectorAll("button")].find((b) => (typeof nome === "string" ? b.textContent?.includes(nome) || b.getAttribute("aria-label") === nome : nome.test(b.textContent ?? ""))),
@@ -85,6 +86,38 @@ describe("RoscaEtapas", () => {
     const m = await montar(createElement(RoscaEtapas, { dados, etapasSelecionadas: ["03"], aoFiltrarEtapa: () => {} }))
     expect(m.botao("03 · Diagnóstico")?.getAttribute("aria-pressed")).toBe("true")
     expect(m.botao("04 · Diagnóstico")?.getAttribute("aria-pressed")).toBe("false")
+    await m.desmontar()
+  })
+
+  it("com o catálogo no contexto, 'Por etapa' mostra o título do catálogo; a arquivada mantém o rótulo próprio", async () => {
+    const catalogo = [
+      { id: "01", rotulo: "01 · Preparação de contexto", fase: "Contexto" },
+      { id: "03", rotulo: "03 · Diagnóstico de performance", fase: "Diagnóstico" },
+    ] as never
+    const aoFiltrarEtapa = vi.fn()
+    const m = await montar(createElement(EtapasPainelContext.Provider, { value: catalogo }, createElement(RoscaEtapas, { dados, etapasSelecionadas: [], aoFiltrarEtapa })))
+    await m.clicar(m.botao("Por etapa"))
+    expect(m.texto()).toContain("03 · Diagnóstico de performance")
+    expect(m.texto()).toContain("01 · Preparação de contexto")
+    expect(m.texto()).toContain("Briefing e benchmark (arquivada)")
+    // Etapa sem título no catálogo dado cai no rótulo curto.
+    expect(m.texto()).toContain("04 · Diagnóstico")
+    await m.clicar(m.botao("03 · Diagnóstico de performance"))
+    expect(aoFiltrarEtapa).toHaveBeenCalledWith("03")
+    await m.desmontar()
+  })
+
+  it("quando passa a haver etapa filtrada, a rosca troca sozinha para 'Por etapa'", async () => {
+    const props = { dados, aoFiltrarEtapa: () => {} }
+    const m = await montar(createElement(RoscaEtapas, { ...props, etapasSelecionadas: [] }))
+    const visao = () => [...m.raiz.querySelectorAll('[aria-label="Agrupar a rosca"] button')].find((b) => b.getAttribute("aria-pressed") === "true")?.textContent
+    expect(visao()).toBe("Por fase")
+    await m.redesenhar(createElement(RoscaEtapas, { ...props, etapasSelecionadas: ["03"] }))
+    expect(visao()).toBe("Por etapa")
+    expect(m.botao("03 · Diagnóstico")?.getAttribute("aria-pressed")).toBe("true")
+    // Sem filtro de novo, a escolha da pessoa fica como está.
+    await m.redesenhar(createElement(RoscaEtapas, { ...props, etapasSelecionadas: [] }))
+    expect(visao()).toBe("Por etapa")
     await m.desmontar()
   })
 

@@ -1,10 +1,23 @@
 /** Peças que os componentes do painel e o `painel-projetos.tsx` compartilham (este reexporta, para quem já importava de lá). */
 
+import { createContext, useContext } from "react"
 import type { EtapaId } from "@workspace/core/tipos"
 
 export interface EtapaRotulada {
   id: EtapaId
   rotulo: string
+  /** Fase da etapa no catálogo (`etapas.json`); dá a ordem e a cor das fases nos gráficos. */
+  fase?: string
+}
+
+/**
+ * Etapas do catálogo para os gráficos do painel (título de cada etapa e ordem das fases), sem mudar as props deles.
+ * Vazio (padrão) faz os gráficos caírem nos rótulos curtos e na ordem fixa das fases.
+ */
+export const EtapasPainelContext = createContext<readonly EtapaRotulada[]>([])
+
+export function useEtapasPainel(): readonly EtapaRotulada[] {
+  return useContext(EtapasPainelContext)
 }
 
 /** Chave do custo sem modelo registrado (`CHAVE_OUTROS` do core), em português para a tela. */

@@ -1,41 +1,49 @@
 /** Lógica pura dos gráficos do painel de Projetos (sem React): agrupamentos, percentuais, cores e rótulos. */
+import { ID_ETAPA_ARQUIVADA } from "@workspace/core/migracao-etapas"
 import type { PainelMetricas, PontoSerie } from "@workspace/core/metricas/painel"
-import { rotuloModelo } from "./comuns"
+import { FASE_ARQUIVADA } from "@workspace/core/tipos"
+import { rotuloModelo, type EtapaRotulada } from "./comuns"
 
 /** Abaixo disto (US$ 0,00 na tela) um total conta como zero: é ruído de arredondamento. */
 const ZERO_USD = 0.005
-/** Máximo de séries com cor própria (`--chart-1..5`). */
-const MAXIMO_CORES = 5
+/** Cores de série do tema (`--chart-1..5`). */
+const CORES_SERIE = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"] as const
 /** Fatias abaixo desta fração do total agrupam em "Outras". */
 const FRACAO_PEQUENA = 0.03
 
-export const ETAPA_ARQUIVADA = "briefing-benchmark"
-export const FASE_ARQUIVADA = "Arquivada"
+/** As mesmas constantes do core: a fase das etapas fora do catálogo e o id da antiga etapa de briefing. */
+export { FASE_ARQUIVADA }
+export const ETAPA_ARQUIVADA = ID_ETAPA_ARQUIVADA
 export const ROTULO_ARQUIVADA = "Briefing e benchmark (arquivada)"
 
-/** Fases na ordem fixa de `etapas.json`, mais a arquivada no fim. */
-export const ORDEM_FASES = ["Contexto", "Diagnóstico", "Soluções e metas", "Mídia e ação", "Apresentação", FASE_ARQUIVADA] as const
+/** Ordem das fases quando o catálogo não chega à tela: a de `etapas.json`, mais a arquivada no fim. */
+export const ORDEM_FASES: readonly string[] = ["Contexto", "Diagnóstico", "Soluções e metas", "Mídia e ação", "Apresentação", FASE_ARQUIVADA]
 
 /** Só tokens do tema. A arquivada e "Outras" usam tons fora da paleta de séries, sempre com rótulo ao lado. */
-const COR_FASE: Record<string, string> = {
-  Contexto: "var(--chart-1)",
-  Diagnóstico: "var(--chart-2)",
-  "Soluções e metas": "var(--chart-3)",
-  "Mídia e ação": "var(--chart-4)",
-  Apresentação: "var(--chart-5)",
-  [FASE_ARQUIVADA]: "var(--selo-opus)",
-}
+const COR_ARQUIVADA = "var(--selo-opus)"
 export const COR_OUTRAS = "var(--muted-foreground)"
 
-export function corDaFase(fase: string): string {
-  return COR_FASE[fase] ?? COR_OUTRAS
+/**
+ * Ordem das fases pelo catálogo (a primeira aparição de cada `fase`, na ordem das etapas), com a arquivada no fim.
+ * Sem catálogo, ou sem nenhuma fase nele, vale `ORDEM_FASES`.
+ */
+export function ordemDasFases(etapas: readonly EtapaRotulada[] = []): readonly string[] {
+  const fases = [...new Set(etapas.map((e) => e.fase).filter((f): f is string => typeof f === "string" && f !== "" && f !== FASE_ARQUIVADA))]
+  return fases.length === 0 ? ORDEM_FASES : [...fases, FASE_ARQUIVADA]
 }
 
-/** Fases que aparecem nos dados, na ordem fixa; fases desconhecidas vão para o fim, em ordem alfabética. */
-export function fasesOrdenadas(fases: Iterable<string>): string[] {
+/** Cor da fase pela posição dela na ordem (as 5 primeiras têm cor própria); a arquivada tem a dela; o resto fica apagado. */
+export function corDaFase(fase: string, ordem: readonly string[] = ORDEM_FASES): string {
+  if (fase === FASE_ARQUIVADA) return COR_ARQUIVADA
+  const i = ordem.filter((f) => f !== FASE_ARQUIVADA).indexOf(fase)
+  return i >= 0 && i < CORES_SERIE.length ? CORES_SERIE[i]! : COR_OUTRAS
+}
+
+/** Fases que aparecem nos dados, na ordem dada; fases desconhecidas vão para o fim, em ordem alfabética. */
+export function fasesOrdenadas(fases: Iterable<string>, ordem: readonly string[] = ORDEM_FASES): string[] {
   const presentes = new Set(fases)
-  const conhecidas = ORDEM_FASES.filter((f) => presentes.has(f))
-  const outras = [...presentes].filter((f) => !(ORDEM_FASES as readonly string[]).includes(f)).sort((a, b) => a.localeCompare(b, "pt-BR"))
+  const conhecidas = ordem.filter((f) => presentes.has(f))
+  const outras = [...presentes].filter((f) => !ordem.includes(f)).sort((a, b) => a.localeCompare(b, "pt-BR"))
   return [...conhecidas, ...outras]
 }
 
@@ -77,22 +85,55 @@ export interface SerieModelo {
 
 export type LinhaSerie = { inicio: string; rotulo: string; total: number } & Record<string, number | string>
 
+/** Famílias com cor fixa, na ordem da legenda: Opus, Sonnet e Haiku ficam sempre com `--chart-1`, `-2` e `-3`. */
+const FAMILIAS_FIXAS = ["opus", "sonnet", "haiku"] as const
+const CHAVE_SEM_MODELO = "outros"
+
+/** Família do id cru (`opus` ou `claude-opus-4-5...`), quando é uma das fixas. */
+function familiaFixa(id: string): number {
+  const familia = /^claude-([a-z]+)-\d/.exec(id)?.[1] ?? id
+  return (FAMILIAS_FIXAS as readonly string[]).indexOf(familia)
+}
+
 /**
- * Séries por modelo da área empilhada: tira modelos zerados no período, ordena pelo total, e acima de 5 modelos
- * mantém os 4 maiores e soma o resto em "Outros modelos".
+ * Séries por modelo do gráfico empilhado, com cor pela identidade do modelo, não pela posição no período. Tira
+ * modelos zerados no período. Ordem estável: o maior modelo de cada família fixa (opus, sonnet, haiku), com a cor da
+ * família; depois os demais pelo total, com `--chart-4`, `--chart-5` e as cores de família que sobraram (sem cor
+ * livre para todos, o último vira "Outros modelos"); o custo sem modelo ("outros") sempre no fim, com a cor apagada.
  */
 export function modelosDaSerie(serie: PontoSerie[]): { series: SerieModelo[]; linhas: LinhaSerie[]; total: number } {
   const totais = new Map<string, number>()
   for (const p of serie) for (const [id, v] of Object.entries(p.porModelo)) totais.set(id, (totais.get(id) ?? 0) + v)
   const ids = [...totais.entries()].filter(([, v]) => v >= ZERO_USD).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-  const grupos: Array<{ rotulo: string; ids: string[] }> =
-    ids.length > MAXIMO_CORES
-      ? [...ids.slice(0, MAXIMO_CORES - 1).map(([id]) => ({ rotulo: rotuloModelo(id), ids: [id] })), { rotulo: "Outros modelos", ids: ids.slice(MAXIMO_CORES - 1).map(([id]) => id) }]
-      : ids.map(([id]) => ({ rotulo: rotuloModelo(id), ids: [id] }))
+
+  const daFamilia: Array<string | undefined> = FAMILIAS_FIXAS.map(() => undefined)
+  const extras: string[] = []
+  for (const [id] of ids) {
+    if (id === CHAVE_SEM_MODELO) continue
+    const f = familiaFixa(id)
+    if (f >= 0 && daFamilia[f] === undefined) daFamilia[f] = id
+    else extras.push(id)
+  }
+  const livres = [...CORES_SERIE.slice(FAMILIAS_FIXAS.length), ...CORES_SERIE.slice(0, FAMILIAS_FIXAS.length).filter((_, i) => daFamilia[i] === undefined)]
+  const grupos: Array<{ rotulo: string; ids: string[]; cor: string }> = []
+  daFamilia.forEach((id, i) => {
+    if (id !== undefined) grupos.push({ rotulo: rotuloModelo(id), ids: [id], cor: CORES_SERIE[i]! })
+  })
+  if (extras.length > livres.length) {
+    const proprios = extras.slice(0, livres.length - 1)
+    proprios.forEach((id, i) => grupos.push({ rotulo: rotuloModelo(id), ids: [id], cor: livres[i]! }))
+    grupos.push({ rotulo: "Outros modelos", ids: extras.slice(livres.length - 1), cor: livres[livres.length - 1]! })
+  } else {
+    extras.forEach((id, i) => grupos.push({ rotulo: rotuloModelo(id), ids: [id], cor: livres[i]! }))
+  }
+  if (totais.has(CHAVE_SEM_MODELO) && totais.get(CHAVE_SEM_MODELO)! >= ZERO_USD) {
+    grupos.push({ rotulo: rotuloModelo(CHAVE_SEM_MODELO), ids: [CHAVE_SEM_MODELO], cor: COR_OUTRAS })
+  }
+
   const series = grupos.map((g, i) => ({
     chave: `m${i}`,
     rotulo: g.rotulo,
-    cor: `var(--chart-${i + 1})`,
+    cor: g.cor,
     ids: g.ids,
     total: arredondar(g.ids.reduce((a, id) => a + (totais.get(id) ?? 0), 0)),
   }))
@@ -132,13 +173,20 @@ export function rotuloEtapa(etapa: string, fase: string): string {
 }
 
 /**
- * Fatias da rosca, por fase ou por etapa, na ordem fixa das fases. Fatias abaixo de 3% do total agrupam em "Outras"
- * (só quando há duas ou mais; a arquivada nunca agrupa). Zeros não entram; percentuais somam 100.
+ * Fatias da rosca, por fase ou por etapa, na ordem das fases do catálogo (ou na fixa, sem catálogo). Por etapa, o
+ * rótulo é o título do catálogo ("03 · Diagnóstico de performance"); etapa fora dele usa `rotuloEtapa`. Fatias abaixo
+ * de 3% do total agrupam em "Outras" (só quando há duas ou mais; a arquivada nunca agrupa). Zeros não entram;
+ * percentuais somam 100.
  */
-export function fatiasDaRosca(porEtapa: PainelMetricas["porEtapa"], visao: "fase" | "etapa"): FatiaRosca[] {
+export function fatiasDaRosca(porEtapa: PainelMetricas["porEtapa"], visao: "fase" | "etapa", etapas: readonly EtapaRotulada[] = []): FatiaRosca[] {
   const positivas = porEtapa.filter((e) => e.usd >= ZERO_USD)
   if (positivas.length === 0) return []
-  const ordemFase = fasesOrdenadas(positivas.map((e) => e.fase))
+  const ordem = ordemDasFases(etapas)
+  const ordemFase = fasesOrdenadas(
+    positivas.map((e) => e.fase),
+    ordem,
+  )
+  const rotuloDoCatalogo = (etapa: string, fase: string) => etapas.find((e) => e.id === etapa)?.rotulo ?? rotuloEtapa(etapa, fase)
   type Base = Omit<FatiaRosca, "pct" | "agrupada">
   let base: Base[]
   if (visao === "fase") {
@@ -148,14 +196,14 @@ export function fatiasDaRosca(porEtapa: PainelMetricas["porEtapa"], visao: "fase
         id: fase,
         rotulo: fase === FASE_ARQUIVADA ? ROTULO_ARQUIVADA : fase,
         usd: arredondar(daFase.reduce((a, e) => a + e.usd, 0)),
-        cor: corDaFase(fase),
+        cor: corDaFase(fase, ordem),
         etapas: daFase.map((e) => e.etapa),
       }
     })
   } else {
     base = [...positivas]
       .sort((a, b) => ordemFase.indexOf(a.fase) - ordemFase.indexOf(b.fase) || a.etapa.localeCompare(b.etapa))
-      .map((e) => ({ id: e.etapa, rotulo: rotuloEtapa(e.etapa, e.fase), usd: e.usd, cor: corDaFase(e.fase), etapas: [e.etapa] }))
+      .map((e) => ({ id: e.etapa, rotulo: rotuloDoCatalogo(e.etapa, e.fase), usd: e.usd, cor: corDaFase(e.fase, ordem), etapas: [e.etapa] }))
   }
   const total = base.reduce((a, f) => a + f.usd, 0)
   const arquivada = (f: Base) => f.id === FASE_ARQUIVADA || f.id === ETAPA_ARQUIVADA

@@ -21,12 +21,17 @@ vi.mock("@/lib/api", async (original) => ({
 
 // A 7b troca o stub pelos gráficos; aqui só se captura o que o painel entrega a eles.
 let propsGraficos: import("./painel/graficos-painel").PropsGraficosPainel | null = null
-vi.mock("./painel/graficos-painel", () => ({
-  GraficosPainel: (props: import("./painel/graficos-painel").PropsGraficosPainel) => {
-    propsGraficos = props
-    return null
-  },
-}))
+let etapasDoContexto: readonly unknown[] | null = null
+vi.mock("./painel/graficos-painel", async () => {
+  const { useEtapasPainel } = await import("./painel/comuns")
+  return {
+    GraficosPainel: (props: import("./painel/graficos-painel").PropsGraficosPainel) => {
+      propsGraficos = props
+      etapasDoContexto = useEtapasPainel()
+      return null
+    },
+  }
+})
 
 const { PainelProjetos, MarcaEstimado, formatarDataHora } = await import("./painel-projetos")
 
@@ -86,6 +91,7 @@ async function montar() {
 beforeEach(() => {
   busca = ""
   propsGraficos = null
+  etapasDoContexto = null
   painelMetricas.mockReset()
 })
 
@@ -113,6 +119,14 @@ describe("PainelProjetos", () => {
     expect(m.raiz.textContent).toContain("US$ 12,00")
     expect(m.raiz.textContent).toContain("Verdeluz")
     expect(m.botao("Médias por etapa")?.getAttribute("aria-expanded")).toBe("false")
+    await m.desmontar()
+  })
+
+  it("os gráficos recebem as etapas do catálogo pelo EtapasPainelContext, sem mudar as props", async () => {
+    painelMetricas.mockResolvedValue(resposta())
+    const m = await montar()
+    expect(etapasDoContexto).toBe(ETAPAS)
+    expect(Object.keys(propsGraficos!).sort()).toEqual(["aoFiltrar", "avatares", "filtro", "painel"])
     await m.desmontar()
   })
 

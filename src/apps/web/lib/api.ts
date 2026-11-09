@@ -7,6 +7,7 @@ import type { EscolhaModelo, ListaDeModelos, Sugestao, UsoDaEtapa } from "@works
 import type { LinhaConfigModelo } from "@workspace/core/nuvem/tipos"
 import type { PessoaRegistrada } from "@workspace/core/nuvem/usuarios"
 import type { NotaSkill } from "@workspace/core/notas-skills"
+import type { OpcoesPainel } from "@workspace/core/servico-planejamento"
 import type { Papel } from "@workspace/core/papeis"
 import type { EtapaId, ResultadoValidacao, ResumoProspect, RespostaTeste } from "@workspace/core/tipos"
 import { tratarNaoAutenticado } from "@/lib/login"
@@ -88,7 +89,7 @@ export interface DetalheProjeto {
 /** Resposta de GET /api/admin/painel: o painel filtrado, as opções dos filtros e a foto de cada dono (e-mail para URL). */
 export interface RespostaPainel {
   painel: PainelMetricas
-  opcoes: { donos: string[]; projetos: Array<{ slug: string; nome: string }>; modelos: string[] }
+  opcoes: OpcoesPainel
   avatares: Record<string, string>
 }
 export interface CorpoPresenca {

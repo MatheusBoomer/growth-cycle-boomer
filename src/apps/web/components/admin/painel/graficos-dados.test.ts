@@ -1,9 +1,17 @@
 import { describe, expect, it } from "vitest"
+import { FASE_ARQUIVADA as FASE_ARQUIVADA_CORE } from "@workspace/core/catalogo"
+import { ID_ETAPA_ARQUIVADA } from "@workspace/core/migracao-etapas"
 import type { PainelMetricas } from "@workspace/core/metricas/painel"
 import { fixturePainel } from "./fixture-painel"
 import {
   alturaBarras,
+  corDaFase,
+  ETAPA_ARQUIVADA,
+  FASE_ARQUIVADA,
+  fasesOrdenadas,
   fatiasDaRosca,
+  ORDEM_FASES,
+  ordemDasFases,
   formatarDiaMes,
   modelosDaSerie,
   percentuaisMaiorResto,
@@ -56,17 +64,48 @@ describe("modelosDaSerie", () => {
     expect(r.series.map((s) => s.rotulo)).toEqual(["a"])
   })
 
-  it("ordena por total e rotula 'outros' como 'Sem modelo registrado'", () => {
+  it("'outros' vira 'Sem modelo registrado', fica sempre por último e com a cor apagada, mesmo sendo o maior", () => {
     const r = modelosDaSerie([ponto("2026-11-01T03:00:00.000Z", { a: 1, outros: 3 })])
-    expect(r.series.map((s) => s.rotulo)).toEqual(["Sem modelo registrado", "a"])
+    expect(r.series.map((s) => s.rotulo)).toEqual(["a", "Sem modelo registrado"])
+    expect(r.series[1]!.cor).toBe("var(--muted-foreground)")
   })
 
-  it("mais de 5 modelos: os 4 maiores ficam e o resto vira 'Outros modelos'", () => {
+  it("cor pela identidade: Opus, Sonnet e Haiku têm cor fixa, não importa o total nem quem mais aparece", () => {
+    const cores = (porModelo: Record<string, number>) =>
+      Object.fromEntries(modelosDaSerie([ponto("2026-11-01T03:00:00.000Z", porModelo)]).series.map((s) => [s.rotulo, s.cor]))
+    const cheio = cores({ "claude-opus-4-5": 1, "claude-sonnet-4-5": 9, "claude-haiku-4-5": 5, outros: 2 })
+    const poucos = cores({ "claude-sonnet-4-5": 1, "claude-opus-4-5": 3 })
+    const so = cores({ "claude-haiku-4-5": 1 })
+    expect(cheio["claude-opus-4-5"]).toBe("var(--chart-1)")
+    expect(cheio["claude-sonnet-4-5"]).toBe("var(--chart-2)")
+    expect(cheio["claude-haiku-4-5"]).toBe("var(--chart-3)")
+    expect(poucos["claude-opus-4-5"]).toBe(cheio["claude-opus-4-5"])
+    expect(poucos["claude-sonnet-4-5"]).toBe(cheio["claude-sonnet-4-5"])
+    expect(so["claude-haiku-4-5"]).toBe(cheio["claude-haiku-4-5"])
+    // Apelido curto ("opus") é a mesma família.
+    expect(cores({ opus: 1, sonnet: 2 })).toEqual({ opus: "var(--chart-1)", sonnet: "var(--chart-2)" })
+  })
+
+  it("ordem estável: famílias conhecidas primeiro (opus, sonnet, haiku), depois os outros pelo total, 'outros' no fim", () => {
+    const r = modelosDaSerie([ponto("2026-11-01T03:00:00.000Z", { x: 1, outros: 9, "claude-haiku-4-5": 2, y: 5, "claude-opus-4-5": 1 })])
+    expect(r.series.map((s) => s.rotulo)).toEqual(["claude-opus-4-5", "claude-haiku-4-5", "y", "x", "Sem modelo registrado"])
+    expect(r.series.map((s) => s.cor)).toEqual(["var(--chart-1)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)", "var(--muted-foreground)"])
+  })
+
+  it("segunda versão da mesma família não repete a cor: vai para as cores livres", () => {
+    const r = modelosDaSerie([ponto("2026-11-01T03:00:00.000Z", { "claude-opus-4-5": 3, "claude-opus-4-6": 5 })])
+    expect(r.series.map((s) => s.rotulo)).toEqual(["claude-opus-4-6", "claude-opus-4-5"])
+    expect(new Set(r.series.map((s) => s.cor)).size).toBe(2)
+    expect(r.series[0]!.cor).toBe("var(--chart-1)")
+  })
+
+  it("muitos modelos sem família: os 4 maiores ficam e o resto vira 'Outros modelos', cada um com uma cor", () => {
     const r = modelosDaSerie([ponto("2026-11-01T03:00:00.000Z", { a: 6, b: 5, c: 4, d: 3, e: 2, f: 1 })])
     expect(r.series.map((s) => s.rotulo)).toEqual(["a", "b", "c", "d", "Outros modelos"])
     const linha = r.linhas[0]!
     expect(linha[r.series[4]!.chave]).toBe(3)
-    expect(r.series.every((s, i) => s.cor === `var(--chart-${i + 1})`)).toBe(true)
+    expect(new Set(r.series.map((s) => s.cor)).size).toBe(5)
+    expect(r.series.every((s) => /^var\(--chart-[1-5]\)$/.test(s.cor))).toBe(true)
   })
 
   it("linhas trazem rótulo dd/MM e total; série vazia não lança", () => {
@@ -112,6 +151,50 @@ describe("fatiasDaRosca", () => {
   it("zeros e lista vazia não têm fatias", () => {
     expect(fatiasDaRosca([], "fase")).toEqual([])
     expect(fatiasDaRosca([{ etapa: "01", fase: "Contexto", usd: 0 }], "etapa")).toEqual([])
+  })
+})
+
+describe("fases pelo catálogo", () => {
+  const CATALOGO = [
+    { id: "01", rotulo: "01 · Preparação de contexto", fase: "Contexto" },
+    { id: "02", rotulo: "02 · Contextualização estratégica", fase: "Contexto" },
+    { id: "03", rotulo: "03 · Diagnóstico de performance", fase: "Diagnóstico" },
+    { id: "05", rotulo: "05 · Soluções", fase: "Soluções e metas" },
+    { id: "final", rotulo: "Apresentação final", fase: "Apresentação" },
+  ] as never
+
+  it("FASE_ARQUIVADA e ETAPA_ARQUIVADA são as mesmas constantes do core", () => {
+    expect(FASE_ARQUIVADA).toBe(FASE_ARQUIVADA_CORE)
+    expect(ETAPA_ARQUIVADA).toBe(ID_ETAPA_ARQUIVADA)
+  })
+
+  it("ordemDasFases segue a primeira aparição de cada fase no catálogo, com a arquivada no fim; sem catálogo, a ordem fixa", () => {
+    expect(ordemDasFases(CATALOGO)).toEqual(["Contexto", "Diagnóstico", "Soluções e metas", "Apresentação", FASE_ARQUIVADA])
+    expect(ordemDasFases([{ id: "01", rotulo: "x", fase: "Nova" }, { id: "02", rotulo: "y", fase: "Contexto" }] as never)).toEqual(["Nova", "Contexto", FASE_ARQUIVADA])
+    expect(ordemDasFases([])).toEqual(ORDEM_FASES)
+    expect(ordemDasFases([{ id: "01", rotulo: "x" }] as never)).toEqual(ORDEM_FASES)
+  })
+
+  it("cor e ordem acompanham a ordem dada; a arquivada mantém a cor própria e fase fora da ordem fica apagada", () => {
+    const ordem = ["Nova", "Contexto", FASE_ARQUIVADA]
+    expect(corDaFase("Nova", ordem)).toBe("var(--chart-1)")
+    expect(corDaFase("Contexto", ordem)).toBe("var(--chart-2)")
+    expect(corDaFase(FASE_ARQUIVADA, ordem)).toBe("var(--selo-opus)")
+    expect(corDaFase("Diagnóstico", ordem)).toBe("var(--muted-foreground)")
+    expect(corDaFase("Diagnóstico")).toBe("var(--chart-2)")
+    expect(fasesOrdenadas(["Contexto", FASE_ARQUIVADA, "Zeta", "Nova"], ordem)).toEqual(["Nova", "Contexto", FASE_ARQUIVADA, "Zeta"])
+  })
+
+  it("por etapa, a fatia usa o título do catálogo; etapa fora do catálogo cai no rótulo curto", () => {
+    const porEtapa: PainelMetricas["porEtapa"] = [
+      { etapa: "03", fase: "Diagnóstico", usd: 5 },
+      { etapa: "01", fase: "Contexto", usd: 4 },
+      { etapa: "final", fase: "Apresentação", usd: 3 },
+      { etapa: "briefing-benchmark", fase: FASE_ARQUIVADA, usd: 2 },
+    ]
+    const f = fatiasDaRosca(porEtapa, "etapa", CATALOGO)
+    expect(f.map((x) => x.rotulo)).toEqual(["01 · Preparação de contexto", "03 · Diagnóstico de performance", "Apresentação final", "Briefing e benchmark (arquivada)"])
+    expect(fatiasDaRosca(porEtapa, "etapa").map((x) => x.rotulo)[0]).toBe("01 · Contexto")
   })
 })
 

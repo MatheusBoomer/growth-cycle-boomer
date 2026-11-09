@@ -11,7 +11,7 @@ import { api, mensagemDeErro, type RespostaPainel } from "@/lib/api"
 import { filtroDeParametros, parametrosDeFiltro, type PeriodoRapido } from "@/lib/painel-filtro"
 import { painelParaCsv } from "@/lib/painel-csv"
 import { BarraFiltros } from "./painel/barra-filtros"
-import { TEXTO_SEM_USO, type EtapaRotulada } from "./painel/comuns"
+import { EtapasPainelContext, TEXTO_SEM_USO, type EtapaRotulada } from "./painel/comuns"
 import { GraficosPainel } from "./painel/graficos-painel"
 import { ListaProjetos } from "./painel/lista-projetos"
 import { SecaoMediasPorEtapa } from "./painel/medias-por-etapa"
@@ -150,7 +150,9 @@ export function PainelProjetos({ etapas }: { etapas: EtapaRotulada[] }) {
         ) : (
           <>
             <NumerosGrandes painel={painel} />
-            <GraficosPainel painel={painel} avatares={avatares} filtro={filtro} aoFiltrar={aoFiltrar} />
+            <EtapasPainelContext.Provider value={etapas}>
+              <GraficosPainel painel={painel} avatares={avatares} filtro={filtro} aoFiltrar={aoFiltrar} />
+            </EtapasPainelContext.Provider>
           </>
         )}
         <ListaProjetos projetos={painel.porProjeto} etapas={etapas} avatares={avatares} filtrado={filtrado} />

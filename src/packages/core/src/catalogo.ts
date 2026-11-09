@@ -1,12 +1,12 @@
 import { readFileSync } from "node:fs"
 import path from "node:path"
 import { SUBAGENTES_CONFIGURAVEIS } from "./modelos"
-import { ORDEM_ETAPAS, type Catalogo, type EtapaCatalogo, type EtapaId, type InsumoCatalogo } from "./tipos"
+import { FASE_ARQUIVADA, ORDEM_ETAPAS, type Catalogo, type EtapaCatalogo, type EtapaId, type InsumoCatalogo } from "./tipos"
 
 export const CAMINHO_CATALOGO = ".claude/skills/_shared/etapas.json"
 
-/** Fase das etapas que saíram do catálogo (ex.: briefing-benchmark) mas ainda aparecem em projetos antigos. */
-export const FASE_ARQUIVADA = "Arquivada"
+/** Fase das etapas que saíram do catálogo; definida em `tipos.ts` (sem Node) e reexportada aqui. */
+export { FASE_ARQUIVADA }
 
 export function carregarCatalogo(raiz: string): Catalogo {
   const bruto = JSON.parse(readFileSync(path.join(raiz, CAMINHO_CATALOGO), "utf8")) as Catalogo

@@ -1,12 +1,13 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Cell, Pie, PieChart } from "recharts"
 import { formatarUsd } from "@workspace/core/metricas/formato"
 import type { PainelMetricas } from "@workspace/core/metricas/painel"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@workspace/ui/components/chart"
 import { ToggleGroup, ToggleGroupItem } from "@workspace/ui/components/toggle-group"
 import { cn } from "@workspace/ui/lib/utils"
+import { useEtapasPainel } from "./comuns"
 import { GraficoVazio } from "./grafico-vazio"
 import { fatiasDaRosca, type FatiaRosca } from "./graficos-dados"
 
@@ -35,12 +36,19 @@ function tons(fatias: FatiaRosca[]): number[] {
 
 /**
  * Rosca do custo por fase ou por etapa. "Por fase" (padrão) só destaca a fatia; "Por etapa" filtra a página pela
- * etapa clicada. Total no centro e legenda são HTML, para o texto nunca escalar com o gráfico.
+ * etapa clicada e usa o título de cada etapa do catálogo (`EtapasPainelContext`). Com etapa filtrada, abre (ou passa)
+ * na visão por etapa. Total no centro e legenda são HTML, para o texto nunca escalar com o gráfico.
  */
 export function RoscaEtapas({ dados, etapasSelecionadas, aoFiltrarEtapa }: PropsRoscaEtapas) {
-  const [visao, setVisao] = useState<Visao>(etapasSelecionadas.length > 0 ? "etapa" : "fase")
+  const catalogo = useEtapasPainel()
+  const temEtapaFiltrada = etapasSelecionadas.length > 0
+  const [visao, setVisao] = useState<Visao>(temEtapaFiltrada ? "etapa" : "fase")
+  // Etapa filtrada (aqui ou nos filtros da página) só aparece destacada na visão por etapa: troca para ela.
+  useEffect(() => {
+    if (temEtapaFiltrada) setVisao("etapa")
+  }, [temEtapaFiltrada])
   const [faseDestacada, setFaseDestacada] = useState<string | null>(null)
-  const fatias = useMemo(() => fatiasDaRosca(dados, visao), [dados, visao])
+  const fatias = useMemo(() => fatiasDaRosca(dados, visao, catalogo), [dados, visao, catalogo])
   const opacidades = useMemo(() => tons(fatias), [fatias])
   const total = fatias.reduce((a, f) => a + f.usd, 0)
 
