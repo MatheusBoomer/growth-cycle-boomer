@@ -48,11 +48,15 @@ export function nomeCurto(email: string): string {
 }
 
 const AVATAR_TAMANHO_MAXIMO = 512
-const AVATAR_DOMINIO = "googleusercontent.com"
+/** Só os servidores de foto de perfil do Google (lh3 a lh6). Drive, Docs e outros subdomínios ficam fora. */
+const AVATAR_HOST = /^lh[3-6]\.googleusercontent\.com$/
 
 /**
- * Foto de perfil que pode virar `<img src>`: só https em googleusercontent.com (ou subdomínio), até 512
- * caracteres. Qualquer outra coisa vira null, porque o endereço vem de um campo que o usuário consegue editar.
+ * Foto de perfil que pode virar `<img src>`: só https em lh3 a lh6.googleusercontent.com, sem porta, sem usuário
+ * e escrita já na forma canônica (o texto recebido precisa começar por `https://<host>/` exatamente como o
+ * navegador o normaliza, o que recusa maiúsculas, ponto final, `%2E` e porta explícita, mesmo a 443). Até 512
+ * caracteres no endereço guardado (`href`). Qualquer outra coisa vira null, porque o endereço vem de um campo que
+ * o usuário consegue editar.
  */
 export function avatarSeguro(url: unknown): string | null {
   if (typeof url !== "string" || url.length === 0 || url.length > AVATAR_TAMANHO_MAXIMO) return null
@@ -62,8 +66,10 @@ export function avatarSeguro(url: unknown): string | null {
   } catch {
     return null
   }
-  if (u.protocol !== "https:" || u.username !== "" || u.password !== "") return null
-  if (u.hostname !== AVATAR_DOMINIO && !u.hostname.endsWith(`.${AVATAR_DOMINIO}`)) return null
+  if (u.protocol !== "https:" || u.username !== "" || u.password !== "" || u.port !== "") return null
+  if (!AVATAR_HOST.test(u.hostname)) return null
+  if (!url.startsWith(`https://${u.hostname}/`)) return null
+  if (u.href.length > AVATAR_TAMANHO_MAXIMO) return null
   return u.href
 }
 

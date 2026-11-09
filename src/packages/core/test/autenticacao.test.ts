@@ -114,22 +114,44 @@ describe("nomeCurto", () => {
 })
 
 describe("avatarSeguro", () => {
-  it("aceita só https em googleusercontent.com (ou subdomínio)", () => {
-    expect(avatarSeguro("https://lh3.googleusercontent.com/a/abc=s96-c")).toBe("https://lh3.googleusercontent.com/a/abc=s96-c")
-    expect(avatarSeguro("https://googleusercontent.com/x")).toBe("https://googleusercontent.com/x")
+  it.each(["lh3", "lh4", "lh5", "lh6"])("aceita https em %s.googleusercontent.com", (sub) => {
+    const url = `https://${sub}.googleusercontent.com/a/abc=s96-c`
+    expect(avatarSeguro(url)).toBe(url)
   })
 
   it.each([
     "http://lh3.googleusercontent.com/a/abc",
     "https://evil.com/x.png",
-    "https://googleusercontent.com.evil.com/x",
+    "https://googleusercontent.com/x",
+    "https://lh2.googleusercontent.com/a/abc",
+    "https://lh7.googleusercontent.com/a/abc",
+    "https://drive.googleusercontent.com/a/abc",
+    "https://docs.googleusercontent.com/a/abc",
+    "https://doc-0s-1c-docs.googleusercontent.com/a/abc",
+    "https://lh3.googleusercontent.com.evil.com/x",
     "https://evilgoogleusercontent.com/x",
     "https://user@evil.com/x",
+    "https://user@lh3.googleusercontent.com/x",
+    "https://lh3.googleusercontent.com:443/a/abc",
+    "https://lh3.googleusercontent.com:8443/a/abc",
+    "https://LH3.GOOGLEUSERCONTENT.COM/a/abc",
+    "https://lh3.googleusercontent.com./a/abc",
+    "https://lh3%2Egoogleusercontent.com/a/abc",
+    "https://lh3.googleusercontent%2Ecom/a/abc",
+    "//lh3.googleusercontent.com/a/abc",
+    "data:image/png;base64,iVBORw0KGgo=",
     "javascript:alert(1)",
     "",
     "nao é url",
     `https://lh3.googleusercontent.com/${"a".repeat(600)}`,
   ])("recusa %s", (url) => {
+    expect(avatarSeguro(url)).toBeNull()
+  })
+
+  it("mede o tamanho no endereço que fica guardado (href), não só no texto recebido", () => {
+    // Menos de 200 caracteres de entrada viram mais de 512 depois de codificar os espaços como %20.
+    const url = `https://lh3.googleusercontent.com/${" ".repeat(160)}x`
+    expect(url.length).toBeLessThanOrEqual(512)
     expect(avatarSeguro(url)).toBeNull()
   })
 
