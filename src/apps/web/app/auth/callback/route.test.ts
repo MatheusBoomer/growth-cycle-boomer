@@ -23,6 +23,11 @@ vi.mock("@supabase/ssr", () => ({
   },
 }))
 
+// Só o que o callback usa do servidor: o repositório de usuários (null = modo sem Supabase).
+const registrarAvatar = vi.fn()
+const estadoDoServidor: { usuarios: { registrarAvatar: typeof registrarAvatar } | null } = { usuarios: { registrarAvatar } }
+vi.mock("@/lib/servidor", () => ({ servidor: () => ({ usuarios: estadoDoServidor.usuarios }) }))
+
 const { GET } = await import("./route")
 
 const claimsDe = (email: string, extra: Record<string, unknown> = {}) => ({
@@ -46,6 +51,9 @@ describe("GET /auth/callback", () => {
     vi.stubEnv("PLANEJAMENTO_DOMINIOS_PERMITIDOS", "")
     for (const f of [exchangeCodeForSession, getClaims, signOut, createServerClient]) f.mockReset()
     aoTrocar = null
+    registrarAvatar.mockReset()
+    registrarAvatar.mockResolvedValue(undefined)
+    estadoDoServidor.usuarios = { registrarAvatar }
     exchangeCodeForSession.mockResolvedValue({ data: { session: {} }, error: null })
     signOut.mockResolvedValue({ error: null })
     getClaims.mockResolvedValue(claimsDe("ana@boomer.com.br"))
@@ -225,5 +233,51 @@ describe("GET /auth/callback", () => {
     const r = await GET(req("/auth/callback?code=abc"))
     expect(r.headers.get("location")).toBe("http://127.0.0.1:3000/")
     expect(createServerClient).not.toHaveBeenCalled()
+  })
+
+  describe("foto do Google", () => {
+    const FOTO = "https://lh3.googleusercontent.com/a/abc=s96-c"
+
+    it("foto válida em user_metadata: grava uma vez, com o e-mail normalizado", async () => {
+      getClaims.mockResolvedValue(claimsDe("Ana@Boomer.com.br", { user_metadata: { email_verified: true, avatar_url: FOTO } }))
+      const r = await GET(req("/auth/callback?code=abc", proximoCookie("/prospects/a")))
+      expect(registrarAvatar).toHaveBeenCalledExactlyOnceWith("ana@boomer.com.br", FOTO)
+      expect(r.headers.get("location")).toBe("http://127.0.0.1:3000/prospects/a")
+    })
+
+    it("foto inválida ou ausente: não grava e o login segue", async () => {
+      getClaims.mockResolvedValue(claimsDe("ana@boomer.com.br", { user_metadata: { email_verified: true, avatar_url: "https://evil.com/x.png" } }))
+      const r = await GET(req("/auth/callback?code=abc"))
+      expect(registrarAvatar).not.toHaveBeenCalled()
+      expect(r.headers.get("location")).toBe("http://127.0.0.1:3000/")
+      getClaims.mockResolvedValue(claimsDe("ana@boomer.com.br"))
+      await GET(req("/auth/callback?code=abc"))
+      expect(registrarAvatar).not.toHaveBeenCalled()
+    })
+
+    it("se registrarAvatar lançar, o login continua redirecionando normalmente", async () => {
+      registrarAvatar.mockRejectedValue(new Error("banco fora"))
+      const erro = vi.spyOn(console, "error").mockImplementation(() => {})
+      getClaims.mockResolvedValue(claimsDe("ana@boomer.com.br", { user_metadata: { email_verified: true, avatar_url: FOTO } }))
+      const r = await GET(req("/auth/callback?code=abc", proximoCookie("/prospects/a")))
+      expect(registrarAvatar).toHaveBeenCalledOnce()
+      expect(signOut).not.toHaveBeenCalled()
+      expect(r.headers.get("location")).toBe("http://127.0.0.1:3000/prospects/a")
+      erro.mockRestore()
+    })
+
+    it("modo disco (usuarios null): não grava e o login segue", async () => {
+      estadoDoServidor.usuarios = null
+      getClaims.mockResolvedValue(claimsDe("ana@boomer.com.br", { user_metadata: { email_verified: true, avatar_url: FOTO } }))
+      const r = await GET(req("/auth/callback?code=abc"))
+      expect(registrarAvatar).not.toHaveBeenCalled()
+      expect(r.headers.get("location")).toBe("http://127.0.0.1:3000/")
+    })
+
+    it("login recusado (domínio) não grava foto", async () => {
+      getClaims.mockResolvedValue(claimsDe("ana@gmail.com", { user_metadata: { email_verified: true, avatar_url: FOTO } }))
+      await GET(req("/auth/callback?code=abc"))
+      expect(registrarAvatar).not.toHaveBeenCalled()
+    })
   })
 })

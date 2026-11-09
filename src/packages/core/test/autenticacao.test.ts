@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
+  avatarDeClaims,
+  avatarSeguro,
   caminhoProximoSeguro,
   decidirAcesso,
   dominiosPermitidos,
@@ -108,6 +110,52 @@ describe("nomeCurto", () => {
     expect(nomeCurto("x@y.com")).toBe("X")
     expect(nomeCurto("ANA.SILVA@boomer.com.br")).toBe("Ana Silva")
     expect(nomeCurto("ana..silva@boomer.com.br")).toBe("Ana Silva")
+  })
+})
+
+describe("avatarSeguro", () => {
+  it("aceita só https em googleusercontent.com (ou subdomínio)", () => {
+    expect(avatarSeguro("https://lh3.googleusercontent.com/a/abc=s96-c")).toBe("https://lh3.googleusercontent.com/a/abc=s96-c")
+    expect(avatarSeguro("https://googleusercontent.com/x")).toBe("https://googleusercontent.com/x")
+  })
+
+  it.each([
+    "http://lh3.googleusercontent.com/a/abc",
+    "https://evil.com/x.png",
+    "https://googleusercontent.com.evil.com/x",
+    "https://evilgoogleusercontent.com/x",
+    "https://user@evil.com/x",
+    "javascript:alert(1)",
+    "",
+    "nao é url",
+    `https://lh3.googleusercontent.com/${"a".repeat(600)}`,
+  ])("recusa %s", (url) => {
+    expect(avatarSeguro(url)).toBeNull()
+  })
+
+  it("recusa o que não é string", () => {
+    for (const v of [42, null, undefined, {}, ["https://lh3.googleusercontent.com/a"]]) expect(avatarSeguro(v)).toBeNull()
+  })
+})
+
+describe("avatarDeClaims", () => {
+  const foto = "https://lh3.googleusercontent.com/a/abc=s96-c"
+  const outra = "https://lh3.googleusercontent.com/a/outra"
+
+  it("prefere avatar_url a picture", () => {
+    expect(avatarDeClaims({ user_metadata: { avatar_url: foto, picture: outra } })).toBe(foto)
+  })
+
+  it("usa picture quando avatar_url falta ou é inválido", () => {
+    expect(avatarDeClaims({ user_metadata: { picture: outra } })).toBe(outra)
+    expect(avatarDeClaims({ user_metadata: { avatar_url: "https://evil.com/x", picture: outra } })).toBe(outra)
+  })
+
+  it("devolve null sem user_metadata ou sem foto válida", () => {
+    expect(avatarDeClaims({})).toBeNull()
+    expect(avatarDeClaims({ user_metadata: null })).toBeNull()
+    expect(avatarDeClaims({ user_metadata: "x" })).toBeNull()
+    expect(avatarDeClaims({ user_metadata: { avatar_url: "https://evil.com/x" } })).toBeNull()
   })
 })
 

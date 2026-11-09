@@ -47,6 +47,37 @@ export function nomeCurto(email: string): string {
   return palavras.map((p) => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(" ")
 }
 
+const AVATAR_TAMANHO_MAXIMO = 512
+const AVATAR_DOMINIO = "googleusercontent.com"
+
+/**
+ * Foto de perfil que pode virar `<img src>`: só https em googleusercontent.com (ou subdomínio), até 512
+ * caracteres. Qualquer outra coisa vira null, porque o endereço vem de um campo que o usuário consegue editar.
+ */
+export function avatarSeguro(url: unknown): string | null {
+  if (typeof url !== "string" || url.length === 0 || url.length > AVATAR_TAMANHO_MAXIMO) return null
+  let u: URL
+  try {
+    u = new URL(url)
+  } catch {
+    return null
+  }
+  if (u.protocol !== "https:" || u.username !== "" || u.password !== "") return null
+  if (u.hostname !== AVATAR_DOMINIO && !u.hostname.endsWith(`.${AVATAR_DOMINIO}`)) return null
+  return u.href
+}
+
+/**
+ * Foto do Google nos claims: `user_metadata.avatar_url`, depois `.picture`. `user_metadata` é editável pelo
+ * usuário e não prova identidade: serve só de fonte da foto, sempre filtrada por `avatarSeguro`.
+ */
+export function avatarDeClaims(claims: Record<string, unknown>): string | null {
+  const metadados: unknown = claims.user_metadata
+  if (typeof metadados !== "object" || metadados === null) return null
+  const { avatar_url, picture } = metadados as Record<string, unknown>
+  return avatarSeguro(avatar_url) ?? avatarSeguro(picture)
+}
+
 /**
  * Destino depois do login: só caminho relativo que começa com uma única "/". Barra invertida e
  * caracteres de controle (tab e quebra de linha são removidos pelo navegador, o que transformaria

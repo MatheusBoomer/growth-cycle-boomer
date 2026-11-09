@@ -16,6 +16,10 @@ export interface RepositorioUsuarios {
   existe(email: string): Promise<boolean>
   /** ErroSemPermissao (autor não admin), ErroNaoEncontrado (alvo), ErroUltimoAdmin, ErroEntrada (papel inválido). */
   alterarPapel(alvo: string, papel: Papel, autor: string): Promise<void>
+  /** Grava (ou, com null, apaga) a foto de quem já está registrado; e-mail desconhecido não cria linha. A URL já deve ter passado por avatarSeguro. */
+  registrarAvatar(email: string, url: string | null): Promise<void>
+  /** E-mail normalizado para a URL da foto, só de quem tem foto. */
+  avatares(): Promise<Map<string, string>>
 }
 
 /** Intervalo mínimo entre duas atualizações de ultimo_acesso da mesma pessoa. */
@@ -33,6 +37,7 @@ export function porEmail(a: PessoaRegistrada, b: PessoaRegistrada): number {
 /** Repositório em memória (modo sem Supabase e testes). As regras de alterarPapel espelham planejamento.alterar_papel. */
 export class MemoriaUsuarios implements RepositorioUsuarios {
   private readonly pessoas = new Map<string, PessoaRegistrada>()
+  private readonly fotos = new Map<string, string>()
 
   constructor(
     admins: string[] = [],
@@ -87,5 +92,16 @@ export class MemoriaUsuarios implements RepositorioUsuarios {
       throw new ErroUltimoAdmin()
     }
     pessoa.papel = papel
+  }
+
+  async registrarAvatar(email: string, url: string | null): Promise<void> {
+    const chave = normalizarEmail(email)
+    if (!this.pessoas.has(chave)) return
+    if (url === null) this.fotos.delete(chave)
+    else this.fotos.set(chave, url)
+  }
+
+  async avatares(): Promise<Map<string, string>> {
+    return new Map(this.fotos)
   }
 }
