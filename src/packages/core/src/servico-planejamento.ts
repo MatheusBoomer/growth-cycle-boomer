@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { existsSync } from "node:fs"
-import { rm } from "node:fs/promises"
+import { copyFile, mkdtemp, rm } from "node:fs/promises"
+import { tmpdir } from "node:os"
 import path from "node:path"
 import type { FsArmazenamento } from "./armazenamento"
 import { semAberturaDeConclusao } from "./handoff"
@@ -879,6 +880,7 @@ export class ServicoPlanejamento {
     arquivoTemp: string,
     nomeOriginal: string,
     autor: string | null = null,
+    notificarAgente = true,
   ): Promise<ResultadoValidacao> {
     const insumo = this.insumoDaEtapa(etapa, insumoId)
     if (insumo.tipo !== "arquivo") throw new ErroEntrada("Este insumo é um link, não um arquivo.")
@@ -897,7 +899,7 @@ export class ServicoPlanejamento {
     } else {
       await rm(arquivoTemp, { force: true })
     }
-    await this.registrarResultadoInsumo(slug, etapa, insumo, resultado, destino, autor)
+    await this.registrarResultadoInsumo(slug, etapa, insumo, resultado, destino, autor, notificarAgente)
     return resultado
   }
 
@@ -942,6 +944,7 @@ export class ServicoPlanejamento {
     resultado: ResultadoValidacao,
     destino: string | null,
     autor: string | null,
+    notificarAgente = true,
   ): Promise<void> {
     const emAndamento = await this.mutar(slug, (e) => {
       let novo = registrarInsumo(
@@ -962,7 +965,7 @@ export class ServicoPlanejamento {
       const s = novo.etapas[etapa].status
       return { estado: novo, resultado: s === "em_andamento" || s === "pronta" }
     })
-    if (resultado.ok && destino && emAndamento) {
+    if (resultado.ok && destino && emAndamento && notificarAgente) {
       await this.enfileirar(slug, etapa, mensagemInsumoRecebido(insumo.nome, `clientes/${slug}/${destino}`, resultado.resumo), autor)
     }
   }
@@ -1037,6 +1040,7 @@ export class ServicoPlanejamento {
       const dados = (entrada && typeof entrada === "object" ? entrada : {}) as Record<string, unknown>
       if (nome === "propor_entregavel") return await this.ferramentaPropor(ctx.slug, ctx.etapa, dados)
       if (nome === "solicitar_insumo") return await this.ferramentaSolicitar(ctx.slug, ctx.etapa, dados)
+      if (nome === "registrar_insumo_anexado") return await this.ferramentaRegistrarAnexo(ctx.slug, ctx.etapa, dados)
       if (nome === "sinalizar_etapa_pronta") return await this.ferramentaSinalizar(ctx.slug, ctx.etapa, dados)
       return { ok: false, mensagem: `Ferramenta desconhecida: ${nome}` }
     } catch (e) {
@@ -1084,6 +1088,42 @@ export class ServicoPlanejamento {
     return {
       ok: true,
       mensagem: `Pedido de "${insumo.nome}" mostrado ao analista, com o modelo para baixar quando houver. Aguarde: quando o arquivo passar na validação você recebe uma mensagem com o caminho.`,
+    }
+  }
+
+  /**
+   * O analista anexou pelo clipe do chat um arquivo que é, na verdade, um insumo da etapa. O agente conferiu o conteúdo
+   * e pede o registro: o arquivo passa pela mesma validação do envio pelo card e a etapa deixa de cobrá-lo.
+   * O anexo original continua na biblioteca; só uma cópia vai para a pasta do insumo.
+   */
+  private async ferramentaRegistrarAnexo(slug: string, etapa: EtapaId, d: Record<string, unknown>): Promise<RespostaFerramenta> {
+    const insumo = this.insumoDaEtapa(etapa, campoTexto(d.insumo_id, "insumo_id"))
+    if (insumo.tipo !== "arquivo") throw new ErroEntrada("Este insumo é um link, não um arquivo.")
+    const arquivo = campoTexto(d.arquivo, "arquivo")
+    const rel = this.arm.relativoAoProspect(slug, arquivo)
+    if (!rel.startsWith(`.app/anexos/${etapa}/`)) {
+      throw new ErroEntrada(`Só anexos do chat desta etapa podem ser registrados (esperado em clientes/${slug}/.app/anexos/${etapa}/, recebido: ${arquivo}).`)
+    }
+    if (!(await this.arm.existeArquivo(slug, rel))) throw new ErroEntrada(`Anexo não encontrado: clientes/${slug}/${rel}.`)
+    // O nome gravado pelo app leva um carimbo de hora na frente ("1728830000000-nome.docx").
+    const nomeOriginal = path.basename(rel).replace(/^\d{10,}-/, "")
+    const pastaTemp = await mkdtemp(path.join(tmpdir(), "anexo-"))
+    const temp = path.join(pastaTemp, nomeSeguro(nomeOriginal))
+    try {
+      await copyFile(this.arm.caminhoAbsoluto(slug, rel), temp)
+      const r = await this.receberInsumoArquivo(slug, etapa, insumo.id, temp, nomeOriginal, null, false)
+      if (!r.ok) {
+        return {
+          ok: true,
+          mensagem: `O anexo não passou na validação de "${insumo.nome}": ${r.problemas.join("; ")}. Explique ao analista, em uma frase, o que precisa mudar no arquivo.`,
+        }
+      }
+      return {
+        ok: true,
+        mensagem: `Anexo registrado como "${insumo.nome}"${r.resumo ? ` (${r.resumo})` : ""}. Não peça esse arquivo de novo: pode seguir.`,
+      }
+    } finally {
+      await rm(pastaTemp, { recursive: true, force: true })
     }
   }
 

@@ -10,7 +10,7 @@ describe("prompts", () => {
     const s = systemPromptModoInterface({ slug: "iszi", etapa: etapaDoCatalogo(cat, "03") })
     expect(s).toContain("clientes/iszi/.app/rascunhos/")
     expect(s).toContain("03 · Diagnóstico de performance")
-    for (const f of ["propor_entregavel", "solicitar_insumo", "sinalizar_etapa_pronta"]) expect(s).toContain(f)
+    for (const f of ["propor_entregavel", "solicitar_insumo", "registrar_insumo_anexado", "sinalizar_etapa_pronta"]) expect(s).toContain(f)
   })
 
   it("chama o produto de Growth Cycle", () => {

@@ -462,6 +462,29 @@ describe("ferramentas do agente", () => {
     })
   })
 
+  it("registrar_insumo_anexado trata um anexo do chat como o insumo da etapa, sem apagar o anexo", async () => {
+    const slug = await prospectNaEtapa03()
+    const anexo = await servico.salvarAnexo(slug, "03", "Histórico.xlsx", new Uint8Array([120]))
+    const r = await servico.ferramenta(ctx03, "registrar_insumo_anexado", { insumo_id: "historico-mensal", arquivo: anexo })
+    expect(r.ok).toBe(true)
+    expect(r.mensagem).toContain("registrado")
+    const reg = (await servico.estado(slug)).insumos.find((i) => i.etapa === "03" && i.insumoId === "historico-mensal")
+    expect(reg?.status).toBe("valido")
+    expect(existsSync(path.join(raiz, anexo))).toBe(true)
+    expect((await servico.estado(slug)).filaAutomatica).toHaveLength(0)
+  })
+
+  it("registrar_insumo_anexado só aceita anexos do chat da própria etapa", async () => {
+    const slug = await prospectNaEtapa03()
+    const fora = path.join(raiz, "clientes", slug, "dados")
+    await mkdir(fora, { recursive: true })
+    await writeFile(path.join(fora, "x.xlsx"), "x")
+    const r = await servico.ferramenta(ctx03, "registrar_insumo_anexado", { insumo_id: "historico-mensal", arquivo: `clientes/${slug}/dados/x.xlsx` })
+    expect(r.ok).toBe(false)
+    const outraEtapa = await servico.salvarAnexo(slug, "02", "H.xlsx", new Uint8Array([1]))
+    expect((await servico.ferramenta(ctx03, "registrar_insumo_anexado", { insumo_id: "historico-mensal", arquivo: outraEtapa })).ok).toBe(false)
+  })
+
   it("sinalizar lista o que falta; concluir grava o arquivo de decisões e libera a 04", async () => {
     const slug = await prospectNaEtapa03()
     const sinal = {

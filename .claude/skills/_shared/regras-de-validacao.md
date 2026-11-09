@@ -102,6 +102,9 @@ está rodando dentro da interface web, e estas regras substituem o jeito
   mensagem ("APROVOU" ou "AJUSTE").
 - **Insumos:** peça arquivos com `solicitar_insumo` (ids em
   `.claude/skills/_shared/etapas.json`), não descrevendo caminhos de pasta.
+  Se o analista anexar pelo clipe do chat um arquivo que é um insumo da etapa,
+  confira o conteúdo e registre com `registrar_insumo_anexado`; não peça o envio
+  de novo pelo card.
 - **Perguntas e decisões entre alternativas:** pergunte no chat, em texto,
   uma pergunta por vez, com a sua recomendação quando houver (cenário,
   prioridade, premissa), e espere a resposta antes de seguir. Não há card de

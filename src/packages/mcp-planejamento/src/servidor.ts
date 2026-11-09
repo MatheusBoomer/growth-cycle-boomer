@@ -63,6 +63,20 @@ servidor.registerTool(
 )
 
 servidor.registerTool(
+  "registrar_insumo_anexado",
+  {
+    title: "Registrar um anexo do chat como insumo da etapa",
+    description:
+      "Use quando o analista anexou pelo clipe do chat um arquivo que, conferido o conteúdo, é um insumo do catálogo da etapa atual (ex.: a transcrição do kickoff). O app valida o arquivo como se tivesse sido enviado pelo card e passa a considerar o insumo entregue. Confira o conteúdo antes de chamar: só registre se for mesmo o documento esperado.",
+    inputSchema: {
+      insumo_id: z.string().describe("Id do insumo no catálogo da etapa atual"),
+      arquivo: z.string().describe("Caminho do anexo em clientes/<slug>/.app/anexos/<etapa>/"),
+    },
+  },
+  async (args) => chamarApp("registrar_insumo_anexado", args),
+)
+
+servidor.registerTool(
   "sinalizar_etapa_pronta",
   {
     title: "Sinalizar que a etapa atingiu o critério de conclusão",
