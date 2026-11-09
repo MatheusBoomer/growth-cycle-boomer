@@ -83,7 +83,7 @@ function painel(parcial: Partial<PainelMetricas> = {}): PainelMetricas {
     serie: [],
     porEtapa: [],
     porProjeto: [
-      { slug: "verdeluz", nome: "Verdeluz", dono: "ana@boomer.com.br", usd: 12, porFase: {}, tempoUtilSeg: 3600, ultimaAtividade: "2026-11-05T12:00:00Z", etapaAtual: "03", ativo: true, concluidoEm: null, pendencias: 0, teste: false },
+      { slug: "verdeluz", nome: "Verdeluz", dono: "ana@boomer.com.br", usd: 12, porFase: {}, tempoUtilSeg: 3600, ultimaAtividade: "2026-11-05T12:00:00Z", etapaAtual: "03", ativo: true, concluidoEm: null, pendencias: 0, teste: false, estimado: false },
     ],
     tempoPorPessoa: [],
     tempoIgnoraModelo: false,

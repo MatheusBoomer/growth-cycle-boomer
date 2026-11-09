@@ -118,6 +118,15 @@ describe("BarrasProjetos", () => {
     await m.desmontar()
   })
 
+  it("projeto com custo estimado diz 'estimado' no nome acessível do botão e no resumo do gráfico", async () => {
+    const lista = projetos.map((p) => (p.slug === "pet-amigo" ? { ...p, estimado: true } : p))
+    const m = await montar(createElement(BarrasProjetos, { projetos: lista, projetosSelecionados: [], aoFiltrarProjeto: () => {} }))
+    expect(m.botao("Pet Amigo")?.getAttribute("aria-label")).toBe("Pet Amigo, US$ 11,90, estimado")
+    expect(m.botao("Aurora Joias")?.getAttribute("aria-label")).not.toContain("estimado")
+    expect(m.raiz.querySelector('[role="img"]')?.getAttribute("aria-label")).toContain("Pet Amigo US$ 11,90 (estimado)")
+    await m.desmontar()
+  })
+
   it("altura calculada pelas linhas, sem aspect", async () => {
     const m = await montar(createElement(BarrasProjetos, { projetos, projetosSelecionados: [], aoFiltrarProjeto: () => {} }))
     const grafico = m.raiz.querySelector<HTMLElement>('[data-slot="chart"]')

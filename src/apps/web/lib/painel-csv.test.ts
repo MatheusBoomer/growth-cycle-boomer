@@ -18,6 +18,7 @@ function linha(parcial: Partial<Linha>): Linha {
     concluidoEm: null,
     pendencias: 0,
     teste: false,
+    estimado: false,
     ...parcial,
   }
 }
@@ -27,19 +28,21 @@ function resposta(linhas: Linha[]): RespostaPainel {
 }
 
 const BOM = "﻿"
-const CABECALHO = "Projeto;Analista;Custo (US$);Tempo útil (s);Última atividade (ISO)"
+const CABECALHO = "Projeto;Analista;Custo (US$);Tempo útil (s);Última atividade (ISO);Custo estimado"
 
 describe("painelParaCsv", () => {
   it("começa com BOM UTF-8 e o cabeçalho; painel vazio devolve só o cabeçalho", () => {
     expect(painelParaCsv(resposta([]))).toBe(BOM + CABECALHO)
   })
 
-  it("uma linha por projeto: nome, analista pelo nome, custo com ponto, segundos e data ISO", () => {
-    const csv = painelParaCsv(resposta([linha({}), linha({ nome: "Casa Azul", dono: null, usd: 0, tempoUtilSeg: 0, ultimaAtividade: null })]))
+  it("uma linha por projeto: nome, analista pelo nome, custo com ponto, segundos, data ISO e se o custo é estimado", () => {
+    const csv = painelParaCsv(
+      resposta([linha({ estimado: true }), linha({ nome: "Casa Azul", dono: null, usd: 0, tempoUtilSeg: 0, ultimaAtividade: null })]),
+    )
     expect(csv.split("\n")).toEqual([
       BOM + CABECALHO,
-      "Verdeluz;Ana Souza;1.5000;90;2026-11-05T12:00:00.000Z",
-      "Casa Azul;;0.0000;0;",
+      "Verdeluz;Ana Souza;1.5000;90;2026-11-05T12:00:00.000Z;sim",
+      "Casa Azul;;0.0000;0;;não",
     ])
   })
 

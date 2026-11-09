@@ -66,6 +66,8 @@ export interface PainelMetricas {
     concluidoEm: string | null
     pendencias: number
     teste: boolean
+    /** Algum custo deste projeto no período (depois dos filtros) veio de turno estimado: mesma regra de `totais.estimado`. */
+    estimado: boolean
   }>
   tempoPorPessoa: Array<{ email: string; agenteSeg: number; ativoSeg: number; ociosoSeg: number }>
   tempoIgnoraModelo: boolean
@@ -245,7 +247,14 @@ export function agregarPainel(
   const projetos = new Map(
     [...visiveis.values()].map((p) => [
       p.slug,
-      { usd: 0, vida: 0, porFase: {} as Record<string, number>, tempoUtilSeg: 0, ultimaAtividade: null as string | null },
+      {
+        usd: 0,
+        vida: 0,
+        porFase: {} as Record<string, number>,
+        tempoUtilSeg: 0,
+        ultimaAtividade: null as string | null,
+        estimado: false,
+      },
     ]),
   )
   const marcas = [...usos.map((u) => [u.slug, u.fim] as const), ...presencas.map((p) => [p.slug, p.em] as const)]
@@ -274,6 +283,7 @@ export function agregarPainel(
     if (ms >= anteriorMs && ms < inicioMs) custoAnteriorUsd += valor
     if (!(ms >= inicioMs && ms < fimMs) || valor === 0) continue
     estimado ||= c.estimado
+    projeto.estimado ||= c.estimado
     custoUsd += valor
     const ponto = serie[indiceDoBucket(inicios, ms)]!
     ponto.total += valor
@@ -356,6 +366,7 @@ export function agregarPainel(
           concluidoEm: p.concluidoEm,
           pendencias: p.pendencias,
           teste: p.teste,
+          estimado: m.estimado,
         }
       })
       .sort(

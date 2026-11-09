@@ -13,7 +13,7 @@ import { Input } from "@workspace/ui/components/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@workspace/ui/components/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs"
 import { AvatarPessoa } from "@/components/marca/avatar-pessoa"
-import { formatarDataHora, type EtapaRotulada } from "./comuns"
+import { formatarDataHora, MarcaEstimado, type EtapaRotulada } from "./comuns"
 
 type Linha = PainelMetricas["porProjeto"][number]
 type Aba = "andamento" | "concluidos" | "todos"
@@ -169,7 +169,10 @@ export function ListaProjetos({ projetos, etapas, avatares, filtrado = false }: 
                   </div>
                 </TableCell>
                 <TableCell>{p.etapaAtual === null ? <span className="text-muted-foreground">Concluído</span> : rotuloDaEtapa(p.etapaAtual)}</TableCell>
-                <TableCell className="text-right tabular-nums">{formatarUsd(p.usd)}</TableCell>
+                <TableCell className="text-right tabular-nums whitespace-nowrap">
+                  {formatarUsd(p.usd)}
+                  {p.estimado && <MarcaEstimado />}
+                </TableCell>
                 <TableCell className="text-right tabular-nums">{formatarDuracao(p.tempoUtilSeg)}</TableCell>
                 <TableCell className="text-muted-foreground whitespace-nowrap">{formatarDataHora(p.ultimaAtividade)}</TableCell>
               </TableRow>

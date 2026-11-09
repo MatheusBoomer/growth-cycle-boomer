@@ -6,6 +6,7 @@ import { formatarUsd } from "@workspace/core/metricas/formato"
 import type { PainelMetricas } from "@workspace/core/metricas/painel"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@workspace/ui/components/chart"
 import { cn } from "@workspace/ui/lib/utils"
+import { MarcaEstimado } from "./comuns"
 import { GraficoVazio } from "./grafico-vazio"
 import { ALTURA_EIXO, ALTURA_LINHA, alturaBarras, corDaFase, FASE_ARQUIVADA, fasesOrdenadas, ROTULO_ARQUIVADA, topProjetos } from "./graficos-dados"
 
@@ -17,6 +18,11 @@ export interface PropsBarrasProjetos {
   projetos: PainelMetricas["porProjeto"]
   projetosSelecionados: string[]
   aoFiltrarProjeto: (slug: string) => void
+}
+
+/** Custo com a marca de estimado, para nomes acessíveis. */
+function custoFalado(p: { usd: number; estimado: boolean }, separador: ", " | " "): string {
+  return `${formatarUsd(p.usd)}${p.estimado ? (separador === ", " ? ", estimado" : " (estimado)") : ""}`
 }
 
 function rotuloEixoUsd(v: number): string {
@@ -35,7 +41,7 @@ export function BarrasProjetos({ projetos, projetosSelecionados, aoFiltrarProjet
     [fases],
   )
   const dados = useMemo(
-    () => linhas.map((p) => ({ slug: p.slug, nome: p.nome, usd: p.usd, ...Object.fromEntries(fases.map((f, i) => [`f${i}`, p.porFase[f] ?? 0])) })),
+    () => linhas.map((p) => ({ slug: p.slug, nome: p.nome, usd: p.usd, estimado: p.estimado, ...Object.fromEntries(fases.map((f, i) => [`f${i}`, p.porFase[f] ?? 0])) })),
     [linhas, fases],
   )
 
@@ -56,7 +62,7 @@ export function BarrasProjetos({ projetos, projetosSelecionados, aoFiltrarProjet
                 <button
                   type="button"
                   aria-pressed={selecionado}
-                  aria-label={`${p.nome}, ${formatarUsd(p.usd)}`}
+                  aria-label={`${p.nome}, ${custoFalado(p, ", ")}`}
                   title={p.nome}
                   onClick={() => aoFiltrarProjeto(p.slug)}
                   className={cn(
@@ -77,7 +83,7 @@ export function BarrasProjetos({ projetos, projetosSelecionados, aoFiltrarProjet
           style={{ height: altura }}
           initialDimension={{ width: 360, height: altura }}
           role="img"
-          aria-label={`Custo por projeto, ${linhas.length} maiores: ${linhas.map((p) => `${p.nome} ${formatarUsd(p.usd)}`).join(", ")}`}
+          aria-label={`Custo por projeto, ${linhas.length} maiores: ${linhas.map((p) => `${p.nome} ${custoFalado(p, " ")}`).join(", ")}`}
         >
           <BarChart data={dados} layout="vertical" margin={{ top: 0, right: 20, bottom: ALTURA_EIXO - EIXO_X, left: 12 }} barCategoryGap={8} accessibilityLayer={false}>
             <CartesianGrid horizontal={false} />
@@ -89,11 +95,14 @@ export function BarrasProjetos({ projetos, projetosSelecionados, aoFiltrarProjet
                 <ChartTooltipContent
                   className="max-w-64"
                   labelFormatter={(_, payload) => {
-                    const p = payload?.[0]?.payload as { nome: string; usd: number } | undefined
+                    const p = payload?.[0]?.payload as { nome: string; usd: number; estimado: boolean } | undefined
                     return p ? (
                       <div className="flex flex-col">
                         <span className="truncate">{p.nome}</span>
-                        <span className="text-muted-foreground font-normal tabular-nums">{formatarUsd(p.usd)}</span>
+                        <span className="text-muted-foreground font-normal tabular-nums">
+                          {formatarUsd(p.usd)}
+                          {p.estimado && <MarcaEstimado />}
+                        </span>
                       </div>
                     ) : null
                   }}

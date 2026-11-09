@@ -27,6 +27,7 @@ function linha(parcial: Partial<Linha>): Linha {
     concluidoEm: null,
     pendencias: 0,
     teste: false,
+    estimado: false,
     ...parcial,
   }
 }
@@ -173,6 +174,17 @@ describe("ListaProjetos: busca, ordenação e linha", () => {
     expect(texto).toContain("US$ 30,00")
     expect(texto).toContain("1h00")
     expect(texto).toContain("2 pendências")
+    await m.desmontar()
+  })
+
+  it("custo com parte estimada leva a marca 'estimado' na célula de custo; os demais não", async () => {
+    const m = await montar([linha({ slug: "a", nome: "Alfa", usd: 3, estimado: true }), linha({ slug: "b", nome: "Beta", usd: 4 })])
+    const celulaCusto = (nome: string) => {
+      const tr = [...m.raiz.querySelectorAll("tbody tr")].find((t) => t.querySelector("a")?.textContent === nome)!
+      return tr.querySelectorAll("td")[3]!
+    }
+    expect(celulaCusto("Alfa").textContent).toBe("US$ 3,00estimado")
+    expect(celulaCusto("Beta").textContent).toBe("US$ 4,00")
     await m.desmontar()
   })
 

@@ -1,6 +1,6 @@
 /**
  * Dados fictícios do painel de Projetos, para os testes dos gráficos e para conferir a tela à mão.
- * "cheio": 12 projetos, 3 modelos mais "outros", 90 dias em semanas, todas as fases e 4 pessoas;
+ * "cheio": 12 projetos (um com custo estimado), 3 modelos mais "outros", 90 dias em semanas, todas as fases e 4 pessoas;
  * "poucos": 1 projeto e 2 buckets; "vazio": tudo zerado.
  */
 import type { PainelMetricas } from "@workspace/core/metricas/painel"
@@ -30,6 +30,7 @@ function projeto(parcial: Partial<Projeto> & Pick<Projeto, "slug" | "nome" | "po
     concluidoEm: null,
     pendencias: 0,
     teste: false,
+    estimado: false,
     ...parcial,
     usd,
   }
@@ -60,7 +61,7 @@ function cheio(): PainelMetricas {
     { etapa: "briefing-benchmark", fase: "Arquivada", usd: 1.4 },
   ]
   const porProjeto: Projeto[] = [
-    projeto({ slug: "verdeluz", nome: "Verdeluz Cosméticos", porFase: { Contexto: 3.1, Diagnóstico: 9.8, "Soluções e metas": 6.2, "Mídia e ação": 2.4, Apresentação: 1.9 }, etapaAtual: null, ativo: false, concluidoEm: "2026-10-30T18:00:00.000Z" }),
+    projeto({ slug: "verdeluz", nome: "Verdeluz Cosméticos", porFase: { Contexto: 3.1, Diagnóstico: 9.8, "Soluções e metas": 6.2, "Mídia e ação": 2.4, Apresentação: 1.9 }, etapaAtual: null, ativo: false, concluidoEm: "2026-10-30T18:00:00.000Z", estimado: true }),
     projeto({ slug: "casa-norte", nome: "Casa Norte Móveis", porFase: { Contexto: 2.2, Diagnóstico: 8.4, "Soluções e metas": 5.1, "Mídia e ação": 1.7 }, etapaAtual: "08", dono: "bruno.lima@boomer.com.br" }),
     projeto({
       slug: "nome-longo",
@@ -82,7 +83,7 @@ function cheio(): PainelMetricas {
   const custoUsd = arred(serie.reduce((a, p) => a + p.total, 0))
   return {
     periodo: { de: "2026-08-11", ate: "2026-11-08", granularidade: "semana" },
-    totais: { custoUsd, estimado: false, tempoUtilSeg: 162_000, custoAnteriorUsd: 80, tempoUtilAnteriorSeg: 120_000 },
+    totais: { custoUsd, estimado: true, tempoUtilSeg: 162_000, custoAnteriorUsd: 80, tempoUtilAnteriorSeg: 120_000 },
     concluidos: { media: 24.6, mediana: 23.4, n: 2 },
     contagem: { ativos: 10, concluidos: 2, comPendencia: 1 },
     serie,

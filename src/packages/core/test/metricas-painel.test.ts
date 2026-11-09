@@ -419,6 +419,7 @@ describe("agregarPainel: totais, tempo e listas", () => {
       concluidoEm: null,
       pendencias: 0,
       teste: false,
+      estimado: false,
     })
   })
 
@@ -562,6 +563,32 @@ describe("agregarPainel: parcelas reais de custoDoTurno", () => {
     ]
     expect(agregar({ usos }).totais.estimado).toBe(true)
     expect(agregar({ usos }, filtro({ modelos: ["haiku"] })).totais.estimado).toBe(false)
+  })
+
+  it("estimado por projeto: só o projeto cuja linha antiga contribui no período, depois dos filtros", () => {
+    const p = agregar(dadosMistos())
+    conferirSomas(p)
+    expect(p.porProjeto.find((e) => e.slug === "a")?.estimado).toBe(true)
+    expect(p.porProjeto.find((e) => e.slug === "b")?.estimado).toBe(false)
+    expect(p.totais.estimado).toBe(p.porProjeto.some((e) => e.estimado))
+
+    // Só haiku: a linha antiga de 06/11 ainda tem parcela haiku (0.2), então "a" continua estimado.
+    const haiku = agregar(dadosMistos(), filtro({ modelos: ["haiku"] }))
+    expect(haiku.porProjeto.find((e) => e.slug === "a")?.estimado).toBe(true)
+    // Só sonnet: as antigas não têm sonnet, então nada é estimado.
+    const sonnet = agregar(dadosMistos(), filtro({ modelos: ["sonnet"] }))
+    expect(sonnet.porProjeto.every((e) => !e.estimado)).toBe(true)
+    expect(sonnet.totais.estimado).toBe(false)
+    // Etapa sem linhas antigas: nada estimado.
+    const etapa01 = agregar(dadosMistos(), filtro({ etapas: ["01"] }))
+    expect(etapa01.porProjeto.every((e) => !e.estimado)).toBe(true)
+  })
+
+  it("estimado por projeto ignora linha antiga fora do período", () => {
+    const usos = [uso({ sessao: null, custoTurnoUsd: null, custoUsd: 0.6, modelos: { opus: 0.6 }, fim: "2026-10-30T10:00:00Z" })]
+    const p = agregar({ usos })
+    expect(p.porProjeto[0]?.estimado).toBe(false)
+    expect(p.totais.estimado).toBe(false)
   })
 })
 
