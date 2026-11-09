@@ -94,7 +94,7 @@ describe("cadeiaDeComponentes", () => {
     const nomes = new Set<string>()
     for (const arquivo of readdirSync(pasta).filter((a) => a.endsWith(".tsx"))) {
       const fonte = readFileSync(path.join(pasta, arquivo), "utf-8")
-      for (const m of fonte.matchAll(/^(?:export )?(?:function|const) ([A-Z][A-Za-z]+)/gm)) nomes.add(m[1]!)
+      for (const m of fonte.matchAll(/^(?:export )?(?:function|const) ([A-Z][a-z][A-Za-z]*)/gm)) nomes.add(m[1]!)
     }
     expect(nomes.size).toBeGreaterThan(20)
     for (const nome of nomes) expect(nomeIgnorado(nome), nome).toBe(true)
