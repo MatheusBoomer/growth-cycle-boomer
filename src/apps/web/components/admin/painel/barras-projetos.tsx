@@ -13,6 +13,8 @@ import { ALTURA_EIXO, ALTURA_LINHA, alturaBarras, corDaFase, FASE_ARQUIVADA, fas
 const TICK = { fontSize: 12 }
 /** Altura do eixo X; o resto de ALTURA_EIXO fica de margem embaixo. A faixa de cada barra fica com ALTURA_LINHA px. */
 const EIXO_X = 24
+/** A marca "US$ 0" fica centrada no começo das barras: metade dela precisa caber à esquerda. */
+const MARGEM_ESQUERDA = 28
 
 export interface PropsBarrasProjetos {
   projetos: PainelMetricas["porProjeto"]
@@ -92,7 +94,7 @@ export function BarrasProjetos({ projetos, projetosSelecionados, aoFiltrarProjet
           role="img"
           aria-label={`Custo por projeto, ${linhas.length} maiores: ${linhas.map((p) => `${p.nome} ${custoFalado(p, " ")}`).join(", ")}`}
         >
-          <BarChart data={dados} layout="vertical" margin={{ top: 0, right: 20, bottom: ALTURA_EIXO - EIXO_X, left: 12 }} barCategoryGap={8} accessibilityLayer={false}>
+          <BarChart data={dados} layout="vertical" margin={{ top: 0, right: 24, bottom: ALTURA_EIXO - EIXO_X, left: MARGEM_ESQUERDA }} barCategoryGap={8} accessibilityLayer={false}>
             <CartesianGrid horizontal={false} />
             <YAxis type="category" dataKey="slug" hide />
             <XAxis
