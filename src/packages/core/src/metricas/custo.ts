@@ -77,3 +77,68 @@ export function custoPorPessoa(usos: LinhaUso[]): Map<string, number> {
   }
   return porPessoa
 }
+
+/** Um custo com data: um turno novo, ou o grupo de linhas antigas de um projeto e etapa. */
+export interface CustoDatado {
+  slug: string
+  etapa: string
+  autor: string | null
+  /** Instante (ISO) em que o custo conta: o fim do turno, ou o maior fim do grupo antigo. */
+  quando: string
+  usd: number
+  modelos: Record<string, number>
+  estimado: boolean
+}
+
+function depoisDe(candidato: string, atual: string): boolean {
+  const ms = Date.parse(candidato)
+  const atualMs = Date.parse(atual)
+  return !Number.isNaN(ms) && (Number.isNaN(atualMs) || ms > atualMs)
+}
+
+/**
+ * Custos datados, para séries no tempo. Cada linha nova vira uma entrada no seu `fim`. As linhas antigas de um mesmo
+ * (projeto, etapa) viram uma só, estimada, no maior `fim` do grupo, com o maior acumulado e os modelos dessa linha.
+ * Para cada (projeto, etapa), a soma de `usd` bate com `custoPorEtapa`.
+ */
+export function custosPorTurno(usos: LinhaUso[]): CustoDatado[] {
+  const novos: CustoDatado[] = []
+  const antigos = new Map<string, CustoDatado>()
+
+  for (const u of usos) {
+    if (ehLinhaNova(u)) {
+      novos.push({
+        slug: u.slug,
+        etapa: u.etapa,
+        autor: u.autor,
+        quando: u.fim,
+        usd: u.custoTurnoUsd ?? 0,
+        modelos: { ...(u.modelos ?? {}) },
+        estimado: false,
+      })
+      continue
+    }
+    const chave = JSON.stringify([u.slug, u.etapa])
+    const custo = u.custoUsd ?? 0
+    const grupo = antigos.get(chave)
+    if (!grupo) {
+      antigos.set(chave, {
+        slug: u.slug,
+        etapa: u.etapa,
+        autor: u.autor,
+        quando: u.fim,
+        usd: custo,
+        modelos: { ...(u.modelos ?? {}) },
+        estimado: true,
+      })
+      continue
+    }
+    if (depoisDe(u.fim, grupo.quando)) grupo.quando = u.fim
+    if (custo > grupo.usd) {
+      grupo.usd = custo
+      grupo.autor = u.autor
+      grupo.modelos = { ...(u.modelos ?? {}) }
+    }
+  }
+  return [...novos, ...antigos.values()]
+}
