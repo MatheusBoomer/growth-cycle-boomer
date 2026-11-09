@@ -58,13 +58,13 @@ describe("caractereDaIntensidade", () => {
 
 describe("PALETAS", () => {
   const soma = (c: readonly number[]) => c[0]! + c[1]! + c[2]!
-  it("claro usa o azul e o laranja da Boomer; escuro é mais luminoso; opacidade 0,20 nos dois temas; neon só no escuro", () => {
+  it("claro usa o azul e o laranja da Boomer; escuro é mais luminoso; opacidade 0,20 no claro e 0,3 no escuro; neon só no escuro", () => {
     expect([...PALETAS.claro.azul]).toEqual([57, 135, 229])
     expect([...PALETAS.claro.laranja]).toEqual([235, 97, 10])
     expect(soma(PALETAS.escuro.azul)).toBeGreaterThan(soma(PALETAS.claro.azul))
     expect(soma(PALETAS.escuro.laranja)).toBeGreaterThan(soma(PALETAS.claro.laranja))
     expect(PALETAS.claro.opacidadeMax).toBe(0.2)
-    expect(PALETAS.escuro.opacidadeMax).toBe(0.2)
+    expect(PALETAS.escuro.opacidadeMax).toBe(0.3)
     // Neon leve só no escuro: o halo é a cor do próprio caractere, sem brilho no claro.
     expect(PALETAS.claro.brilho).toBe(0)
     expect(PALETAS.escuro.brilho).toBeGreaterThan(0)

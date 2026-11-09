@@ -45,7 +45,7 @@ Duas unidades, cada uma com um propósito.
 
 - **Movimento:** colunas verticais de caracteres ondulando e avançando para a direita, com a massa mais densa à esquerda.
 - **Tema claro:** azul dominante, laranja `#eb610a` como detalhe. Opacidade máxima de 0,20 (era 0,35; reduzida duas vezes depois de ver o resultado), para o texto das telas continuar legível.
-- **Tema escuro:** azul vivo com toque de ciano e laranja mais quente, com opacidade máxima de 0,2 (a mesma do claro; era 0,85) e neon leve: um halo (`shadowBlur` de 6 px) na cor do próprio caractere, só nas faixas mais intensas (a partir da 6ª de 8). O tema claro não tem brilho.
+- **Tema escuro:** azul vivo com toque de ciano e laranja mais quente, com opacidade máxima de 0,3 (era 0,85; reduzida depois de ver o resultado) e neon leve: um halo (`shadowBlur` de 6 px) na cor do próprio caractere, só nas faixas mais intensas (a partir da 6ª de 8). O tema claro não tem brilho.
 - **Cards de vidro** (`vidro`) ficam por cima das ondas e quase opacos, para o fundo não interferir no conteúdo. Tokens `--vidro-1` e `--vidro-2` em `packages/ui/src/styles/globals.css`: claro 0,97 → 0,94 de branco (era 0,92 → 0,72); escuro azul-marinho `rgb(21 27 42)` 0,94 → `rgb(15 20 32)` 0,90 (era branco a 0,035 → 0,01, quase transparente). Um teste em `lib/superficies.test.ts` impede o vidro de voltar a ficar translúcido.
 
 ## Desempenho e robustez
