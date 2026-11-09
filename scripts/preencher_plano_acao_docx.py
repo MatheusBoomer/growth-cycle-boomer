@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-scripts/preencher_plano_acao_docx.py — monta o .docx do Plano de Ação (Skill 09).
+scripts/preencher_plano_acao_docx.py — monta o .docx do Plano de Ação (Skill 08).
 
 Le um modelo em `.claude/skills/_shared/[MODELO] Plano de Ação Estratégico.docx`
 (banner da agência, fontes Montserrat embutidas, estilos de tabela já prontos) e
@@ -324,7 +324,7 @@ def preencher(modelo: str, dados: dict, saida: str) -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Monta o .docx do Plano de Ação (Skill 09).")
+    parser = argparse.ArgumentParser(description="Monta o .docx do Plano de Ação (Skill 08).")
     parser.add_argument("--modelo", required=True, help="Caminho do .docx-modelo em _shared/.")
     parser.add_argument("--input", required=True, help="JSON com prospect + horizontes + tabela.")
     parser.add_argument("--output", required=True, help="Caminho do .docx final a salvar.")

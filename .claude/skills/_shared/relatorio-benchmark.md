@@ -14,7 +14,8 @@ Um relatório HTML autocontido que apresenta a análise dos anúncios ativos de
 cada concorrente na Biblioteca de Anúncios do Meta, do próprio prospect, as
 respostas às perguntas estratégicas e o ranking de intensidade de mídia. É o
 artefato visual que pode ser mostrado ao prospect; **não substitui** a camada
-Lição + Evidência (`secoes/07-benchmark.md`).
+Lição + Evidência (`secoes/07-benchmark.md` da etapa desativada `briefing-e-benchmark`;
+nos prospects migrados, em `entrega/arquivo-etapa-07/secoes/`).
 
 ## Template
 

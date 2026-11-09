@@ -1,9 +1,9 @@
 # Agência — Growth Cycle
 
-Este projeto gera o documento de Growth Cycle que a agência entrega a
-prospects (ainda não são clientes fechados): diagnóstico dos últimos 12 meses,
-benchmark de concorrentes, metas, projeções e plano de ação. É o argumento
-comercial para fechar um contrato de 12 meses.
+Este projeto gera o Growth Cycle de cada prospect (ainda não é cliente fechado):
+o documento que a agência entrega com o diagnóstico dos últimos 12 meses, as
+metas, as projeções e o plano de ação. É o argumento comercial para fechar um
+contrato de 12 meses.
 
 **O documento é produzido uma única vez por prospect.** Não existe recorrência,
 não existe reexecução, não existe comparação entre ciclos. Nenhuma skill deve

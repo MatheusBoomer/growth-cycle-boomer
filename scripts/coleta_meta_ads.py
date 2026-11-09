@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 scripts/coleta_meta_ads.py: coleta de anúncios da Biblioteca de Anúncios do
-Meta via Apify, para o benchmark da Skill 07.
+Meta via Apify, para o benchmark da etapa desativada briefing-e-benchmark
+(`.claude/skills/_desativadas/`).
 
     python3 scripts/coleta_meta_ads.py coletar --link "<link da página na Biblioteca>" --marca "Nome" --saida clientes/<slug>/dados/benchmark-meta [--limite 5]
 
@@ -9,7 +10,8 @@ O link é o da página da marca na Biblioteca de Anúncios (com view_all_page_id
 informado pelo analista: o script não busca páginas pela API, para não gastar
 com descoberta. `--page-id N` também é aceito no lugar do link.
 
-coletar: baixa os anúncios ativos da página, aplica as regras da Skill 07
+coletar: baixa os anúncios ativos da página, aplica as regras da etapa desativada
+briefing-e-benchmark (`.claude/skills/_desativadas/`)
 (até 5 criativos distintos, no máximo 1 catálogo, sem anúncio sem mídia),
 baixa imagens, extrai quadros de vídeo e grava anuncios.json, bruto.json,
 resumo.md e midia/ em <saida>/<marca>/.
@@ -172,7 +174,7 @@ def coletar(page_id: str, marca: str, saida: Path, limite: int, cliente: Any, se
 
 
 def criar_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(description="Coleta de anúncios da Biblioteca do Meta via Apify (Skill 07).")
+    p = argparse.ArgumentParser(description="Coleta de anúncios da Biblioteca do Meta via Apify (etapa desativada briefing-e-benchmark).")
     sub = p.add_subparsers(dest="comando", required=True)
     c = sub.add_parser("coletar")
     pagina = c.add_mutually_exclusive_group(required=True)
