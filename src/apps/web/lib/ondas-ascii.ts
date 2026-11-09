@@ -25,18 +25,23 @@ export function caractereDaIntensidade(intensidade: number): string {
   return RAMPA[Math.round(limitar(intensidade) * (RAMPA.length - 1))]!
 }
 
-/** `t` em segundos. Listras verticais (uma fase por coluna) que ondulam devagar, com o miolo mais denso no centro. */
+/**
+ * `t` em segundos. Listras verticais (uma fase por coluna) que viajam da esquerda para a direita, com a massa mais
+ * densa à esquerda e cobrindo a altura toda. Todo termo que depende de x e t tem a forma `k·x − w·t`, ou seja,
+ * avança para +x; nenhum anda para a esquerda.
+ */
 export function celulaOnda(coluna: number, linha: number, t: number, colunas: number, linhas: number): Celula {
   const x = coluna / Math.max(colunas, 1)
   const y = linha / Math.max(linhas, 1)
 
-  // A fase de cada coluna é deslocada por duas ondas lentas: é isso que faz as listras ondularem.
-  const deslocamento = 1.7 * Math.sin(y * 3.2 + t * 0.6) + 1.1 * Math.sin(x * 4.1 - t * 0.45) + 0.6 * Math.sin((x + y) * 6 + t * 0.9)
-  const listra = 0.5 + 0.5 * Math.sin(coluna * 1.15 + deslocamento)
+  // A fase de cada coluna é deslocada por ondas lentas que também avançam para a direita: é isso que faz as listras ondularem.
+  const deslocamento =
+    1.7 * Math.sin(y * 3.2 + x * 2.4 - t * 0.5) + 1.1 * Math.sin(x * 4.1 - t * 0.45) + 0.6 * Math.sin((x - y) * 6 - t * 0.9)
+  const listra = 0.5 + 0.5 * Math.sin(coluna * 1.15 - t * 1.6 + deslocamento)
 
-  // O miolo respira: o centro da mancha anda de leve, como o brilho da referência.
-  const dx = (x - (0.5 + 0.08 * Math.sin(t * 0.2))) / 0.4
-  const dy = (y - (0.42 + 0.06 * Math.cos(t * 0.17))) / 0.6
+  // A massa nasce à esquerda e se espalha pela altura inteira; o centro anda de leve, como o brilho da referência.
+  const dx = (x - (0.22 + 0.04 * Math.sin(t * 0.2))) / 0.55
+  const dy = (y - (0.5 + 0.05 * Math.cos(t * 0.17))) / 1.1
   const miolo = Math.exp(-(dx * dx + dy * dy))
 
   const intensidade = limitar(miolo * (0.2 + 0.8 * listra ** 1.4))
@@ -44,10 +49,10 @@ export function celulaOnda(coluna: number, linha: number, t: number, colunas: nu
   return { intensidade, caractere: caractereDaIntensidade(intensidade), laranja: ruido > LIMIAR_LARANJA }
 }
 
-/** 1 no topo da janela, 0 na base. O degradê visual é um mask CSS; isto só decide quais linhas valem desenhar. */
-export function fatorDeDegrade(linha: number, linhas: number): number {
-  if (linhas <= 0) return 0
-  return limitar(1 - linha / linhas)
+/** 1 no começo (borda esquerda da janela), 0 no fim (direita). O degradê visual é um mask CSS; isto só decide quais colunas valem desenhar. */
+export function fatorDeDegrade(posicao: number, total: number): number {
+  if (total <= 0) return 0
+  return limitar(1 - posicao / total)
 }
 
 const TETO_CELULAS = 20000

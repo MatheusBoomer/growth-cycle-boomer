@@ -101,3 +101,39 @@ describe("dimensionarGrade", () => {
     expect(Number.isFinite(g.celulaA)).toBe(true)
   })
 })
+
+describe("direção e cobertura (revisão: da esquerda para a direita, fundo inteiro)", () => {
+  const media = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length
+  const grade = (t: number, c0: number, c1: number, l0: number, l1: number, colunas = 90, linhas = 40) => {
+    const v: number[] = []
+    for (let c = c0; c < c1; c++) for (let l = l0; l < l1; l++) v.push(celulaOnda(c, l, t, colunas, linhas).intensidade)
+    return v
+  }
+
+  it("as ondas avançam para a direita: o melhor deslocamento entre dois quadros, 1 s depois, é positivo", () => {
+    const colunas = 120
+    const perfil = (linha: number, t: number) => Array.from({ length: colunas }, (_, c) => celulaOnda(c, linha, t, colunas, 40).intensidade)
+    const soma = new Map<number, number>()
+    for (const t of [0, 7, 19])
+      for (const linha of [5, 12, 20, 33]) {
+        const a = perfil(linha, t)
+        const b = perfil(linha, t + 1)
+        // Menos de meio período de listra (~5,5 colunas), para o deslocamento não ficar ambíguo.
+        for (let s = -2; s <= 2; s++) {
+          let corr = 0
+          for (let c = 8; c < colunas - 8; c++) corr += a[c]! * b[c + s]!
+          soma.set(s, (soma.get(s) ?? 0) + corr)
+        }
+      }
+    const melhor = [...soma.entries()].sort((x, y) => y[1] - x[1])[0]![0]
+    expect(melhor).toBeGreaterThan(0)
+  })
+
+  it("a massa fica à esquerda: média do terço esquerdo ≥ 1,5× a do terço direito", () => {
+    for (const t of [0, 5, 40]) expect(media(grade(t, 0, 30, 0, 40))).toBeGreaterThanOrEqual(1.5 * media(grade(t, 60, 90, 0, 40)))
+  })
+
+  it("o fundo cobre a altura: média do terço inferior ≥ 80% da do terço superior", () => {
+    for (const t of [0, 5, 40]) expect(media(grade(t, 0, 90, 27, 40))).toBeGreaterThanOrEqual(0.8 * media(grade(t, 0, 90, 0, 13)))
+  })
+})

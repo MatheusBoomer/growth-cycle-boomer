@@ -6,12 +6,12 @@ import { PALETAS, celulaOnda, dimensionarGrade, fatorDeDegrade, type TemaOndas }
 
 const FAIXAS = 8
 const INTERVALO_MS = 1000 / 30
-/** Abaixo disto o degradê do mask já escondeu a linha: não vale desenhar. */
+/** Abaixo disto o degradê do mask já escondeu a coluna: não vale desenhar. */
 const DEGRADE_MINIMO = 0.05
 
 /**
- * Fundo fixo de ondas em ASCII. O canvas ocupa a janela inteira e o degradê de 100% (topo) a 0% (base) é um mask
- * CSS, sem custo de CPU. Desenha em lotes por faixa de opacidade e cor; pausa com a aba oculta; com
+ * Fundo fixo de ondas em ASCII, em todas as telas. O canvas ocupa a janela inteira e o degradê de 100% (esquerda) a
+ * 0% (direita) é um mask CSS, sem custo de CPU. Desenha em lotes por faixa de opacidade e cor; pausa com a aba oculta; com
  * prefers-reduced-motion pinta um único quadro.
  */
 export function FundoOndasAscii() {
@@ -62,9 +62,9 @@ export function FundoOndasAscii() {
         l.pos.length = 0
         l.chars.length = 0
       }
-      for (let linha = 0; linha < linhas; linha++) {
-        if (fatorDeDegrade(linha, linhas) < DEGRADE_MINIMO) break
-        for (let coluna = 0; coluna < colunas; coluna++) {
+      for (let coluna = 0; coluna < colunas; coluna++) {
+        if (fatorDeDegrade(coluna, colunas) < DEGRADE_MINIMO) break
+        for (let linha = 0; linha < linhas; linha++) {
           const c = celulaOnda(coluna, linha, tempo, colunas, linhas)
           const faixa = Math.round(c.intensidade * FAIXAS)
           if (faixa === 0 || c.caractere === " ") continue
@@ -128,7 +128,7 @@ export function FundoOndasAscii() {
     <canvas
       ref={canvasRef}
       aria-hidden
-      className="pointer-events-none fixed inset-0 -z-10 size-full [-webkit-mask-image:linear-gradient(to_bottom,#000,transparent)] [mask-image:linear-gradient(to_bottom,#000,transparent)]"
+      className="pointer-events-none fixed inset-0 -z-10 size-full [-webkit-mask-image:linear-gradient(to_right,#000,transparent)] [mask-image:linear-gradient(to_right,#000,transparent)]"
     />
   )
 }

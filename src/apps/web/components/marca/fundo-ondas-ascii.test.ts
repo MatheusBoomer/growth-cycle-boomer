@@ -12,6 +12,7 @@ const { FundoOndasAscii } = await import("./fundo-ondas-ascii")
 
 // Contexto 2D falso: guarda a cor vigente a cada fillText, que é o que o teste de tema precisa ver.
 let estilos: string[]
+let xs: number[]
 let ctx: Record<string, unknown>
 let fila: Map<number, FrameRequestCallback>
 let proximoId: number
@@ -20,13 +21,17 @@ let oculto = false
 
 function instalarAmbiente({ reduzido = false, largura = 1024, altura = 768, contexto = true } = {}) {
   estilos = []
+  xs = []
   ctx = {
     fillStyle: "",
     font: "",
     textBaseline: "",
     clearRect: vi.fn(),
     setTransform: vi.fn(),
-    fillText: vi.fn(() => estilos.push(String(ctx.fillStyle))),
+    fillText: vi.fn((_ch: string, x: number) => {
+      estilos.push(String(ctx.fillStyle))
+      xs.push(x)
+    }),
   }
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation((() => (contexto ? ctx : null)) as never)
   fila = new Map()
@@ -79,13 +84,21 @@ describe("FundoOndasAscii", () => {
     expect(document.querySelector("canvas")).toBeNull()
   })
 
-  it("renderiza canvas aria-hidden, sem pointer-events e com o degradê de cima para baixo", async () => {
+  it("renderiza canvas aria-hidden, sem pointer-events e com o degradê da esquerda para a direita", async () => {
     instalarAmbiente()
     await montar()
     const canvas = document.querySelector("canvas")!
     expect(canvas.getAttribute("aria-hidden")).toBe("true")
     expect(canvas.className).toContain("pointer-events-none")
-    expect(canvas.className).toContain("mask-image:linear-gradient(to_bottom,#000,transparent)")
+    expect(canvas.className).toContain("mask-image:linear-gradient(to_right,#000,transparent)")
+  })
+
+  it("não desenha nas colunas que o degradê já escondeu e desenha por toda a largura útil", async () => {
+    instalarAmbiente({ reduzido: true })
+    await montar()
+    expect(xs.length).toBeGreaterThan(0)
+    expect(Math.max(...xs)).toBeLessThanOrEqual(0.96 * 1024)
+    expect(Math.max(...xs)).toBeGreaterThan(0.5 * 1024)
   })
 
   it("reduced-motion: desenha um quadro e não agenda requestAnimationFrame", async () => {
