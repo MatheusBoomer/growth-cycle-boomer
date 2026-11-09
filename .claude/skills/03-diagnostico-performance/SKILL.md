@@ -19,9 +19,6 @@ skill orquestra e interpreta; não faz conta diretamente.
       sessões e conversão já quebrados por Google e Meta
 - [ ] `dados/produtos-curva-abc.xlsx` anexado — relatório de produtos
       vendidos no ano (necessário só para a Curva ABC, etapa 4)
-- [ ] `dados/quebra-pagamento.xlsx` (opcional): receita captada e aprovada por
-      mês e meio de pagamento (PIX, cartão, boleto); sem ele, a etapa 3b da
-      Fase 1 não é feita
 - [ ] Conferir manualmente cada gráfico e benchmark gerado antes de deixar a
       skill avançar — ver `regras-de-validacao.md`
 
@@ -36,12 +33,6 @@ Analisar, nesta ordem obrigatória:
 3. **Taxa de quebra**: percentual médio, meses fora da média, taxa
    comparada à faixa de `benchmarks-kpi.md`, e a suspeita de causa quando o
    dado indicar.
-
-   **3b. Quebra por meio de pagamento** (se `dados/quebra-pagamento.xlsx`
-   veio): taxa de quebra mês a mês por meio de pagamento, em um gráfico de
-   linha com uma série por meio (até 3, ver `padrao-visual.md`) e a linha de
-   referência do benchmark de quebra de `benchmarks-kpi.md`. Se o arquivo não
-   veio, registre que esse recorte não foi analisado; não estime.
 4. **ROAS** — Global e por plataforma (Google, Meta): tendência, estabilidade,
    compressão em escala, diferença entre plataformas.
 

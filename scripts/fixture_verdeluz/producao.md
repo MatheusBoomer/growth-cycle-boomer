@@ -55,7 +55,6 @@ Quando estiver tudo pronto, rode `/03-diagnostico-performance`.
 
 - **Histórico mensal dos últimos 12 meses (Excel):** o arquivo `historico-mensal.xlsx` da pasta do kit.
 - **Relatório de produtos vendidos no ano (Excel):** o arquivo `produtos-curva-abc.xlsx`.
-- **Quebra por meio de pagamento (Excel, opcional):** o arquivo `quebra-pagamento.xlsx`. Envie, porque ele habilita o recorte por cartão, PIX e boleto.
 
 ### O que responder ao agente
 

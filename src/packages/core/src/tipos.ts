@@ -37,6 +37,8 @@ export interface EtapaCatalogo {
   titulo: string
   rotuloStatus: string
   descricao: string
+  /** Texto explicativo do que o analista deve esperar da etapa (card "O que esperar"). */
+  oQueEsperar: string
   skill: string | null
   /** Subagentes que a etapa pode acionar (só os de SUBAGENTES_CONFIGURAVEIS). */
   subagentes: string[]

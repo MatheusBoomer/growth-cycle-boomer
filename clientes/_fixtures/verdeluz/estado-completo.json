@@ -617,16 +617,6 @@
       "atualizadoEm": "2026-10-22T12:05:00.000Z"
     },
     {
-      "etapa": "03",
-      "insumoId": "quebra-pagamento",
-      "status": "valido",
-      "problemas": [],
-      "avisos": [],
-      "resumo": "36 linhas de dados",
-      "arquivo": "dados/quebra-pagamento.xlsx",
-      "atualizadoEm": "2026-10-22T12:05:00.000Z"
-    },
-    {
       "etapa": "04",
       "insumoId": "clientes-historico",
       "status": "valido",

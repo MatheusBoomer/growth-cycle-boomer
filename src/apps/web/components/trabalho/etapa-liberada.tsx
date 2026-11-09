@@ -4,13 +4,11 @@ import { LockIcon } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import type { EtapaId, RespostaEstado } from "@workspace/core/tipos"
-import { semAberturaDeConclusao } from "@workspace/core/handoff"
 import { Button } from "@workspace/ui/components/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@workspace/ui/components/empty"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { CardInsumo } from "@/components/cards/card-insumo"
-import { Markdown } from "@/components/markdown"
 import { PainelKit } from "@/components/teste/painel-kit"
 import { api, mensagemDeErro } from "@/lib/api"
 
@@ -18,12 +16,10 @@ export function EtapaLiberada({
   slug,
   etapa,
   dados,
-  handoffAnterior,
 }: {
   slug: string
   etapa: EtapaId
   dados: RespostaEstado
-  handoffAnterior: string | null
 }) {
   const [iniciando, setIniciando] = useState(false)
   const etapaCat = dados.catalogo.etapas.find((e) => e.id === etapa)!
@@ -61,21 +57,18 @@ export function EtapaLiberada({
           <h2 className="text-2xl font-semibold">{etapaCat.titulo}</h2>
           <p className="text-muted-foreground mt-2">{etapaCat.descricao}</p>
         </div>
-        {handoffAnterior && (
-          <Card>
-            <CardHeader>
-              <CardTitle>O que preparar</CardTitle>
-              <CardDescription>Pedido deixado pela etapa anterior</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Markdown>{semAberturaDeConclusao(handoffAnterior)}</Markdown>
-            </CardContent>
-          </Card>
-        )}
+        <Card>
+          <CardHeader>
+            <CardTitle>O que esperar desta etapa</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>{etapaCat.oQueEsperar}</p>
+          </CardContent>
+        </Card>
         {etapaCat.insumos.length > 0 && (
           <div className="space-y-3">
             <h3 className="font-medium">Arquivos desta etapa</h3>
-            <p className="text-muted-foreground text-sm">Pode enviar agora ou quando o agente pedir.</p>
+            <p className="text-muted-foreground text-sm">Pode enviar agora, quando o agente pedir ou anexando no chat depois que a conversa começar.</p>
             {etapaCat.insumos.map((ref) => (
               <CardInsumo
                 key={ref.id}

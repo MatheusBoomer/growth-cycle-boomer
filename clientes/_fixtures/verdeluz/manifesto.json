@@ -414,8 +414,7 @@
     ],
     "03": [
       "dados/historico-mensal.xlsx",
-      "dados/produtos-curva-abc.xlsx",
-      "dados/quebra-pagamento.xlsx"
+      "dados/produtos-curva-abc.xlsx"
     ],
     "04": [
       "dados/clientes-historico.xlsx"

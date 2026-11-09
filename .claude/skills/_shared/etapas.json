@@ -6,6 +6,7 @@
       "titulo": "Preparação de contexto",
       "rotuloStatus": "01 · Preparação de contexto",
       "descricao": "Limpa a transcrição do kickoff e os materiais pré-reunião, separando o que é conteúdo de negócio do que é ruído de reunião.",
+      "oQueEsperar": "O agente lê a transcrição do kickoff e os materiais pré-reunião, separa o que é conteúdo de negócio do que é ruído de conversa e devolve uma versão limpa para você conferir. A etapa só avança depois da sua aprovação.",
       "skill": "01-preparacao-de-contexto",
       "subagentes": [],
       "insumos": [
@@ -20,6 +21,7 @@
       "titulo": "Contextualização estratégica",
       "rotuloStatus": "02 · Contextualização estratégica",
       "descricao": "Constrói o entendimento do negócio (modelo, produto, público, posicionamento, hipóteses e gargalos) antes de qualquer número.",
+      "oQueEsperar": "O agente monta o entendimento do negócio (modelo, produto, público, posicionamento, hipóteses e gargalos) a partir do kickoff, antes de qualquer número. Perto do fim ele faz algumas perguntas estratégicas: quanto mais profundas as respostas, melhor o diagnóstico. Você aprova cada seção antes de seguir.",
       "skill": "02-contextualizacao-estrategica",
       "subagentes": ["pesquisador-benchmark"],
       "insumos": []
@@ -30,12 +32,12 @@
       "titulo": "Diagnóstico de performance",
       "rotuloStatus": "03 · Diagnóstico de performance",
       "descricao": "Analisa 12 meses de mídia paga, receita, sessões, conversão e a Curva ABC de produtos, com gráficos conferidos um a um.",
+      "oQueEsperar": "O agente analisa os 12 meses de mídia paga, receita, sessões, conversão e Curva ABC, um gráfico por vez, e para em cada um para você conferir os números e o benchmark antes de escrever a leitura. Para começar, ele precisa da planilha de histórico mensal (investimento, receita, ROAS, sessões e conversão por Google e Meta) e do relatório de produtos vendidos no ano. Aqui é só diagnóstico: nenhuma meta ou plano.",
       "skill": "03-diagnostico-performance",
       "subagentes": ["analista-dados"],
       "insumos": [
         { "id": "historico-mensal", "obrigatorio": true },
-        { "id": "produtos-curva-abc", "obrigatorio": false },
-        { "id": "quebra-pagamento", "obrigatorio": false }
+        { "id": "produtos-curva-abc", "obrigatorio": false }
       ]
     },
     {
@@ -44,6 +46,7 @@
       "titulo": "Unidade econômica",
       "rotuloStatus": "04 · Unidade econômica",
       "descricao": "Calcula CAC, LTV histórico e a relação LTV/CAC a partir do histórico de vendas por cliente.",
+      "oQueEsperar": "O agente calcula o CAC, o LTV histórico e a relação LTV/CAC a partir do histórico de vendas por cliente, e confere o resultado contra a plataforma de origem. Antes de enviar a planilha, apague CPF, e-mail, telefone, endereço e dados de cartão: só ID ou nome do cliente, número de pedidos e valor gasto.",
       "skill": "04-unidade-economica",
       "subagentes": [],
       "insumos": [{ "id": "clientes-historico", "obrigatorio": true }]
@@ -54,6 +57,7 @@
       "titulo": "Soluções",
       "rotuloStatus": "05 · Soluções",
       "descricao": "Abre cada problema do diagnóstico em hipóteses de causa, 1 a 3 soluções e impacto em R$ ou %.",
+      "oQueEsperar": "O agente abre cada problema do diagnóstico em hipóteses de causa, de uma a três soluções concretas e o impacto em reais ou em percentual. Não precisa enviar arquivo. Vale lembrar o que o prospect já tentou para resolver cada problema, para não propor o que já falhou.",
       "skill": "05-solucoes",
       "subagentes": ["analista-dados", "pesquisador-benchmark"],
       "insumos": []
@@ -64,6 +68,7 @@
       "titulo": "Metas e cenários",
       "rotuloStatus": "06 · Metas e cenários",
       "descricao": "Define a meta, quebra mês a mês pela sazonalidade real e monta os cenários Pessimista, Realista e Otimista.",
+      "oQueEsperar": "O agente define a meta do projeto, distribui mês a mês respeitando a sazonalidade histórica (nunca de forma linear) e monta os cenários Pessimista, Realista e Otimista. Não precisa enviar arquivo, mas tenha clara a meta (qual número, em quanto tempo), a receita do ano passado e a sazonalidade que importa para o negócio.",
       "skill": "06-metas-e-cenarios",
       "subagentes": ["analista-dados"],
       "insumos": []
@@ -74,6 +79,7 @@
       "titulo": "Mídia paga",
       "rotuloStatus": "07 · Mídia paga",
       "descricao": "Planeja verba por plataforma, estratégia por Curva ABC, calendário anual, ROAS esperado e redução de dependência.",
+      "oQueEsperar": "O agente monta o plano de mídia paga sobre o cenário Realista aprovado: verba por plataforma, estratégia por Curva ABC, calendário anual, ROAS esperado e redução de dependência. Prints das campanhas atuais das plataformas ajudam, mas são opcionais.",
       "skill": "07-midia-paga",
       "subagentes": ["analista-dados", "pesquisador-benchmark"],
       "insumos": [{ "id": "prints-campanhas", "obrigatorio": false }]
@@ -84,6 +90,7 @@
       "titulo": "Plano de ação",
       "rotuloStatus": "08 · Plano de ação",
       "descricao": "Organiza tudo o que foi proposto num plano de ação priorizado, com responsável, prazo e forma de execução.",
+      "oQueEsperar": "O agente organiza tudo o que foi proposto no planejamento em um plano de ação cronológico e priorizado, com responsável, prazo e forma de execução para cada item. Tenha em mente as 2 ou 3 frentes mais urgentes que você quer priorizar.",
       "skill": "08-plano-de-acao",
       "subagentes": [],
       "insumos": []
@@ -94,6 +101,7 @@
       "titulo": "Apresentação final",
       "rotuloStatus": "Apresentação final",
       "descricao": "Monta a apresentação (.pptx) no molde da agência a partir de tudo o que foi aprovado.",
+      "oQueEsperar": "O agente escreve o roteiro slide a slide com o que foi aprovado nas etapas e, depois da sua aprovação, gera a apresentação em .pptx editável no molde da agência. Não precisa enviar nada: ele usa só os gráficos e seções já aprovados.",
       "skill": "09-apresentacao-final",
       "subagentes": [],
       "insumos": []
@@ -158,18 +166,6 @@
       "modelo": "produtos-curva-abc.xlsx",
       "destino": "dados/produtos-curva-abc",
       "validador": "produtos-curva-abc",
-      "sensivel": false
-    },
-    {
-      "id": "quebra-pagamento",
-      "nome": "Quebra por meio de pagamento",
-      "descricao": "Receita captada e aprovada de cada mês, separada por meio de pagamento (PIX, cartão, boleto).",
-      "instrucao": "Opcional. Uma linha por mês e meio de pagamento, exportada da plataforma do e-commerce.",
-      "tipo": "arquivo",
-      "formatos": [".xlsx"],
-      "modelo": "quebra-pagamento.xlsx",
-      "destino": "dados/quebra-pagamento",
-      "validador": "quebra-pagamento",
       "sensivel": false
     },
     {

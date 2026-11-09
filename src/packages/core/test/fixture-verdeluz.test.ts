@@ -13,7 +13,7 @@ import { ServicoPlanejamento } from "../src/servico-planejamento"
 import { ORDEM_ETAPAS, type EtapaId } from "../src/tipos"
 import { catalogoReal, raizTemporaria, RAIZ } from "./ajuda"
 
-const KIT_ESPERADO: Partial<Record<EtapaId, number>> = { "01": 2, "03": 3, "04": 1, "07": 4 }
+const KIT_ESPERADO: Partial<Record<EtapaId, number>> = { "01": 2, "03": 2, "04": 1, "07": 4 }
 let fixture: Fixture
 
 beforeAll(async () => {
@@ -101,7 +101,6 @@ describe("fixture real da Verdeluz", () => {
     const insumos: [string, string][] = [
       ["historico-mensal", "dados/historico-mensal.xlsx"],
       ["produtos-curva-abc", "dados/produtos-curva-abc.xlsx"],
-      ["quebra-pagamento", "dados/quebra-pagamento.xlsx"],
       ["clientes-historico", "dados/clientes-historico.xlsx"],
     ]
     for (const [id, rel] of insumos) {

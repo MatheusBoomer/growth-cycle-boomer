@@ -67,7 +67,6 @@ const INSUMOS: { etapa: EtapaId; id: string; arquivo: string; resumo: string }[]
   { etapa: "01", id: "site", arquivo: "contexto/site-referencia.md", resumo: SITE },
   { etapa: "03", id: "historico-mensal", arquivo: "dados/historico-mensal.xlsx", resumo: "12 meses (OUTUBRO a SETEMBRO)" },
   { etapa: "03", id: "produtos-curva-abc", arquivo: "dados/produtos-curva-abc.xlsx", resumo: "58 linhas de dados" },
-  { etapa: "03", id: "quebra-pagamento", arquivo: "dados/quebra-pagamento.xlsx", resumo: "36 linhas de dados" },
   { etapa: "04", id: "clientes-historico", arquivo: "dados/clientes-historico.xlsx", resumo: "10400 linhas de dados" },
   { etapa: "07", id: "prints-campanhas", arquivo: "contexto/brutos/prints-campanhas/print-01.png", resumo: "4 prints de campanha" },
 ]
@@ -75,7 +74,7 @@ const INSUMOS: { etapa: EtapaId; id: string; arquivo: string; resumo: string }[]
 /** Arquivos que o analista envia (kit de cada etapa). */
 const KIT: Partial<Record<EtapaId, string[]>> = {
   "01": ["contexto/brutos/kickoff-transcricao-bruta.docx", "contexto/brutos/formulario-cliente.docx"],
-  "03": ["dados/historico-mensal.xlsx", "dados/produtos-curva-abc.xlsx", "dados/quebra-pagamento.xlsx"],
+  "03": ["dados/historico-mensal.xlsx", "dados/produtos-curva-abc.xlsx"],
   "04": ["dados/clientes-historico.xlsx"],
   "07": [1, 2, 3, 4].map((n) => `contexto/brutos/prints-campanhas/print-0${n}.png`),
 }

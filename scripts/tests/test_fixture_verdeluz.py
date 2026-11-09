@@ -63,7 +63,7 @@ def test_historico_valida(gerado):
 
 def test_demais_planilhas_validam(gerado):
     pasta, _ = gerado
-    for insumo in ("produtos-curva-abc", "quebra-pagamento", "clientes-historico"):
+    for insumo in ("produtos-curva-abc", "clientes-historico"):
         r = validar(insumo, pasta / f"{insumo}.xlsx")
         assert r["ok"], (insumo, r["problemas"])
 

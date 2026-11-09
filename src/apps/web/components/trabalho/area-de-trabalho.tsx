@@ -231,7 +231,6 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   const etapaCat = dados.catalogo.etapas.find((e) => e.id === etapa)!
   const estadoEtapa = dados.estado.etapas[etapa]
   const indice = ORDEM_ETAPAS.indexOf(etapa)
-  const anterior = indice > 0 ? ORDEM_ETAPAS[indice - 1]! : null
   const mostrarChat = estadoEtapa.status !== "liberada" && estadoEtapa.status !== "bloqueada"
   const salvoInicial = lerLayout(chaveColunas(false))
   const layoutInicial = salvoInicial && Object.keys(salvoInicial).sort().join() === IDS_COLUNAS.join() ? salvoInicial : undefined
@@ -324,7 +323,7 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
                 {mostrarChat ? (
                   <ChatEtapa slug={slug} etapa={etapa} dados={dados} eventos={conversas[etapa] ?? []} delta={deltas[etapa] ?? ""} />
                 ) : (
-                  <EtapaLiberada slug={slug} etapa={etapa} dados={dados} handoffAnterior={anterior ? dados.estado.etapas[anterior].handoff : null} />
+                  <EtapaLiberada slug={slug} etapa={etapa} dados={dados} />
                 )}
               </main>
             </ResizablePanel>
