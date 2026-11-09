@@ -118,3 +118,59 @@ def test_jornada_tem_uma_seta_por_secao_no_mesmo_espaco_do_original():
     # mesma faixa vertical que as 6 setas do deck de referência ocupavam (1387100 a 3525063)
     assert ys[0] == 1387100
     assert abs(ys[-1] - 3525063) < 10000
+
+
+def _partes(caminho: Path) -> dict:
+    import zipfile
+
+    with zipfile.ZipFile(caminho) as z:
+        return {i.filename: z.read(i.filename) for i in z.infolist()}
+
+
+def test_capa_diz_growth_cycle_e_nao_planejamento_estrategico():
+    xml = _partes(MOLDE)["ppt/slides/slide1.xml"].decode("utf-8")
+    assert "PLANEJAMENTO" not in xml
+    assert "ESTRATÉGICO" not in xml
+    assert "<a:t>GROWTH </a:t>" in xml
+    assert "<a:t>CYCLE</a:t>" in xml
+    assert "{{prospect}}" in xml
+
+
+def test_ajustar_capa_troca_so_o_titulo_do_slide_1_e_e_idempotente(tmp_path):
+    import zipfile
+
+    import preparar_molde_apresentacao as pm
+
+    antigo = tmp_path / "antigo.pptx"
+    partes = _partes(MOLDE)
+    partes["ppt/slides/slide1.xml"] = (
+        partes["ppt/slides/slide1.xml"].decode("utf-8").replace("<a:t>GROWTH </a:t>", "<a:t>PLANEJAMENTO </a:t>").replace("<a:t>CYCLE</a:t>", "<a:t>ESTRATÉGICO</a:t>")
+    ).encode("utf-8")
+    with zipfile.ZipFile(MOLDE) as origem, zipfile.ZipFile(antigo, "w") as destino:
+        for info in origem.infolist():
+            destino.writestr(info, partes[info.filename])
+
+    assert pm.ajustar_capa(antigo) is True
+    depois = _partes(antigo)
+    xml = depois["ppt/slides/slide1.xml"].decode("utf-8")
+    assert "PLANEJAMENTO" not in xml and "ESTRATÉGICO" not in xml
+    assert "<a:t>GROWTH </a:t>" in xml and "<a:t>CYCLE</a:t>" in xml
+    assert depois == _partes(MOLDE)  # mesmo molde final, as demais partes intactas
+    assert pm.ajustar_capa(antigo) is False
+
+
+def test_ajustar_capa_recusa_capa_com_layout_inesperado(tmp_path):
+    import zipfile
+
+    import pytest
+
+    import preparar_molde_apresentacao as pm
+
+    estranho = tmp_path / "estranho.pptx"
+    partes = _partes(MOLDE)
+    partes["ppt/slides/slide1.xml"] = partes["ppt/slides/slide1.xml"].replace(b"<a:t>CYCLE</a:t>", b"<a:t>PLANEJAMENTO </a:t>")
+    with zipfile.ZipFile(MOLDE) as origem, zipfile.ZipFile(estranho, "w") as destino:
+        for info in origem.infolist():
+            destino.writestr(info, partes[info.filename])
+    with pytest.raises(ValueError):
+        pm.ajustar_capa(estranho)

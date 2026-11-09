@@ -138,6 +138,7 @@ def preparar(original: Path, saida: Path) -> None:
         prs.save(saida)
     adicionar_modelo_desafio.adicionar(saida)
     ajustar_jornada(saida)
+    ajustar_capa(saida)
 
 
 SLIDE_JORNADA = "ppt/slides/slide2.xml"
@@ -182,6 +183,39 @@ def ajustar_jornada(molde: Path) -> bool:
         nova = re.sub(r'<a:off x="0" y="\d+"/>', f'<a:off x="0" y="{JORNADA_PRIMEIRA_SETA + indice * JORNADA_PASSO}"/>', seta, count=1)
         xml = xml.replace(seta, nova, 1)
     partes[SLIDE_JORNADA] = xml.encode("utf-8")
+    temporario = molde.with_suffix(".tmp.pptx")
+    with zipfile.ZipFile(temporario, "w") as z:
+        for info in infos:
+            z.writestr(info, partes[info.filename])
+    temporario.replace(molde)
+    return True
+
+
+SLIDE_CAPA = "ppt/slides/slide1.xml"
+# Título da capa do deck de referência: duas partes com fontes diferentes (a 1ª em Montserrat Black,
+# a 2ª em Montserrat). O produto passou a se chamar Growth Cycle; cada parte mantém a fonte da original.
+CAPA_ANTES = ("<a:t>PLANEJAMENTO </a:t>", "<a:t>ESTRATÉGICO</a:t>")
+CAPA_DEPOIS = ("<a:t>GROWTH </a:t>", "<a:t>CYCLE</a:t>")
+
+
+def ajustar_capa(molde: Path) -> bool:
+    """Troca o título da capa (slide 1) de "PLANEJAMENTO ESTRATÉGICO" para "GROWTH CYCLE".
+
+    Edita só o XML do slide 1; as demais partes do pacote são copiadas sem alteração.
+    Idempotente: devolve False se a capa já está com o nome novo."""
+    import zipfile
+
+    with zipfile.ZipFile(molde) as z:
+        infos = z.infolist()
+        partes = {i.filename: z.read(i.filename) for i in infos}
+    xml = partes[SLIDE_CAPA].decode("utf-8")
+    if all(t in xml for t in CAPA_DEPOIS) and not any(t in xml for t in CAPA_ANTES):
+        return False
+    if any(xml.count(t) != 1 for t in CAPA_ANTES):
+        raise ValueError("slide 1 do molde não tem o título da capa esperado; ajuste à mão")
+    for antes, depois in zip(CAPA_ANTES, CAPA_DEPOIS):
+        xml = xml.replace(antes, depois, 1)
+    partes[SLIDE_CAPA] = xml.encode("utf-8")
     temporario = molde.with_suffix(".tmp.pptx")
     with zipfile.ZipFile(temporario, "w") as z:
         for info in infos:
