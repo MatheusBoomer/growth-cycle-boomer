@@ -12,7 +12,7 @@ export type Paleta = { azul: Rgb; laranja: Rgb; opacidadeMax: number }
 
 /** Claro: o azul e o laranja da Boomer, discretos para não brigar com o texto. Escuro: luminosos, como no vídeo de referência. */
 export const PALETAS: Record<TemaOndas, Paleta> = {
-  claro: { azul: [57, 135, 229], laranja: [235, 97, 10], opacidadeMax: 0.35 },
+  claro: { azul: [57, 135, 229], laranja: [235, 97, 10], opacidadeMax: 0.26 },
   escuro: { azul: [84, 178, 255], laranja: [255, 138, 61], opacidadeMax: 0.85 },
 }
 

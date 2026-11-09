@@ -16,7 +16,7 @@
 - `src/apps/web/AGENTS.md`: este Next tem mudanças incompatíveis. Antes de usar `usePathname` ou mexer em componente cliente, ler o guia correspondente em `node_modules/next/dist/docs/`.
 - Rampa de caracteres, da menor para a maior intensidade: ` . : - = + * # @`.
 - Azul da Boomer no tema claro: `rgb(57 135 229)` (`#3987e5`). Laranja: `#eb610a` = `rgb(235 97 10)`.
-- Laranja em cerca de 10–15% das células; tema claro com opacidade máxima em torno de 0,35.
+- Laranja em cerca de 10–15% das células; tema claro com opacidade máxima de 0,26 (era 0,35; reduzida depois de ver o resultado).
 - Degradê: `mask-image: linear-gradient(to bottom, #000, transparent)` no canvas, relativo à viewport.
 - Células de ~10×18 px no desktop e maiores no celular; teto de ~30 fps; desenho em lotes por faixa de opacidade; linhas que o degradê já esconde não são desenhadas.
 - O loop pausa com a aba oculta. Com `prefers-reduced-motion: reduce`, um único quadro estático.

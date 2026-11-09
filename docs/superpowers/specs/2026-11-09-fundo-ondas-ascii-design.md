@@ -44,7 +44,7 @@ Duas unidades, cada uma com um propósito.
 ## Visual
 
 - **Movimento:** colunas verticais de caracteres ondulando e avançando para a direita, com a massa mais densa à esquerda.
-- **Tema claro:** azul dominante, laranja `#eb610a` como detalhe. Opacidade máxima baixa (alvo em torno de 0,35), para o texto das telas continuar legível.
+- **Tema claro:** azul dominante, laranja `#eb610a` como detalhe. Opacidade máxima baixa (0,26, reduzida de 0,35 depois de ver o resultado), para o texto das telas continuar legível.
 - **Tema escuro:** azul vivo com toque de ciano e laranja mais quente, com opacidade maior.
 - **Painéis de vidro** (`vidro`, `backdrop-blur`) ficam por cima das ondas, sem brigar com texto ou gráfico.
 

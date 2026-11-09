@@ -58,12 +58,12 @@ describe("caractereDaIntensidade", () => {
 
 describe("PALETAS", () => {
   const soma = (c: readonly number[]) => c[0]! + c[1]! + c[2]!
-  it("claro usa o azul e o laranja da Boomer; escuro é mais luminoso; opacidade clara ≤ 0.35 e menor que a escura", () => {
+  it("claro usa o azul e o laranja da Boomer; escuro é mais luminoso; opacidade clara ≤ 0.28 e menor que a escura", () => {
     expect([...PALETAS.claro.azul]).toEqual([57, 135, 229])
     expect([...PALETAS.claro.laranja]).toEqual([235, 97, 10])
     expect(soma(PALETAS.escuro.azul)).toBeGreaterThan(soma(PALETAS.claro.azul))
     expect(soma(PALETAS.escuro.laranja)).toBeGreaterThan(soma(PALETAS.claro.laranja))
-    expect(PALETAS.claro.opacidadeMax).toBeLessThanOrEqual(0.35)
+    expect(PALETAS.claro.opacidadeMax).toBeLessThanOrEqual(0.28)
     expect(PALETAS.claro.opacidadeMax).toBeLessThan(PALETAS.escuro.opacidadeMax)
   })
 })
