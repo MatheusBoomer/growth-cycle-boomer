@@ -474,6 +474,14 @@ describe("ferramentas do agente", () => {
     expect((await servico.estado(slug)).filaAutomatica).toHaveLength(0)
   })
 
+  it("insumo que saiu do catálogo (quebra-pagamento) e ficou no estado de um prospect antigo não quebra o dossiê", async () => {
+    const slug = await prospectNaEtapa03()
+    const estado = JSON.parse(await readFile(path.join(raiz, "clientes", slug, ".app/estado.json"), "utf8"))
+    estado.insumos.push({ etapa: "03", insumoId: "quebra-pagamento", status: "valido", problemas: [], avisos: [], resumo: "36 linhas", arquivo: "dados/quebra-pagamento.xlsx", atualizadoEm: "2026-10-22T12:05:00.000Z" })
+    await writeFile(path.join(raiz, "clientes", slug, ".app/estado.json"), JSON.stringify(estado))
+    await expect(servico.dossie(slug, "03")).resolves.toEqual(expect.any(String))
+  })
+
   it("registrar_insumo_anexado só aceita anexos do chat da própria etapa", async () => {
     const slug = await prospectNaEtapa03()
     const fora = path.join(raiz, "clientes", slug, "dados")

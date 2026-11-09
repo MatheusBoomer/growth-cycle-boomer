@@ -705,8 +705,9 @@ export class ServicoPlanejamento {
     }
     const contextoPersistido: string[] = []
     for (const c of CONTEXTO_PERSISTIDO) if (await this.arm.existeArquivo(slug, c)) contextoPersistido.push(c)
+    // Insumo que saiu do catálogo (ex.: quebra-pagamento) mas ficou gravado num prospect antigo: ignora, não quebra o dossiê.
     const insumosRecebidos = estado.insumos
-      .filter((i) => i.etapa === etapa && i.status === "valido" && i.arquivo)
+      .filter((i) => i.etapa === etapa && i.status === "valido" && i.arquivo && this.catalogo.insumos.some((c) => c.id === i.insumoId))
       .map((i) => ({ nome: insumoDoCatalogo(this.catalogo, i.insumoId).nome, arquivo: i.arquivo! }))
     return montarDossie({
       nome: estado.prospect.nome,
