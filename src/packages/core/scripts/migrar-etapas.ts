@@ -117,7 +117,10 @@ async function aplicar(pasta: string, movimentos: MovimentoArquivo[], gravacoes:
   }
 }
 
-/** Migra a pasta de um prospect (com `.app/estado.json`) para a numeração de 9 etapas; só mexe em estado "atual" (com a etapa 09). */
+/**
+ * Migra a pasta de um prospect (com `.app/estado.json`) para a numeração de 9 etapas; só mexe em estado "atual" (ver classificarNumeracao).
+ * Lê o estado.json cru, sem passar pelo FsArmazenamento: o app recusa abrir um estado "atual" (ErroNumeracaoAntiga), e é este script que o resolve.
+ */
 export async function migrarProspect(pasta: string, catalogo: Catalogo, opcoes: OpcoesMigracao): Promise<RelatorioMigracao> {
   const slug = path.basename(pasta)
   const relatorio = (resultado: ResultadoMigracao, movimentos: MovimentoArquivo[] = []): RelatorioMigracao => ({ slug, resultado, movimentos, removidos: [] })
@@ -202,7 +205,7 @@ function imprimir(r: RelatorioMigracao, aplicado: boolean): void {
   const verbo = aplicado ? "migrado" : "migraria"
   const rotulo: Record<ResultadoMigracao, string> = {
     migrado: verbo,
-    "pulado-legado": "pulado (estado legado, sem a etapa 09)",
+    "pulado-legado": "pulado (estado legado: sem a etapa 09, ou com a 09 que o app antigo injetou)",
     "pulado-ja-migrado": "pulado (já migrado)",
     "pulado-sem-estado": "pulado (sem .app/estado.json)",
   }
@@ -245,6 +248,7 @@ async function principal(): Promise<void> {
   }
   const catalogo = carregarCatalogo(raiz)
   console.log(`${aplicarMudancas ? "Aplicando em" : "Dry-run (nada será alterado) em"} ${pastaClientes}`)
+  if (aplicarMudancas) console.log("Pare o app antes de migrar e guarde o backup até conferir o resultado.")
   if (opcoes.pastaBackup) console.log(`Backup em ${opcoes.pastaBackup}`)
 
   const erros: string[] = []

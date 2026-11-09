@@ -37,6 +37,20 @@ const ATUAL: Record<string, StatusEtapa> = {
   final: "bloqueada",
 }
 
+/** Prospect de 8 etapas (07 = mídia paga, 08 = plano) em que o app antigo injetou uma "09" bloqueada, como a adda. */
+const LEGADO_COM_09_INJETADA: Record<string, StatusEtapa> = {
+  "01": "concluida",
+  "02": "concluida",
+  "03": "concluida",
+  "04": "concluida",
+  "05": "concluida",
+  "06": "concluida",
+  "07": "concluida",
+  "08": "concluida",
+  final: "em_andamento",
+  "09": "bloqueada",
+}
+
 function entregavel(id: string, etapa: string): Entregavel {
   return {
     id,
@@ -76,6 +90,35 @@ describe("classificarNumeracao", () => {
   it("o marcador vale mais que a chave 09", () => {
     expect(classificarNumeracao({ versaoEtapas: 2, etapas: { "09": {} } })).toBe("migrada")
   })
+
+  // O app antigo (desde 14/10) injetava uma "09" bloqueada em todo estado legado de 8 etapas que lia e gravava.
+  it("legado com a 09 injetada (08 concluída, final em andamento) é legado, não atual", () => {
+    expect(classificarNumeracao(estadoDe(LEGADO_COM_09_INJETADA))).toBe("legada")
+  })
+
+  it("09 bloqueada com a 08 concluída prova a chave injetada", () => {
+    expect(classificarNumeracao(estadoDe({ ...ATUAL, "08": "concluida", "09": "bloqueada", final: "bloqueada" }))).toBe("legada")
+  })
+
+  it.each(["liberada", "em_andamento", "pronta", "concluida", "desatualizada"] as StatusEtapa[])(
+    "09 bloqueada com a final %s prova a chave injetada",
+    (final) => {
+      expect(classificarNumeracao(estadoDe({ ...ATUAL, "08": "em_andamento", "09": "bloqueada", final }))).toBe("legada")
+    },
+  )
+
+  it("9 etapas de verdade com a 09 bloqueada no começo ou no meio do caminho continuam atuais", () => {
+    expect(classificarNumeracao(estadoDe(ATUAL))).toBe("atual")
+    const tudoBloqueado = Object.fromEntries(Object.keys(ATUAL).map((id) => [id, "bloqueada" as StatusEtapa]))
+    expect(classificarNumeracao(estadoDe({ ...tudoBloqueado, "01": "em_andamento" }))).toBe("atual")
+    expect(classificarNumeracao(estadoDe(tudoBloqueado))).toBe("atual")
+    expect(classificarNumeracao(estadoDe({ ...ATUAL, "08": "desatualizada" }))).toBe("atual")
+  })
+
+  it("9 etapas de verdade com a 09 já liberada ou concluída continuam atuais", () => {
+    expect(classificarNumeracao(estadoDe({ ...ATUAL, "08": "concluida", "09": "liberada" }))).toBe("atual")
+    expect(classificarNumeracao(estadoDe({ ...ATUAL, "08": "concluida", "09": "concluida", final: "em_andamento" }))).toBe("atual")
+  })
 })
 
 describe("migrarEstado", () => {
@@ -83,6 +126,23 @@ describe("migrarEstado", () => {
     const legado = estadoDe({ "01": "concluida", "08": "liberada", final: "bloqueada" })
     expect(() => migrarEstado(legado)).toThrow(/legada/)
     expect(() => migrarEstado({ ...estadoDe(ATUAL), versaoEtapas: 2 })).toThrow(/migrada/)
+  })
+
+  it("recusa o legado com a 09 injetada pelo app antigo", () => {
+    const legado = estadoDe(LEGADO_COM_09_INJETADA, { entregaveis: [entregavel("midia", "07"), entregavel("plano", "08")] })
+    expect(() => migrarEstado(legado)).toThrow(/legada/)
+  })
+
+  it("lista ausente (perguntas, fila) vira lista vazia em vez de quebrar", () => {
+    const estado = estadoDe(ATUAL, { entregaveis: [entregavel("e8", "08")] }) as Partial<EstadoMigravel>
+    delete estado.perguntas
+    delete estado.filaAutomatica
+    delete estado.insumos
+    const novo = migrarEstado(estado as EstadoMigravel)
+    expect(novo.perguntas).toEqual([])
+    expect(novo.filaAutomatica).toEqual([])
+    expect(novo.insumos).toEqual([])
+    expect(novo.entregaveis.map((e) => e.etapa)).toEqual(["07"])
   })
 
   it("remapeia etapas: 08→07, 09→08, descarta a 07 antiga, mantém final", () => {
@@ -230,6 +290,21 @@ describe("planoDeArquivos", () => {
 
   it("não mexe no que não pertence a nenhuma etapa renumerada", () => {
     expect(planoDeArquivos(["contexto/decisoes/06-metas.md", "entrega/ativos-aprovados/graficos/roas-global.png", "CLAUDE.md"])).toEqual([])
+  })
+
+  it("trata os anexos do chat (.app/anexos/<etapa>/): arquiva os da 07 antiga e renumera 08 e 09, na ordem", () => {
+    const plano = planoDeArquivos([
+      ".app/anexos/09/3-plano.xlsx",
+      ".app/anexos/08/2-midia.pdf",
+      ".app/anexos/07/1-briefing.docx",
+      ".app/anexos/06/0-metas.xlsx",
+      ".app/anexos/final/4-deck.pptx",
+    ])
+    expect(plano).toEqual([
+      { de: ".app/anexos/07/1-briefing.docx", para: "entrega/arquivo-etapa-07/anexos/1-briefing.docx" },
+      { de: ".app/anexos/08/2-midia.pdf", para: ".app/anexos/07/2-midia.pdf" },
+      { de: ".app/anexos/09/3-plano.xlsx", para: ".app/anexos/08/3-plano.xlsx" },
+    ])
   })
 
   it("trata kit-de-teste/NN/ e conversas de cliente de teste", () => {

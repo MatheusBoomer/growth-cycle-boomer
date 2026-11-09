@@ -84,6 +84,9 @@ const ARQUIVOS_ANTIGOS: Record<string, string> = {
   ".app/conversas/07.jsonl": "conversa 07 antiga",
   ".app/conversas/08.jsonl": "conversa 08 antiga",
   ".app/conversas/09.jsonl": "conversa 09 antiga",
+  ".app/anexos/07/1-briefing.docx": "anexo 07 antiga",
+  ".app/anexos/08/2-midia.pdf": "anexo 08 antiga",
+  ".app/anexos/09/3-plano.xlsx": "anexo 09 antiga",
   "dados/historico.xlsx": "dados",
 }
 
@@ -123,7 +126,11 @@ describe("migrarProspect", () => {
     expect(await lerTexto(pasta, "entrega/ativos-aprovados/secoes/07-midia-paga.md")).toBe("secao 08 antiga")
     expect(await lerTexto(pasta, "entrega/arquivo-etapa-07/benchmark/anuncios.html")).toBe("benchmark")
     expect(await lerTexto(pasta, "dados/historico.xlsx")).toBe("dados")
+    expect(await lerTexto(pasta, "entrega/arquivo-etapa-07/anexos/1-briefing.docx")).toBe("anexo 07 antiga")
+    expect(await lerTexto(pasta, ".app/anexos/07/2-midia.pdf")).toBe("anexo 08 antiga")
+    expect(await lerTexto(pasta, ".app/anexos/08/3-plano.xlsx")).toBe("anexo 09 antiga")
     const depois = await fotografia(pasta)
+    expect(Object.keys(depois).filter((c) => c.startsWith(".app/anexos/")).sort()).toEqual([".app/anexos/07/2-midia.pdf", ".app/anexos/08/3-plano.xlsx"])
     expect(Object.keys(depois)).not.toContain("contexto/decisoes/10-apresentacao.md")
     expect(Object.keys(depois)).not.toContain("entrega/ativos-aprovados/secoes/08-midia-paga.md")
     expect(Object.keys(depois).filter((c) => c.startsWith("entrega/ativos-aprovados/benchmark/"))).toEqual([])
@@ -159,6 +166,22 @@ describe("migrarProspect", () => {
     const antes = await fotografia(pasta)
     const r = await migrarProspect(pasta, catalogo, { aplicar: true, pastaBackup: path.join(tmp, "backup") })
     expect(r.resultado).toBe("pulado-legado")
+    expect(await fotografia(pasta)).toEqual(antes)
+    expect(await readdir(tmp)).not.toContain("backup")
+  })
+
+  it("legado com a 09 injetada pelo app antigo (como a adda salva depois de 14/10) é pulado e fica idêntico", async () => {
+    const legado = estadoAtual()
+    for (const id of ["01", "02", "03", "04", "05", "06", "07", "08"]) legado.etapas[id] = etapaVazia("concluida")
+    legado.etapas.final = etapaVazia("em_andamento")
+    legado.etapas["09"] = etapaVazia("bloqueada")
+    const pasta = await criarProspect("adda-like", ARQUIVOS_ANTIGOS, legado)
+    const antes = await fotografia(pasta)
+    const seco = await migrarProspect(pasta, catalogo, { aplicar: false, pastaBackup: null })
+    expect(seco.resultado).toBe("pulado-legado")
+    const r = await migrarProspect(pasta, catalogo, { aplicar: true, pastaBackup: path.join(tmp, "backup") })
+    expect(r.resultado).toBe("pulado-legado")
+    expect(r.movimentos).toEqual([])
     expect(await fotografia(pasta)).toEqual(antes)
     expect(await readdir(tmp)).not.toContain("backup")
   })

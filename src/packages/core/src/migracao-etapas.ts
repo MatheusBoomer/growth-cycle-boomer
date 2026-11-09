@@ -32,10 +32,27 @@ export type ManifestoMigravel = Omit<Manifesto, "arquivos" | "kit"> & {
   kit: Record<string, string[]>
 }
 
-/** "migrada" se já tem o marcador; "atual" se ainda tem as 9 etapas numeradas (chave "09"); senão "legada". */
+function statusDe(etapas: Record<string, unknown>, id: string): unknown {
+  return (etapas[id] as { status?: unknown } | null | undefined)?.status
+}
+
+/**
+ * Chave "09" que o app antigo injetou num estado legado de 8 etapas (desde 14/10 ele completava todo estado lido com
+ * uma "09" bloqueada). Num prospect de 9 etapas de verdade a 09 é liberada assim que a 08 é concluída, e a final só
+ * começa depois da 09: 09 bloqueada com a 08 concluída, ou com a final fora de "bloqueada", só existe com a chave injetada.
+ */
+function nonaInjetada(etapas: Record<string, unknown>): boolean {
+  return statusDe(etapas, "09") === "bloqueada" && (statusDe(etapas, "08") === "concluida" || statusDe(etapas, "final") !== "bloqueada")
+}
+
+/**
+ * "migrada" se já tem o marcador; "atual" se ainda tem as 9 etapas numeradas (chave "09" que não foi injetada pelo app
+ * antigo, ver nonaInjetada); senão "legada". Um estado todo bloqueado com a "09" é ambíguo e conta como "atual".
+ * A migration SQL (20261111120000_renumera_etapas.sql) aplica a mesma regra.
+ */
 export function classificarNumeracao(estado: { versaoEtapas?: number; etapas: Record<string, unknown> }): ClasseNumeracao {
   if (estado.versaoEtapas === 2) return "migrada"
-  return "09" in estado.etapas ? "atual" : "legada"
+  return "09" in estado.etapas && !nonaInjetada(estado.etapas) ? "atual" : "legada"
 }
 
 /** A nova 07 vem da antiga 08, então a antiga 07 não tem mais lugar. */
@@ -43,8 +60,9 @@ function descartada(etapa: string): boolean {
   return etapa === "07"
 }
 
-function remapeiaLista<T extends { etapa: string }>(itens: T[]): T[] {
-  return itens.filter((i) => !descartada(i.etapa)).map((i) => ({ ...i, etapa: novoIdEtapa(i.etapa) }))
+/** Lista ausente no estado gravado (ex.: `perguntas` de antes do card) vira lista vazia. */
+function remapeiaLista<T extends { etapa: string }>(itens: T[] | undefined): T[] {
+  return (itens ?? []).filter((i) => !descartada(i.etapa)).map((i) => ({ ...i, etapa: novoIdEtapa(i.etapa) }))
 }
 
 export function migrarEstado(estado: EstadoMigravel): EstadoMigravel {
@@ -106,6 +124,11 @@ const PADROES: { regex: RegExp; arquivar: (m: RegExpMatchArray) => string; renom
     regex: /^entrega\/ativos-aprovados\/secoes\/(\d\d)-(.+)$/,
     arquivar: (m) => `${PASTA_ARQUIVO}/secoes/${m[1]}-${m[2]}`,
     renomear: (m, n) => `entrega/ativos-aprovados/secoes/${n}-${m[2]}`,
+  },
+  {
+    regex: /^\.app\/anexos\/(\d\d)\/(.+)$/,
+    arquivar: (m) => `${PASTA_ARQUIVO}/anexos/${m[2]}`,
+    renomear: (m, n) => `.app/anexos/${n}/${m[2]}`,
   },
   {
     regex: /^kit-de-teste\/(\d\d)\/(.+)$/,

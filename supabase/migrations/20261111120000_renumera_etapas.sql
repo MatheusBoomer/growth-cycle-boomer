@@ -4,6 +4,8 @@
 -- Tudo no schema "planejamento"; nada fora dele é tocado (o projeto é compartilhado com o "pit").
 -- Idempotente: a marca 'renumera-etapas-growth-cycle' em planejamento.migracoes faz uma segunda execução não mudar nada.
 -- O bloco "do" é um único comando: ou tudo é aplicado, ou nada.
+-- Aplicar com o app parado: se o app novo estiver no ar, alguém pode gravar modelo da nova 07 e a migração o moveria
+-- para briefing-benchmark. (O app novo também recusa abrir um prospect ainda não migrado: ErroNumeracaoAntiga.)
 
 create table if not exists planejamento.migracoes (
   nome text primary key,
@@ -34,14 +36,22 @@ begin
     return;
   end if;
 
-  -- 1. Prospects na numeração "atual" (mesma regra de classificarNumeracao): estado com a etapa 09 e sem versaoEtapas = 2.
-  --    Prospect legado (8 etapas, sem a chave 09) ou já migrado fica intocado, inclusive os arquivos e eventos.
+  -- 1. Prospects na numeração "atual" (mesma regra de classificarNumeracao): estado com a etapa 09, sem versaoEtapas = 2
+  --    e sem a 09 que o app antigo injetava num legado de 8 etapas (desde 14/10 ele completava todo estado lido com uma
+  --    "09" bloqueada). Num prospect de 9 etapas de verdade a 09 é liberada assim que a 08 é concluída e a final só começa
+  --    depois da 09: 09 bloqueada com a 08 concluída, ou com a final fora de "bloqueada", prova a chave injetada.
+  --    Prospect legado (sem a chave 09 ou com ela injetada) ou já migrado fica intocado, inclusive os arquivos e eventos.
   for p in
     select slug, estado, etapa_atual
     from planejamento.prospects
     where jsonb_typeof(estado -> 'etapas') = 'object'
       and (estado -> 'etapas') ? '09'
       and (estado -> 'versaoEtapas') is distinct from '2'::jsonb
+      and not (
+        (estado -> 'etapas' -> '09' ->> 'status') is not distinct from 'bloqueada'
+        and ((estado -> 'etapas' -> '08' ->> 'status') is not distinct from 'concluida'
+             or (estado -> 'etapas' -> 'final' ->> 'status') is distinct from 'bloqueada')
+      )
     order by slug
     for update
   loop
@@ -130,18 +140,22 @@ begin
         (0, '^contexto/decisoes/07-(.+)$',                         'entrega/arquivo-etapa-07/decisoes/07-\1'),
         (0, '^entrega/ativos-aprovados/secoes/07-(.+)$',           'entrega/arquivo-etapa-07/secoes/07-\1'),
         (0, '^kit-de-teste/07/(.+)$',                              'entrega/arquivo-etapa-07/kit-de-teste/\1'),
+        (0, '^\.app/anexos/07/(.+)$',                              'entrega/arquivo-etapa-07/anexos/\1'),
         (1, '^\.app/conversas/08\.jsonl$',                         '.app/conversas/07.jsonl'),
         (1, '^contexto/decisoes/08-(.+)$',                         'contexto/decisoes/07-\1'),
         (1, '^entrega/ativos-aprovados/secoes/08-(.+)$',           'entrega/ativos-aprovados/secoes/07-\1'),
         (1, '^kit-de-teste/08/(.+)$',                              'kit-de-teste/07/\1'),
+        (1, '^\.app/anexos/08/(.+)$',                              '.app/anexos/07/\1'),
         (2, '^\.app/conversas/09\.jsonl$',                         '.app/conversas/08.jsonl'),
         (2, '^contexto/decisoes/09-(.+)$',                         'contexto/decisoes/08-\1'),
         (2, '^entrega/ativos-aprovados/secoes/09-(.+)$',           'entrega/ativos-aprovados/secoes/08-\1'),
         (2, '^kit-de-teste/09/(.+)$',                              'kit-de-teste/08/\1'),
+        (2, '^\.app/anexos/09/(.+)$',                              '.app/anexos/08/\1'),
         (3, '^\.app/conversas/10\.jsonl$',                         '.app/conversas/09.jsonl'),
         (3, '^contexto/decisoes/10-(.+)$',                         'contexto/decisoes/09-\1'),
         (3, '^entrega/ativos-aprovados/secoes/10-(.+)$',           'entrega/ativos-aprovados/secoes/09-\1'),
-        (3, '^kit-de-teste/10/(.+)$',                              'kit-de-teste/09/\1')
+        (3, '^kit-de-teste/10/(.+)$',                              'kit-de-teste/09/\1'),
+        (3, '^\.app/anexos/10/(.+)$',                              '.app/anexos/09/\1')
       ) as r(fase, padrao, destino)
      where r.fase = fase_atual
        and a.slug = any (slugs)
