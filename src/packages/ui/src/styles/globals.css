@@ -121,8 +121,8 @@
     --volume: #2563eb;
     --link-acao: #c2410c;
     --papel: #ffffff;
-    --vidro-1: rgb(255 255 255 / 0.92);
-    --vidro-2: rgb(255 255 255 / 0.72);
+    --vidro-1: rgb(255 255 255 / 0.97);
+    --vidro-2: rgb(255 255 255 / 0.94);
     --vidro-interno: rgb(15 27 61 / 0.03);
     --sombra-card: 0 1px 0 0 #ffffff inset, 0 18px 36px -26px rgb(15 27 61 / 0.28);
     --orb-laranja: 0.1;
@@ -180,8 +180,8 @@
     --selo-opus-fundo: rgb(139 92 246 / 0.2);
     --volume: #3987e5;
     --link-acao: #f0894a;
-    --vidro-1: rgb(255 255 255 / 0.035);
-    --vidro-2: rgb(255 255 255 / 0.01);
+    --vidro-1: rgb(21 27 42 / 0.94);
+    --vidro-2: rgb(15 20 32 / 0.9);
     --vidro-interno: rgb(0 0 0 / 0.25);
     --sombra-card: 0 1px 0 0 rgb(255 255 255 / 0.04) inset, 0 20px 40px -24px rgb(0 0 0 / 0.6);
     --orb-laranja: 0.09;
@@ -191,7 +191,7 @@
     --pontos-cor: rgb(255 255 255 / 0.8);
 }
 
-/* Card de vidro: gradiente translúcido, borda fina, luz de 1 px no topo e sombra longa. */
+/* Card de vidro: gradiente quase opaco (o fundo de ondas só aparece de leve), borda fina, luz de 1 px no topo e sombra longa. */
 @utility vidro {
     border: 1px solid var(--border);
     background-image: linear-gradient(to bottom, var(--vidro-1), var(--vidro-2));

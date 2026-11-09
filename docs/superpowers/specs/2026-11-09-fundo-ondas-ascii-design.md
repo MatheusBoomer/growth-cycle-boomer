@@ -1,63 +1,62 @@
 # Fundo de ondas ASCII animadas
 
-Data: 2026-11-09
+Data: 2026-11-09 (revisado no mesmo dia: direção horizontal e app inteiro)
 
 ## Objetivo
 
-Dar à home do Growth Cycle, ao login e à tela do projeto um fundo animado de ondas em ASCII, inspirado em um vídeo de referência (listras verticais que ondulam, com miolo luminoso). O efeito respeita o fundo claro do app, usa o azul da Boomer com detalhes em laranja e some aos poucos de cima para baixo, de 100% a 0%, para ficar sutil e tecnológico.
+Dar ao app inteiro do Growth Cycle um fundo animado de ondas em ASCII, inspirado em um vídeo de referência (listras verticais que ondulam, com miolo luminoso). O efeito respeita o fundo claro do app, usa o azul da Boomer com detalhes em laranja, nasce na esquerda e avança para a direita, e some aos poucos, de 100% na esquerda a 0% na direita, para ficar sutil e tecnológico.
 
 ## Decisões já tomadas
 
 | Tema | Decisão |
 |---|---|
 | Produção do efeito | Canvas 2D gerado ao vivo. Não usa o .mp4 de referência, só imita o movimento. |
-| Telas | `/`, `/login` e `/prospects/*`. Admin e demais telas mantêm o fundo atual. |
+| Telas | App inteiro: todas as rotas, inclusive admin. É o único fundo da marca; os brilhos difusos e a grade de pontos deixam de existir. |
+| Movimento | As listras viajam da esquerda para a direita. A massa de ondas fica concentrada à esquerda e cobre a altura toda da janela. |
 | Tema escuro | Versão própria: caracteres luminosos (azul vivo com toque de ciano, laranja mais quente) sobre o fundo escuro. |
-| Degradê | 100% no topo da janela, 0% na base, sempre relativo à viewport. |
-| Azul da Boomer | `#3987e5` (`rgb(57 135 229)`, já usado no `FundoBoomer`). Confirmar com o time se a marca usa outro. |
+| Degradê | 100% na borda esquerda da janela, 0% na direita, sempre relativo à viewport. |
+| Azul da Boomer | `#3987e5` (`rgb(57 135 229)`, já usado no antigo `FundoBoomer`). Confirmar com o time se a marca usa outro. |
 
 ## Estrutura
 
-Três unidades, cada uma com um propósito.
+Duas unidades, cada uma com um propósito.
 
 ### `src/apps/web/lib/ondas-ascii.ts` (função pura)
 
 - Entrada: coluna, linha, tempo em segundos e dimensões da grade.
 - Saída: `{ intensidade: number (0–1), caractere: string, laranja: boolean }`.
 - Rampa de caracteres: ` . : - = + * # @` (da menor para a maior intensidade).
-- O campo é a soma de duas ou três senoides lentas. A fase de cada coluna é deslocada pela posição, o que dá as listras verticais que ondulam. Um fator radial concentra a intensidade no miolo.
+- O campo é a soma de senoides lentas. A fase de cada listra anda com o tempo no sentido +x (`coluna * k - t * v`), o que faz as ondas viajarem para a direita. Todos os termos de fase que dependem de `x` e `t` avançam para a direita, inclusive o ruído que decide o laranja; o deslocamento líquido do padrão é sempre para a direita.
+- Um envelope concentra a intensidade no lado esquerdo e cobre a altura toda da janela (sem miolo no centro).
 - O laranja é decidido por um segundo ruído lento e fica em cerca de 10–15% das células.
-- Exporta também as paletas por tema (`claro`, `escuro`) e a função que agrupa as células visíveis em faixas de opacidade.
+- Exporta também as paletas por tema (`claro`, `escuro`), `fatorDeDegrade(posicao, total)` (1 no início, 0 no fim) e `dimensionarGrade`.
 - Não conhece React nem canvas.
 
 ### `src/apps/web/components/marca/fundo-ondas-ascii.tsx` (cliente)
 
 - Renderiza um `<canvas>` fixo (`fixed inset-0 -z-10`), `aria-hidden` e `pointer-events-none`.
-- Aplica `mask-image: linear-gradient(to bottom, #000, transparent)` para o degradê. O fade custa zero de CPU.
+- Aplica `mask-image: linear-gradient(to right, #000, transparent)` para o degradê. O fade custa zero de CPU.
 - Lê o tema pelo `ThemeProvider` já existente e troca a paleta sem recarregar.
-- Cuida do loop de animação, do redimensionamento (`ResizeObserver`) e do `devicePixelRatio`.
+- Cuida do loop de animação, do redimensionamento (o canvas ocupa a janela toda: mede `window.innerWidth/innerHeight` e ouve `resize`) e do `devicePixelRatio`.
 - Fonte: Geist Mono, que o app já carrega (`--font-mono`).
-
-### `FundoBoomer` (seletor por rota)
-
-- `usePathname` decide qual fundo mostrar. Em `/`, `/login` e `/prospects/*`, as ondas substituem os brilhos difusos e a grade de pontos. Nas demais rotas o fundo atual continua igual.
-- A regra de rotas fica numa função pura (`rotaUsaOndas(caminho)`), testável sem DOM.
+- O `layout.tsx` renderiza o componente direto, em todas as rotas. Não há seleção por rota.
 
 ## Visual
 
-- **Movimento:** colunas verticais de caracteres ondulando devagar, com miolo mais denso, na linha da referência.
-- **Tema claro:** azul dominante, laranja `#eb610a` como detalhe. Opacidade máxima baixa (alvo em torno de 0,35), para o texto das telas continuar legível.
-- **Tema escuro:** azul vivo com toque de ciano e laranja mais quente, com opacidade maior.
-- **Tela do projeto:** os painéis de vidro (`vidro`, `backdrop-blur`) ficam por cima das ondas, sem brigar com texto ou gráfico.
+- **Movimento:** colunas verticais de caracteres ondulando e avançando para a direita, com a massa mais densa à esquerda.
+- **Tema claro:** azul dominante, laranja `#eb610a` como detalhe. Opacidade máxima de 0,20 (era 0,35; reduzida duas vezes depois de ver o resultado), para o texto das telas continuar legível.
+- **Tema escuro:** azul vivo com toque de ciano e laranja mais quente, com opacidade máxima de 0,3 (era 0,85; reduzida depois de ver o resultado) e neon leve: um halo (`shadowBlur` de 6 px) na cor do próprio caractere, só nas faixas mais intensas (a partir da 6ª de 8). O tema claro não tem brilho.
+- **Cards de vidro** (`vidro`) ficam por cima das ondas e quase opacos, para o fundo não interferir no conteúdo. Tokens `--vidro-1` e `--vidro-2` em `packages/ui/src/styles/globals.css`: claro 0,97 → 0,94 de branco (era 0,92 → 0,72); escuro azul-marinho `rgb(21 27 42)` 0,94 → `rgb(15 20 32)` 0,90 (era branco a 0,035 → 0,01, quase transparente). Um teste em `lib/superficies.test.ts` impede o vidro de voltar a ficar translúcido.
 
 ## Desempenho e robustez
 
 - Células de cerca de 10×18 px no desktop e maiores no celular, para limitar o número de células.
 - Teto de ~30 fps.
-- Desenho em lotes por faixa de opacidade (poucos `fillStyle` por quadro). Linhas que o degradê já deixa invisíveis não são desenhadas.
+- Desenho em lotes por faixa de opacidade (poucos `fillStyle` por quadro). Colunas que o degradê já deixa invisíveis não são desenhadas.
+- O halo neon só vale para as faixas mais fortes: o desfoque por caractere é o custo mais alto do quadro. Se pesar em máquinas fracas, aumentar `FAIXA_BRILHO` (menos caracteres com halo) ou zerar `brilho` na paleta escura resolve.
 - O loop pausa quando a aba fica oculta (`visibilitychange`).
 - Com `prefers-reduced-motion: reduce` desenha um único quadro estático e não anima.
-- Sem `getContext("2d")` o componente não renderiza nada, e o fundo base continua valendo.
+- Sem `getContext("2d")` o componente não renderiza nada.
 
 ## Testes e verificação
 
@@ -66,10 +65,11 @@ Três unidades, cada uma com um propósito.
   - a intensidade fica sempre em [0, 1];
   - a rampa de caracteres é monotônica;
   - a paleta muda entre claro e escuro;
-  - a fração de células laranja fica dentro do previsto.
-- **Vitest, rotas:** `rotaUsaOndas` é verdadeira para `/`, `/login` e `/prospects/x`, e falsa para `/admin` e `/admin/skills`.
-- **Componente:** não lança exceção quando o canvas não existe (jsdom).
-- **Visual:** subir o app e capturar home, login e projeto nos dois temas antes de dar como pronto.
+  - a fração de células laranja fica dentro do previsto;
+  - o padrão avança para a direita com o tempo (correlação entre quadros);
+  - a esquerda é mais intensa que a direita, e a base não fica vazia em relação ao topo.
+- **Componente:** não lança exceção sem canvas; a máscara é horizontal; nada é desenhado nas colunas que o degradê já escondeu.
+- **Visual:** subir o app e capturar as telas nos dois temas antes de dar como pronto.
 - Rodar `npm test` em `src/apps/web`.
 
 ## Fora do escopo
@@ -77,5 +77,10 @@ Três unidades, cada uma com um propósito.
 - Converter ou tocar o vídeo de referência.
 - WebGL e shaders.
 - Interação com o mouse ou com o scroll.
-- Mudar o fundo das telas de admin.
-- Alterar tokens de tema em `packages/ui` (a paleta das ondas fica no módulo próprio).
+- Animação de entrada (varredura única ao carregar). "Nascer na esquerda" é a massa concentrada à esquerda com as ondas avançando.
+- Remover os tokens `--orb-*` e `--pontos*` do fundo antigo em `packages/ui`: ficam sem uso e podem ser removidos num passo à parte. (Os tokens `--vidro-*` foram alterados por pedido, ver "Visual".)
+
+## Histórico de revisões
+
+- 2026-11-09, versão inicial: ondas em home, login e projeto, degradê de cima para baixo.
+- 2026-11-09, revisão pedida após ver o resultado: movimento e degradê da esquerda para a direita, e fundo único em todo o app.

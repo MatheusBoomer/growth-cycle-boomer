@@ -27,6 +27,16 @@ describe("superfícies e texto no tema Boomer", () => {
     expect(achados).toEqual([])
   })
 
+  it("cards de vidro são quase opacos: o fundo animado de ondas não interfere no conteúdo", () => {
+    const css = readFileSync(path.resolve(import.meta.dirname, "../../../packages/ui/src/styles/globals.css"), "utf-8")
+    const [claro, escuro] = css.split(/^\.dark\s*\{/m) as [string, string]
+    const alfa = (bloco: string, n: 1 | 2) => Number(new RegExp(`--vidro-${n}:\\s*rgb\\([^)]*/\\s*([\\d.]+)\\)`).exec(bloco)![1])
+    expect(alfa(claro, 1)).toBeGreaterThanOrEqual(0.95)
+    expect(alfa(claro, 2)).toBeGreaterThanOrEqual(0.92)
+    expect(alfa(escuro, 1)).toBeGreaterThanOrEqual(0.9)
+    expect(alfa(escuro, 2)).toBeGreaterThanOrEqual(0.88)
+  })
+
   it("avisos fixos do sistema têm fundo sólido", () => {
     const alertas = [...ler("sistema/verificacao-sistema.tsx").matchAll(/<Alert\b[^>]*>/g)].map((m) => m[0])
     expect(alertas.length).toBeGreaterThan(0)
