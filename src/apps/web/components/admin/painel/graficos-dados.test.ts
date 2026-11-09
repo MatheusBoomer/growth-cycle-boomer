@@ -9,6 +9,7 @@ import {
   percentuaisMaiorResto,
   pessoasDoGrafico,
   rotuloEtapa,
+  ticksDeTempo,
   topProjetos,
 } from "./graficos-dados"
 
@@ -140,6 +141,19 @@ describe("alturaBarras", () => {
   it("36 px por linha mais 40 px de eixo", () => {
     expect(alturaBarras(1)).toBe(76)
     expect(alturaBarras(8)).toBe(328)
+  })
+})
+
+describe("ticksDeTempo", () => {
+  it("marcas em horas redondas, no máximo 4 intervalos, cobrindo o máximo", () => {
+    expect(ticksDeTempo(22.5 * 3600)).toEqual([0, 6, 12, 18, 24].map((h) => h * 3600))
+    expect(ticksDeTempo(3 * 3600)).toEqual([0, 1, 2, 3].map((h) => h * 3600))
+  })
+
+  it("abaixo de uma hora usa minutos redondos; zero não quebra", () => {
+    expect(ticksDeTempo(40 * 60)).toEqual([0, 10, 20, 30, 40].map((m) => m * 60))
+    expect(ticksDeTempo(50 * 60)).toEqual([0, 15, 30, 45, 60].map((m) => m * 60))
+    expect(ticksDeTempo(0)).toEqual([0])
   })
 })
 

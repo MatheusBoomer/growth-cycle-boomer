@@ -14,6 +14,8 @@ type Visao = "fase" | "etapa"
 
 /** Lado fixo da rosca em px: sempre um quadrado, nunca acompanha a largura do cartão. */
 const LADO = 200
+/** O `bg-muted` padrão do toggle quase não aparece no cartão: a visão escolhida ganha fundo e texto da marca. */
+const ITEM_VISAO = "px-3 aria-pressed:bg-primary/15 aria-pressed:text-link-acao"
 
 export interface PropsRoscaEtapas {
   dados: PainelMetricas["porEtapa"]
@@ -65,8 +67,12 @@ export function RoscaEtapas({ dados, etapasSelecionadas, aoFiltrarEtapa }: Props
           if (nova) setVisao(nova)
         }}
       >
-        <ToggleGroupItem value="fase">Por fase</ToggleGroupItem>
-        <ToggleGroupItem value="etapa">Por etapa</ToggleGroupItem>
+        <ToggleGroupItem value="fase" className={ITEM_VISAO}>
+          Por fase
+        </ToggleGroupItem>
+        <ToggleGroupItem value="etapa" className={ITEM_VISAO}>
+          Por etapa
+        </ToggleGroupItem>
       </ToggleGroup>
       <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
         <div className="relative size-[200px] shrink-0">
@@ -129,7 +135,7 @@ export function RoscaEtapas({ dados, etapasSelecionadas, aoFiltrarEtapa }: Props
             const conteudo = (
               <>
                 <span aria-hidden="true" className="size-2.5 shrink-0 rounded-[2px]" style={{ background: f.cor, opacity: opacidades[i] }} />
-                <span className="min-w-0 flex-1 truncate">{f.rotulo}</span>
+                <span className="min-w-0 flex-1 leading-snug break-words">{f.rotulo}</span>
                 <span className="text-muted-foreground shrink-0 tabular-nums">{formatarUsd(f.usd)}</span>
                 <span data-pct={f.pct} className="w-10 shrink-0 text-right font-medium tabular-nums">
                   {f.pct}%

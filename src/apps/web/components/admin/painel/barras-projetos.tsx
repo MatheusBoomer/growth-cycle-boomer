@@ -79,7 +79,7 @@ export function BarrasProjetos({ projetos, projetosSelecionados, aoFiltrarProjet
           role="img"
           aria-label={`Custo por projeto, ${linhas.length} maiores: ${linhas.map((p) => `${p.nome} ${formatarUsd(p.usd)}`).join(", ")}`}
         >
-          <BarChart data={dados} layout="vertical" margin={{ top: 0, right: 12, bottom: ALTURA_EIXO - EIXO_X, left: 0 }} barCategoryGap={8} accessibilityLayer={false}>
+          <BarChart data={dados} layout="vertical" margin={{ top: 0, right: 20, bottom: ALTURA_EIXO - EIXO_X, left: 12 }} barCategoryGap={8} accessibilityLayer={false}>
             <CartesianGrid horizontal={false} />
             <YAxis type="category" dataKey="slug" hide />
             <XAxis type="number" height={EIXO_X} tickLine={false} axisLine={false} tick={TICK} tickFormatter={rotuloEixoUsd} />

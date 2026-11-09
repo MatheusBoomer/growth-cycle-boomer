@@ -194,6 +194,15 @@ export function alturaBarras(linhas: number): number {
   return linhas * ALTURA_LINHA + ALTURA_EIXO
 }
 
+const PASSOS_SEG = [5, 10, 15, 30].map((m) => m * 60).concat([1, 2, 3, 4, 6, 8, 12, 24, 48, 72, 168].map((h) => h * 3600))
+
+/** Marcas do eixo de tempo em minutos ou horas redondos, de 0 até cobrir o máximo, com no máximo 4 intervalos. */
+export function ticksDeTempo(maximoSeg: number): number[] {
+  if (!(maximoSeg > 0)) return [0]
+  const passo = PASSOS_SEG.find((p) => Math.ceil(maximoSeg / p) <= 4) ?? Math.ceil(maximoSeg / 4 / 168 / 3600) * 168 * 3600
+  return Array.from({ length: Math.ceil(maximoSeg / passo) + 1 }, (_, i) => i * passo)
+}
+
 /** Pessoas com algum tempo, da que mais trabalhou para a que menos. */
 export function pessoasDoGrafico(tempo: PainelMetricas["tempoPorPessoa"]) {
   const total = (p: PainelMetricas["tempoPorPessoa"][number]) => p.agenteSeg + p.ativoSeg + p.ociosoSeg

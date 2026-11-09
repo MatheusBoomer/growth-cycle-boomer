@@ -10,7 +10,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { cn } from "@workspace/ui/lib/utils"
 import { AvatarPessoa } from "@/components/marca/avatar-pessoa"
 import { GraficoVazio } from "./grafico-vazio"
-import { ALTURA_EIXO, ALTURA_LINHA, alturaBarras, pessoasDoGrafico } from "./graficos-dados"
+import { ALTURA_EIXO, ALTURA_LINHA, alturaBarras, pessoasDoGrafico, ticksDeTempo } from "./graficos-dados"
 
 const TICK = { fontSize: 12 }
 const EIXO_X = 24
@@ -30,10 +30,10 @@ export interface PropsBarrasPessoas {
   tempoIgnoraModelo: boolean
 }
 
-/** Rótulo do eixo em horas inteiras quando passa de uma hora (`2h`), senão em minutos. */
+/** Rótulo das marcas de `ticksDeTempo`: horas redondas (`6h`) ou minutos (`15 min`). */
 function rotuloEixoTempo(seg: number): string {
   if (seg <= 0) return "0"
-  return seg >= 3600 ? `${Math.round(seg / 3600)}h` : `${Math.round(seg / 60)} min`
+  return seg % 3600 === 0 ? `${seg / 3600}h` : formatarDuracao(seg)
 }
 
 /**
@@ -65,6 +65,7 @@ export function BarrasPessoas({ tempo, avatares, tempoIgnoraModelo }: PropsBarra
     )
 
   const altura = alturaBarras(pessoas.length)
+  const ticks = ticksDeTempo(Math.max(...pessoas.map((p) => p.total)))
   const alternar = (email: string) => setDestacada((atual) => (atual === email ? null : email))
   const detalhe = pessoas.find((p) => p.email === destacada)
 
@@ -102,10 +103,20 @@ export function BarrasPessoas({ tempo, avatares, tempoIgnoraModelo }: PropsBarra
           role="img"
           aria-label={`Tempo por pessoa: ${pessoas.map((p) => `${p.nome} ${formatarDuracao(p.total)}`).join(", ")}`}
         >
-          <BarChart data={pessoas} layout="vertical" margin={{ top: 0, right: 12, bottom: ALTURA_EIXO - EIXO_X, left: 0 }} barCategoryGap={8} accessibilityLayer={false}>
+          <BarChart data={pessoas} layout="vertical" margin={{ top: 0, right: 20, bottom: ALTURA_EIXO - EIXO_X, left: 12 }} barCategoryGap={8} accessibilityLayer={false}>
             <CartesianGrid horizontal={false} />
             <YAxis type="category" dataKey="email" hide />
-            <XAxis type="number" height={EIXO_X} tickLine={false} axisLine={false} tick={TICK} tickFormatter={rotuloEixoTempo} />
+            <XAxis
+              type="number"
+              height={EIXO_X}
+              domain={[0, ticks.at(-1) ?? 0]}
+              ticks={ticks}
+              interval={0}
+              tickLine={false}
+              axisLine={false}
+              tick={TICK}
+              tickFormatter={rotuloEixoTempo}
+            />
             <ChartTooltip
               cursor={{ fillOpacity: 0.5 }}
               content={

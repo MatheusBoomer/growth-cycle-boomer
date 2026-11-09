@@ -47,13 +47,15 @@ export function GraficoCustoTempo({ serie, granularidade = "semana" }: { serie: 
               </div>
             ) : null
           }}
-          formatter={(valor, nome) => (
+          formatter={(valor, nome) =>
+            Number(valor) <= 0 ? null : (
             <div className="flex w-full items-center gap-2">
               <span className="size-2.5 shrink-0 rounded-[2px]" style={{ background: `var(--color-${String(nome)})` }} />
               <span className="text-muted-foreground">{config[String(nome)]?.label}</span>
               <span className="text-foreground ml-auto font-medium tabular-nums">{formatarUsd(Number(valor))}</span>
             </div>
-          )}
+            )
+          }
         />
       }
     />
