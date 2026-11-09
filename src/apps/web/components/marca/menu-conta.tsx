@@ -9,7 +9,7 @@ export function MenuConta() {
   const email = useEmailDaConta()
   if (!email) return null
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1 sm:gap-2">
       <div className="hidden min-w-0 flex-col items-end leading-tight sm:flex">
         <span className="text-xs font-semibold">{nomeCurto(email)}</span>
         <span className="text-muted-foreground max-w-48 truncate text-[0.7rem]">{email}</span>

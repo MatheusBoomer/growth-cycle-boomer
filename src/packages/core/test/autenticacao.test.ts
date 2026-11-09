@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
+  avatarDeClaims,
+  avatarSeguro,
   caminhoProximoSeguro,
   decidirAcesso,
   dominiosPermitidos,
@@ -108,6 +110,74 @@ describe("nomeCurto", () => {
     expect(nomeCurto("x@y.com")).toBe("X")
     expect(nomeCurto("ANA.SILVA@boomer.com.br")).toBe("Ana Silva")
     expect(nomeCurto("ana..silva@boomer.com.br")).toBe("Ana Silva")
+  })
+})
+
+describe("avatarSeguro", () => {
+  it.each(["lh3", "lh4", "lh5", "lh6"])("aceita https em %s.googleusercontent.com", (sub) => {
+    const url = `https://${sub}.googleusercontent.com/a/abc=s96-c`
+    expect(avatarSeguro(url)).toBe(url)
+  })
+
+  it.each([
+    "http://lh3.googleusercontent.com/a/abc",
+    "https://evil.com/x.png",
+    "https://googleusercontent.com/x",
+    "https://lh2.googleusercontent.com/a/abc",
+    "https://lh7.googleusercontent.com/a/abc",
+    "https://drive.googleusercontent.com/a/abc",
+    "https://docs.googleusercontent.com/a/abc",
+    "https://doc-0s-1c-docs.googleusercontent.com/a/abc",
+    "https://lh3.googleusercontent.com.evil.com/x",
+    "https://evilgoogleusercontent.com/x",
+    "https://user@evil.com/x",
+    "https://user@lh3.googleusercontent.com/x",
+    "https://lh3.googleusercontent.com:443/a/abc",
+    "https://lh3.googleusercontent.com:8443/a/abc",
+    "https://LH3.GOOGLEUSERCONTENT.COM/a/abc",
+    "https://lh3.googleusercontent.com./a/abc",
+    "https://lh3%2Egoogleusercontent.com/a/abc",
+    "https://lh3.googleusercontent%2Ecom/a/abc",
+    "//lh3.googleusercontent.com/a/abc",
+    "data:image/png;base64,iVBORw0KGgo=",
+    "javascript:alert(1)",
+    "",
+    "nao é url",
+    `https://lh3.googleusercontent.com/${"a".repeat(600)}`,
+  ])("recusa %s", (url) => {
+    expect(avatarSeguro(url)).toBeNull()
+  })
+
+  it("mede o tamanho no endereço que fica guardado (href), não só no texto recebido", () => {
+    // Menos de 200 caracteres de entrada viram mais de 512 depois de codificar os espaços como %20.
+    const url = `https://lh3.googleusercontent.com/${" ".repeat(160)}x`
+    expect(url.length).toBeLessThanOrEqual(512)
+    expect(avatarSeguro(url)).toBeNull()
+  })
+
+  it("recusa o que não é string", () => {
+    for (const v of [42, null, undefined, {}, ["https://lh3.googleusercontent.com/a"]]) expect(avatarSeguro(v)).toBeNull()
+  })
+})
+
+describe("avatarDeClaims", () => {
+  const foto = "https://lh3.googleusercontent.com/a/abc=s96-c"
+  const outra = "https://lh3.googleusercontent.com/a/outra"
+
+  it("prefere avatar_url a picture", () => {
+    expect(avatarDeClaims({ user_metadata: { avatar_url: foto, picture: outra } })).toBe(foto)
+  })
+
+  it("usa picture quando avatar_url falta ou é inválido", () => {
+    expect(avatarDeClaims({ user_metadata: { picture: outra } })).toBe(outra)
+    expect(avatarDeClaims({ user_metadata: { avatar_url: "https://evil.com/x", picture: outra } })).toBe(outra)
+  })
+
+  it("devolve null sem user_metadata ou sem foto válida", () => {
+    expect(avatarDeClaims({})).toBeNull()
+    expect(avatarDeClaims({ user_metadata: null })).toBeNull()
+    expect(avatarDeClaims({ user_metadata: "x" })).toBeNull()
+    expect(avatarDeClaims({ user_metadata: { avatar_url: "https://evil.com/x" } })).toBeNull()
   })
 })
 

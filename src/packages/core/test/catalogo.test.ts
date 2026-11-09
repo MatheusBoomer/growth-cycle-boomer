@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest"
-import { etapaAnterior, etapaDoCatalogo, insumoDoCatalogo, proximaEtapa, validarCatalogo } from "../src/catalogo"
+import {
+  etapaAnterior,
+  etapaDoCatalogo,
+  FASE_ARQUIVADA,
+  faseDaEtapa,
+  insumoDoCatalogo,
+  proximaEtapa,
+  validarCatalogo,
+} from "../src/catalogo"
 import type { Catalogo } from "../src/tipos"
 import { catalogoReal } from "./ajuda"
 
@@ -43,6 +51,49 @@ describe("catálogo", () => {
     const c = structuredClone(catalogoReal()) as Catalogo
     delete (c.etapas[0] as unknown as Record<string, unknown>).subagentes
     expect(() => validarCatalogo(c)).toThrow(/subagentes/)
+  })
+
+  it("agrupa as 9 etapas do etapas.json real em 5 fases, na ordem de aparição", () => {
+    const c = catalogoReal()
+    expect(c.etapas.every((e) => typeof e.fase === "string" && e.fase.length > 0)).toBe(true)
+    expect([...new Set(c.etapas.map((e) => e.fase))]).toEqual([
+      "Contexto",
+      "Diagnóstico",
+      "Soluções e metas",
+      "Mídia e ação",
+      "Apresentação",
+    ])
+    expect(c.etapas.map((e) => e.fase)).toEqual([
+      "Contexto",
+      "Contexto",
+      "Diagnóstico",
+      "Diagnóstico",
+      "Soluções e metas",
+      "Soluções e metas",
+      "Mídia e ação",
+      "Mídia e ação",
+      "Apresentação",
+    ])
+  })
+
+  it("devolve a fase da etapa e Arquivada para etapa fora do catálogo", () => {
+    const c = catalogoReal()
+    expect(faseDaEtapa(c, "04")).toBe("Diagnóstico")
+    expect(faseDaEtapa(c, "final")).toBe("Apresentação")
+    expect(faseDaEtapa(c, "briefing-benchmark")).toBe(FASE_ARQUIVADA)
+    expect(FASE_ARQUIVADA).toBe("Arquivada")
+  })
+
+  it("recusa etapa sem fase", () => {
+    const c = structuredClone(catalogoReal()) as Catalogo
+    delete (c.etapas[2] as unknown as Record<string, unknown>).fase
+    expect(() => validarCatalogo(c)).toThrow(/fase/)
+  })
+
+  it("recusa etapa com fase vazia", () => {
+    const c = structuredClone(catalogoReal()) as Catalogo
+    c.etapas[2]!.fase = "  "
+    expect(() => validarCatalogo(c)).toThrow(/fase/)
   })
 
   it("navega entre etapas", () => {

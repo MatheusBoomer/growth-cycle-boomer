@@ -103,4 +103,24 @@ export class SupabaseUsuarios implements RepositorioUsuarios {
         throw falha(error)
     }
   }
+
+  async registrarAvatar(email: string, url: string | null): Promise<void> {
+    const { error } = await this.cliente
+      .from("usuarios")
+      .update({ avatar_url: url })
+      .eq("email", normalizarEmail(email))
+    if (error) throw falha(error)
+  }
+
+  async avatares(): Promise<Map<string, string>> {
+    const linhas = await paginar<{ email: string; avatar_url: string }>((de, ate) =>
+      this.cliente
+        .from("usuarios")
+        .select("email, avatar_url")
+        .not("avatar_url", "is", null)
+        .order("email")
+        .range(de, ate),
+    )
+    return new Map(linhas.map((l) => [l.email, l.avatar_url]))
+  }
 }

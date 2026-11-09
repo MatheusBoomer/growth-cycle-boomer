@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs"
 import path from "node:path"
 import { describe, expect, it } from "vitest"
+import { NEUTRO, PALETA } from "../components/marca/avatar-pessoa"
 
 // Lê os tokens dos dois temas direto do CSS, para o teste quebrar se alguém mudar uma cor sem olhar o contraste.
 const CSS = readFileSync(path.resolve(import.meta.dirname, "../../../packages/ui/src/styles/globals.css"), "utf-8")
@@ -64,10 +65,24 @@ for (const [nome, seletor] of [["escuro", ".dark"], ["claro", ":root"]] as const
       ["--muted-foreground", "popover", c("--muted-foreground"), c("--popover"), 4.5],
       ["--sucesso", "chip de sucesso", c("--sucesso"), sobre(c("--sucesso-fundo"), card), 4.5],
       ["--aviso", "chip de aviso", c("--aviso"), sobre(c("--aviso-fundo"), card), 4.5],
+      // Pior caso: o chip em cima do fundo da página (card translúcido sobre os halos), não só sobre o card branco.
+      ["--aviso", "chip de aviso sobre o fundo da página", c("--aviso"), sobre(c("--aviso-fundo"), fundo), 4.5],
+      ["--sucesso", "chip de sucesso sobre o fundo da página", c("--sucesso"), sobre(c("--sucesso-fundo"), fundo), 4.5],
       ["--destructive", "chip de perigo", c("--destructive"), sobre(c("--perigo-fundo"), card), 4.5],
       ["--link-acao", "card", c("--link-acao"), card, 4.5],
       ["--primary-foreground", "--primary (exceção do botão)", c("--primary-foreground"), c("--primary"), 3],
     ]
+    // Cada par do avatar vem das classes reais (`bg-X[/N] text-Y`), então trocar a classe sem olhar o contraste quebra o teste.
+    const corDaClasse = (classe: string, prefixo: "bg" | "text"): Cor => {
+      const [, token, opacidade] = classe.match(new RegExp(`^${prefixo}-([\\w-]+?)(?:/(\\d+))?$`)) ?? []
+      if (!token) throw new Error(`classe ${classe} fora do formato esperado`)
+      const base = c(`--${token}`)
+      return opacidade === undefined ? base : { ...base, a: base.a * (+opacidade / 100) }
+    }
+    for (const par of [...PALETA, NEUTRO]) {
+      const [fundoClasse, textoClasse] = par.split(" ") as [string, string]
+      pares.push([`avatar ${par}`, "o card (iniciais)", corDaClasse(textoClasse, "text"), sobre(corDaClasse(fundoClasse, "bg"), card), 4.5])
+    }
     for (const [texto, sobreQue, frente, base, minimo] of pares) {
       it(`${texto} sobre ${sobreQue} ≥ ${minimo}:1`, () => {
         expect(contraste(frente, base)).toBeGreaterThanOrEqual(minimo)

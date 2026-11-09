@@ -2,6 +2,7 @@
   "etapas": [
     {
       "id": "01",
+      "fase": "Contexto",
       "numero": "01",
       "titulo": "Preparação de contexto",
       "rotuloStatus": "01 · Preparação de contexto",
@@ -17,6 +18,7 @@
     },
     {
       "id": "02",
+      "fase": "Contexto",
       "numero": "02",
       "titulo": "Contextualização estratégica",
       "rotuloStatus": "02 · Contextualização estratégica",
@@ -28,6 +30,7 @@
     },
     {
       "id": "03",
+      "fase": "Diagnóstico",
       "numero": "03",
       "titulo": "Diagnóstico de performance",
       "rotuloStatus": "03 · Diagnóstico de performance",
@@ -42,6 +45,7 @@
     },
     {
       "id": "04",
+      "fase": "Diagnóstico",
       "numero": "04",
       "titulo": "Unidade econômica",
       "rotuloStatus": "04 · Unidade econômica",
@@ -53,6 +57,7 @@
     },
     {
       "id": "05",
+      "fase": "Soluções e metas",
       "numero": "05",
       "titulo": "Soluções",
       "rotuloStatus": "05 · Soluções",
@@ -64,6 +69,7 @@
     },
     {
       "id": "06",
+      "fase": "Soluções e metas",
       "numero": "06",
       "titulo": "Metas e cenários",
       "rotuloStatus": "06 · Metas e cenários",
@@ -75,6 +81,7 @@
     },
     {
       "id": "07",
+      "fase": "Mídia e ação",
       "numero": "07",
       "titulo": "Mídia paga",
       "rotuloStatus": "07 · Mídia paga",
@@ -86,6 +93,7 @@
     },
     {
       "id": "08",
+      "fase": "Mídia e ação",
       "numero": "08",
       "titulo": "Plano de ação",
       "rotuloStatus": "08 · Plano de ação",
@@ -97,6 +105,7 @@
     },
     {
       "id": "final",
+      "fase": "Apresentação",
       "numero": "",
       "titulo": "Apresentação final",
       "rotuloStatus": "Apresentação final",

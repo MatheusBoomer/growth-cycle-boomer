@@ -1,9 +1,29 @@
 import type { NextRequest } from "next/server"
-import { caminhoProximoSeguro, dominiosPermitidos } from "@workspace/core/autenticacao"
+import { avatarDeClaims, caminhoProximoSeguro, dominiosPermitidos } from "@workspace/core/autenticacao"
 import { contextoDeRota, loginLigado, redirecionarSemLogin } from "@/lib/rota-auth"
 import { usuarioDeClaims } from "@/lib/sessao"
 
 export const dynamic = "force-dynamic"
+
+/**
+ * Garante a linha de quem acabou de entrar e guarda a foto do Google. A foto nunca pode atrapalhar o login:
+ * qualquer falha (banco fora, repositório indisponível) é ignorada. No modo disco não faz nada.
+ */
+async function guardarFoto(email: string, claims: Record<string, unknown>): Promise<void> {
+  try {
+    // Import tardio, como em sessao.ts: o proxy e as rotas de login não devem carregar o grafo do servidor à toa.
+    const { servidor } = await import("@/lib/servidor")
+    const { usuarios } = servidor()
+    if (usuarios === null) return
+    // Idempotente (só atualiza ultimo_acesso depois de 1 h). No primeiro login a linha ainda não existe, e
+    // registrarAvatar só atualiza quem já está registrado.
+    await usuarios.registrarAcesso(email)
+    const avatar = avatarDeClaims(claims)
+    if (avatar !== null) await usuarios.registrarAvatar(email, avatar)
+  } catch (e) {
+    console.error("[auth] falha ao guardar a foto do Google", e)
+  }
+}
 
 /** Volta do Google: troca o código por sessão (cookies), confere o domínio e o e-mail e manda para a página pedida. */
 export async function GET(request: NextRequest) {
@@ -38,6 +58,7 @@ export async function GET(request: NextRequest) {
       await encerrar()
       return redirecionar("/login?erro=dominio")
     }
+    await guardarFoto(usuario.email, data.claims)
     // Revalidado aqui: o cookie volta pelo navegador e não é confiável só por /auth/entrar tê-lo gravado.
     return redirecionar(caminhoProximoSeguro(proximo))
   } catch (e) {

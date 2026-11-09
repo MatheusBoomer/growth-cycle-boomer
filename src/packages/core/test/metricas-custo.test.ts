@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { custoDoTurno, custoPorEtapa, custoPorPessoa } from "../src/metricas/custo"
+import { custoDoTurno, custoPorEtapa, custoPorPessoa, custosPorTurno } from "../src/metricas/custo"
 import type { LinhaUso } from "../src/metricas/tipos"
 
 function linha(parcial: Partial<LinhaUso>): LinhaUso {
@@ -161,5 +161,79 @@ describe("custoPorPessoa", () => {
       linha({ autor: null, sessao: "s1", custoTurnoUsd: 0.4 }),
     ]
     expect(custoPorPessoa(usos).size).toBe(0)
+  })
+})
+
+describe("custosPorTurno", () => {
+  it("cada linha nova vira uma entrada no fim do turno, com o custo do turno e os modelos", () => {
+    const usos = [
+      linha({ autor: "ana@x", sessao: "s1", custoUsd: 0.2, custoTurnoUsd: 0.2, modelos: { sonnet: 0.2 }, fim: "2026-11-07T10:05:00Z" }),
+      linha({ autor: "ana@x", sessao: "s1", custoUsd: 0.5, custoTurnoUsd: 0.3, modelos: { haiku: 0.3 }, fim: "2026-11-07T11:00:00Z" }),
+    ]
+    expect(custosPorTurno(usos)).toEqual([
+      { slug: "verdeluz", etapa: "03", autor: "ana@x", quando: "2026-11-07T10:05:00Z", usd: 0.2, modelos: { sonnet: 0.2 }, estimado: false },
+      { slug: "verdeluz", etapa: "03", autor: "ana@x", quando: "2026-11-07T11:00:00Z", usd: 0.3, modelos: { haiku: 0.3 }, estimado: false },
+    ])
+  })
+
+  it("linha nova sem custo do turno nem modelos vale zero, com modelos vazios", () => {
+    const [e] = custosPorTurno([linha({ sessao: "s1" })])
+    expect(e?.usd).toBe(0)
+    expect(e?.modelos).toEqual({})
+    expect(e?.estimado).toBe(false)
+  })
+
+  it("linhas antigas do mesmo projeto e etapa viram uma entrada estimada, no maior fim, com o maior acumulado", () => {
+    const usos = [
+      linha({ custoUsd: 0.4, modelos: { opus: 0.4 }, fim: "2026-11-05T10:00:00Z" }),
+      linha({ custoUsd: 1.1, modelos: { opus: 1, haiku: 0.1 }, fim: "2026-11-06T10:00:00Z" }),
+      linha({ custoUsd: 0.7, modelos: { opus: 0.7 }, fim: "2026-11-07T10:00:00Z" }),
+    ]
+    const r = custosPorTurno(usos)
+    expect(r).toHaveLength(1)
+    expect(r[0]).toMatchObject({
+      slug: "verdeluz",
+      etapa: "03",
+      quando: "2026-11-07T10:00:00Z",
+      usd: 1.1,
+      modelos: { opus: 1, haiku: 0.1 },
+      estimado: true,
+    })
+  })
+
+  it("linhas antigas de projetos ou etapas diferentes ficam em entradas separadas", () => {
+    const usos = [
+      linha({ slug: "a", etapa: "03", custoUsd: 1 }),
+      linha({ slug: "a", etapa: "04", custoUsd: 2 }),
+      linha({ slug: "b", etapa: "03", custoUsd: 3 }),
+    ]
+    const r = custosPorTurno(usos)
+    expect(r).toHaveLength(3)
+    expect(r.map((e) => e.usd).sort()).toEqual([1, 2, 3])
+  })
+
+  it("invariante: a soma por projeto e etapa bate com custoPorEtapa, inclusive misturando linhas novas e antigas", () => {
+    const usos = [
+      linha({ slug: "a", etapa: "03", custoUsd: 0.4, fim: "2026-11-01T10:00:00Z" }),
+      linha({ slug: "a", etapa: "03", custoUsd: 1.0, fim: "2026-11-02T10:00:00Z" }),
+      linha({ slug: "a", etapa: "03", sessao: "s1", custoUsd: 0.2, custoTurnoUsd: 0.2, modelos: { sonnet: 0.2 } }),
+      linha({ slug: "a", etapa: "03", sessao: "s1", custoUsd: 0.5, custoTurnoUsd: 0.3, modelos: { haiku: 0.3 } }),
+      linha({ slug: "a", etapa: "03", sessao: null, custoUsd: 0.25, custoTurnoUsd: 0.25 }),
+      linha({ slug: "a", etapa: "04", sessao: "s2", custoTurnoUsd: 0.1234 }),
+      linha({ slug: "a", etapa: "briefing-benchmark" as LinhaUso["etapa"], custoUsd: 0.75 }),
+      linha({ slug: "b", etapa: "03", custoUsd: 2.5 }),
+      linha({ slug: "b", etapa: "03", sessao: "s3", custoTurnoUsd: 0.05 }),
+    ]
+    const entradas = custosPorTurno(usos)
+    for (const slug of ["a", "b"]) {
+      const esperado = custoPorEtapa(usos.filter((u) => u.slug === slug))
+      for (const [etapa, custo] of esperado) {
+        const soma = entradas
+          .filter((e) => e.slug === slug && e.etapa === etapa)
+          .reduce((s, e) => s + e.usd, 0)
+        expect(Math.abs(soma - custo.usd)).toBeLessThan(1e-6)
+        expect(entradas.some((e) => e.slug === slug && e.etapa === etapa && e.estimado)).toBe(custo.estimado)
+      }
+    }
   })
 })
