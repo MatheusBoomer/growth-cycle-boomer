@@ -3,7 +3,7 @@ import { act, createElement } from "react"
 import { createRoot } from "react-dom/client"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { PainelMetricas } from "@workspace/core/metricas/painel"
-import type { ProjetoComMetricas, RespostaPainel } from "@/lib/api"
+import type { RespostaPainel } from "@/lib/api"
 
 const replace = vi.fn()
 const push = vi.fn()
@@ -28,39 +28,9 @@ vi.mock("./painel/graficos-painel", () => ({
   },
 }))
 
-const { PainelProjetos, filtrarPorNome, ordenarPorAtividade, ROTULO_BASE_PEQUENA, MarcaEstimado, formatarDataHora } = await import("./painel-projetos")
+const { PainelProjetos, MarcaEstimado, formatarDataHora } = await import("./painel-projetos")
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
-
-const projeto = (nome: string, ultimaAtividade: string | null): ProjetoComMetricas =>
-  ({ slug: nome.toLowerCase(), nome, metricas: { ultimaAtividade } }) as ProjetoComMetricas
-
-describe("ordenarPorAtividade", () => {
-  it("mais recente primeiro, sem atividade no fim", () => {
-    const lista = [projeto("Zeta", null), projeto("Antiga", "2026-11-01T10:00:00Z"), projeto("Alfa", null), projeto("Recente", "2026-11-06T10:00:00Z")]
-    expect(ordenarPorAtividade(lista).map((p) => p.nome)).toEqual(["Recente", "Antiga", "Alfa", "Zeta"])
-  })
-
-  it("não altera a lista original", () => {
-    const lista = [projeto("A", "2026-11-01T10:00:00Z"), projeto("B", "2026-11-02T10:00:00Z")]
-    ordenarPorAtividade(lista)
-    expect(lista.map((p) => p.nome)).toEqual(["A", "B"])
-  })
-})
-
-describe("filtrarPorNome", () => {
-  it("busca sem distinguir maiúsculas e ignora espaços nas pontas", () => {
-    const lista = [projeto("Verdeluz", null), projeto("Casa Azul", null)]
-    expect(filtrarPorNome(lista, "  VERDE ").map((p) => p.nome)).toEqual(["Verdeluz"])
-    expect(filtrarPorNome(lista, "")).toHaveLength(2)
-  })
-})
-
-describe("ROTULO_BASE_PEQUENA", () => {
-  it("diz quantos projetos faltam para a média valer", () => {
-    expect(ROTULO_BASE_PEQUENA).toBe("base pequena, menos de 5 projetos")
-  })
-})
 
 describe("exports que o detalhe do projeto usa", () => {
   it("MarcaEstimado e formatarDataHora continuam saindo daqui", () => {
@@ -134,16 +104,15 @@ describe("PainelProjetos", () => {
     await m.desmontar()
   })
 
-  it("monta filtros, números e lista, nessa ordem, sem a tabela antiga de médias por etapa", async () => {
+  it("monta filtros, números, lista e as médias por etapa (fechadas), nessa ordem", async () => {
     painelMetricas.mockResolvedValue(resposta())
     const m = await montar()
-    const ordem = ["Filtros do painel", "Números do período", "Projetos"].map((r) => m.raiz.querySelector(`[aria-label="${r}"]`))
+    const ordem = ["Filtros do painel", "Números do período", "Projetos", "Médias por etapa"].map((r) => m.raiz.querySelector(`section[aria-label="${r}"]`))
     expect(ordem.every((e) => e !== null)).toBe(true)
-    expect(ordem[0]!.compareDocumentPosition(ordem[1]!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(ordem[1]!.compareDocumentPosition(ordem[2]!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    for (let i = 1; i < ordem.length; i++) expect(ordem[i - 1]!.compareDocumentPosition(ordem[i]!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(m.raiz.textContent).toContain("US$ 12,00")
     expect(m.raiz.textContent).toContain("Verdeluz")
-    expect(m.raiz.textContent).not.toContain("Médias por etapa")
+    expect(m.botao("Médias por etapa")?.getAttribute("aria-expanded")).toBe("false")
     await m.desmontar()
   })
 
@@ -227,6 +196,26 @@ describe("PainelProjetos", () => {
     expect(m.raiz.querySelector('[aria-label="Filtros do painel"]')).not.toBeNull()
     expect(m.raiz.textContent).toContain("US$ 12,00")
     expect(m.raiz.textContent).toContain("Verdeluz")
+    await m.desmontar()
+  })
+
+  it("depois de uma recarga com erro o conteúdo antigo fica esmaecido, com aria-busy, e o Exportar CSV desabilitado", async () => {
+    painelMetricas.mockResolvedValueOnce(resposta())
+    const m = await montar()
+    const conteudo = () => m.raiz.querySelector("[aria-busy]")!
+    expect(m.botao("Exportar CSV")?.disabled).toBe(false)
+    painelMetricas.mockRejectedValueOnce(new Error("Erro 503"))
+    await act(async () => m.botao("Atualizar")!.click())
+    expect(conteudo().getAttribute("aria-busy")).toBe("true")
+    expect(conteudo().className).toContain("opacity-60")
+    expect(conteudo().textContent).toContain("Verdeluz")
+    expect(m.botao("Exportar CSV")?.disabled).toBe(true)
+    // Ao dar certo, tudo volta ao normal.
+    painelMetricas.mockResolvedValueOnce(resposta())
+    await act(async () => m.botao("Tentar de novo")!.click())
+    expect(conteudo().getAttribute("aria-busy")).toBe("false")
+    expect(conteudo().className).not.toContain("opacity-60")
+    expect(m.botao("Exportar CSV")?.disabled).toBe(false)
     await m.desmontar()
   })
 

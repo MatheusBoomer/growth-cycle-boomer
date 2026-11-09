@@ -39,6 +39,8 @@ interface Props {
   aoAtualizar: () => void
   aoExportar: () => void
   atualizando?: boolean
+  /** O último pedido falhou e os dados na tela estão velhos: não exporta o que não é o filtro atual. */
+  exportarDesabilitado?: boolean
 }
 
 function diasEntre(de: string, ate: string): number {
@@ -59,7 +61,7 @@ interface Chip {
 }
 
 /** Filtros de projeto inteiro e de custo, escolhidos por selects, com chips dos ativos, "Limpar" e as ações do painel. */
-export function BarraFiltros({ filtro, periodo, opcoes, etapas, aoMudar, aoAtualizar, aoExportar, atualizando = false }: Props) {
+export function BarraFiltros({ filtro, periodo, opcoes, etapas, aoMudar, aoAtualizar, aoExportar, atualizando = false, exportarDesabilitado = false }: Props) {
   const [personalizado, setPersonalizado] = useState(periodo === "custom")
   const [de, setDe] = useState(filtro.de)
   const [ate, setAte] = useState(filtro.ate)
@@ -199,7 +201,7 @@ export function BarraFiltros({ filtro, periodo, opcoes, etapas, aoMudar, aoAtual
             <RefreshCwIcon data-icon="inline-start" className={atualizando ? "animate-spin" : undefined} />
             Atualizar
           </Button>
-          <Button type="button" variant="outline" size="sm" onClick={aoExportar}>
+          <Button type="button" variant="outline" size="sm" onClick={aoExportar} disabled={exportarDesabilitado}>
             <DownloadIcon data-icon="inline-start" />
             Exportar CSV
           </Button>

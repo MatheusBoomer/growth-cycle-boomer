@@ -7,44 +7,20 @@ import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Button } from "@workspace/ui/components/button"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@workspace/ui/components/empty"
 import { Skeleton } from "@workspace/ui/components/skeleton"
-import { api, mensagemDeErro, type ProjetoComMetricas, type RespostaPainel } from "@/lib/api"
+import { api, mensagemDeErro, type RespostaPainel } from "@/lib/api"
 import { filtroDeParametros, parametrosDeFiltro, type PeriodoRapido } from "@/lib/painel-filtro"
 import { painelParaCsv } from "@/lib/painel-csv"
 import { BarraFiltros } from "./painel/barra-filtros"
 import { TEXTO_SEM_USO, type EtapaRotulada } from "./painel/comuns"
 import { GraficosPainel } from "./painel/graficos-painel"
 import { ListaProjetos } from "./painel/lista-projetos"
+import { SecaoMediasPorEtapa } from "./painel/medias-por-etapa"
 import { NumerosGrandes } from "./painel/numeros-grandes"
 
 // Reexportados porque o detalhe do projeto e os testes importam daqui.
 export { MarcaEstimado, formatarDataHora, type EtapaRotulada } from "./painel/comuns"
 
 const CAMINHO = "/admin/projetos"
-
-/** Mais recente primeiro; projetos sem atividade no fim (por nome). Puro, para testar sem tela. */
-export function ordenarPorAtividade(lista: ProjetoComMetricas[]): ProjetoComMetricas[] {
-  const instante = (p: ProjetoComMetricas) => {
-    const ms = p.metricas.ultimaAtividade ? Date.parse(p.metricas.ultimaAtividade) : Number.NaN
-    return Number.isNaN(ms) ? null : ms
-  }
-  return [...lista].sort((a, b) => {
-    const ia = instante(a)
-    const ib = instante(b)
-    if (ia === null && ib === null) return a.nome.localeCompare(b.nome, "pt-BR")
-    if (ia === null) return 1
-    if (ib === null) return -1
-    return ib - ia
-  })
-}
-
-/** Busca por nome, sem distinguir maiúsculas. */
-export function filtrarPorNome(lista: ProjetoComMetricas[], busca: string): ProjetoComMetricas[] {
-  const termo = busca.trim().toLowerCase()
-  return lista.filter((p) => p.nome.toLowerCase().includes(termo))
-}
-
-/** Selo da média de uma etapa com poucos projetos na base. */
-export const ROTULO_BASE_PEQUENA = "base pequena, menos de 5 projetos"
 
 /** Como o período está na URL: `periodo=` válido, `de`/`ate` aceitos pelo leitor, ou o padrão de 30 dias. */
 function periodoDaUrl(p: URLSearchParams, f: FiltroPainel): PeriodoRapido | "custom" {
@@ -68,7 +44,7 @@ function baixarCsv(r: RespostaPainel): void {
   URL.revokeObjectURL(url)
 }
 
-/** Aba "Projetos": filtros (na URL), números do período, gráficos e a lista de projetos. */
+/** Aba "Projetos": filtros (na URL), números do período, gráficos, a lista de projetos e as médias por etapa (recolhidas). */
 export function PainelProjetos({ etapas }: { etapas: EtapaRotulada[] }) {
   const roteador = useRouter()
   const parametros = useSearchParams()
@@ -144,11 +120,12 @@ export function PainelProjetos({ etapas }: { etapas: EtapaRotulada[] }) {
   if (!resposta) return alertaDeErro || <Skeleton className="h-64 w-full" />
 
   const { painel, opcoes, avatares } = resposta
+  const desatualizado = carregando || erro !== null
   const filtrado = filtro.donos.length + filtro.projetos.length + filtro.etapas.length + filtro.modelos.length > 0
   const semUso = painel.totais.custoUsd === 0 && painel.totais.tempoUtilSeg === 0 && painel.porProjeto.every((p) => p.usd === 0 && p.tempoUtilSeg === 0)
 
   return (
-    <div className="flex flex-col gap-6" aria-busy={carregando}>
+    <div className="flex flex-col gap-6">
       <BarraFiltros
         filtro={filtro}
         periodo={periodo}
@@ -158,9 +135,11 @@ export function PainelProjetos({ etapas }: { etapas: EtapaRotulada[] }) {
         aoAtualizar={atualizar}
         aoExportar={() => baixarCsv(resposta)}
         atualizando={carregando}
+        exportarDesabilitado={erro !== null}
       />
       {alertaDeErro}
-      <div className={carregando ?"flex flex-col gap-6 opacity-60 transition-opacity" : "flex flex-col gap-6"}>
+      {/* Recarregando, ou com o último pedido em erro: o conteúdo que fica na tela é o antigo, então fica esmaecido. */}
+      <div aria-busy={desatualizado} className={desatualizado ? "flex flex-col gap-6 opacity-60 transition-opacity" : "flex flex-col gap-6"}>
         {semUso ? (
           <Empty>
             <EmptyHeader>
@@ -176,6 +155,7 @@ export function PainelProjetos({ etapas }: { etapas: EtapaRotulada[] }) {
         )}
         <ListaProjetos projetos={painel.porProjeto} etapas={etapas} avatares={avatares} filtrado={filtrado} />
       </div>
+      <SecaoMediasPorEtapa etapas={etapas} />
     </div>
   )
 }

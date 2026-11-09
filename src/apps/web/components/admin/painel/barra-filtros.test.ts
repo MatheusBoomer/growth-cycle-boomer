@@ -22,7 +22,7 @@ const ETAPAS = [
   { id: "03", rotulo: "Diagnóstico" },
 ] as never
 
-async function montar(parcial: { filtro?: Partial<FiltroPainel>; periodo?: PeriodoRapido | "custom" } = {}) {
+async function montar(parcial: { filtro?: Partial<FiltroPainel>; periodo?: PeriodoRapido | "custom"; exportarDesabilitado?: boolean } = {}) {
   const aoMudar = vi.fn<(p: URLSearchParams) => void>()
   const aoAtualizar = vi.fn()
   const aoExportar = vi.fn()
@@ -39,6 +39,7 @@ async function montar(parcial: { filtro?: Partial<FiltroPainel>; periodo?: Perio
         aoMudar,
         aoAtualizar,
         aoExportar,
+        exportarDesabilitado: parcial.exportarDesabilitado,
       }),
     ),
   )
@@ -175,6 +176,15 @@ describe("BarraFiltros: chips, limpar e ações", () => {
     await m.clicar(m.botao("Exportar CSV"))
     expect(m.aoAtualizar).toHaveBeenCalledTimes(1)
     expect(m.aoExportar).toHaveBeenCalledTimes(1)
+    await m.desmontar()
+  })
+
+  it("com exportarDesabilitado o Exportar CSV fica desabilitado e não chama o callback", async () => {
+    const m = await montar({ exportarDesabilitado: true })
+    expect(m.botao("Exportar CSV")?.disabled).toBe(true)
+    await m.clicar(m.botao("Exportar CSV"))
+    expect(m.aoExportar).not.toHaveBeenCalled()
+    expect(m.botao("Atualizar")?.disabled).toBe(false)
     await m.desmontar()
   })
 
