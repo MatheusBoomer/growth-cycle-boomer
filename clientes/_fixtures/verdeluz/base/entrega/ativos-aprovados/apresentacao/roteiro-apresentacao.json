@@ -485,59 +485,6 @@
     {
       "tipo": "divisoria",
       "numero": "03.",
-      "titulo": "ANÁLISE DE **BENCHMARKING**"
-    },
-    {
-      "tipo": "bullets",
-      "titulo": "Benchmarking · Sallve",
-      "subtitulo": "Kit com desconto **limitado** e rotina guiada",
-      "itens": [
-        "Lição: oferta de kit montado (até 15% OFF) e ordem de uso no blog",
-        "Evidência: site e blog da marca, observados em 22/10/2026 (sem coleta de anúncios)",
-        "Testar: Black Friday com kit montado de até 15% no lugar de 35% (P6 e P8)",
-        "Testar: página de ordem de uso no pós-compra (P3)"
-      ],
-      "fonte": "secoes/07-benchmark.md"
-    },
-    {
-      "tipo": "bullets",
-      "titulo": "Benchmarking · Simple Organic",
-      "subtitulo": "Comunidade e **revenda**",
-      "itens": [
-        "Lição: programa aberto de comunidade e presença em varejista online",
-        "Evidência: perfil e site da marca, observados em 22/10/2026 (sem coleta de anúncios)",
-        "Testar: piloto de 10 embaixadoras com cupom e UTM por 60 dias (P7)",
-        "Testar: vitrine de best-sellers com os líderes e os kits (P8)"
-      ],
-      "fonte": "secoes/07-benchmark.md"
-    },
-    {
-      "tipo": "bullets",
-      "titulo": "Benchmarking · Care Natural Beauty",
-      "subtitulo": "Selo de confiança e **brinde**",
-      "itens": [
-        "Lição: selo de terceiros autodeclarado como prova e publicação associada com brinde",
-        "Evidência: perfil e site da marca, observados em 22/10/2026 (sem coleta de anúncios)",
-        "Testar: nécessaire Verdeluz como brinde acima de um valor mínimo (P6)",
-        "Testar: selo vegano e avaliações nas páginas dos líderes (P5)"
-      ],
-      "fonte": "secoes/07-benchmark.md"
-    },
-    {
-      "tipo": "bullets",
-      "titulo": "Benchmarking · Análises",
-      "subtitulo": "Quatro **destaques** para a Verdeluz",
-      "itens": [
-        "Sallve usa kit com desconto limitado; a Care aparece com brinde e cupom",
-        "Prova de confiança visível faz parte do argumento de venda",
-        "Programa estruturado de embaixadoras transforma influência em número",
-        "Sem coleta de anúncios: formato, funil e intensidade ficam para a coleta real"
-      ],
-      "fonte": "secoes/07-benchmark.md"
-    },
-    {
-      "tipo": "divisoria",
-      "numero": "04.",
       "titulo": "**METAS**"
     },
     {
@@ -578,7 +525,7 @@
     },
     {
       "tipo": "divisoria",
-      "numero": "05.",
+      "numero": "04.",
       "titulo": "**CENÁRIOS** E IMPACTOS **ESPERADOS**"
     },
     {
@@ -677,7 +624,7 @@
     },
     {
       "tipo": "divisoria",
-      "numero": "06.",
+      "numero": "05.",
       "titulo": "PLANO **DE AÇÃO**"
     },
     {

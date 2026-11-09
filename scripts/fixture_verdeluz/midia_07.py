@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Etapa 08 da Verdeluz (mídia paga): alocação de verba por plataforma, estratégia por Curva ABC, calendário estratégico, ROAS esperado
+Etapa 07 da Verdeluz (mídia paga): alocação de verba por plataforma, estratégia por Curva ABC, calendário estratégico, ROAS esperado
 por plataforma e meta de redução de dependência, tudo derivado do cenário Realista da etapa 06. Grava os PNG e imprime o resumo em JSON.
 
-    python3 scripts/fixture_verdeluz/midia_08.py --cliente clientes/verdeluz-producao
+    python3 scripts/fixture_verdeluz/midia_07.py --cliente clientes/verdeluz-producao
 """
 
 from __future__ import annotations
@@ -64,7 +64,7 @@ def _rs(v: float) -> str:
     return g.brl(v, 0)
 
 
-def construir_08(cliente: Path) -> dict:
+def construir_07(cliente: Path) -> dict:
     d3 = etapa03(cliente)
     s6 = construir(cliente)
     real = s6["cenarios"]["realista"]
@@ -107,7 +107,7 @@ def construir_08(cliente: Path) -> dict:
     }
 
 
-def gerar_08(cliente: Path, s: dict) -> None:
+def gerar_07(cliente: Path, s: dict) -> None:
     graf = cliente / "entrega/ativos-aprovados/graficos"
     g.configurar()
     import matplotlib.pyplot as plt
@@ -178,6 +178,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cliente", required=True, type=Path)
     args = parser.parse_args()
-    resumo = construir_08(args.cliente)
-    gerar_08(args.cliente, resumo)
+    resumo = construir_07(args.cliente)
+    gerar_07(args.cliente, resumo)
     print(json.dumps(resumo, ensure_ascii=False, indent=1))

@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
-Benchmark ilustrativo da etapa 07 da Verdeluz (cliente de teste).
+Benchmark ilustrativo da antiga etapa 07 da Verdeluz (cliente de teste). Etapa desativada: o script fica
+aqui só como referência e não alimenta mais o fixture.
 
 Não houve coleta na Biblioteca de Anúncios do Meta (sem APIFY_TOKEN neste ambiente). O relatório traz só o que é público e foi
 observado em 22/10/2026 nos sites e perfis oficiais das três marcas reais, sem inventar contagem de anúncios nem criativos. Gera o
 relatório HTML no template da agência e o arquivo de análise.
 
-    python3 scripts/fixture_verdeluz/benchmark_07.py --cliente clientes/verdeluz-producao
+    python3 .claude/skills/_desativadas/briefing-e-benchmark/benchmark_07.py --cliente clientes/verdeluz-producao
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ import argparse
 import html
 from pathlib import Path
 
-RAIZ = Path(__file__).resolve().parents[2]
+RAIZ = Path(__file__).resolve().parents[4]
 DATA = "22/10/2026"
 
 CONCORRENTES = [

@@ -139,32 +139,11 @@ Logo no início o agente pergunta a meta, o horizonte e a sazonalidade. Resposta
 
 ### Handoff
 
-Nesta sessão, a meta e os cenários ficaram fechados. Não preciso de nada novo, só pensa numa lista de concorrentes que você quer que eu pesquise na próxima etapa.
+Nesta sessão, a meta e os cenários ficaram fechados. Não preciso de nada novo, só confirma se seguimos com o cenário Realista como base para a próxima etapa. Se quiser, pode me mandar prints de tela (imagens) das campanhas atuais das plataformas, mas isso é opcional.
 
-Quando estiver pronto, rode `/07-briefing-e-benchmark`.
+Quando estiver pronto, rode `/07-midia-paga`.
 
 ## Etapa 07
-
-### O que enviar
-
-Nada a enviar obrigatoriamente. Se quiser testar a coleta real de anúncios, tenha o `APIFY_TOKEN` configurado e copie, da Biblioteca de Anúncios do Meta, o link da página (com `view_all_page_id=`) de cada concorrente.
-
-### O que responder ao agente
-
-- **Concorrentes:** Sallve, Simple Organic e Care Natural Beauty. O quarto é opcional e fica a seu critério; prefira uma marca com muitos anúncios ativos.
-- **Links da Biblioteca:** com o token da Apify, informe os links das páginas dos concorrentes. Sem o token, avise o agente: a coleta não roda e o benchmark fica ilustrativo, com as informações públicas dos sites e perfis das marcas.
-- **A Verdeluz é fictícia e não tem página na Biblioteca de Anúncios.** O agente já é avisado disso. Se ele pedir o link do prospect, diga que a marca fica registrada sem anúncios.
-- **Perguntas estratégicas:** as 7 padrão do relatório.
-- **Cenário-base:** confirme que o cenário Realista segue como base.
-- Revise o briefing (as 9 seções, com os números aprovados nas etapas anteriores), o relatório HTML e a camada Lição, Evidência e O que testar. Aprove cada um.
-
-### Handoff
-
-Nesta sessão, o briefing e o benchmark ficaram consolidados. Não preciso de nada novo, só confirma se seguimos com o cenário Realista como base para a próxima etapa. Se quiser, pode me mandar prints de tela (imagens) das campanhas atuais das plataformas, mas isso é opcional.
-
-Quando estiver pronto, rode `/08-midia-paga`.
-
-## Etapa 08
 
 ### O que enviar
 
@@ -184,9 +163,9 @@ Quando estiver pronto, rode `/08-midia-paga`.
 
 Nesta sessão, o planejamento de mídia paga ficou fechado. Não preciso de nada novo, só confirma comigo a data de hoje, se seguimos com o cenário Realista, e quais são as 2 ou 3 frentes mais urgentes que você quer priorizar no plano de ação.
 
-Quando estiver pronto, rode `/09-plano-de-acao`.
+Quando estiver pronto, rode `/08-plano-de-acao`.
 
-## Etapa 09
+## Etapa 08
 
 ### O que enviar
 
@@ -218,13 +197,12 @@ Nada a enviar nesta etapa.
 
 ### O que responder ao agente
 
-O agente confere se há material das seis seções do deck, escreve o roteiro slide a slide e só depois gera o `.pptx`. Respostas usadas na produção deste cliente:
+O agente confere se há material das cinco seções do deck, escreve o roteiro slide a slide e só depois gera o `.pptx`. Respostas usadas na produção deste cliente:
 
-- **Escala:** deck de cerca de 60 slides, com os três cenários e o Realista em destaque. Todo gráfico e toda tabela aprovados entram, um por slide, e todo problema do registro vira um slide de desafio.
+- **Escala:** deck de cerca de 55 slides, com os três cenários e o Realista em destaque. Todo gráfico e toda tabela aprovados entram, um por slide, e todo problema do registro vira um slide de desafio.
 - **Pilares do plano (o agente pede o seu aval):** aquisição eficiente (P1, P4 e P5), produto e estoque (P2 e P8) e retenção (P3, P6 e P7). As iniciativas podem ficar num único slide de seis itens.
-- **Benchmarking:** como não houve coleta de anúncios, aceite slides de texto (um por concorrente) no lugar do slide com três criativos, e peça que cada um diga que o benchmark é ilustrativo. Se você rodou a coleta real, o agente usa os criativos coletados.
 - **Plano de ação:** três slides de texto, um por horizonte, e o `.docx` completo anexo à entrega.
-- **Checklist de qualidade (Regra 8):** confirme que os cinco itens estão atendidos: problema com 1 a 3 soluções, hipótese antes da ação, impacto em R$ ou %, cada solução virando ação do plano e benchmarking terminando em teste.
+- **Checklist de qualidade (Regra 8):** confirme que os quatro itens estão atendidos: problema com 1 a 3 soluções, hipótese antes da ação, impacto em R$ ou % e cada solução virando ação do plano.
 - Aprove o roteiro e, depois, a apresentação. Se o agente avisar que um texto não cabe numa caixa, peça para encurtar a frase.
 
 ### Handoff
