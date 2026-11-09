@@ -109,7 +109,7 @@
     --primario-claro: #f47a2a;
     --sucesso: #047857;
     --sucesso-fundo: rgb(16 185 129 / 0.12);
-    --aviso: #b45309;
+    --aviso: #92400e;
     --aviso-fundo: rgb(245 158 11 / 0.12);
     --perigo-fundo: rgb(225 29 72 / 0.08);
     --selo-haiku: #047857;
@@ -160,6 +160,11 @@
     --sidebar-accent-foreground: #ffffff;
     --sidebar-border: rgb(255 255 255 / 0.07);
     --sidebar-ring: rgb(235 97 10 / 0.5);
+    --chart-1: #f2762e;
+    --chart-2: #5b9df0;
+    --chart-3: #2fbf8c;
+    --chart-4: #cbd5e1;
+    --chart-5: #8696ad;
 
     --texto-forte: #ffffff;
     --sucesso: #34d399;

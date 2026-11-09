@@ -8,6 +8,7 @@ set -euo pipefail
 
 RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 MIGRACAO="$RAIZ/supabase/migrations/20261107120000_usuarios.sql"
+MIGRACAO_AVATAR="$RAIZ/supabase/migrations/20261112120000_usuarios_avatar.sql"
 ASSERCOES="$RAIZ/supabase/testes/usuarios.sql"
 CONTEINER="planejamento-teste-usuarios-$$-$RANDOM"
 TMP="$(mktemp -d)"
@@ -43,6 +44,10 @@ SQL
 
 echo "Aplicando a migração..."
 psql_c -f - <"$MIGRACAO" >/dev/null
+psql_c -f - <"$MIGRACAO_AVATAR" >/dev/null
+# Reaplicar as duas é um no-op (idempotentes): a asserção da coluna roda depois disto.
+psql_c -f - <"$MIGRACAO" >/dev/null
+psql_c -f - <"$MIGRACAO_AVATAR" >/dev/null
 
 echo "Rodando as asserções..."
 psql_c -t -A -f - <"$ASSERCOES"

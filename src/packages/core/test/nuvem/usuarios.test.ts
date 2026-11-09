@@ -154,4 +154,62 @@ describe("SupabaseUsuarios (cliente falso)", () => {
     expect((erro as Error).message).toContain("queda")
     expect((erro as Error).message).not.toContain("supabase.co")
   })
+
+  it("registrarAvatar: atualiza só avatar_url, pelo e-mail normalizado", async () => {
+    const fake = criarFake(() => ok(null))
+    const repo = new SupabaseUsuarios(fake.cliente, () => AGORA)
+    await repo.registrarAvatar(" ANA@x ", "https://lh3.googleusercontent.com/a/abc")
+    expect(fake.consultas).toHaveLength(1)
+    const c = fake.consultas[0]!
+    expect(c.tabela).toBe("usuarios")
+    expect(op(c, "update")).toEqual(["update", { avatar_url: "https://lh3.googleusercontent.com/a/abc" }])
+    expect(op(c, "eq")).toEqual(["eq", "email", "ana@x"])
+    expect(op(c, "upsert")).toBeUndefined()
+    expect(op(c, "insert")).toBeUndefined()
+  })
+
+  it("registrarAvatar: null grava null", async () => {
+    const fake = criarFake(() => ok(null))
+    const repo = new SupabaseUsuarios(fake.cliente, () => AGORA)
+    await repo.registrarAvatar("ana@x", null)
+    expect(op(fake.consultas[0]!, "update")).toEqual(["update", { avatar_url: null }])
+  })
+
+  it("registrarAvatar: erro do banco vira Error sem URL", async () => {
+    const fake = criarFake(() => ({ data: null, error: { message: "queda em https://abc.supabase.co/rest/v1/usuarios" } }))
+    const repo = new SupabaseUsuarios(fake.cliente, () => AGORA)
+    const erro = await repo.registrarAvatar("ana@x", null).catch((e: unknown) => e)
+    expect((erro as Error).message).toContain("queda")
+    expect((erro as Error).message).not.toContain("supabase.co")
+  })
+
+  it("avatares: seleciona email e avatar_url só de quem tem foto e monta o mapa", async () => {
+    const fake = criarFake(() =>
+      ok([
+        { email: "a@x", avatar_url: "https://lh3.googleusercontent.com/a/1" },
+        { email: "b@x", avatar_url: "https://lh3.googleusercontent.com/a/2" },
+      ]),
+    )
+    const repo = new SupabaseUsuarios(fake.cliente, () => AGORA)
+    const mapa = await repo.avatares()
+    expect([...mapa]).toEqual([
+      ["a@x", "https://lh3.googleusercontent.com/a/1"],
+      ["b@x", "https://lh3.googleusercontent.com/a/2"],
+    ])
+    const c = fake.consultas[0]!
+    expect(c.tabela).toBe("usuarios")
+    expect(op(c, "select")).toEqual(["select", "email, avatar_url"])
+    expect(op(c, "not")).toEqual(["not", "avatar_url", "is", null])
+    expect(op(c, "order")).toEqual(["order", "email"])
+    expect(op(c, "range")).toEqual(["range", 0, 999])
+  })
+})
+
+describe("MemoriaUsuarios: avatares", () => {
+  it("avatares devolve cópia: mudar o mapa não altera o repositório", async () => {
+    const repo = new MemoriaUsuarios(["ana@x"], () => AGORA)
+    await repo.registrarAvatar("ana@x", "https://lh3.googleusercontent.com/a/abc")
+    ;(await repo.avatares()).clear()
+    expect((await repo.avatares()).size).toBe(1)
+  })
 })

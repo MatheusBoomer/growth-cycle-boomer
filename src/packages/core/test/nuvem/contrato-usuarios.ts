@@ -106,5 +106,37 @@ export function contratoUsuarios(
       await semearAdmin(admin)
       await expect(repo.alterarPapel(novoEmail(), "admin", admin)).rejects.toBeInstanceOf(ErroNaoEncontrado)
     })
+
+    it("registrarAvatar de e-mail existente aparece em avatares() com o e-mail normalizado", async () => {
+      const { repo } = await criar(() => INICIO)
+      const email = novoEmail()
+      await repo.registrarAcesso(email)
+      await repo.registrarAvatar(`  ${email.toUpperCase()}  `, "https://lh3.googleusercontent.com/a/abc")
+      expect((await repo.avatares()).get(email)).toBe("https://lh3.googleusercontent.com/a/abc")
+    })
+
+    it("registrarAvatar(email, null) apaga a foto", async () => {
+      const { repo } = await criar(() => INICIO)
+      const email = novoEmail()
+      await repo.registrarAcesso(email)
+      await repo.registrarAvatar(email, "https://lh3.googleusercontent.com/a/abc")
+      await repo.registrarAvatar(email, null)
+      expect((await repo.avatares()).has(email)).toBe(false)
+    })
+
+    it("registrarAvatar de e-mail inexistente não cria linha", async () => {
+      const { repo } = await criar(() => INICIO)
+      const email = novoEmail()
+      await repo.registrarAvatar(email, "https://lh3.googleusercontent.com/a/abc")
+      expect(await repo.existe(email)).toBe(false)
+      expect((await repo.avatares()).has(email)).toBe(false)
+    })
+
+    it("avatares() só traz quem tem foto", async () => {
+      const { repo } = await criar(() => INICIO)
+      const email = novoEmail()
+      await repo.registrarAcesso(email)
+      expect((await repo.avatares()).has(email)).toBe(false)
+    })
   })
 }

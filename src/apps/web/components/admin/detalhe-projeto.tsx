@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { nomeCurto } from "@workspace/core/autenticacao"
 import { formatarDuracao, formatarUsd } from "@workspace/core/metricas/formato"
+import type { ListaDeModelos } from "@workspace/core/modelos"
 import { compararComMedia, type MediaEtapa, type MetricasEtapa } from "@workspace/core/metricas/resumo"
 import { tempoUtil } from "@workspace/core/metricas/tempo"
 import { Alert, AlertDescription } from "@workspace/ui/components/alert"
@@ -11,7 +12,9 @@ import { Button } from "@workspace/ui/components/button"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@workspace/ui/components/table"
 import { api, mensagemDeErro, type DetalheProjeto as Detalhe } from "@/lib/api"
+import { Termo } from "./legenda-termos"
 import { formatarDataHora, MarcaEstimado, type EtapaRotulada } from "./painel-projetos"
+import { SeloModelo } from "./selo-modelo"
 
 /** O que a coluna de modelos mostra quando a etapa não tem custo por modelo: custo só estimado (linhas antigas) ou sem o detalhe. */
 export function textoSemModelos(m: MetricasEtapa): string {
@@ -28,7 +31,24 @@ export function comparacoesDaEtapa(m: MetricasEtapa, media: MediaEtapa | undefin
   }
 }
 
-function Numero({ rotulo, children }: { rotulo: string; children: React.ReactNode }) {
+/** Enquanto a lista de modelos não chega (ou se falhar), o selo se vira com o id do modelo. */
+const SEM_LISTA: ListaDeModelos = { modelos: [], padrao: null, completa: false }
+
+/** Largura da barra em %: a fração do maior valor; 0 quando não há maior (tudo zerado). */
+export function larguraDaBarra(valor: number, maior: number): number {
+  return maior > 0 ? Math.min(100, Math.max(0, (valor / maior) * 100)) : 0
+}
+
+/** Barra fina e decorativa ao lado de um número; o número continua no texto, para quem não enxerga a barra. */
+function BarraCusto({ tipo, valor, maior }: { tipo: "custo-etapa" | "custo-pessoa"; valor: number; maior: number }) {
+  return (
+    <div aria-hidden="true" className="bg-muted mt-1 ml-auto h-1 w-24 overflow-hidden rounded-full">
+      <div data-barra={tipo} className="bg-primary h-full rounded-full" style={{ width: `${larguraDaBarra(valor, maior)}%` }} />
+    </div>
+  )
+}
+
+function Numero({ rotulo, children }: { rotulo: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1 rounded-xl border p-4">
       <dt className="text-muted-foreground text-xs font-medium">{rotulo}</dt>
@@ -41,9 +61,17 @@ function Numero({ rotulo, children }: { rotulo: string; children: React.ReactNod
 export function DetalheProjeto({ slug, etapas }: { slug: string; etapas: EtapaRotulada[] }) {
   const [detalhe, setDetalhe] = useState<Detalhe | null>(null)
   const [erro, setErro] = useState<string | null>(null)
+  const [lista, setLista] = useState<ListaDeModelos | null>(null)
 
   useEffect(() => {
     let ativo = true
+    // Só para rotular o selo do modelo; sem a lista (falha ou conta sem acesso) o selo mostra o id.
+    api
+      .configModelos()
+      .then((c) => {
+        if (ativo) setLista(c.lista)
+      })
+      .catch(() => {})
     // As médias entram aqui (a comparação por etapa precisa delas); o selo da barra as dispensa.
     api
       .metricasDoProjeto(slug, { medias: true })
@@ -74,6 +102,9 @@ export function DetalheProjeto({ slug, etapas }: { slug: string; etapas: EtapaRo
     return m ? [{ etapa: e, m }] : []
   })
 
+  const maiorCustoEtapa = Math.max(0, ...linhas.map(({ m }) => m.custo.usd))
+  const maiorCustoPessoa = Math.max(0, ...metricas.porPessoa.map((p) => p.custoUsd))
+
   return (
     <div className="flex flex-col gap-8">
       <section className="flex flex-col gap-4">
@@ -98,7 +129,7 @@ export function DetalheProjeto({ slug, etapas }: { slug: string; etapas: EtapaRo
           </Numero>
           <Numero rotulo="Tempo útil">{formatarDuracao(tempoUtil(metricas.tempo))}</Numero>
           <Numero rotulo="Tempo aberto">{formatarDuracao(tempoUtil(metricas.tempo) + metricas.tempo.ocioso)}</Numero>
-          <Numero rotulo="Descartado">{formatarDuracao(metricas.tempo.descartado)}</Numero>
+          <Numero rotulo={<Termo id="descartado">Descartado</Termo>}>{formatarDuracao(metricas.tempo.descartado)}</Numero>
         </dl>
       </section>
 
@@ -115,9 +146,15 @@ export function DetalheProjeto({ slug, etapas }: { slug: string; etapas: EtapaRo
                   <TableHead className="text-right">Custo</TableHead>
                   <TableHead className="text-right">Turnos</TableHead>
                   <TableHead>Modelos</TableHead>
-                  <TableHead className="text-right">Agente</TableHead>
-                  <TableHead className="text-right">Analista ativo</TableHead>
-                  <TableHead className="text-right">Ocioso</TableHead>
+                  <TableHead className="text-right">
+                    <Termo id="agente">Agente</Termo>
+                  </TableHead>
+                  <TableHead className="text-right">
+                    <Termo id="ativo">Analista ativo</Termo>
+                  </TableHead>
+                  <TableHead className="text-right">
+                    <Termo id="ocioso">Ocioso</Termo>
+                  </TableHead>
                   <TableHead>Comparação com a média</TableHead>
                 </TableRow>
               </TableHeader>
@@ -131,10 +168,16 @@ export function DetalheProjeto({ slug, etapas }: { slug: string; etapas: EtapaRo
                       <TableCell className="text-right tabular-nums">
                         {formatarUsd(m.custo.usd)}
                         {m.custo.estimado && <MarcaEstimado />}
+                        <BarraCusto tipo="custo-etapa" valor={m.custo.usd} maior={maiorCustoEtapa} />
                       </TableCell>
                       <TableCell className="text-right tabular-nums">{m.custo.turnos}</TableCell>
                       <TableCell className="text-muted-foreground text-xs">
-                        {modelos.length === 0 ? textoSemModelos(m) : modelos.map(([modelo, usd]) => <div key={modelo}>{modelo}: {formatarUsd(usd)}</div>)}
+                        {modelos.length === 0 ? textoSemModelos(m) : modelos.map(([modelo, usd]) => (
+                          <div key={modelo} className="flex items-center gap-1.5 py-0.5">
+                            <SeloModelo modelo={modelo} lista={lista ?? SEM_LISTA} />
+                            <span className="tabular-nums">{formatarUsd(usd)}</span>
+                          </div>
+                        ))}
                       </TableCell>
                       <TableCell className="text-right tabular-nums">{formatarDuracao(m.tempo.agente)}</TableCell>
                       <TableCell className="text-right tabular-nums">{formatarDuracao(m.tempo.ativo)}</TableCell>
@@ -160,16 +203,25 @@ export function DetalheProjeto({ slug, etapas }: { slug: string; etapas: EtapaRo
                   <TableRow>
                     <TableHead>Pessoa</TableHead>
                     <TableHead className="text-right">Custo dos turnos</TableHead>
-                    <TableHead className="text-right">Tempo ativo</TableHead>
-                    <TableHead className="text-right">Ocioso</TableHead>
-                    <TableHead className="text-right">Descartado</TableHead>
+                    <TableHead className="text-right">
+                      <Termo id="ativo">Tempo ativo</Termo>
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <Termo id="ocioso">Ocioso</Termo>
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <Termo id="descartado">Descartado</Termo>
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {metricas.porPessoa.map((p) => (
                     <TableRow key={p.email}>
                       <TableCell className="font-medium">{nomeCurto(p.email)}</TableCell>
-                      <TableCell className="text-right tabular-nums">{formatarUsd(p.custoUsd)}</TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatarUsd(p.custoUsd)}
+                        <BarraCusto tipo="custo-pessoa" valor={p.custoUsd} maior={maiorCustoPessoa} />
+                      </TableCell>
                       <TableCell className="text-right tabular-nums">{formatarDuracao(p.tempo.ativo)}</TableCell>
                       <TableCell className="text-right tabular-nums">{formatarDuracao(p.tempo.ocioso)}</TableCell>
                       <TableCell className="text-right tabular-nums">{formatarDuracao(p.tempo.descartado)}</TableCell>

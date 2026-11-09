@@ -14,7 +14,7 @@ import {
   type EtapaBiblioteca,
   type ItemBiblioteca,
 } from "./biblioteca"
-import { etapaDoCatalogo, insumoDoCatalogo } from "./catalogo"
+import { etapaDoCatalogo, faseDaEtapa, insumoDoCatalogo } from "./catalogo"
 import { itensDoCatalogo } from "./catalogo-skills"
 import { extrairOverrides, montarDossie, type AnteriorDossie } from "./dossie"
 import {
@@ -32,9 +32,11 @@ import { destinoInsumo, extensao, extensaoAceita, nomeSeguro, registrarInsumo } 
 import * as me from "./maquina-estados"
 import { descreverMarcacoes, type MarcaAjuste } from "./marcacoes"
 import { mensagemAjuste, mensagemAjustes, mensagemAprovacao, mensagemEtapaAnteriorAlterada, mensagemInsumoRecebido } from "./prompts"
+import { CacheCurto } from "./metricas/cache-curto"
 import { custoDoTurno, custoPorEtapa } from "./metricas/custo"
+import { agregarPainel, type EntradaProjeto, type FiltroPainel, type PainelMetricas } from "./metricas/painel"
 import { mediasPorEtapa, resumirProjeto, type MediaEtapa, type MetricasProjeto } from "./metricas/resumo"
-import type { Acumulado, Limites, LinhaUso } from "./metricas/tipos"
+import type { Acumulado, Limites, LinhaPresenca, LinhaUso } from "./metricas/tipos"
 import { alvosDaEtapa, ALVO_PRINCIPAL, NIVEIS_ESFORCO, validarEscolha, type EscolhaModelo, type ListaDeModelos, type NivelEsforco, type UsoDaEtapa } from "./modelos"
 import type { EntradaUsoTurno, LinhaConfigModelo, RegistroUsoTurno } from "./nuvem/tipos"
 import { LIMITE_TEXTO_NOTA, type NotaSkill } from "./notas-skills"
@@ -113,6 +115,23 @@ function validarUrl(url: string): string {
   return u.toString()
 }
 
+/** Quanto tempo o pacote de dados do painel vale: o filtro muda na tela sem reler o uso e a presença. */
+const PRAZO_CACHE_PAINEL_MS = 30_000
+
+/** Dados do painel antes do filtro: o que `agregarPainel` recebe, mais as listas de opções dos filtros. */
+interface PacotePainel {
+  projetos: EntradaProjeto[]
+  usos: LinhaUso[]
+  presencas: LinhaPresenca[]
+  opcoes: OpcoesPainel
+}
+
+export interface OpcoesPainel {
+  donos: string[]
+  projetos: Array<{ slug: string; nome: string }>
+  modelos: string[]
+}
+
 function agruparPorSlug<T extends { slug: string }>(linhas: T[]): Map<string, T[]> {
   const porSlug = new Map<string, T[]>()
   for (const l of linhas) {
@@ -165,6 +184,7 @@ export class ServicoPlanejamento {
   private readonly gerarId: () => string
   private readonly exclusoes = new Map<string, Promise<unknown>>()
   private turnos: ConexaoTurnos = { aoEnfileirar: () => {}, estaOcupado: () => false }
+  private readonly pacotePainel = new CacheCurto<PacotePainel>(PRAZO_CACHE_PAINEL_MS)
 
   constructor(d: DependenciasServico) {
     this.arm = d.armazenamento
@@ -337,6 +357,77 @@ export class ServicoPlanejamento {
     }
     projetos.sort((a, b) => b.atualizadoEm.localeCompare(a.atualizadoEm))
     return { projetos, medias: mediasPorEtapa(paraMedia) }
+  }
+
+  /**
+   * Painel de métricas filtrado. Slugs, donos, usos, presenças e estados são lidos de uma vez e ficam 30 s em cache
+   * (`atualizar: true` força a releitura); o filtro é aplicado depois, em memória. `filtro.de` e `filtro.ate` já
+   * precisam ser datas válidas (o `agregarPainel` lança `RangeError` se não forem). As opções dos filtros cobrem todos
+   * os projetos legíveis, de teste inclusive. Um prospect ilegível é pulado, como em `metricasGerais`.
+   */
+  async painelDeMetricas(
+    filtro: FiltroPainel,
+    limites: Limites,
+    opcoes: { atualizar?: boolean } = {},
+  ): Promise<{ painel: PainelMetricas; opcoes: OpcoesPainel }> {
+    const pacote = await this.pacotePainel.obter(() => this.carregarPacotePainel(), opcoes.atualizar === true)
+    const painel = agregarPainel(
+      {
+        projetos: pacote.projetos,
+        usos: pacote.usos,
+        presencas: pacote.presencas,
+        faseDaEtapa: (etapa) => faseDaEtapa(this.catalogo, etapa),
+        limites,
+      },
+      filtro,
+    )
+    return { painel, opcoes: pacote.opcoes }
+  }
+
+  private async carregarPacotePainel(): Promise<PacotePainel> {
+    const slugs = await this.arm.listarSlugs()
+    const ativos = new Set(slugs)
+    const [donos, usos, presencas] = await Promise.all([
+      this.arm.listarDonos(),
+      this.arm.listarUsos(undefined, ativos),
+      this.arm.listarPresencas(undefined, ativos),
+    ])
+    const projetos: EntradaProjeto[] = []
+    for (const slug of slugs) {
+      try {
+        const estado = await this.estado(slug)
+        const dono = donos.get(slug) ?? null
+        const resumo = this.resumir(estado, dono)
+        projetos.push({
+          slug,
+          nome: resumo.nome,
+          dono,
+          teste: resumo.teste,
+          ativo: resumo.etapaAtual !== null,
+          etapaAtual: resumo.etapaAtual,
+          concluidoEm: estado.etapas.final.concluidaEm,
+          pendencias: resumo.pendencias,
+        })
+      } catch (e) {
+        console.error(`Não consegui ler o prospect ${slug}:`, e)
+      }
+    }
+    const legiveis = new Set(projetos.map((p) => p.slug))
+    const modelos = new Set<string>()
+    for (const u of usos) {
+      if (!legiveis.has(u.slug)) continue
+      for (const m of Object.keys(u.modelos ?? {})) modelos.add(m)
+    }
+    return {
+      projetos,
+      usos,
+      presencas,
+      opcoes: {
+        donos: [...new Set(projetos.flatMap((p) => (p.dono === null ? [] : [normalizarEmail(p.dono)])))].sort(),
+        projetos: projetos.map((p) => ({ slug: p.slug, nome: p.nome })).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")),
+        modelos: [...modelos].sort(),
+      },
+    }
   }
 
   /**

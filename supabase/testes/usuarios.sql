@@ -192,6 +192,28 @@ begin
   end if;
 end $$;
 
+-- Foto do Google (20261112120000_usuarios_avatar.sql): coluna text anulável, que aceita gravar e apagar a URL.
+do $$
+begin
+  if not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'planejamento' and table_name = 'usuarios'
+      and column_name = 'avatar_url' and data_type = 'text' and is_nullable = 'YES'
+  ) then
+    raise exception 'avatar: planejamento.usuarios.avatar_url (text, anulável) deveria existir';
+  end if;
+  delete from planejamento.usuarios;
+  insert into planejamento.usuarios (email) values ('a@x');
+  update planejamento.usuarios set avatar_url = 'https://lh3.googleusercontent.com/a/abc' where email = 'a@x';
+  if (select avatar_url from planejamento.usuarios where email = 'a@x') is null then
+    raise exception 'avatar: deveria gravar a URL';
+  end if;
+  update planejamento.usuarios set avatar_url = null where email = 'a@x';
+  if (select avatar_url from planejamento.usuarios where email = 'a@x') is not null then
+    raise exception 'avatar: deveria apagar a URL com null';
+  end if;
+end $$;
+
 -- Permissões: só o service_role usa a tabela e a função; RLS ligado.
 do $$
 begin

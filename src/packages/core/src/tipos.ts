@@ -1,6 +1,12 @@
 export const ORDEM_ETAPAS = ["01", "02", "03", "04", "05", "06", "07", "08", "final"] as const
 export type EtapaId = (typeof ORDEM_ETAPAS)[number]
 
+/**
+ * Fase das etapas que saíram do catálogo (ex.: briefing-benchmark) mas ainda aparecem em projetos antigos. Fica aqui,
+ * num módulo sem dependência do Node, para a tela (componente de cliente) usar a mesma constante do catálogo.
+ */
+export const FASE_ARQUIVADA = "Arquivada"
+
 export type StatusEtapa =
   | "bloqueada"
   | "liberada"
@@ -33,6 +39,8 @@ export interface RefInsumo {
 
 export interface EtapaCatalogo {
   id: EtapaId
+  /** Agrupa etapas na tela (ex.: "Diagnóstico"). Opcional no tipo; o etapas.json real exige. */
+  fase?: string
   numero: string
   titulo: string
   rotuloStatus: string
