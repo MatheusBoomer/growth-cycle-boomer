@@ -17,6 +17,25 @@ describe("avataresDosDonos", () => {
     expect(await avataresDosDonos()).toEqual({ "ana@x": "https://lh3.googleusercontent.com/a/1" })
   })
 
+  it("com donos devolve só a foto de quem é dono (sem diferença de caixa, ignorando donos nulos)", async () => {
+    avatares.mockResolvedValue(
+      new Map([
+        ["ana@x", "https://lh3.googleusercontent.com/a/1"],
+        ["bia@x", "https://lh3.googleusercontent.com/a/2"],
+        ["caio@x", "https://lh3.googleusercontent.com/a/3"],
+      ]),
+    )
+    expect(await avataresDosDonos(["ANA@x", null, "caio@x", "sem-foto@x"])).toEqual({
+      "ana@x": "https://lh3.googleusercontent.com/a/1",
+      "caio@x": "https://lh3.googleusercontent.com/a/3",
+    })
+  })
+
+  it("com donos vazio devolve {} (ninguém é dono de nada)", async () => {
+    avatares.mockResolvedValue(new Map([["ana@x", "https://lh3.googleusercontent.com/a/1"]]))
+    expect(await avataresDosDonos([])).toEqual({})
+  })
+
   it("modo disco (usuarios null): {} sem consultar", async () => {
     estadoDoServidor.usuarios = null
     expect(await avataresDosDonos()).toEqual({})

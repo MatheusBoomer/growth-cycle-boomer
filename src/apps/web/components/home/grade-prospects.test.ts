@@ -130,6 +130,15 @@ describe("GradeProspects: filtros", () => {
     await comum.desmontar()
   })
 
+  it("usuário comum não vê nome nem e-mail de nenhum dono em lugar nenhum da tela", async () => {
+    const { raiz, desmontar } = await montar("usuario")
+    await clicar(botao(raiz, "Concluídos")!)
+    const texto = document.body.textContent ?? ""
+    for (const dono of ["ana@boomer.com", "bia@boomer.com", "Ana", "Bia", "Sem dono"]) expect(texto).not.toContain(dono)
+    expect(document.body.innerHTML).not.toContain("@boomer.com")
+    await desmontar()
+  })
+
   it("filtrar por analista reduz os cartões e 'Limpar filtros' restaura", async () => {
     const { raiz, desmontar } = await montar("admin")
     await escolher(raiz, "Analista", "Bia")

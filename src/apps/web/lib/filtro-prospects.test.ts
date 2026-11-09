@@ -61,6 +61,16 @@ describe("ordenarProspects", () => {
     expect(nomes(ordenarProspects(lista, "atividade"))).toEqual(["Verdeluz", "Ilha", "Iszi", "Água Clara", "Iguatemi"])
   })
 
+  it("atividade compara o instante, não o texto: ISO com Z e com -03:00, e datas inválidas por último", () => {
+    const mistas = [
+      p("Zulu", null, { atualizadoEm: "2026-10-05T14:00:00Z" }), // 14:00Z
+      p("Brasilia", null, { atualizadoEm: "2026-10-05T12:00:00-03:00" }), // 15:00Z, depois do Zulu
+      p("Quebrado", null, { atualizadoEm: "ontem" }),
+      p("Cedo", null, { atualizadoEm: "2026-10-05T10:00:00Z" }),
+    ]
+    expect(nomes(ordenarProspects(mistas, "atividade"))).toEqual(["Brasilia", "Zulu", "Cedo", "Quebrado"])
+  })
+
   it("nome: ordem alfabética sem ligar para acento e caixa", () => {
     expect(nomes(ordenarProspects(lista, "nome"))).toEqual(["Água Clara", "Iguatemi", "Ilha", "Iszi", "Verdeluz"])
   })

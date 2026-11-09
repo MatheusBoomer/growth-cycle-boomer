@@ -9,16 +9,16 @@ import { cn } from "@workspace/ui/lib/utils"
  * tem contraste próprio nos temas claro e escuro, então as iniciais ficam legíveis sem cor escrita à mão. Os
  * nomes de classe ficam inteiros aqui para o Tailwind enxergá-los.
  */
-const PALETA = [
+export const PALETA = [
   "bg-sucesso-fundo text-sucesso",
   "bg-aviso-fundo text-aviso",
   "bg-selo-sonnet-fundo text-selo-sonnet",
   "bg-selo-opus-fundo text-selo-opus",
-  "bg-primary/15 text-link-acao",
+  "bg-primary/10 text-link-acao",
   "bg-perigo-fundo text-destructive",
 ] as const
 
-const NEUTRO = "bg-muted text-muted-foreground"
+export const NEUTRO = "bg-muted text-muted-foreground"
 
 /** Duas letras do nome (primeira de cada uma das duas primeiras palavras); uma palavra só dá uma letra. */
 export function iniciais(nome: string): string {
@@ -54,8 +54,9 @@ export function AvatarPessoa({
   fotoUrl?: string | null
   tamanho?: "sm" | "md"
 }) {
-  const [falhou, setFalhou] = useState(false)
-  const mostrarFoto = Boolean(fotoUrl) && !falhou
+  // Guarda qual URL falhou (e não um booleano): ao chegar outra foto, ela é tentada de novo.
+  const [urlQueFalhou, setUrlQueFalhou] = useState<string | null>(null)
+  const mostrarFoto = Boolean(fotoUrl) && fotoUrl !== urlQueFalhou
   const texto = email === null ? "?" : iniciais(nome)
 
   return (
@@ -66,7 +67,7 @@ export function AvatarPessoa({
           alt=""
           referrerPolicy="no-referrer"
           keepMounted
-          onLoadingStatusChange={(status) => status === "error" && setFalhou(true)}
+          onLoadingStatusChange={(status) => status === "error" && setUrlQueFalhou(fotoUrl!)}
         />
       )}
       <AvatarFallback className={cn("text-[11px] font-medium", corDoAvatar(email))}>{texto}</AvatarFallback>

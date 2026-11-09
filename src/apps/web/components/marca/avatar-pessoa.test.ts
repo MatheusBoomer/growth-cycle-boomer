@@ -90,4 +90,19 @@ describe("AvatarPessoa", () => {
     expect(raiz.textContent).toBe("AS")
     await desmontar()
   })
+
+  it("trocar a foto depois de uma falha tenta de novo com a nova imagem", async () => {
+    const raiz = document.createElement("div")
+    document.body.append(raiz)
+    const r = createRoot(raiz)
+    const render = (fotoUrl: string) => act(async () => r.render(createElement(AvatarPessoa, { email: "ana@x.com", nome: "Ana Souza", fotoUrl })))
+    await render("https://lh3.googleusercontent.com/a/quebrada")
+    await act(async () => {
+      raiz.querySelector("img")!.dispatchEvent(new Event("error"))
+    })
+    expect(raiz.querySelector("img")).toBeNull()
+    await render("https://lh3.googleusercontent.com/a/nova")
+    expect(raiz.querySelector("img")?.getAttribute("src")).toBe("https://lh3.googleusercontent.com/a/nova")
+    await act(async () => r.unmount())
+  })
 })

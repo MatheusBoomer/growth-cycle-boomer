@@ -19,9 +19,12 @@ import { BarraEtapas } from "./barra-etapas"
 import { DialogoExcluirProspect } from "./dialogo-excluir-prospect"
 import { DialogoTrocarDono } from "./dialogo-trocar-dono"
 
+/** Fuso fixo: servidor (UTC) e navegador (Brasília) renderizam o mesmo texto, sem erro de hidratação. */
 function quando(iso: string): string {
   const d = new Date(iso)
-  return Number.isNaN(d.getTime()) ? "" : d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
+  return Number.isNaN(d.getTime())
+    ? ""
+    : d.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
 }
 
 /** `fotoUrl` é a foto do dono (só o admin vê o analista no cartão). */

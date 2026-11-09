@@ -40,6 +40,12 @@ function posicaoDaEtapa(p: ResumoProspect): number {
   return p.etapaAtual === null ? ORDEM_ETAPAS.length : ORDEM_ETAPAS.indexOf(p.etapaAtual)
 }
 
+/** Momento da última atividade em ms; data inválida vale -Infinity e vai para o fim da lista. */
+function instante(p: ResumoProspect): number {
+  const ms = Date.parse(p.atualizadoEm)
+  return Number.isNaN(ms) ? Number.NEGATIVE_INFINITY : ms
+}
+
 /** Ordena sem alterar a entrada; `Array.sort` é estável, então empates mantêm a ordem recebida. */
 export function ordenarProspects(lista: ResumoProspect[], ordem: Ordem): ResumoProspect[] {
   const copia = [...lista]
@@ -49,7 +55,7 @@ export function ordenarProspects(lista: ResumoProspect[], ordem: Ordem): ResumoP
     case "etapa":
       return copia.sort((a, b) => posicaoDaEtapa(a) - posicaoDaEtapa(b))
     case "atividade":
-      return copia.sort((a, b) => b.atualizadoEm.localeCompare(a.atualizadoEm))
+      return copia.sort((a, b) => instante(b) - instante(a))
   }
 }
 

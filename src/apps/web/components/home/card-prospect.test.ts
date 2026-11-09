@@ -104,4 +104,18 @@ describe("CardProspect: analista e etapa", () => {
     expect(raiz.querySelector("img")?.getAttribute("referrerpolicy")).toBe("no-referrer")
     await desmontar()
   })
+
+  it("a data é mostrada no horário de Brasília, seja qual for o fuso de quem renderiza", async () => {
+    const fusoOriginal = process.env.TZ
+    process.env.TZ = "UTC"
+    try {
+      // 01:30 UTC de 27/10 é 22:30 de 26/10 em Brasília (UTC-3).
+      const { raiz, desmontar } = await renderizar({ ...comDono, atualizadoEm: "2026-10-27T01:30:00Z" } as ResumoProspect, "usuario")
+      expect(raiz.textContent).toMatch(/26\/10.{1,2}22:30/)
+      await desmontar()
+    } finally {
+      if (fusoOriginal === undefined) delete process.env.TZ
+      else process.env.TZ = fusoOriginal
+    }
+  })
 })
