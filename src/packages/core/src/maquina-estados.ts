@@ -21,6 +21,7 @@ export function estadoInicial(prospect: { slug: string; nome: string; site: stri
   for (const id of ORDEM_ETAPAS) etapas[id] = etapaVazia(id === "01" ? "liberada" : "bloqueada")
   return {
     versao: 1,
+    versaoEtapas: 2,
     prospect: { ...prospect, criadoEm: em },
     etapas,
     entregaveis: [],

@@ -56,6 +56,10 @@ describe("máquina de estados", () => {
     for (const id of ORDEM_ETAPAS.slice(1)) expect(e.etapas[id].status).toBe("bloqueada")
   })
 
+  it("nasce com o marcador da numeração atual das etapas", () => {
+    expect(novo().versaoEtapas).toBe(2)
+  })
+
   it("só inicia etapa liberada", () => {
     expect(() => iniciarEtapa(novo(), "02", EM)).toThrow(TransicaoInvalida)
     expect(iniciarEtapa(novo(), "01", EM).etapas["01"].status).toBe("em_andamento")

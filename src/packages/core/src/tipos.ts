@@ -136,6 +136,8 @@ export interface ConjuntoPerguntas {
 
 export interface Estado {
   versao: 1
+  /** Marca a numeração atual das etapas (07 = mídia paga, 08 = plano de ação); ausente em estado anterior à renumeração. */
+  versaoEtapas?: 2
   prospect: { slug: string; nome: string; site: string | null; criadoEm: string }
   etapas: Record<EtapaId, EstadoEtapa>
   entregaveis: Entregavel[]
