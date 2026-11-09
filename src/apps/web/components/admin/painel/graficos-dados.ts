@@ -242,6 +242,21 @@ export function alturaBarras(linhas: number): number {
   return linhas * ALTURA_LINHA + ALTURA_EIXO
 }
 
+const MULTIPLOS_USD = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8]
+
+/**
+ * Marcas do eixo de custo: de US$ 0 até cobrir o máximo, com passo redondo (1, 1,5, 2, 2,5, 3, 4, 5, 6 ou 8 vezes uma
+ * potência de 10) e no máximo 3 marcas, para caberem sem se sobrepor mesmo a 360 px.
+ */
+export function ticksDeUsd(maximo: number): number[] {
+  if (!(maximo > 0) || !Number.isFinite(maximo)) return [0]
+  const bruto = maximo / 2
+  const potencia = 10 ** Math.floor(Math.log10(bruto))
+  const passo = arredondar((MULTIPLOS_USD.find((m) => m * potencia >= bruto - 1e-9) ?? 10) * potencia)
+  const n = Math.ceil(maximo / passo - 1e-9)
+  return Array.from({ length: n + 1 }, (_, i) => arredondar(i * passo))
+}
+
 const PASSOS_SEG = [5, 10, 15, 30].map((m) => m * 60).concat([1, 2, 3, 4, 6, 8, 12, 24, 48, 72, 168].map((h) => h * 3600))
 
 /** Marcas do eixo de tempo em minutos ou horas redondos, de 0 até cobrir o máximo, com no máximo 4 intervalos. */

@@ -8,7 +8,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { cn } from "@workspace/ui/lib/utils"
 import { MarcaEstimado, useEtapasPainel } from "./comuns"
 import { GraficoVazio } from "./grafico-vazio"
-import { ALTURA_EIXO, ALTURA_LINHA, alturaBarras, corDaFase, FASE_ARQUIVADA, fasesOrdenadas, ordemDasFases, ROTULO_ARQUIVADA, topProjetos } from "./graficos-dados"
+import { ALTURA_EIXO, ALTURA_LINHA, alturaBarras, corDaFase, FASE_ARQUIVADA, fasesOrdenadas, ordemDasFases, ROTULO_ARQUIVADA, ticksDeUsd, topProjetos } from "./graficos-dados"
 
 const TICK = { fontSize: 12 }
 /** Altura do eixo X; o resto de ALTURA_EIXO fica de margem embaixo. A faixa de cada barra fica com ALTURA_LINHA px. */
@@ -25,8 +25,9 @@ function custoFalado(p: { usd: number; estimado: boolean }, separador: ", " | " 
   return `${formatarUsd(p.usd)}${p.estimado ? (separador === ", " ? ", estimado" : " (estimado)") : ""}`
 }
 
+/** Rótulo das marcas de `ticksDeUsd`: `US$ 0`, `US$ 15`, `US$ 2,5`. */
 function rotuloEixoUsd(v: number): string {
-  return `US$ ${Math.round(v).toLocaleString("pt-BR")}`
+  return `US$ ${v.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}`
 }
 
 /**
@@ -53,6 +54,7 @@ export function BarrasProjetos({ projetos, projetosSelecionados, aoFiltrarProjet
   if (linhas.length === 0) return <GraficoVazio className="h-[156px]" />
 
   const altura = alturaBarras(linhas.length)
+  const ticks = ticksDeUsd(Math.max(...linhas.map((p) => p.usd)))
   const algumSelecionado = linhas.some((p) => projetosSelecionados.includes(p.slug))
   const apagado = (slug: string) => algumSelecionado && !projetosSelecionados.includes(slug)
 
@@ -93,7 +95,17 @@ export function BarrasProjetos({ projetos, projetosSelecionados, aoFiltrarProjet
           <BarChart data={dados} layout="vertical" margin={{ top: 0, right: 20, bottom: ALTURA_EIXO - EIXO_X, left: 12 }} barCategoryGap={8} accessibilityLayer={false}>
             <CartesianGrid horizontal={false} />
             <YAxis type="category" dataKey="slug" hide />
-            <XAxis type="number" height={EIXO_X} tickLine={false} axisLine={false} tick={TICK} tickFormatter={rotuloEixoUsd} />
+            <XAxis
+              type="number"
+              height={EIXO_X}
+              domain={[0, ticks.at(-1) ?? 0]}
+              ticks={ticks}
+              interval={0}
+              tickLine={false}
+              axisLine={false}
+              tick={TICK}
+              tickFormatter={rotuloEixoUsd}
+            />
             <ChartTooltip
               cursor={{ fillOpacity: 0.5 }}
               content={

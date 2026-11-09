@@ -12,7 +12,7 @@ vi.mock("@/lib/api", async (importOriginal) => ({
   api: { metricasDoProjeto, configModelos },
 }))
 
-const { comparacoesDaEtapa, textoSemModelos, DetalheProjeto } = await import("./detalhe-projeto")
+const { comparacoesDaEtapa, larguraDaBarra, textoSemModelos, DetalheProjeto } = await import("./detalhe-projeto")
 const { TERMOS } = await import("./legenda-termos")
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
@@ -97,17 +97,54 @@ describe("TERMOS", () => {
     expect(Object.keys(TERMOS).sort()).toEqual(["agente", "ativo", "descartado", "ocioso"])
     for (const texto of Object.values(TERMOS)) expect(texto.trim().length).toBeGreaterThan(10)
   })
+
+  it("ocioso e descartado dizem a regra de metricas/tempo.ts (aba escondida ou 5 min sem interação; além dos primeiros 15 min)", () => {
+    expect(TERMOS.ocioso).toBe("Tempo com o projeto aberto, mas com a aba escondida ou sem interação por 5 minutos (padrão).")
+    expect(TERMOS.descartado).toBe("Tempo ocioso além dos primeiros 15 minutos seguidos (padrão): a pessoa provavelmente saiu.")
+  })
+})
+
+describe("larguraDaBarra", () => {
+  it("sem maior (tudo zerado) a barra é 0, sem NaN", () => {
+    expect(larguraDaBarra(5, 0)).toBe(0)
+    expect(larguraDaBarra(0, 0)).toBe(0)
+    expect(larguraDaBarra(5, 10)).toBe(50)
+  })
 })
 
 describe("DetalheProjeto", () => {
-  it("focar o cabeçalho Ocioso mostra o significado", async () => {
+  it("focar o cabeçalho Ocioso mostra o significado no tooltip", async () => {
     const m = await montar()
-    const gatilho = [...m.raiz.querySelectorAll<HTMLElement>("th")].find((th) => th.textContent?.trim() === "Ocioso")?.querySelector<HTMLElement>("[tabindex]")
+    const gatilho = [...m.raiz.querySelectorAll<HTMLElement>("th [tabindex]")].find((g) => g.textContent === "Ocioso")
     expect(gatilho).toBeTruthy()
-    expect(document.body.textContent).not.toContain(TERMOS.ocioso)
+    const tooltip = () => document.querySelector('[data-slot="tooltip-content"]')
+    expect(tooltip()).toBeNull()
     await act(async () => gatilho!.focus())
-    expect(document.body.textContent).toContain(TERMOS.ocioso)
+    expect(tooltip()?.textContent).toContain(TERMOS.ocioso)
     await m.desmontar()
+  })
+
+  it("o rótulo do termo tem a explicação como descrição acessível, mesmo com o tooltip fechado", async () => {
+    const m = await montar()
+    const gatilho = [...m.raiz.querySelectorAll<HTMLElement>("th [tabindex]")].find((g) => g.textContent === "Ocioso")!
+    const id = gatilho.getAttribute("aria-describedby")
+    expect(id).toBeTruthy()
+    expect(document.getElementById(id!)?.textContent).toBe(TERMOS.ocioso)
+    expect(gatilho.textContent).toBe("Ocioso")
+    await m.desmontar()
+  })
+
+  it("se a lista de modelos falhar, a tabela por etapa continua na tela", async () => {
+    metricasDoProjeto.mockResolvedValue(detalhe)
+    configModelos.mockRejectedValue(new Error("SDK fora do ar"))
+    const raiz = document.createElement("div")
+    document.body.append(raiz)
+    const r = createRoot(raiz)
+    await act(async () => r.render(createElement(DetalheProjeto, { slug: "verdeluz", etapas: ETAPAS })))
+    expect(raiz.querySelectorAll('[data-barra="custo-etapa"]')).toHaveLength(3)
+    expect(raiz.textContent).toContain("US$ 10,00")
+    expect(raiz.querySelector('[data-slot="alert"]')).toBeNull()
+    await act(async () => r.unmount())
   })
 
   it("o modelo aparece como selo, não como id cru, com o custo ao lado", async () => {

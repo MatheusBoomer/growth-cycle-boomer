@@ -12,6 +12,7 @@ import { fixturePainel } from "./fixture-painel"
 import { GraficoCustoTempo } from "./grafico-custo-tempo"
 import { GraficosPainel } from "./graficos-painel"
 import { RoscaEtapas } from "./rosca-etapas"
+import { TERMOS } from "../legenda-termos"
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -191,12 +192,26 @@ describe("BarrasPessoas", () => {
 
   it("notas: autor ausente sempre; 'Tempo não filtra por modelo' só com o aviso ligado", async () => {
     const sem = await montar(createElement(BarrasPessoas, { tempo, avatares: {}, tempoIgnoraModelo: false }))
-    expect(sem.texto()).toContain("Custos antigos sem autor ficam fora deste gráfico.")
+    expect(sem.texto()).toContain("Turnos antigos sem autor não entram no tempo do agente.")
+    expect(sem.texto()).not.toContain("Custos antigos sem autor")
     expect(sem.texto()).not.toContain("Tempo não filtra por modelo")
     await sem.desmontar()
     const com = await montar(createElement(BarrasPessoas, { tempo, avatares: {}, tempoIgnoraModelo: true }))
     expect(com.texto()).toContain("Tempo não filtra por modelo")
     await com.desmontar()
+  })
+
+  it("a legenda explica cada tempo com o Termo compartilhado (foco abre o tooltip), sem title", async () => {
+    const m = await montar(createElement(BarrasPessoas, { tempo, avatares: {}, tempoIgnoraModelo: false }))
+    const legenda = m.raiz.querySelector('[aria-label="Tipos de tempo"]')!
+    expect(legenda.querySelector("[title]")).toBeNull()
+    const gatilhos = [...legenda.querySelectorAll<HTMLElement>("[tabindex]")]
+    expect(gatilhos.map((g) => g.textContent)).toEqual(["Agente", "Analista ativo", "Ocioso"])
+    const descricao = (g: HTMLElement) => document.getElementById(g.getAttribute("aria-describedby") ?? "")?.textContent
+    expect(gatilhos.map(descricao)).toEqual([TERMOS.agente, TERMOS.ativo, TERMOS.ocioso])
+    await act(async () => gatilhos[2]!.focus())
+    expect(document.querySelector('[data-slot="tooltip-content"]')?.textContent).toContain(TERMOS.ocioso)
+    await m.desmontar()
   })
 
   it("sem tempo mostra o texto de vazio", async () => {
@@ -256,24 +271,56 @@ describe("GraficosPainel", () => {
 describe("guarda estática dos gráficos", () => {
   const pasta = import.meta.dirname
   const fontes = readdirSync(pasta)
-    .filter((n) => n.endsWith(".tsx"))
+    .filter((n) => /\.tsx?$/.test(n) && !/\.test\.tsx?$/.test(n))
     .map((n) => ({ nome: n, texto: readFileSync(path.join(pasta, n), "utf8") }))
+
+  /** Tag de abertura de cada `<ChartContainer ...>`, contando chaves para não parar num `>` de `=>` ou de JSX nas props. */
+  function aberturasDeChartContainer(texto: string): string[] {
+    const tags: string[] = []
+    for (let i = texto.indexOf("<ChartContainer"); i >= 0; i = texto.indexOf("<ChartContainer", i + 1)) {
+      let chaves = 0
+      let fim = i
+      for (; fim < texto.length; fim++) {
+        const c = texto[fim]
+        if (c === "{") chaves++
+        else if (c === "}") chaves--
+        else if (c === ">" && chaves === 0) break
+      }
+      tags.push(texto.slice(i, fim + 1))
+    }
+    return tags
+  }
+
+  it("lê os .ts e os .tsx da pasta, sem os testes", () => {
+    expect(fontes.some((f) => f.nome === "graficos-dados.ts")).toBe(true)
+    expect(fontes.some((f) => f.nome === "rosca-etapas.tsx")).toBe(true)
+    expect(fontes.some((f) => f.nome.includes(".test."))).toBe(false)
+  })
 
   it("sem preserveAspectRatio='none' nem cor hexadecimal", () => {
     for (const f of fontes) {
       expect(f.texto, f.nome).not.toMatch(/preserveAspectRatio="none"/)
-      expect(f.texto, f.nome).not.toMatch(/#[0-9a-fA-F]{6}\b/)
+      expect(f.texto, f.nome).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
     }
   })
 
-  it("todo ChartContainer tem altura ou proporção explícita no className", () => {
+  it("todo ChartContainer tem altura ou proporção explícita; aspect-auto só com altura na mesma tag", () => {
     let total = 0
     for (const f of fontes) {
-      for (const m of f.texto.matchAll(/<ChartContainer\b[^>]*?className="([^"]*)"/g)) {
+      for (const tag of aberturasDeChartContainer(f.texto)) {
         total++
-        expect(m[1], f.nome).toMatch(/h-\[|aspect-|size-/)
+        const classe = /className="([^"]*)"/.exec(tag)?.[1] ?? ""
+        expect(classe, `${f.nome}: ${tag}`).toMatch(/h-\[|aspect-|size-/)
+        if (classe.includes("aspect-auto")) expect(tag, `${f.nome}: aspect-auto sem altura`).toMatch(/h-\[|style=\{\{\s*height/)
       }
     }
     expect(total).toBeGreaterThanOrEqual(4)
+  })
+
+  it("a guarda pega aspect-auto sem altura", () => {
+    const ruim = '<ChartContainer config={c} className="aspect-auto w-full" aria-label={`a => b`}>'
+    const [tag] = aberturasDeChartContainer(ruim)
+    expect(tag).toBe(ruim)
+    expect(tag).not.toMatch(/h-\[|style=\{\{\s*height/)
   })
 })

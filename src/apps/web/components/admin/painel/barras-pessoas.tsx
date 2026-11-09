@@ -8,6 +8,7 @@ import type { PainelMetricas } from "@workspace/core/metricas/painel"
 import { normalizarEmail } from "@workspace/core/papeis"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@workspace/ui/components/chart"
 import { cn } from "@workspace/ui/lib/utils"
+import { Termo } from "@/components/admin/legenda-termos"
 import { AvatarPessoa } from "@/components/marca/avatar-pessoa"
 import { GraficoVazio } from "./grafico-vazio"
 import { ALTURA_EIXO, ALTURA_LINHA, alturaBarras, pessoasDoGrafico, ticksDeTempo } from "./graficos-dados"
@@ -15,11 +16,11 @@ import { ALTURA_EIXO, ALTURA_LINHA, alturaBarras, pessoasDoGrafico, ticksDeTempo
 const TICK = { fontSize: 12 }
 const EIXO_X = 24
 
-/** Os três tempos, com a explicação de cada termo no `title` (a Task 8 traz o `Termo` completo). */
+/** Os três tempos do gráfico; a explicação de cada um vem do `Termo` compartilhado (legenda-termos.tsx). */
 const TERMOS = [
-  { chave: "agente", rotulo: "Agente", cor: "var(--chart-1)", explicacao: "Tempo em que o agente trabalhou respondendo ao analista." },
-  { chave: "ativo", rotulo: "Analista ativo", cor: "var(--chart-2)", explicacao: "Tempo em que o analista estava na tela, lendo ou escrevendo." },
-  { chave: "ocioso", rotulo: "Ocioso", cor: "var(--chart-5)", explicacao: "Tempo com o projeto aberto, sem atividade do analista nem do agente." },
+  { chave: "agente", rotulo: "Agente", cor: "var(--chart-1)" },
+  { chave: "ativo", rotulo: "Analista ativo", cor: "var(--chart-2)" },
+  { chave: "ocioso", rotulo: "Ocioso", cor: "var(--chart-5)" },
 ] as const
 
 const CONFIG = Object.fromEntries(TERMOS.map((t) => [t.chave, { label: t.rotulo, color: t.cor }])) satisfies ChartConfig
@@ -158,9 +159,9 @@ export function BarrasPessoas({ tempo, avatares, tempoIgnoraModelo }: PropsBarra
       </div>
       <ul aria-label="Tipos de tempo" className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs">
         {TERMOS.map((t) => (
-          <li key={t.chave} className="flex items-center gap-1.5" title={t.explicacao}>
+          <li key={t.chave} className="flex items-center gap-1.5">
             <span aria-hidden="true" className="size-2.5 shrink-0 rounded-[2px]" style={{ background: t.cor }} />
-            <span className="underline decoration-dotted underline-offset-2">{t.rotulo}</span>
+            <Termo id={t.chave}>{t.rotulo}</Termo>
           </li>
         ))}
       </ul>
@@ -172,7 +173,7 @@ export function BarrasPessoas({ tempo, avatares, tempoIgnoraModelo }: PropsBarra
       )}
       <div className="flex flex-col gap-1">
         {nota}
-        <p className="text-muted-foreground text-xs">Custos antigos sem autor ficam fora deste gráfico.</p>
+        <p className="text-muted-foreground text-xs">Turnos antigos sem autor não entram no tempo do agente.</p>
       </div>
     </div>
   )

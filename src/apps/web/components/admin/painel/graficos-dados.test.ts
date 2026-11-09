@@ -18,6 +18,7 @@ import {
   pessoasDoGrafico,
   rotuloEtapa,
   ticksDeTempo,
+  ticksDeUsd,
   topProjetos,
 } from "./graficos-dados"
 
@@ -237,6 +238,27 @@ describe("ticksDeTempo", () => {
     expect(ticksDeTempo(40 * 60)).toEqual([0, 10, 20, 30, 40].map((m) => m * 60))
     expect(ticksDeTempo(50 * 60)).toEqual([0, 15, 30, 45, 60].map((m) => m * 60))
     expect(ticksDeTempo(0)).toEqual([0])
+  })
+})
+
+describe("ticksDeUsd", () => {
+  it("começa em zero, no máximo 3 marcas redondas, cobrindo o máximo", () => {
+    expect(ticksDeUsd(19.5)).toEqual([0, 10, 20])
+    expect(ticksDeUsd(25.9)).toEqual([0, 15, 30])
+    expect(ticksDeUsd(3.75)).toEqual([0, 2, 4])
+    expect(ticksDeUsd(0.9)).toEqual([0, 0.5, 1])
+    expect(ticksDeUsd(140)).toEqual([0, 80, 160])
+    for (const max of [0.01, 0.3, 7, 33, 99.99, 1234]) {
+      const t = ticksDeUsd(max)
+      expect(t[0]).toBe(0)
+      expect(t.length).toBeLessThanOrEqual(3)
+      expect(t.at(-1)!).toBeGreaterThanOrEqual(max)
+    }
+  })
+
+  it("zero ou inválido dá só o zero", () => {
+    expect(ticksDeUsd(0)).toEqual([0])
+    expect(ticksDeUsd(Number.NaN)).toEqual([0])
   })
 })
 
