@@ -1,6 +1,21 @@
-import { describe, expect, it } from "vitest"
+// @vitest-environment jsdom
+import { act, createElement } from "react"
+import { createRoot } from "react-dom/client"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import type { MediaEtapa, MetricasEtapa } from "@workspace/core/metricas/resumo"
-import { comparacoesDaEtapa, textoSemModelos } from "./detalhe-projeto"
+
+const metricasDoProjeto = vi.fn()
+const configModelos = vi.fn()
+vi.mock("next/link", () => ({ default: (p: { href: string; children?: unknown }) => createElement("a", { href: p.href }, p.children as never) }))
+vi.mock("@/lib/api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/api")>()),
+  api: { metricasDoProjeto, configModelos },
+}))
+
+const { comparacoesDaEtapa, textoSemModelos, DetalheProjeto } = await import("./detalhe-projeto")
+const { TERMOS } = await import("./legenda-termos")
+
+;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 const etapa = (usd: number, ativo: number, temPresenca: boolean): MetricasEtapa => ({
   custo: { usd, estimado: false, turnos: 1, modelos: {} },
@@ -31,5 +46,90 @@ describe("textoSemModelos", () => {
     const estimada: MetricasEtapa = { ...etapa(1, 0, false), custo: { usd: 1, estimado: true, turnos: 2, modelos: {} } }
     expect(textoSemModelos(estimada)).toBe("não registrado")
     expect(textoSemModelos(etapa(1, 0, false))).toBe("Sem detalhe")
+  })
+})
+
+const ETAPAS = [
+  { id: "03", rotulo: "Diagnóstico" },
+  { id: "04", rotulo: "Unidade econômica" },
+  { id: "05", rotulo: "Soluções" },
+] as never
+
+const tempo = { agente: 60, ativo: 120, ocioso: 30, descartado: 10 }
+const detalhe = {
+  projeto: { slug: "verdeluz", nome: "Verdeluz", dono: "ana.souza@boomer.com.br", rotuloEtapaAtual: "Diagnóstico" },
+  metricas: {
+    custoUsd: 12,
+    estimado: false,
+    ultimaAtividade: "2026-11-05T12:00:00.000Z",
+    tempo,
+    porEtapa: {
+      "03": { custo: { usd: 10, estimado: false, turnos: 2, modelos: { "claude-sonnet-5-5": 10 } }, tempo, temPresenca: true },
+      "04": { custo: { usd: 5, estimado: false, turnos: 1, modelos: {} }, tempo, temPresenca: true },
+      "05": { custo: { usd: 0, estimado: false, turnos: 0, modelos: {} }, tempo, temPresenca: true },
+    },
+    porPessoa: [
+      { email: "ana.souza@boomer.com.br", custoUsd: 8, tempo },
+      { email: "bia@boomer.com.br", custoUsd: 4, tempo },
+      { email: "caio@boomer.com.br", custoUsd: 0, tempo },
+    ],
+  },
+  medias: null,
+}
+
+async function montar() {
+  metricasDoProjeto.mockResolvedValue(detalhe)
+  configModelos.mockResolvedValue({ lista: { modelos: [], padrao: null, completa: false } })
+  const raiz = document.createElement("div")
+  document.body.append(raiz)
+  const r = createRoot(raiz)
+  await act(async () => r.render(createElement(DetalheProjeto, { slug: "verdeluz", etapas: ETAPAS })))
+  return { raiz, desmontar: () => act(async () => r.unmount()) }
+}
+
+afterEach(() => {
+  document.body.innerHTML = ""
+  vi.clearAllMocks()
+})
+
+describe("TERMOS", () => {
+  it("tem os quatro termos, todos com texto", () => {
+    expect(Object.keys(TERMOS).sort()).toEqual(["agente", "ativo", "descartado", "ocioso"])
+    for (const texto of Object.values(TERMOS)) expect(texto.trim().length).toBeGreaterThan(10)
+  })
+})
+
+describe("DetalheProjeto", () => {
+  it("focar o cabeçalho Ocioso mostra o significado", async () => {
+    const m = await montar()
+    const gatilho = [...m.raiz.querySelectorAll<HTMLElement>("th")].find((th) => th.textContent?.trim() === "Ocioso")?.querySelector<HTMLElement>("[tabindex]")
+    expect(gatilho).toBeTruthy()
+    expect(document.body.textContent).not.toContain(TERMOS.ocioso)
+    await act(async () => gatilho!.focus())
+    expect(document.body.textContent).toContain(TERMOS.ocioso)
+    await m.desmontar()
+  })
+
+  it("o modelo aparece como selo, não como id cru, com o custo ao lado", async () => {
+    const m = await montar()
+    const texto = m.raiz.textContent ?? ""
+    expect(texto).toContain("Sonnet 5.5 · fixo")
+    expect(texto).not.toContain("claude-sonnet-5-5")
+    await m.desmontar()
+  })
+
+  it("a barra de custo da etapa mais cara tem 100%, a de custo zero 0%, e o número continua", async () => {
+    const m = await montar()
+    const larguras = [...m.raiz.querySelectorAll<HTMLElement>('[data-barra="custo-etapa"]')].map((b) => b.style.width)
+    expect(larguras).toEqual(["100%", "50%", "0%"])
+    expect(m.raiz.textContent).toContain("US$ 10,00")
+    await m.desmontar()
+  })
+
+  it("por pessoa, a barra do custo dos turnos é proporcional ao maior", async () => {
+    const m = await montar()
+    const larguras = [...m.raiz.querySelectorAll<HTMLElement>('[data-barra="custo-pessoa"]')].map((b) => b.style.width)
+    expect(larguras).toEqual(["100%", "50%", "0%"])
+    await m.desmontar()
   })
 })
