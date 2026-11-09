@@ -8,6 +8,7 @@ import {
   ErroCaminhoForaDoProspect,
   ErroEntrada,
   ErroNaoEncontrado,
+  ErroNumeracaoAntiga,
   ErroProspectExistente,
   ErroTurnoAtivo,
   TransicaoInvalida,
@@ -143,6 +144,32 @@ describe("criar e excluir prospect", () => {
     )
     ocupado = false
     await servico.excluirProspect(slug, "a")
+  })
+})
+
+describe("prospect ainda na numeração antiga das etapas", () => {
+  async function prospectNaoMigrado(nome: string): Promise<string> {
+    const slug = await servico.criarProspect(nome, null)
+    const arquivo = path.join(raiz, "clientes", slug, ".app/estado.json")
+    const e = JSON.parse(await readFile(arquivo, "utf8")) as Record<string, unknown> & { etapas: Record<string, unknown> }
+    delete e.versaoEtapas
+    e.etapas["09"] = { ...(e.etapas["08"] as object), status: "bloqueada" }
+    await writeFile(arquivo, JSON.stringify(e))
+    return slug
+  }
+
+  it("abrir o prospect dá ErroNumeracaoAntiga; a lista e as métricas seguem com os outros", async () => {
+    await servico.criarProspect("Novo", null)
+    const velho = await prospectNaoMigrado("Velho")
+    await expect(servico.estado(velho)).rejects.toBeInstanceOf(ErroNumeracaoAntiga)
+    const erro = vi.spyOn(console, "error").mockImplementation(() => {})
+    try {
+      expect((await servico.listarProspects(ADMIN)).map((p) => p.slug)).toEqual(["novo"])
+      expect((await servico.metricasGerais({ ociosoMin: 5, descarteMin: 15 })).projetos.map((p) => p.slug)).toEqual(["novo"])
+      expect(erro).toHaveBeenCalled()
+    } finally {
+      erro.mockRestore()
+    }
   })
 })
 

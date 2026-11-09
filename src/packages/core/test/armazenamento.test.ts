@@ -3,8 +3,10 @@ import { mkdir, readdir, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { beforeEach, describe, expect, it } from "vitest"
 import { FsArmazenamento } from "../src/armazenamento"
-import { ErroCaminhoForaDoProspect, ErroEntrada, ErroProspectExistente } from "../src/erros"
-import { estadoInicial } from "../src/maquina-estados"
+import { migrarProspect } from "../scripts/migrar-etapas"
+import { ErroCaminhoForaDoProspect, ErroEntrada, ErroNumeracaoAntiga, ErroProspectExistente } from "../src/erros"
+import { estadoInicial, etapaVazia } from "../src/maquina-estados"
+import { catalogoReal } from "./ajuda"
 import { raizTemporaria } from "./ajuda"
 
 let raiz: string
@@ -164,5 +166,67 @@ describe("imagens do prospect para a biblioteca", () => {
     await arm.gravarBinario("iszi", ".app/previas/x/slide-01.png", um)
     const caminhos = (await arm.listarImagensDoProspect("iszi")).map((a) => a.caminho)
     expect(caminhos).toEqual([".app/previas/x/slide-01.png"])
+  })
+})
+
+/** Estado gravado pelo app de 9 etapas numeradas (com "09", sem o marcador): ainda não passou pela migração. */
+function estadoNaoMigrado(slug: string): Record<string, unknown> & { etapas: Record<string, unknown> } {
+  const e = estadoInicial({ slug, nome: slug, site: null }, "2026-11-01T10:00:00.000Z") as unknown as Record<string, unknown> & {
+    etapas: Record<string, unknown>
+  }
+  delete e.versaoEtapas
+  e.etapas["09"] = etapaVazia("bloqueada")
+  return e
+}
+
+async function gravarCru(slug: string, estado: unknown): Promise<void> {
+  await mkdir(path.join(raiz, "clientes", slug, ".app"), { recursive: true })
+  await writeFile(path.join(raiz, "clientes", slug, ".app/estado.json"), JSON.stringify(estado))
+}
+
+describe("guarda da numeração antiga", () => {
+  it("recusa abrir um estado ainda na numeração antiga, com o comando da migração na mensagem", async () => {
+    await arm.criarPasta("velho")
+    await gravarCru("velho", estadoNaoMigrado("velho"))
+    const erro = await arm.lerEstado("velho").catch((e: unknown) => e)
+    expect(erro).toBeInstanceOf(ErroNumeracaoAntiga)
+    expect((erro as ErroNumeracaoAntiga).message).toContain("npm run migrar-etapas")
+    expect((erro as ErroNumeracaoAntiga).slug).toBe("velho")
+    expect((erro as ErroNumeracaoAntiga).status).toBe(409)
+  })
+
+  it("estado legado (sem a 09 ou com a 09 injetada pelo app antigo) abre como antes", async () => {
+    await arm.criarPasta("legado")
+    const legado = estadoNaoMigrado("legado")
+    for (const id of ["01", "02", "03", "04", "05", "06", "07", "08"]) legado.etapas[id] = etapaVazia("concluida")
+    legado.etapas.final = etapaVazia("em_andamento")
+    await gravarCru("legado", legado)
+    const lido = await arm.lerEstado("legado")
+    expect(lido?.etapas["07"]?.status).toBe("concluida")
+    expect(lido?.etapas.final?.status).toBe("em_andamento")
+    expect(lido?.versaoEtapas).toBeUndefined()
+    expect(Object.keys(lido?.etapas ?? {})).toContain("09")
+
+    delete legado.etapas["09"]
+    await gravarCru("legado", legado)
+    expect((await arm.lerEstado("legado"))?.etapas.final?.status).toBe("em_andamento")
+  })
+
+  it("estado migrado (com o marcador) abre como antes, mesmo com uma 09 sobrando", async () => {
+    await arm.criarPasta("novo")
+    const e = estadoInicial({ slug: "novo", nome: "Novo", site: null }, "2026-11-01T10:00:00.000Z")
+    await arm.gravarEstado("novo", e)
+    expect(await arm.lerEstado("novo")).toEqual(e)
+    await gravarCru("novo", { ...e, etapas: { ...e.etapas, "09": etapaVazia("bloqueada") } })
+    expect((await arm.lerEstado("novo"))?.versaoEtapas).toBe(2)
+  })
+
+  it("a migração em disco lê o estado.json cru, sem a guarda, e depois dela o app abre o prospect", async () => {
+    await arm.criarPasta("velho")
+    await gravarCru("velho", estadoNaoMigrado("velho"))
+    await expect(arm.lerEstado("velho")).rejects.toBeInstanceOf(ErroNumeracaoAntiga)
+    const r = await migrarProspect(path.join(raiz, "clientes", "velho"), catalogoReal(), { aplicar: true, pastaBackup: null })
+    expect(r.resultado).toBe("migrado")
+    expect((await arm.lerEstado("velho"))?.versaoEtapas).toBe(2)
   })
 })

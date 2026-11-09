@@ -105,6 +105,19 @@ export class ErroConflitoVersao extends ErroDominio {
   }
 }
 
+/** Estado salvo ainda na numeração antiga das etapas (09 = plano de ação): abrir com o app novo trocaria as etapas de lugar. */
+export class ErroNumeracaoAntiga extends ErroDominio {
+  readonly slug: string
+  constructor(slug: string) {
+    super(
+      `Este projeto ainda está na numeração antiga das etapas. Rode a migração de etapas (npm run migrar-etapas) com o app parado antes de abrir.`,
+      "numeracao_antiga",
+      409,
+    )
+    this.slug = slug
+  }
+}
+
 export class ErroSincronizacao extends ErroDominio {
   readonly caminho: string | null
   constructor(message: string, caminho: string | null = null) {

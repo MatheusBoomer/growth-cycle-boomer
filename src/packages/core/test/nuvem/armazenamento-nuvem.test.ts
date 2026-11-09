@@ -3,8 +3,8 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { Comentario } from "../../src/comentarios"
-import { ErroNaoEncontrado, ErroProspectExistente, ErroSincronizacao } from "../../src/erros"
-import { estadoInicial } from "../../src/maquina-estados"
+import { ErroNaoEncontrado, ErroNumeracaoAntiga, ErroProspectExistente, ErroSincronizacao } from "../../src/erros"
+import { estadoInicial, etapaVazia } from "../../src/maquina-estados"
 import { NuvemArmazenamento } from "../../src/nuvem/armazenamento-nuvem"
 import { MemoriaArmazem, MemoriaRepositorio } from "../../src/nuvem/memoria"
 import { Mesa } from "../../src/nuvem/mesa"
@@ -145,6 +145,21 @@ describe("NuvemArmazenamento", () => {
     const lido = await arm.lerEstado(SLUG)
     expect(lido?.perguntas).toEqual([])
     expect(lido?.etapas["08"]?.status).toBe("bloqueada")
+  })
+
+  it("lerEstado recusa um estado ainda na numeração antiga (com a 09, sem o marcador)", async () => {
+    await arm.criarPasta(SLUG)
+    const antigo = estadoInicial({ slug: SLUG, nome: "Acme", site: null }, AGORA) as unknown as Record<string, unknown> & {
+      etapas: Record<string, unknown>
+    }
+    delete antigo.versaoEtapas
+    antigo.etapas["09"] = etapaVazia("bloqueada")
+    await repositorio.gravarEstado(SLUG, antigo as never, 0)
+    await expect(arm.lerEstado(SLUG)).rejects.toBeInstanceOf(ErroNumeracaoAntiga)
+    // Legado com a 09 injetada pelo app antigo (08 concluída) segue abrindo.
+    antigo.etapas["08"] = etapaVazia("concluida")
+    await repositorio.gravarEstado(SLUG, antigo as never, 1)
+    expect((await arm.lerEstado(SLUG))?.etapas["08"]?.status).toBe("concluida")
   })
 
   it("gravar arquivo agenda sincronização", async () => {

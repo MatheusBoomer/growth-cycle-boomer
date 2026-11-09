@@ -1,5 +1,5 @@
 import { rm } from "node:fs/promises"
-import { FsArmazenamento, normalizarEstado } from "../armazenamento"
+import { estadoLido, FsArmazenamento } from "../armazenamento"
 import type { Comentario } from "../comentarios"
 import { ErroProspectExistente, ErroSincronizacao } from "../erros"
 import type { Acumulado, LinhaPresenca, LinhaUso } from "../metricas/tipos"
@@ -112,7 +112,7 @@ export class NuvemArmazenamento extends FsArmazenamento {
       return null
     }
     this.versoes.set(slug, lido.versao)
-    return normalizarEstado(lido.estado)
+    return estadoLido(slug, lido.estado)
   }
 
   override async gravarEstado(slug: string, estado: Estado): Promise<void> {

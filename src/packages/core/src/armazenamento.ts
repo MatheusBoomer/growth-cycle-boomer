@@ -3,8 +3,9 @@ import { appendFile, copyFile, cp, mkdir, readdir, readFile, rename, rm, stat, w
 import path from "node:path"
 import { ehImagem } from "./biblioteca"
 import type { Comentario } from "./comentarios"
-import { ErroCaminhoForaDoProspect, ErroEntrada, ErroNaoEncontrado, ErroProspectExistente } from "./erros"
+import { ErroCaminhoForaDoProspect, ErroEntrada, ErroNaoEncontrado, ErroNumeracaoAntiga, ErroProspectExistente } from "./erros"
 import { etapaVazia } from "./maquina-estados"
+import { classificarNumeracao } from "./migracao-etapas"
 import type { Acumulado, LinhaPresenca, LinhaUso } from "./metricas/tipos"
 import { normalizarSlug } from "./slug"
 import type { NivelEsforco } from "./modelos"
@@ -54,6 +55,17 @@ export function normalizarEstado(estado: Estado): Estado {
   for (const id of ORDEM_ETAPAS) etapas[id] ??= etapaVazia("bloqueada")
   // estado.json gravado antes do card de perguntas não tem o campo
   return { ...estado, etapas, perguntas: estado.perguntas ?? [] }
+}
+
+/**
+ * Estado lido do disco ou da nuvem, pronto para o app: recusa (ErroNumeracaoAntiga) o que ainda está na numeração antiga
+ * das etapas, que o app novo leria com as etapas trocadas de lugar, e completa o resto com normalizarEstado.
+ * A migração de etapas (scripts/migrar-etapas.ts e a migration SQL) lê o estado cru, sem passar por aqui.
+ */
+export function estadoLido(slug: string, estado: Estado): Estado {
+  const etapas: unknown = estado.etapas
+  if (typeof etapas === "object" && etapas !== null && classificarNumeracao(estado) === "atual") throw new ErroNumeracaoAntiga(slug)
+  return normalizarEstado(estado)
 }
 
 export interface ArquivoProspect {
@@ -154,7 +166,7 @@ export class FsArmazenamento {
   async lerEstado(slug: string): Promise<Estado | null> {
     const texto = await this.lerTexto(slug, ARQUIVO_ESTADO)
     if (!texto) return null
-    return normalizarEstado(JSON.parse(texto) as Estado)
+    return estadoLido(slug, JSON.parse(texto) as Estado)
   }
 
   gravarEstado(slug: string, estado: Estado): Promise<void> {
