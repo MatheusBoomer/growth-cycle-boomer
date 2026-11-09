@@ -1,5 +1,16 @@
-/** Fundo fixo da marca: três brilhos difusos (laranja, azul, verde) e uma grade de pontos quase invisível. */
+"use client"
+
+import { usePathname } from "next/navigation"
+import { rotaUsaOndas } from "@/lib/rota-ondas"
+import { FundoOndasAscii } from "./fundo-ondas-ascii"
+
+/**
+ * Fundo fixo da marca. Na home, no login e na tela do projeto são as ondas ASCII animadas, com degradê até sumir na
+ * base; nas demais telas, três brilhos difusos (laranja, azul, verde) e uma grade de pontos quase invisível.
+ */
 export function FundoBoomer() {
+  const caminho = usePathname() ?? ""
+  if (rotaUsaOndas(caminho)) return <FundoOndasAscii />
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
       <div className="absolute -top-40 -left-40 size-[520px] rounded-full blur-[120px]" style={{ background: "rgb(235 97 10 / var(--orb-laranja))" }} />
