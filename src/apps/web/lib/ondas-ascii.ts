@@ -8,12 +8,13 @@ export const RAMPA: readonly string[] = [" ", ".", ":", "-", "=", "+", "*", "#",
 export type Celula = { intensidade: number; caractere: string; laranja: boolean }
 export type TemaOndas = "claro" | "escuro"
 export type Rgb = readonly [number, number, number]
-export type Paleta = { azul: Rgb; laranja: Rgb; opacidadeMax: number }
+/** `brilho`: desfoque, em px, do halo neon na cor do próprio caractere (0 = sem brilho). */
+export type Paleta = { azul: Rgb; laranja: Rgb; opacidadeMax: number; brilho: number }
 
-/** Claro: o azul e o laranja da Boomer, discretos para não brigar com o texto. Escuro: luminosos, como no vídeo de referência. */
+/** Claro: o azul e o laranja da Boomer, bem discretos para não brigar com o texto. Escuro: luminosos, como no vídeo de referência, com neon leve. */
 export const PALETAS: Record<TemaOndas, Paleta> = {
-  claro: { azul: [57, 135, 229], laranja: [235, 97, 10], opacidadeMax: 0.26 },
-  escuro: { azul: [84, 178, 255], laranja: [255, 138, 61], opacidadeMax: 0.85 },
+  claro: { azul: [57, 135, 229], laranja: [235, 97, 10], opacidadeMax: 0.2, brilho: 0 },
+  escuro: { azul: [84, 178, 255], laranja: [255, 138, 61], opacidadeMax: 0.4, brilho: 6 },
 }
 
 /** Limiar do segundo ruído lento; calibrado para o laranja ocupar cerca de 10–15% das células visíveis. */

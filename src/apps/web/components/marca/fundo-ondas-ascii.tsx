@@ -6,6 +6,8 @@ import { PALETAS, celulaOnda, dimensionarGrade, fatorDeDegrade, type TemaOndas }
 
 const FAIXAS = 8
 const INTERVALO_MS = 1000 / 30
+/** A partir desta faixa (de FAIXAS) o caractere ganha o halo neon do tema escuro. */
+const FAIXA_BRILHO = 6
 /** Abaixo disto o degradê do mask já escondeu a coluna: não vale desenhar. */
 const DEGRADE_MINIMO = 0.05
 
@@ -73,13 +75,18 @@ export function FundoOndasAscii() {
           lote.chars.push(c.caractere)
         }
       }
-      const { azul, laranja, opacidadeMax } = paletaRef.current
+      const { azul, laranja, opacidadeMax, brilho } = paletaRef.current
       lotes.forEach((lote, i) => {
         if (lote.chars.length === 0) return
+        const faixa = Math.floor(i / 2)
         const [r, g, b] = i % 2 === 1 ? laranja : azul
-        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${((Math.floor(i / 2) / FAIXAS) * opacidadeMax).toFixed(3)})`
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${((faixa / FAIXAS) * opacidadeMax).toFixed(3)})`
+        // Neon leve: halo na cor do caractere, só nas faixas mais fortes (o desfoque por caractere é o custo do quadro).
+        ctx.shadowBlur = brilho > 0 && faixa >= FAIXA_BRILHO ? brilho : 0
+        ctx.shadowColor = `rgb(${r}, ${g}, ${b})`
         lote.chars.forEach((ch, k) => ctx.fillText(ch, lote.pos[k * 2]!, lote.pos[k * 2 + 1]!))
       })
+      ctx.shadowBlur = 0
     }
 
     const quadro = (agora: number) => {

@@ -13,6 +13,8 @@ const { FundoOndasAscii } = await import("./fundo-ondas-ascii")
 // Contexto 2D falso: guarda a cor vigente a cada fillText, que é o que o teste de tema precisa ver.
 let estilos: string[]
 let xs: number[]
+let blurs: number[]
+let sombras: string[]
 let ctx: Record<string, unknown>
 let fila: Map<number, FrameRequestCallback>
 let proximoId: number
@@ -22,8 +24,12 @@ let oculto = false
 function instalarAmbiente({ reduzido = false, largura = 1024, altura = 768, contexto = true } = {}) {
   estilos = []
   xs = []
+  blurs = []
+  sombras = []
   ctx = {
     fillStyle: "",
+    shadowBlur: 0,
+    shadowColor: "",
     font: "",
     textBaseline: "",
     clearRect: vi.fn(),
@@ -31,6 +37,8 @@ function instalarAmbiente({ reduzido = false, largura = 1024, altura = 768, cont
     fillText: vi.fn((_ch: string, x: number) => {
       estilos.push(String(ctx.fillStyle))
       xs.push(x)
+      blurs.push(Number(ctx.shadowBlur))
+      sombras.push(String(ctx.shadowColor))
     }),
   }
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation((() => (contexto ? ctx : null)) as never)
@@ -144,6 +152,23 @@ describe("FundoOndasAscii", () => {
     tema = "dark"
     await rerenderizar()
     expect(estilos.some((e) => e.includes("84, 178, 255"))).toBe(true)
+  })
+
+  it("tema escuro: neon leve só nas faixas mais fortes, na cor do lote, e o brilho volta a 0 no fim do quadro", async () => {
+    tema = "dark"
+    instalarAmbiente({ reduzido: true })
+    await montar()
+    expect(blurs.some((b) => b > 0)).toBe(true)
+    expect(blurs.some((b) => b === 0)).toBe(true)
+    expect(sombras.some((s) => s.includes("84, 178, 255"))).toBe(true)
+    expect(ctx.shadowBlur).toBe(0)
+  })
+
+  it("tema claro: nunca usa brilho", async () => {
+    instalarAmbiente({ reduzido: true })
+    await montar()
+    expect(blurs.length).toBeGreaterThan(0)
+    expect(blurs.every((b) => b === 0)).toBe(true)
   })
 
   it("desmontar chama cancelAnimationFrame com o id pendente", async () => {

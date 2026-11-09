@@ -44,8 +44,8 @@ Duas unidades, cada uma com um propósito.
 ## Visual
 
 - **Movimento:** colunas verticais de caracteres ondulando e avançando para a direita, com a massa mais densa à esquerda.
-- **Tema claro:** azul dominante, laranja `#eb610a` como detalhe. Opacidade máxima baixa (0,26, reduzida de 0,35 depois de ver o resultado), para o texto das telas continuar legível.
-- **Tema escuro:** azul vivo com toque de ciano e laranja mais quente, com opacidade maior.
+- **Tema claro:** azul dominante, laranja `#eb610a` como detalhe. Opacidade máxima de 0,20 (era 0,35; reduzida duas vezes depois de ver o resultado), para o texto das telas continuar legível.
+- **Tema escuro:** azul vivo com toque de ciano e laranja mais quente, com opacidade máxima de 0,4 e neon leve: um halo (`shadowBlur` de 6 px) na cor do próprio caractere, só nas faixas mais intensas (a partir da 6ª de 8). O tema claro não tem brilho.
 - **Painéis de vidro** (`vidro`, `backdrop-blur`) ficam por cima das ondas, sem brigar com texto ou gráfico.
 
 ## Desempenho e robustez
@@ -53,6 +53,7 @@ Duas unidades, cada uma com um propósito.
 - Células de cerca de 10×18 px no desktop e maiores no celular, para limitar o número de células.
 - Teto de ~30 fps.
 - Desenho em lotes por faixa de opacidade (poucos `fillStyle` por quadro). Colunas que o degradê já deixa invisíveis não são desenhadas.
+- O halo neon só vale para as faixas mais fortes: o desfoque por caractere é o custo mais alto do quadro. Se pesar em máquinas fracas, aumentar `FAIXA_BRILHO` (menos caracteres com halo) ou zerar `brilho` na paleta escura resolve.
 - O loop pausa quando a aba fica oculta (`visibilitychange`).
 - Com `prefers-reduced-motion: reduce` desenha um único quadro estático e não anima.
 - Sem `getContext("2d")` o componente não renderiza nada.
