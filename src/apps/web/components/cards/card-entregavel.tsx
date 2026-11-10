@@ -29,7 +29,8 @@ const ROTULO_TIPO: Record<TipoEntregavel, string> = {
 }
 export const ROTULO_STATUS_ENTREGAVEL: Record<StatusEntregavel, string> = { pendente: "Aguardando aprovação", aprovado: "Aprovado", substituido: "Substituído" }
 
-export function CardEntregavel({ slug, entregavel: e }: { slug: string; entregavel: Entregavel }) {
+/** `anterior`: a versão anterior do mesmo entregável (null na primeira); o roteiro a usa para mostrar só o que mudou. */
+export function CardEntregavel({ slug, entregavel: e, anterior = null }: { slug: string; entregavel: Entregavel; anterior?: Entregavel | null }) {
   const { abrir, abrirSecao, abrirPlanilha, abrirArquivo, mencionar } = useVisualizador()
   const [ocupado, setOcupado] = useState(false)
   const refs = useReferencias(e.etapa)
@@ -88,6 +89,7 @@ export function CardEntregavel({ slug, entregavel: e }: { slug: string; entregav
             slug={slug}
             tipo={e.tipo}
             caminho={e.arquivoRascunho}
+            caminhoAnterior={anterior?.arquivoRascunho}
             entregavelId={e.id}
             podeComentar={e.status === "pendente"}
             titulo={e.titulo}

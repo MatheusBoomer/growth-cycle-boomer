@@ -1,6 +1,7 @@
 "use client"
 
 import { InfoIcon, WrenchIcon } from "lucide-react"
+import { versaoAnterior } from "@workspace/core/entregaveis"
 import type { EtapaId, EventoConversa, ReferenciaAjuste, RespostaEstado } from "@workspace/core/tipos"
 import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert"
 import { AttachmentGroup } from "@workspace/ui/components/attachment"
@@ -130,7 +131,7 @@ export function ItemConversa({
       )
     case "card_entregavel": {
       const entregavel = dados.estado.entregaveis.find((e) => e.id === evento.entregavelId)
-      return entregavel ? <CardEntregavel slug={slug} entregavel={entregavel} /> : null
+      return entregavel ? <CardEntregavel slug={slug} entregavel={entregavel} anterior={versaoAnterior(dados.estado.entregaveis, entregavel)} /> : null
     }
     case "card_insumo": {
       const insumo = dados.catalogo.insumos.find((i) => i.id === evento.insumoId)
