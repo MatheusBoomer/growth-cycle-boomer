@@ -124,3 +124,10 @@ def test_texto_piso_roas_sem_margem():
     plano = ex.plano_valido()
     plano["abertura"]["margem_contribuicao"] = None
     assert c.texto_piso_roas(plano) == ["Piso de ROAS: [PREENCHER: margem de contribuição]"]
+
+
+def test_acoes_cronologicas_com_horizonte_pareia_horizonte_e_acao_na_ordem_cronologica():
+    pares = c.acoes_cronologicas_com_horizonte(_plano_fora_de_ordem())
+    assert [(h, a["numero"]) for h, a in pares] == [
+        ("Curto prazo", 1), ("Médio prazo", 3), ("Imediato", 2), ("Curto prazo", 4), ("Imediato", 5)]
+    assert [a for _, a in pares] == c.acoes_cronologicas(_plano_fora_de_ordem())

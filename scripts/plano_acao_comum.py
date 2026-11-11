@@ -53,12 +53,20 @@ def acoes(plano: dict) -> list[tuple[str, dict]]:
     return [(h.get("nome", ""), a) for h in plano.get("horizontes", []) for a in h.get("acoes", [])]
 
 
+def acoes_cronologicas_com_horizonte(plano: dict) -> list[tuple[str, dict]]:
+    """(horizonte, ação) ordenados por início; empate resolvido pelo número."""
+    return sorted(
+        acoes(plano),
+        key=lambda par: (
+            ler_data(par[1]["inicio"], f"Ação {par[1].get('numero')}, início"),
+            par[1].get("numero", 0),
+        ),
+    )
+
+
 def acoes_cronologicas(plano: dict) -> list[dict]:
     """Ações ordenadas por início; empate resolvido pelo número."""
-    return sorted(
-        (a for _, a in acoes(plano)),
-        key=lambda a: (ler_data(a["inicio"], f"Ação {a.get('numero')}, início"), a.get("numero", 0)),
-    )
+    return [a for _, a in acoes_cronologicas_com_horizonte(plano)]
 
 
 def pisos_roas(margem: float | None, quebra: float | None) -> dict:
@@ -78,17 +86,16 @@ def pisos_roas(margem: float | None, quebra: float | None) -> dict:
 
 def tabela_resumo(plano: dict) -> list[dict]:
     """Linhas da tabela-resumo em ordem cronológica de início."""
-    horizonte_de = {id(a): h for h, a in acoes(plano)}
     return [
         {
             "numero": a["numero"],
             "acao": a["acao"],
             "frente": a["frente"],
-            "horizonte": horizonte_de[id(a)],
+            "horizonte": horizonte,
             "periodo": f"{a['inicio']} a {a['entrega']}",
             "dono": a["dono"],
         }
-        for a in acoes_cronologicas(plano)
+        for horizonte, a in acoes_cronologicas_com_horizonte(plano)
     ]
 
 
