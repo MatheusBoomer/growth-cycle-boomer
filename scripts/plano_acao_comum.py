@@ -100,3 +100,36 @@ def texto_depende(acao: dict) -> str:
     if len(deps) == 1:
         return f"Ação {deps[0]}"
     return "Ações " + ", ".join(str(d) for d in deps)
+
+
+def formatar_decimal(valor: float, casas: int = 2) -> str:
+    """Número com vírgula decimal e sem separador de milhar: 5.0 -> '5,00'."""
+    return f"{valor:.{casas}f}".replace(".", ",")
+
+
+def formatar_percentual(fracao: float) -> str:
+    """Fração como percentual: inteiro quando redondo ('20%'), senão uma casa ('5,5%')."""
+    pct = round(fracao * 100, 1)
+    if pct == int(pct):
+        return f"{int(pct)}%"
+    return f"{formatar_decimal(pct, 1)}%"
+
+
+def texto_piso_roas(plano: dict) -> list[str]:
+    """Linhas do piso de ROAS para a abertura do plano (.docx e .xlsx)."""
+    abertura = plano.get("abertura") or {}
+    margem = abertura.get("margem_contribuicao")
+    quebra = abertura.get("taxa_quebra")
+    pisos = pisos_roas(margem, quebra)
+    if pisos["aprovada"] is None:
+        return ["Piso de ROAS: [PREENCHER: margem de contribuição]"]
+    linhas = [
+        f"Piso de ROAS sobre a receita aprovada: {formatar_decimal(pisos['aprovada'])} "
+        f"(1 ÷ margem de {formatar_percentual(margem)})."
+    ]
+    if pisos["captada"] is not None:
+        linhas.append(
+            f"Sobre a receita captada: {formatar_decimal(pisos['captada'])} "
+            f"(com quebra de {formatar_percentual(quebra)})."
+        )
+    return linhas

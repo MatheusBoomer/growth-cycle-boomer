@@ -89,3 +89,38 @@ def test_tabela_resumo_ordena_e_mantem_o_horizonte_de_cada_acao():
     assert {l["numero"]: l["horizonte"] for l in linhas} == {
         1: "Curto prazo", 3: "Médio prazo", 2: "Imediato", 4: "Curto prazo", 5: "Imediato"}
     assert linhas[0]["periodo"] == "26/10/2026 a 30/12/2026"
+
+
+def test_formatar_decimal_usa_virgula():
+    assert c.formatar_decimal(5.0) == "5,00"
+    assert c.formatar_decimal(6.25) == "6,25"
+    assert c.formatar_decimal(1 / 0.3) == "3,33"
+    assert c.formatar_decimal(2.5, 1) == "2,5"
+    assert c.formatar_decimal(1234.5) == "1234,50"
+
+
+def test_formatar_percentual_inteiro_quando_redondo():
+    assert c.formatar_percentual(0.20) == "20%"
+    assert c.formatar_percentual(0.055) == "5,5%"
+    assert c.formatar_percentual(0.361) == "36,1%"
+    assert c.formatar_percentual(0.2) == "20%"
+
+
+def test_texto_piso_roas_com_margem_e_quebra():
+    plano = ex.plano_valido()
+    assert c.texto_piso_roas(plano) == [
+        "Piso de ROAS sobre a receita aprovada: 5,00 (1 ÷ margem de 20%).",
+        "Sobre a receita captada: 6,25 (com quebra de 20%).",
+    ]
+
+
+def test_texto_piso_roas_sem_quebra():
+    plano = ex.plano_valido()
+    plano["abertura"]["taxa_quebra"] = None
+    assert c.texto_piso_roas(plano) == ["Piso de ROAS sobre a receita aprovada: 5,00 (1 ÷ margem de 20%)."]
+
+
+def test_texto_piso_roas_sem_margem():
+    plano = ex.plano_valido()
+    plano["abertura"]["margem_contribuicao"] = None
+    assert c.texto_piso_roas(plano) == ["Piso de ROAS: [PREENCHER: margem de contribuição]"]

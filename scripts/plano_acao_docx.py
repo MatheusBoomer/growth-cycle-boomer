@@ -1,60 +1,40 @@
-#!/usr/bin/env python3
 """
-scripts/preencher_plano_acao_docx.py — monta o .docx do Plano de Ação (Skill 08).
+scripts/plano_acao_docx.py — monta o .docx do Plano de Ação v2 (Skill 08).
 
-Le um modelo em `.claude/skills/_shared/[MODELO] Plano de Ação Estratégico.docx`
+Le o modelo em `.claude/skills/_shared/[MODELO] Plano de Ação Estratégico.docx`
 (banner da agência, fontes Montserrat embutidas, estilos de tabela já prontos) e
-gera o documento final a partir de um JSON com os horizontes/ações/tabela-resumo
-já aprovados pelo analista. Nunca escreve o `.docx` na mão — sempre por este
-script, para garantir formatação idêntica em qualquer prospect.
+gera o documento final a partir do JSON do plano v2 (ver `plano_acao_comum.py` e
+`validar_plano_acao.py`). Este módulo NÃO valida o plano: quem valida é o
+`gerar_plano_acao.py`, que chama `gerar_docx` depois.
 
-Uso:
-    python scripts/preencher_plano_acao_docx.py \
-        --modelo ".claude/skills/_shared/[MODELO] Plano de Ação Estratégico.docx" \
-        --input plano.json \
-        --output "clientes/<prospect>/entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.docx"
-
-## Estrutura do JSON de entrada
-
-    {
-      "prospect": "Nome do Prospect",
-      "horizontes": [
-        {
-          "titulo": "HORIZONTE 1 — IMEDIATO (Semana 1, ...)",
-          "intro": null,                         // opcional — frase de contexto em cinza
-          "acoes": [
-            {"acao": "...", "o_que": "...", "quando": "...", "por_quem": "...", "como": "...",
-             "solucoes": ["P1.S1"]},              // opcional: ids do contexto/solucoes.json que a ação executa
-            ...
-          ]
-        },
-        ... (exatamente 3 horizontes, nesta ordem)
-      ],
-      "tabela": [
-        {"num": 1, "acao": "...", "frente": "...", "horizonte": "Imediato",
-         "quando": "...", "por_quem": "..."},
-        ...
-      ]
-    }
+Conteúdo, nesta ordem: título; abertura (metas, cenário, o que cabe nos 3 meses,
+o que não cabe, premissas, piso de ROAS); cada horizonte com as ações agrupadas
+por frente (10 campos por ação); tabela-resumo cronológica.
 
 O script não reescreve `word/header1.xml`, fontes, `styles.xml` nem `theme1.xml`
 — copia-os do modelo sem alteração. Só `word/document.xml` é gerado do zero, a
-partir dos fragmentos abaixo (mesma formatação usada no modelo: título Montserrat
+partir dos fragmentos abaixo (mesma formatação do modelo: título Montserrat
 34/bold, cabeçalhos de horizonte 30/bold, introdução 21/cinza #444444, rótulos
-AÇÃO/O QUÊ/QUANDO/POR QUEM/COMO em negrito — a linha de AÇÃO com destaque
-amarelo —, tabela com cabeçalho #1c2f5f/branco e linhas zebradas
-branco/#eef2f8).
+em negrito — a linha de AÇÃO com destaque amarelo —, tabela com cabeçalho
+#1c2f5f/branco e linhas zebradas branco/#eef2f8).
 """
 
 from __future__ import annotations
 
-import argparse
-import json
-import shutil
-import sys
 import zipfile
 from pathlib import Path
 from xml.sax.saxutils import escape
+
+from plano_acao_comum import (
+    FRENTES,
+    acoes,
+    tabela_resumo,
+    texto_depende,
+    texto_piso_roas,
+)
+
+RAIZ = Path(__file__).resolve().parents[1]
+MODELO_DOCX_PADRAO = RAIZ / ".claude" / "skills" / "_shared" / "[MODELO] Plano de Ação Estratégico.docx"
 
 W_NS_DECL = (
     '<w:document xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" '
@@ -157,29 +137,60 @@ def horizonte_intro(texto: str) -> str:
     )
 
 
-def acao_bloco(acao: str, o_que: str, quando: str, por_quem: str, como: str) -> str:
-    out = []
-    out.append(
-        _p_open(after=240, before=240)
-        + _run("AÇÃO:", bold=True, highlight="yellow")
-        + _run(f" {acao}", highlight="yellow")
+def _p_rotulo(rotulo: str, valor: str, highlight=None, before=240) -> str:
+    return (
+        _p_open(after=240, before=before)
+        + _run(f"{rotulo}:", bold=True, highlight=highlight)
+        + _run(f" {valor}", highlight=highlight)
         + _EMPTY_TRAIL
         + "</w:p>"
     )
-    for label, valor in (("O QUÊ:", o_que), ("QUANDO:", quando), ("POR QUEM:", por_quem), ("COMO:", como)):
-        out.append(
-            _p_open(after=240, before=240)
-            + _run(label, bold=True)
-            + _run(f" {valor}")
-            + _EMPTY_TRAIL
-            + "</w:p>"
-        )
+
+
+def subtitulo_paragrafo(texto: str) -> str:
+    return _p_open(after=80, before=240) + _run(texto, bold=True, sz="24") + _EMPTY_TRAIL + "</w:p>"
+
+
+def texto_paragrafo(texto: str, after=80) -> str:
+    return _p_open(after=after) + _run(texto) + _EMPTY_TRAIL + "</w:p>"
+
+
+def frente_titulo(texto: str) -> str:
+    return _p_open(after=80, before=240) + _run(texto, bold=True, sz="24") + _EMPTY_TRAIL + "</w:p>"
+
+
+def acao_bloco(titulo: str, campos: list[tuple[str, str]]) -> str:
+    """Linha de destaque (`titulo`, ex.: 'AÇÃO 2: ...') seguida de um parágrafo por (rótulo, valor)."""
+    rotulo, _, resto = titulo.partition(":")
+    out = [
+        _p_open(after=240, before=240)
+        + _run(f"{rotulo}:", bold=True, highlight="yellow")
+        + _run(resto, highlight="yellow")
+        + _EMPTY_TRAIL
+        + "</w:p>"
+    ]
+    out.extend(_p_rotulo(r, v) for r, v in campos)
     out.append(spacer_paragrafo())
     return "".join(out)
 
 
-TABLE_HEADERS = ["#", "Ação", "Frente", "Horizonte", "Quando", "Por Quem"]
-TABLE_COL_WIDTHS = ["450", "2500", "1650", "1250", "1800", "1379"]
+def campos_da_acao(acao: dict, horizonte: str) -> list[tuple[str, str]]:
+    return [
+        ("FRENTE", f"{acao['frente']} · HORIZONTE: {horizonte}"),
+        ("ACHADO DE ORIGEM", acao["achado_origem"]),
+        ("ALAVANCA DA META", acao["alavanca"]),
+        ("COMO", acao["como"]),
+        ("DONO", acao["dono"]),
+        ("INÍCIO E ENTREGA", f"{acao['inicio']} a {acao['entrega']}"),
+        ("DEPENDE DE", texto_depende(acao)),
+        ("EVIDÊNCIA", acao["evidencia"]),
+        ("KPI E META", acao["kpi_meta"]),
+        ("GATILHO", acao["gatilho"]),
+    ]
+
+
+TABLE_HEADERS = ["Nº", "Ação", "Frente", "Horizonte", "Início e entrega", "Dono"]
+TABLE_COL_WIDTHS = ["450", "2500", "1650", "1100", "1900", "1429"]  # soma 9029
 
 
 def _tc(text: str, header=False, shade=None, align="left") -> str:
@@ -220,7 +231,7 @@ def tabela_linha_cabecalho() -> str:
 def tabela_linha_dado(row: dict, index: int) -> str:
     shade = "ffffff" if index % 2 == 0 else "eef2f8"
     aligns = ["center", "left", "left", "left", "left", "left"]
-    values = [str(row["num"]), row["acao"], row["frente"], row["horizonte"], row["quando"], row["por_quem"]]
+    values = [str(row["numero"]), row["acao"], row["frente"], row["horizonte"], row["periodo"], row["dono"]]
     cells = "".join(_tc(v, header=False, shade=shade, align=a) for v, a in zip(values, aligns))
     return f'<w:tr><w:trPr><w:cantSplit w:val="0"/><w:tblHeader w:val="0"/></w:trPr>{cells}</w:tr>'
 
@@ -264,22 +275,49 @@ SECT_PR = (
 )
 
 
-def montar_document_xml(dados: dict) -> str:
-    body_parts = [titulo_paragrafo(dados["prospect"]), spacer_paragrafo()]
+def _abertura(plano: dict) -> list[str]:
+    ab = plano.get("abertura") or {}
+    partes = [subtitulo_paragrafo("Metas do plano")]
+    for m in ab.get("metas", []):
+        partes.append(texto_paragrafo(f"{m['kpi']}: de {m['de']} para {m['para']} até {m['ate']}"))
+    partes.append(texto_paragrafo(f"Cenário de referência: {ab.get('cenario', '')}", after=240))
+    blocos = [("O que cabe nos 3 meses", ab.get("cabe_nos_3_meses")),
+              ("O que não cabe", ab.get("nao_cabe")),
+              ("Premissas", ab.get("premissas"))]
+    for titulo, itens in blocos:
+        if not itens:
+            continue
+        partes.append(subtitulo_paragrafo(titulo))
+        partes.extend(texto_paragrafo(f"• {item}") for item in itens)
+    partes.append(subtitulo_paragrafo("Piso de ROAS"))
+    partes.extend(texto_paragrafo(linha) for linha in texto_piso_roas(plano))
+    partes.append(spacer_paragrafo())
+    return partes
 
-    for horizonte in dados["horizontes"]:
+
+def montar_document_xml(plano: dict) -> str:
+    body_parts = [titulo_paragrafo(plano["prospect"]), spacer_paragrafo()]
+    body_parts.extend(_abertura(plano))
+
+    for horizonte in plano["horizontes"]:
         body_parts.append(horizonte_titulo(horizonte["titulo"]))
         if horizonte.get("intro"):
             body_parts.append(horizonte_intro(horizonte["intro"]))
         else:
             body_parts.append(spacer_paragrafo(after=120))
-        for acao in horizonte["acoes"]:
-            body_parts.append(
-                acao_bloco(acao["acao"], acao["o_que"], acao["quando"], acao["por_quem"], acao["como"])
-            )
+        for frente in FRENTES:
+            da_frente = [a for a in horizonte.get("acoes", []) if a.get("frente") == frente]
+            if not da_frente:
+                continue
+            body_parts.append(frente_titulo(frente))
+            for acao in da_frente:
+                body_parts.append(
+                    acao_bloco(f"AÇÃO {acao['numero']}: {acao['acao']}",
+                               campos_da_acao(acao, horizonte["nome"]))
+                )
 
     body_parts.append(tabela_titulo())
-    body_parts.append(montar_tabela(dados["tabela"]))
+    body_parts.append(montar_tabela(tabela_resumo(plano)))
     body_parts.append(_p_open(after=0) + _EMPTY_TRAIL + "</w:p>")
     body_parts.append(SECT_PR)
 
@@ -292,54 +330,21 @@ def montar_document_xml(dados: dict) -> str:
     )
 
 
-def preencher(modelo: str, dados: dict, saida: str) -> dict:
-    obrigatorios = ["prospect", "horizontes", "tabela"]
-    faltando = [k for k in obrigatorios if k not in dados]
-    if faltando:
-        raise ValueError(f"JSON sem as chaves: {', '.join(faltando)}")
-    if len(dados["horizontes"]) != 3:
-        raise ValueError("É preciso exatamente 3 horizontes (Imediato, Curto Prazo, Médio Prazo).")
+def gerar_docx(plano: dict, modelo: Path, saida: Path) -> dict:
+    """Escreve o .docx do plano em `saida`, copiando do `modelo` tudo menos word/document.xml.
 
-    saida_path = Path(saida)
-    saida_path.parent.mkdir(parents=True, exist_ok=True)
-
-    document_xml = montar_document_xml(dados)
+    Não valida o plano; devolve {"output", "total_acoes"}.
+    """
+    saida = Path(saida)
+    saida.parent.mkdir(parents=True, exist_ok=True)
+    document_xml = montar_document_xml(plano)
 
     with zipfile.ZipFile(modelo) as zin:
-        names = zin.namelist()
-        with zipfile.ZipFile(saida_path, "w", zipfile.ZIP_DEFLATED) as zout:
-            for name in names:
+        with zipfile.ZipFile(saida, "w", zipfile.ZIP_DEFLATED) as zout:
+            for name in zin.namelist():
                 data = zin.read(name)
                 if name == "word/document.xml":
                     data = document_xml.encode("utf-8")
                 zout.writestr(name, data)
 
-    total_acoes = sum(len(h["acoes"]) for h in dados["horizontes"])
-    return {
-        "output": str(saida_path),
-        "prospect": dados["prospect"],
-        "total_acoes": total_acoes,
-        "total_linhas_tabela": len(dados["tabela"]),
-    }
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Monta o .docx do Plano de Ação (Skill 08).")
-    parser.add_argument("--modelo", required=True, help="Caminho do .docx-modelo em _shared/.")
-    parser.add_argument("--input", required=True, help="JSON com prospect + horizontes + tabela.")
-    parser.add_argument("--output", required=True, help="Caminho do .docx final a salvar.")
-    args = parser.parse_args()
-
-    try:
-        with open(args.input, encoding="utf-8") as f:
-            dados = json.load(f)
-        resumo = preencher(args.modelo, dados, args.output)
-    except (ValueError, KeyError) as exc:
-        print(json.dumps({"erro": str(exc)}, ensure_ascii=False), file=sys.stderr)
-        sys.exit(1)
-
-    json.dump(resumo, sys.stdout, ensure_ascii=False, indent=2)
-
-
-if __name__ == "__main__":
-    main()
+    return {"output": str(saida), "total_acoes": len(acoes(plano))}
