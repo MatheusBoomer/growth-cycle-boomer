@@ -119,6 +119,24 @@ describe("POST /api/reports", () => {
     expect(await servico.listarReports()).toEqual([])
   })
 
+  it("recusa pelo content-length um corpo acima do limite, antes de ler o formulário", async () => {
+    entrarComo(ANA)
+    const r = await enviar(
+      new Request("http://127.0.0.1:3000/api/reports", {
+        method: "POST",
+        headers: { "content-length": String(22 * 1024 * 1024), "content-type": "multipart/form-data; boundary=x" },
+        body: "--x--",
+      }),
+    )
+    expect(r.status).toBe(400)
+    expect(await r.json()).toMatchObject({ erro: "O report passa de 21 MB no total. Tire alguma imagem extra." })
+  })
+
+  it("o proxy do Next deixa passar o corpo de um report cheio (senão chega cortado na rota)", async () => {
+    const { default: config } = await import("../../next.config")
+    expect(config.experimental?.proxyClientMaxBodySize).toBe("21mb")
+  })
+
   it("com os dados em disco diz que só existe na nuvem", async () => {
     const armazenamento = new FsArmazenamento(raizTemp)
     mundo.servidor = { raiz: RAIZ_DO_PROJETO, catalogo, servico: montarServico(armazenamento), armazenamento, usuarios: new MemoriaUsuarios([CHEFE]) }

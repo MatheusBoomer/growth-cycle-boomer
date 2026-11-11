@@ -62,6 +62,8 @@ describe("validarNovoReport", () => {
     expect(validarNovoReport({ tipo: "bug", comentario: "x", contexto: { url: "/" + "p".repeat(900) } }).contexto.url).toHaveLength(500)
     expect(validarNovoReport({ tipo: "bug", comentario: "x", contexto: { prospect: "Acme Ltda" } }).contexto.prospect).toBeNull()
     expect(validarNovoReport({ tipo: "bug", comentario: "x", contexto: { tela: { largura: 1.5, altura: 2 } } }).contexto.tela).toBeNull()
+    expect(validarNovoReport({ tipo: "bug", comentario: "x", contexto: { url: "http://a//evil.com/x" } }).contexto.url).toBe("/evil.com/x")
+    expect(validarNovoReport({ tipo: "bug", comentario: "x", contexto: { url: "///evil.com" } }).contexto.url).toBe("/")
     expect(validarNovoReport({ tipo: "bug", comentario: "x" }).contexto).toEqual({ url: "", prospect: null, navegador: "", tela: null })
   })
 })

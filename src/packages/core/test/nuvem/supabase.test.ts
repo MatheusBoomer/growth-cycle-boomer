@@ -1,4 +1,4 @@
-import { afterAll, describe } from "vitest"
+import { afterAll, describe, expect, it } from "vitest"
 import { ErroProspectExistente } from "../../src/erros"
 import { criarClienteSupabase, SupabaseArmazem, SupabaseRepositorio } from "../../src/nuvem/supabase"
 import type { ArmazemArquivos, EntradaManifesto } from "../../src/nuvem/tipos"
@@ -81,6 +81,28 @@ describe.skipIf(!suiteVivaHabilitada(process.env))("Supabase (integração)", ()
     "supabase",
     async () => new ArmazemComProspect(new SupabaseArmazem(cliente()), new SupabaseRepositorio(cliente())),
   )
+
+  // Com a chave pública (anon) do projeto de teste: nem a tabela nem o bucket dos reports podem ser lidos. Pega uma
+  // migração futura que dê grant a anon/authenticated ou torne o bucket público. Sem a chave, o caso é pulado.
+  it.skipIf(!process.env.SUPABASE_TESTE_PUBLISHABLE_KEY)("anon não lê reports nem as imagens do bucket", async () => {
+    const id = 1_000_000_000 + Math.floor(Math.random() * 1_000_000_000)
+    const caminho = `${id}/0.png`
+    const { error: erroEnvio } = await cliente()
+      .storage.from("planejamento-reports")
+      .upload(caminho, new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), { contentType: "image/png" })
+    expect(erroEnvio).toBeNull()
+    try {
+      const anon = criarClienteSupabase(process.env.SUPABASE_TESTE_URL ?? "", process.env.SUPABASE_TESTE_PUBLISHABLE_KEY ?? "")
+      const tabela = await anon.from("reports").select("id").limit(1)
+      expect(tabela.error !== null || (tabela.data ?? []).length === 0).toBe(true)
+      const baixar = await anon.storage.from("planejamento-reports").download(caminho)
+      expect(baixar.error).not.toBeNull()
+      const listar = await anon.storage.from("planejamento-reports").list(String(id))
+      expect(listar.error !== null || (listar.data ?? []).length === 0).toBe(true)
+    } finally {
+      await cliente().storage.from("planejamento-reports").remove([caminho])
+    }
+  })
 
   contratoUsuarios("supabase", async (agora) => ({
     repo: new SupabaseUsuarios(cliente(), agora),

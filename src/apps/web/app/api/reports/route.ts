@@ -1,5 +1,5 @@
 import { ErroEntrada } from "@workspace/core/erros"
-import { LIMITE_IMAGEM_BYTES, LIMITE_IMAGENS_EXTRAS } from "@workspace/core/reports"
+import { LIMITE_CORPO_REPORT_BYTES, LIMITE_IMAGEM_BYTES, LIMITE_IMAGENS_EXTRAS } from "@workspace/core/reports"
 import { json, respostaDeErro } from "@/lib/http"
 import { servidor } from "@/lib/servidor"
 import { exigirUsuario } from "@/lib/sessao"
@@ -18,6 +18,10 @@ export async function POST(req: Request) {
   try {
     const usuario = await exigirUsuario()
     if (usuario.email === null) throw new ErroEntrada("Sem e-mail na sessão, não dá para saber quem está reportando.")
+    // Antes de ler o formulário, que fica inteiro na memória (o proxy do Next corta acima de proxyClientMaxBodySize).
+    if (Number(req.headers.get("content-length") ?? 0) > LIMITE_CORPO_REPORT_BYTES) {
+      throw new ErroEntrada("O report passa de 21 MB no total. Tire alguma imagem extra.")
+    }
     let form: FormData
     try {
       form = await req.formData()

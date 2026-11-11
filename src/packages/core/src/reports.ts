@@ -23,6 +23,8 @@ export const LIMITE_COMENTARIO = 2000
 export const LIMITE_NOTA_ADMIN = 2000
 export const LIMITE_IMAGENS_EXTRAS = 3
 export const LIMITE_IMAGEM_BYTES = 5 * 1024 * 1024
+/** Corpo máximo de POST /api/reports: print + 3 extras de 5 MB e folga para o resto do formulário. */
+export const LIMITE_CORPO_REPORT_BYTES = 21 * 1024 * 1024
 export const MSG_REPORTS_SEM_NUVEM = "Os reports só existem com os dados na nuvem."
 
 const LIMITE_URL = 500
@@ -84,7 +86,8 @@ function caminhoSemHost(valor: string): string {
   if (valor === "") return ""
   try {
     const u = new URL(valor, "http://x")
-    return (u.pathname + u.search).slice(0, LIMITE_URL)
+    // "//host/x" viraria link para outro site no detalhe do admin: barras repetidas no começo viram uma só.
+    return (u.pathname.replace(/^\/+/, "/") + u.search).slice(0, LIMITE_URL)
   } catch {
     return ""
   }
