@@ -2,6 +2,7 @@ import { afterAll, describe } from "vitest"
 import { ErroProspectExistente } from "../../src/erros"
 import { criarClienteSupabase, SupabaseArmazem, SupabaseRepositorio } from "../../src/nuvem/supabase"
 import type { ArmazemArquivos, EntradaManifesto } from "../../src/nuvem/tipos"
+import type { ImagemReport } from "../../src/reports"
 import { SupabaseUsuarios } from "../../src/nuvem/usuarios-supabase"
 import { contratoArmazem } from "./contrato-armazem"
 import { contratoRepositorio } from "./contrato-repositorio"
@@ -49,6 +50,15 @@ class ArmazemComProspect implements ArmazemArquivos {
   }
   apagarTudo(slug: string) {
     return this.armazem.apagarTudo(slug)
+  }
+  enviarImagemReport(caminho: string, imagem: ImagemReport) {
+    return this.armazem.enviarImagemReport(caminho, imagem)
+  }
+  baixarImagemReport(caminho: string) {
+    return this.armazem.baixarImagemReport(caminho)
+  }
+  apagarImagensReport(id: number) {
+    return this.armazem.apagarImagensReport(id)
   }
 }
 
@@ -139,6 +149,29 @@ describe.skipIf(!suiteVivaHabilitada(process.env))("Supabase (integração)", ()
       if (!ehItemDeContrato(String(linha.item))) continue
       const { error } = await c.from("notas_skills").delete().eq("id", linha.id)
       registrar("apagar notas_skills", error)
+    }
+
+    // Reports do contrato: só os de autor no formato exato de novoEmail, nunca um report real. As pastas de imagem do
+    // contrato do armazém usam ids a partir de 1.000.000.000, que um report real não alcança.
+    const { data: reports, error: erroReports } = await c.from("reports").select("id, autor")
+    registrar("ler reports", erroReports)
+    const pastasReport = new Set<string>()
+    for (const linha of reports ?? []) {
+      if (!ehEmailDeContrato(String(linha.autor))) continue
+      pastasReport.add(String(linha.id))
+      const { error } = await c.from("reports").delete().eq("id", linha.id)
+      registrar("apagar reports", error)
+    }
+    const { data: raizReports, error: erroRaizReports } = await c.storage.from("planejamento-reports").list("", { limit: 1000 })
+    registrar("listar planejamento-reports", erroRaizReports)
+    for (const o of raizReports ?? []) if (/^\d+$/.test(o.name) && Number(o.name) >= 1_000_000_000) pastasReport.add(o.name)
+    for (const pasta of pastasReport) {
+      const { data: objetos, error: erroPasta } = await c.storage.from("planejamento-reports").list(pasta, { limit: 1000 })
+      registrar(`listar planejamento-reports/${pasta}`, erroPasta)
+      const nomes = (objetos ?? []).map((o) => `${pasta}/${o.name}`)
+      if (nomes.length === 0) continue
+      const { error } = await c.storage.from("planejamento-reports").remove(nomes)
+      registrar(`remover em planejamento-reports/${pasta}`, error)
     }
 
     // Objetos sem linha no banco também vazam: a busca parte da raiz de cada bucket.
