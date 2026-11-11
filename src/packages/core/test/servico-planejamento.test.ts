@@ -337,6 +337,8 @@ describe("ferramentas do agente", () => {
       expect(await readFile(path.join(aprovados(slug), "plano-de-acao-estrategico.docx"), "utf8")).toBe("docx")
       expect(await readFile(path.join(aprovados(slug), "plano-de-acao-estrategico.json"), "utf8")).toBe('{"versao":1}')
       expect(await avisos(slug)).toEqual([])
+      // O JSON veio pela aprovação do documento: não é "aprovado fora da interface".
+      expect((await servico.respostaEstado(slug, null)).aprovadosForaDaInterface).toEqual([])
     })
 
     it("sem o JSON no rascunho aprova mesmo assim e avisa na atividade", async () => {

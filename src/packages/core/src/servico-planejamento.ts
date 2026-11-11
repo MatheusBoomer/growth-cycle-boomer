@@ -628,8 +628,11 @@ export class ServicoPlanejamento {
     const modelosDisponiveis = this.catalogo.insumos
       .filter((i) => i.modelo && existsSync(path.join(this.arm.raiz, PASTA_MODELOS, i.modelo)))
       .map((i) => i.id)
+    // Os JSONs que acompanham o documento do plano chegam pela aprovação dele: também contam como aprovados pela interface.
     const aprovadosPelaInterface = new Set(
-      estado.entregaveis.filter((e) => e.status === "aprovado").map((e) => destinoAprovado(e)),
+      estado.entregaveis
+        .filter((e) => e.status === "aprovado")
+        .flatMap((e) => [destinoAprovado(e), ...acompanhantes(e).map((a) => a.destino)]),
     )
     const aprovadosForaDaInterface = (await this.arm.listarAprovados(slug)).filter((a) => !aprovadosPelaInterface.has(a))
     return { estado, catalogo: this.catalogo, condicoes, turnoAtivo, turnoPor, modelosDisponiveis, aprovadosForaDaInterface }
