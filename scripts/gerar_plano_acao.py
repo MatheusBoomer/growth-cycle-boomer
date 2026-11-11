@@ -1,15 +1,18 @@
 """Ponto de entrada único do plano de ação v2 (Skill 08): valida e gera .docx e .xlsx juntos.
 
 Valida com `validar_plano_acao.validar(rascunho=False)`; se houver erro, não cria nenhum
-arquivo. Os dois arquivos são gravados primeiro em temporários na pasta de destino e só
-então renomeados para os nomes finais, para nunca sobrar um sem o outro.
+arquivo. Os arquivos são gravados primeiro em temporários na pasta de destino e só
+então renomeados para os nomes finais, para nunca sobrar um sem o outro. Com
+`--saida-json`, o próprio plano também é gravado (o JSON que a revisão pós-apresentação compara).
 
     python3 scripts/gerar_plano_acao.py --plano <plano.json> --registro <solucoes.json> \\
-        --saida-docx <.docx> --saida-xlsx <.xlsx> [--modelo-docx <.docx>] [--modelo-xlsx <.xlsx>]
+        --saida-docx <.docx> --saida-xlsx <.xlsx> [--saida-json <.json>] \\
+        [--modelo-docx <.docx>] [--modelo-xlsx <.xlsx>]
 """
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 import tempfile
@@ -50,12 +53,19 @@ def _recusar_colisoes(
     modelo_docx: Path,
     modelo_xlsx: Path | None,
     caminhos_entrada: tuple[Path, ...] = (),
+    saida_json: Path | None = None,
 ) -> None:
     if _mesmo_arquivo(saida_docx, saida_xlsx):
         raise ErroPlano(f"a saída .docx e a saída .xlsx são o mesmo arquivo ({saida_docx}).")
+    saidas = [(".docx", saida_docx), (".xlsx", saida_xlsx)]
+    if saida_json is not None:
+        saidas.append((".json", saida_json))
+        for nome, outra in saidas[:2]:
+            if _mesmo_arquivo(saida_json, outra):
+                raise ErroPlano(f"a saída .json e a saída {nome} são o mesmo arquivo ({saida_json}).")
     modelos = [m for m in (modelo_docx, modelo_xlsx) if m is not None]
     entradas = [Path(e) for e in caminhos_entrada]
-    for nome, saida in ((".docx", saida_docx), (".xlsx", saida_xlsx)):
+    for nome, saida in saidas:
         for modelo in modelos:
             if _mesmo_arquivo(saida, modelo):
                 raise ErroPlano(f"a saída {nome} não pode ser um dos modelos ({modelo}); escolha outro caminho.")
@@ -85,17 +95,22 @@ def gerar(
     modelo_docx: Path = MODELO_DOCX_PADRAO,
     modelo_xlsx: Path | None = None,
     caminhos_entrada: tuple[Path, ...] = (),
+    saida_json: Path | None = None,
 ) -> dict:
-    """Valida o plano e grava o .docx e o .xlsx. Devolve {"docx","xlsx","total_acoes","avisos"}.
+    """Valida o plano e grava o .docx e o .xlsx (e o .json do plano, se `saida_json`).
+
+    Devolve {"docx","xlsx","total_acoes","avisos"} (mais "json" quando gravado).
 
     Levanta ErroValidacao (plano inválido) ou ErroPlano (modelo ruim, caminhos em conflito,
     falha de arquivo); nesses casos nenhum arquivo final é criado nem alterado.
     `caminhos_entrada` são os arquivos lidos pela CLI (plano, registro): nenhuma saída pode ser um deles.
+    O .json é o plano em `ensure_ascii=False, indent=2`, gravado na mesma escrita atômica.
     """
     saida_docx, saida_xlsx, modelo_docx = Path(saida_docx), Path(saida_xlsx), Path(modelo_docx)
     modelo_xlsx = Path(modelo_xlsx) if modelo_xlsx is not None else None
+    saida_json = Path(saida_json) if saida_json is not None else None
 
-    _recusar_colisoes(saida_docx, saida_xlsx, modelo_docx, modelo_xlsx, tuple(caminhos_entrada))
+    _recusar_colisoes(saida_docx, saida_xlsx, modelo_docx, modelo_xlsx, tuple(caminhos_entrada), saida_json)
     erros, avisos = validar(plano, registro, rascunho=False)
     if erros:
         raise ErroValidacao(erros, avisos)
@@ -115,20 +130,28 @@ def gerar(
             resumo = gerar_xlsx(plano, tmp_xlsx, modelo_xlsx)
         except _FALHAS_DE_ARQUIVO as e:
             raise ErroPlano(f"não foi possível gerar o .xlsx{clausula_xlsx}: {e}") from e
-        _permissao_padrao(tmp_docx)
-        _permissao_padrao(tmp_xlsx)
-        os.replace(tmp_docx, saida_docx)
-        temporarios.remove(tmp_docx)
-        os.replace(tmp_xlsx, saida_xlsx)
-        temporarios.remove(tmp_xlsx)
+        pares = [(tmp_docx, saida_docx), (tmp_xlsx, saida_xlsx)]
+        if saida_json is not None:
+            tmp_json = _temporario(saida_json)
+            temporarios.append(tmp_json)
+            tmp_json.write_text(json.dumps(plano, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            pares.append((tmp_json, saida_json))
+        for tmp, _ in pares:
+            _permissao_padrao(tmp)
+        for tmp, final in pares:
+            os.replace(tmp, final)
+            temporarios.remove(tmp)
     except OSError as e:
         raise ErroPlano(f"não foi possível gravar os arquivos de saída: {e}") from e
     finally:
         for t in temporarios:
             t.unlink(missing_ok=True)
 
-    return {"docx": str(saida_docx), "xlsx": str(saida_xlsx),
-            "total_acoes": resumo["total_acoes"], "avisos": avisos}
+    resultado = {"docx": str(saida_docx), "xlsx": str(saida_xlsx),
+                 "total_acoes": resumo["total_acoes"], "avisos": avisos}
+    if saida_json is not None:
+        resultado["json"] = str(saida_json)
+    return resultado
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -137,6 +160,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--registro", required=True, type=Path)
     p.add_argument("--saida-docx", required=True, type=Path)
     p.add_argument("--saida-xlsx", required=True, type=Path)
+    p.add_argument("--saida-json", type=Path, default=None,
+                   help="grava também o JSON do plano (opcional)")
     p.add_argument("--modelo-docx", type=Path, default=MODELO_DOCX_PADRAO)
     p.add_argument("--modelo-xlsx", type=Path, default=None)
     a = p.parse_args(argv)
@@ -144,7 +169,7 @@ def main(argv: list[str] | None = None) -> int:
         plano = _ler_json(a.plano, "plano")
         registro = _ler_json(a.registro, "registro")
         resumo = gerar(plano, registro, a.saida_docx, a.saida_xlsx, a.modelo_docx, a.modelo_xlsx,
-                       caminhos_entrada=(a.plano, a.registro))
+                       caminhos_entrada=(a.plano, a.registro), saida_json=a.saida_json)
     except ErroValidacao as e:
         for aviso in e.avisos:
             print(f"AVISO: {aviso}")
@@ -156,7 +181,8 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     for aviso in resumo["avisos"]:
         print(f"AVISO: {aviso}")
-    print(f"OK: .docx e .xlsx gerados com {resumo['total_acoes']} ações.")
+    arquivos = ".docx, .xlsx e .json" if "json" in resumo else ".docx e .xlsx"
+    print(f"OK: {arquivos} gerados com {resumo['total_acoes']} ações.")
     return 0
 
 

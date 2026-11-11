@@ -149,3 +149,44 @@ def texto_piso_roas(plano: dict) -> list[str]:
             f"(com quebra de {formatar_percentual(quebra)})."
         )
     return linhas
+
+
+# Campos comparados por `diferencas`, além dos de CAMPOS_ACAO.
+_CAMPOS_COMPARADOS = CAMPOS_ACAO + ("frente", "horizonte", "depende_de", "alavanca_da_meta", "solucoes")
+
+
+def _acoes_por_numero(plano: dict) -> dict[int, dict]:
+    """Ações por número, com o nome do horizonte onde estão guardado em `horizonte`."""
+    return {a.get("numero"): {**a, "horizonte": nome} for nome, a in acoes(plano)}
+
+
+def _metas_por_kpi(plano: dict) -> dict:
+    return {m.get("kpi"): m for m in plano.get("abertura", {}).get("metas", [])}
+
+
+def diferencas(plano_a: dict, plano_b: dict) -> dict:
+    """O que mudou de `plano_a` para `plano_b`.
+
+    Devolve {"incluidas": [números só em b], "removidas": [números só em a],
+    "alteradas": {número: [campos que mudaram]}, "metas_alteradas": [kpis]}.
+    Ações são pareadas por `numero`; metas, por `kpi` (meta incluída, removida ou com
+    `de`/`para`/`ate` diferente conta como alterada).
+    """
+    a, b = _acoes_por_numero(plano_a), _acoes_por_numero(plano_b)
+    alteradas = {}
+    for numero in sorted(set(a) & set(b)):
+        campos = [campo for campo in _CAMPOS_COMPARADOS if a[numero].get(campo) != b[numero].get(campo)]
+        if campos:
+            alteradas[numero] = campos
+    ma, mb = _metas_por_kpi(plano_a), _metas_por_kpi(plano_b)
+    metas = [
+        kpi for kpi in [*ma, *(k for k in mb if k not in ma)]
+        if kpi not in ma or kpi not in mb
+        or any(ma[kpi].get(campo) != mb[kpi].get(campo) for campo in ("de", "para", "ate"))
+    ]
+    return {
+        "incluidas": sorted(set(b) - set(a)),
+        "removidas": sorted(set(a) - set(b)),
+        "alteradas": alteradas,
+        "metas_alteradas": metas,
+    }

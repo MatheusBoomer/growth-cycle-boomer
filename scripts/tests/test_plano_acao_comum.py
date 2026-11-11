@@ -131,3 +131,44 @@ def test_acoes_cronologicas_com_horizonte_pareia_horizonte_e_acao_na_ordem_crono
     assert [(h, a["numero"]) for h, a in pares] == [
         ("Curto prazo", 1), ("Médio prazo", 3), ("Imediato", 2), ("Curto prazo", 4), ("Imediato", 5)]
     assert [a for _, a in pares] == c.acoes_cronologicas(_plano_fora_de_ordem())
+
+
+def test_diferencas():
+    import copy
+    a = ex.plano_valido()
+    b = copy.deepcopy(a)
+    medio = b["horizontes"][2]["acoes"]
+    medio[:] = [x for x in medio if x["numero"] != 6]
+    b["horizontes"][0]["acoes"][1]["como"] = "Reconfigurar o fluxo de lembrete de PIX e boleto."
+    nova = copy.deepcopy(a["horizontes"][2]["acoes"][0])
+    nova["numero"] = 7
+    nova["acao"] = "Ação nova"
+    medio.append(nova)
+    b["abertura"]["metas"][0]["para"] = "22%"
+    kpi = a["abertura"]["metas"][0]["kpi"]
+    assert c.diferencas(a, b) == {
+        "incluidas": [7],
+        "removidas": [6],
+        "alteradas": {2: ["como"]},
+        "metas_alteradas": [kpi],
+    }
+    assert c.diferencas(a, a) == {"incluidas": [], "removidas": [], "alteradas": {}, "metas_alteradas": []}
+
+
+def test_diferencas_horizonte_dependencias_solucoes_e_metas_incluidas_removidas():
+    import copy
+    a = ex.plano_valido()
+    b = copy.deepcopy(a)
+    acao3 = b["horizontes"][1]["acoes"].pop(0)
+    acao3["depende_de"] = []
+    acao3["solucoes"] = ["P1.S1"]
+    acao3["alavanca_da_meta"] = False
+    acao3["frente"] = "Eficiência Operacional"
+    b["horizontes"][0]["acoes"].append(acao3)
+    b["abertura"]["metas"].append({"kpi": "ROAS", "de": "2", "para": "3", "ate": "25/01/2027", "fonte": "x"})
+    d = c.diferencas(a, b)
+    assert d["incluidas"] == [] and d["removidas"] == []
+    assert d["alteradas"] == {3: ["frente", "horizonte", "depende_de", "alavanca_da_meta", "solucoes"]}
+    assert d["metas_alteradas"] == ["ROAS"]
+    # meta removida também conta
+    assert c.diferencas(b, a)["metas_alteradas"] == ["ROAS"]

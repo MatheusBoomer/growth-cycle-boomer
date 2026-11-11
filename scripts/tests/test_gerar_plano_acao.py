@@ -287,3 +287,76 @@ def test_mensagem_sem_modelo_xlsx_nao_diz_none(tmp_path, monkeypatch):
         g.gerar(ex.plano_valido(), ex.registro_valido(), tmp_path / "a.docx", tmp_path / "a.xlsx")
     assert "None" not in str(e.value) and "disco cheio" in str(e.value)
     assert list(tmp_path.iterdir()) == []
+
+
+def test_saida_json_igual_a_entrada(tmp_path, capsys):
+    saida = tmp_path / "out" / "plano-de-acao-estrategico.json"
+    codigo, _, docx, xlsx = _rodar(tmp_path, capsys, extra=("--saida-json", str(saida)))
+    assert codigo == 0
+    assert docx.exists() and xlsx.exists()
+    texto = saida.read_text(encoding="utf-8")
+    assert json.loads(texto) == ex.plano_valido()
+    assert texto == json.dumps(ex.plano_valido(), ensure_ascii=False, indent=2) + "\n"
+
+
+def test_saida_json_segue_o_umask(tmp_path):
+    import os
+    docx, xlsx, js = tmp_path / "a.docx", tmp_path / "a.xlsx", tmp_path / "a.json"
+    g.gerar(ex.plano_valido(), ex.registro_valido(), docx, xlsx, saida_json=js)
+    umask = os.umask(0)
+    os.umask(umask)
+    assert js.stat().st_mode & 0o777 == 0o666 & ~umask
+
+
+def test_sem_saida_json_nao_cria_json(tmp_path, capsys):
+    codigo, _, _, _ = _rodar(tmp_path, capsys)
+    assert codigo == 0
+    assert list((tmp_path / "out").glob("*.json")) == []
+
+
+def test_saida_json_atomica(tmp_path, capsys):
+    modelo = tmp_path / "modelo.xlsx"
+    wb = openpyxl.Workbook()
+    wb.active.title = "Outra"
+    wb.save(modelo)
+    saida = tmp_path / "out" / "plano.json"
+    codigo, cap, docx, xlsx = _rodar(tmp_path, capsys,
+                                     extra=("--modelo-xlsx", str(modelo), "--saida-json", str(saida)))
+    assert codigo == 1 and "ERRO:" in cap.err
+    assert not docx.exists() and not xlsx.exists() and not saida.exists()
+    if (tmp_path / "out").exists():
+        assert list((tmp_path / "out").iterdir()) == []
+
+
+def test_saida_json_colide_com_saida_docx(tmp_path, capsys):
+    mesmo = tmp_path / "out" / "plano.bin"
+    codigo, cap, _, xlsx = _rodar(tmp_path, capsys, saida_docx=mesmo, extra=("--saida-json", str(mesmo)))
+    assert codigo == 1 and "ERRO:" in cap.err
+    assert not mesmo.exists() and not xlsx.exists()
+
+
+def test_saida_json_colide_com_saida_xlsx(tmp_path, capsys):
+    mesmo = tmp_path / "out" / "plano.bin"
+    codigo, cap, docx, _ = _rodar(tmp_path, capsys, saida_xlsx=mesmo, extra=("--saida-json", str(mesmo)))
+    assert codigo == 1 and "ERRO:" in cap.err
+    assert not mesmo.exists() and not docx.exists()
+
+
+def test_saida_json_colide_com_modelo_e_com_entradas(tmp_path, capsys):
+    modelo = tmp_path / "modelo.docx"
+    modelo.write_bytes(MODELO_DOCX_PADRAO.read_bytes())
+    original = modelo.read_bytes()
+    codigo, cap, docx, xlsx = _rodar(tmp_path, capsys, extra=("--modelo-docx", str(modelo),
+                                                              "--saida-json", str(modelo)))
+    assert codigo == 1 and "ERRO:" in cap.err and "modelo" in cap.err
+    assert modelo.read_bytes() == original
+    assert not docx.exists() and not xlsx.exists()
+
+    p, r = _entradas(tmp_path)
+    original = p.read_bytes()
+    codigo = g.main(["--plano", str(p), "--registro", str(r), "--saida-docx", str(tmp_path / "a.docx"),
+                     "--saida-xlsx", str(tmp_path / "a.xlsx"), "--saida-json", str(p)])
+    err = capsys.readouterr().err
+    assert codigo == 1 and "ERRO:" in err and "entrada" in err
+    assert p.read_bytes() == original
+    assert not (tmp_path / "a.docx").exists() and not (tmp_path / "a.xlsx").exists()
