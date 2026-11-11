@@ -372,6 +372,62 @@ describe("ferramentas do agente", () => {
     })
   })
 
+  describe("avisos dos acompanhantes na aprovação", () => {
+    const proporPlano = async (slug: string, etapa: "08" | "10", nomeFinal: string) => {
+      const r = await servico.ferramenta({ slug, etapa }, "propor_entregavel", {
+        tipo: "documento",
+        titulo: "Plano de ação",
+        arquivo_rascunho: `clientes/${slug}/.app/rascunhos/plano.docx`,
+        nome_final: nomeFinal,
+      })
+      expect(r.ok).toBe(true)
+    }
+    const textos = async (slug: string, etapa: "08" | "10") =>
+      (await servico.conversa(slug, etapa)).flatMap((ev) => (ev.tipo === "aviso" ? [ev.texto] : []))
+
+    it("registrarConversa que falha não impede a aprovação nem o enfileirar", async () => {
+      const slug = await prospectNaEtapa03()
+      await rascunho(slug, "plano.docx", "docx")
+      await proporPlano(slug, "08", "plano-de-acao-estrategico")
+      const erro = vi.spyOn(console, "error").mockImplementation(() => {})
+      vi.spyOn(servico, "registrarConversa").mockRejectedValue(new Error("conversa indisponível"))
+      await servico.aprovarEntregavel(slug, "id1")
+      expect((await servico.estado(slug)).entregaveis.find((e) => e.id === "id1")?.status).toBe("aprovado")
+      expect(enfileirados).toEqual([slug])
+      expect(erro).toHaveBeenCalled()
+      erro.mockRestore()
+    })
+
+    it("na 10 o aviso de acompanhante ausente não manda a etapa 10 precisar dele", async () => {
+      const slug = await prospectNaEtapa03()
+      await rascunho(slug, "plano.docx", "docx")
+      await rascunho(slug, "plano-de-acao-final.json", "{}")
+      await proporPlano(slug, "10", "plano-de-acao-final")
+      await servico.aprovarEntregavel(slug, "id1")
+      expect(await textos(slug, "10")).toEqual([
+        "Aviso: revisao-plano.json não foi encontrado junto do documento aprovado; a entrega formal fica sem ele.",
+      ])
+    })
+
+    it("na 10 o aviso de falha de cópia também fala da entrega formal", async () => {
+      const slug = await prospectNaEtapa03()
+      await rascunho(slug, "plano.docx", "docx")
+      await rascunho(slug, "plano-de-acao-final.json", "{}")
+      await rascunho(slug, "revisao-plano.json", "{}")
+      await proporPlano(slug, "10", "plano-de-acao-final")
+      const arm = (servico as unknown as { arm: FsArmazenamento }).arm
+      const copiar = arm.copiar.bind(arm)
+      vi.spyOn(arm, "copiar").mockImplementation(async (s, o, d) => {
+        if (d.endsWith("revisao-plano.json")) throw new Error("disco cheio")
+        return copiar(s, o, d)
+      })
+      await servico.aprovarEntregavel(slug, "id1")
+      expect(await textos(slug, "10")).toEqual([
+        "Aviso: não consegui copiar revisao-plano.json junto do documento aprovado; a entrega formal fica sem ele.",
+      ])
+    })
+  })
+
   it("editar seção pendente grava o rascunho e a aprovação avisa a IA da edição", async () => {
     const slug = await prospectNaEtapa03()
     await rascunho(slug, "s.md", "# Texto da IA")

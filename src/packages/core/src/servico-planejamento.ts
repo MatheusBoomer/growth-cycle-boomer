@@ -882,8 +882,13 @@ export class ServicoPlanejamento {
       novo = me.reavaliarPronta(novo, alvo.etapa, this.catalogo, this.agora())
       return { estado: novo, resultado: { ...alvo, destino, avisos } }
     })
+    // A aprovação já está gravada: aviso que não consegue ser registrado não pode impedir o enfileirar.
     for (const texto of aprovado.avisos) {
-      await this.registrarConversa(slug, aprovado.etapa, { tipo: "aviso", nivel: "alerta", texto, em: this.agora() })
+      try {
+        await this.registrarConversa(slug, aprovado.etapa, { tipo: "aviso", nivel: "alerta", texto, em: this.agora() })
+      } catch (e) {
+        console.error(`Não consegui registrar o aviso da aprovação em "${slug}":`, e)
+      }
     }
     await this.enfileirar(
       slug,
@@ -901,14 +906,16 @@ export class ServicoPlanejamento {
     const avisos: string[] = []
     for (const { origem, destino } of acompanhantes(alvo)) {
       const nome = origem.slice(origem.lastIndexOf("/") + 1)
+      // Na 08 o acompanhante é insumo da 10; na própria 10 não há etapa seguinte que dependa dele.
+      const consequencia = alvo.etapa === "10" ? "a entrega formal fica sem ele." : "a etapa 10 vai precisar dele."
       try {
         if (await this.arm.existeArquivo(slug, origem)) {
           await this.arm.copiar(slug, origem, destino)
           continue
         }
-        avisos.push(`Aviso: ${nome} não foi encontrado junto do documento aprovado; a etapa 10 vai precisar dele.`)
+        avisos.push(`Aviso: ${nome} não foi encontrado junto do documento aprovado; ${consequencia}`)
       } catch {
-        avisos.push(`Aviso: não consegui copiar ${nome} junto do documento aprovado; a etapa 10 vai precisar dele.`)
+        avisos.push(`Aviso: não consegui copiar ${nome} junto do documento aprovado; ${consequencia}`)
       }
     }
     return avisos
