@@ -76,15 +76,18 @@ Não busque dado novo.
 Exatamente três, nesta ordem, sempre com data real em cada ação:
 
 - **Imediato:** primeira semana após a apresentação. Ações que desbloqueiam
-  as outras (rastreamento, acessos, reestruturação).
+  as outras (rastreamento, acessos, reestruturação). Cada uma cabe em até 7
+  dias entre início e entrega (o validador avisa quando passa).
 - **Curto prazo:** até o primeiro grande marco do calendário (primeiro mês
   de Pico ou Escala).
 - **Médio prazo:** até o fim do ciclo de 12 meses do cenário (`fim_ciclo`).
 
 ## Janela de prova
 
-Os 3 primeiros meses do ciclo são a janela de prova (`janela_prova`, início e
-fim). Toda ação cuja alavanca é um KPI da meta (`alavanca_da_meta: true`)
+A janela de prova (`janela_prova`, início e fim) começa na data de início do
+plano, o primeiro dia do Imediato (logo após a apresentação e a aprovação),
+e dura 3 meses (ex.: 26/10/2026 a 25/01/2027). Não confunda com o início do
+ciclo do cenário: `fim_ciclo` continua sendo o fim dos 12 meses do cenário. Toda ação cuja alavanca é um KPI da meta (`alavanca_da_meta: true`)
 começa e entrega dentro dela, mesmo estando no Médio prazo. Preparação de
 pico posterior fica com `alavanca_da_meta: false`.
 
@@ -309,11 +312,15 @@ No chat, curto e **sem tabelas**:
    ações que o atacam. Aponte achado sem ação.
 2. **Cobertura da meta:** cada KPI influenciador do cenário e as ações que o
    movem.
-3. **Pendências:** o que ficou marcado [VALIDAR] ou [PREENCHER] em algum
+3. **Coerência:** confirme que todo número do plano é igual ao do cenário
+   aprovado (06) e ao do plano de mídia (07), e que documento e planilha são
+   iguais (garantido pelo `gerar_plano_acao.py`, que gera os dois do mesmo
+   JSON). Aponte qualquer divergência.
+4. **Pendências:** o que ficou marcado [VALIDAR] ou [PREENCHER] em algum
    momento e como foi resolvido, ou o que falta.
-4. **Riscos:** dono que talvez não tenha capacidade, meta acima do melhor mês
+5. **Riscos:** dono que talvez não tenha capacidade, meta acima do melhor mês
    do histórico, premissa frágil.
-5. **Pergunta-guia:** a sua resposta sincera. Se não, diga o que falta.
+6. **Pergunta-guia:** a sua resposta sincera. Se não, diga o que falta.
 
 Pergunte ao analista a resposta dele à pergunta-guia. A etapa só fecha com
 "sim". "Não" volta à Fase 2 com o que falta, e as Fases 3 e 4 rodam de novo.
@@ -345,8 +352,7 @@ Pergunte ao analista a resposta dele à pergunta-guia. A etapa só fecha com
 ## Encerramento e handoff
 
 Ao concluir, marque "08 · Plano de ação" como ✅ em
-`contexto/status-planejamento.md`, grave `contexto/decisoes/08-plano-de-acao.md`
-(Regra 6) e converse com o analista em linguagem natural, sem citar caminho
+`contexto/status-planejamento.md` e converse com o analista em linguagem natural, sem citar caminho
 de arquivo:
 
 "Nesta sessão, o plano de ação ficou fechado, em documento e planilha — esta
@@ -357,5 +363,10 @@ com o roteiro slide a slide para você aprovar antes.
 Quando estiver pronto, rode `/apresentacao-final`."
 
 Reescreva também o bloco "Próximo passo" de `contexto/status-planejamento.md`
-com esse mesmo pedido. Na interface, siga a Regra 7: não edite esse arquivo
-e chame `sinalizar_etapa_pronta` com o resumo de decisões e o mesmo texto.
+com esse mesmo pedido.
+
+Decisões da etapa (Regras 6 e 7): no terminal, grave
+`contexto/decisoes/08-plano-de-acao.md`; na interface, não edite
+`contexto/status-planejamento.md` nem `contexto/decisoes/`: o app grava as
+decisões a partir do resumo enviado em `sinalizar_etapa_pronta`, junto com o
+mesmo texto de handoff.
