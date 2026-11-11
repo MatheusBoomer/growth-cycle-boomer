@@ -87,16 +87,23 @@ export function contratoArmazem(nome: string, criar: () => Promise<ArmazemArquiv
     })
     it("envia, baixa e apaga imagens de report", async () => {
       const armazem = await criar()
-      const id = 1_000_000_000 + Math.floor(Math.random() * 1_000_000_000)
+      const novoId = () => 1_000_000_000 + Math.floor(Math.random() * 1_000_000_000)
       const png = bytes("png falso")
       const jpg = bytes("jpg falso")
+      const id = novoId()
       await armazem.enviarImagemReport(`${id}/0.png`, { bytes: png, formato: "png" })
       await armazem.enviarImagemReport(`${id}/1.jpg`, { bytes: jpg, formato: "jpg" })
       expect(Array.from(await armazem.baixarImagemReport(`${id}/0.png`))).toEqual(Array.from(png))
       expect(Array.from(await armazem.baixarImagemReport(`${id}/1.jpg`))).toEqual(Array.from(jpg))
       await armazem.apagarImagensReport(id)
-      await expect(armazem.baixarImagemReport(`${id}/0.png`)).rejects.toBeInstanceOf(ErroNaoEncontrado)
-      await expect(armazem.apagarImagensReport(id)).resolves.toBeUndefined()
+
+      // O Storage serve de cache, por alguns segundos, um objeto já baixado mesmo depois de apagado. A remoção é
+      // conferida num report cujas imagens nunca foram baixadas (o caso real: desfazer um envio que falhou).
+      const outro = novoId()
+      await armazem.enviarImagemReport(`${outro}/0.png`, { bytes: png, formato: "png" })
+      await armazem.apagarImagensReport(outro)
+      await expect(armazem.baixarImagemReport(`${outro}/0.png`)).rejects.toBeInstanceOf(ErroNaoEncontrado)
+      await expect(armazem.apagarImagensReport(outro)).resolves.toBeUndefined()
     })
   })
 }
