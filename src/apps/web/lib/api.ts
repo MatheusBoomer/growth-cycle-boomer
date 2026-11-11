@@ -157,6 +157,8 @@ export const api = {
   /** Só admin: resolve (`true`) ou reabre (`false`) uma nota. */
   marcarNotaSkill: (notaId: number, resolvida: boolean) =>
     chamar<{ nota: NotaSkill }>(`/api/admin/skills/notas/${notaId}`, comJson("PATCH", { resolvida })),
+  /** Qualquer usuário logado: envia um report de bug ou melhoria (formulário de `montarFormularioReport`). */
+  enviarReport: (form: FormData) => chamar<{ id: number }>("/api/reports", { method: "POST", body: form }),
   /** Só admin: custo e tempo de cada projeto ativo e a média por etapa concluída. */
   metricasGerais: () => chamar<{ projetos: ProjetoComMetricas[]; medias: MediasPorEtapa }>("/api/admin/projetos", { cache: "no-store" }),
   /** Só admin: o resumo e as métricas de um projeto. As médias por etapa (mais caras) só vêm com `{ medias: true }`. */

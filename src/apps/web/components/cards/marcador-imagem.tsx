@@ -24,6 +24,7 @@ export function MarcadorImagem({
   primeiroNumero,
   aoMudar,
   aoFechar,
+  instrucao = "Escolha a forma e marque na imagem. Cada marcação ganha um número: escreva o que mudar em cada um na mensagem do chat (ex.: “1: eixo X em meses por extenso”).",
 }: {
   titulo: string
   urlImagem: string
@@ -31,6 +32,8 @@ export function MarcadorImagem({
   primeiroNumero: number
   aoMudar: (marcas: Marca[]) => void
   aoFechar: () => void
+  /** Texto de ajuda abaixo da imagem; o padrão fala do chat. */
+  instrucao?: string
 }) {
   const [ferramenta, setFerramenta] = useState<FormaMarca>("retangulo")
   const [rascunho, setRascunho] = useState<{ inicio: Ponto; fim: Ponto } | null>(null)
@@ -119,9 +122,7 @@ export function MarcadorImagem({
           </span>
         ))}
       </div>
-      <p className="text-muted-foreground text-xs">
-        Escolha a forma e marque na imagem. Cada marcação ganha um número: escreva o que mudar em cada um na mensagem do chat (ex.: “1: eixo X em meses por extenso”).
-      </p>
+      <p className="text-muted-foreground text-xs">{instrucao}</p>
 
       {marcas.length > 0 && (
         <ul className="flex flex-wrap gap-2">
