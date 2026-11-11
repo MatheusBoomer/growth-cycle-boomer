@@ -26,6 +26,13 @@ const PASTA_POR_TIPO: Record<TipoEntregavel, string> = {
 // A planilha da etapa 08 é o plano de ação em Excel; não vai para a pasta da projeção da 06.
 const PASTA_POR_TIPO_E_ETAPA: Partial<Record<`${TipoEntregavel}:${EtapaId}`, string>> = {
   "planilha:08": "plano-de-acao",
+  "planilha:10": "plano-de-acao",
+}
+
+/** JSONs que o script do plano grava ao lado do documento e que seguem com ele na aprovação (etapa:nomeFinal). */
+const ACOMPANHANTES_DO_DOCUMENTO: Record<string, string[]> = {
+  "08:plano-de-acao-estrategico": ["plano-de-acao-estrategico.json"],
+  "10:plano-de-acao-final": ["plano-de-acao-final.json", "revisao-plano.json"],
 }
 
 const NOME_FINAL = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -54,6 +61,22 @@ export function destinoAprovado(e: Pick<Entregavel, "tipo" | "nomeFinal" | "etap
   const nome = e.tipo === "secao" ? `${e.etapa}-${e.nomeFinal}` : e.nomeFinal
   const pasta = PASTA_POR_TIPO_E_ETAPA[`${e.tipo}:${e.etapa}`] ?? PASTA_POR_TIPO[e.tipo]
   return `entrega/ativos-aprovados/${pasta}/${nome}${EXTENSAO_POR_TIPO[e.tipo]}`
+}
+
+const pastaDe = (rel: string) => (rel.includes("/") ? rel.slice(0, rel.lastIndexOf("/") + 1) : "")
+
+/**
+ * Arquivos gerados junto do documento do plano (mesma pasta do rascunho) que também vão para a pasta do
+ * documento aprovado. Só `documento`; vazio para qualquer outro entregável.
+ */
+export function acompanhantes(
+  e: Pick<Entregavel, "tipo" | "etapa" | "nomeFinal" | "arquivoRascunho">,
+): { origem: string; destino: string }[] {
+  if (e.tipo !== "documento") return []
+  const nomes = ACOMPANHANTES_DO_DOCUMENTO[`${e.etapa}:${e.nomeFinal}`] ?? []
+  const pastaOrigem = pastaDe(e.arquivoRascunho)
+  const pastaDestino = pastaDe(destinoAprovado(e))
+  return nomes.map((nome) => ({ origem: `${pastaOrigem}${nome}`, destino: `${pastaDestino}${nome}` }))
 }
 
 export interface DadosProposta {

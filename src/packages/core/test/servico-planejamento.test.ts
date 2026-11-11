@@ -313,6 +313,63 @@ describe("ferramentas do agente", () => {
     expect(await servico.retirarFila(slug)).toBeNull()
   })
 
+  describe("JSONs que acompanham o documento do plano", () => {
+    const ctx08 = { slug: "iszi-cosmeticos", etapa: "08" as const }
+    const proporDocumento = async (slug: string) => {
+      const r = await servico.ferramenta(ctx08, "propor_entregavel", {
+        tipo: "documento",
+        titulo: "Plano de ação estratégico",
+        arquivo_rascunho: `clientes/${slug}/.app/rascunhos/plano.docx`,
+        nome_final: "plano-de-acao-estrategico",
+      })
+      expect(r.ok).toBe(true)
+    }
+    const aprovados = (slug: string) => path.join(raiz, "clientes", slug, "entrega/ativos-aprovados/plano-de-acao")
+    const avisos = async (slug: string) =>
+      (await servico.conversa(slug, "08")).filter((ev) => ev.tipo === "aviso" && ev.texto.startsWith("Aviso:"))
+
+    it("copia o JSON gerado ao lado do rascunho junto com o documento aprovado", async () => {
+      const slug = await prospectNaEtapa03()
+      await rascunho(slug, "plano.docx", "docx")
+      await rascunho(slug, "plano-de-acao-estrategico.json", '{"versao":1}')
+      await proporDocumento(slug)
+      await servico.aprovarEntregavel(slug, "id1")
+      expect(await readFile(path.join(aprovados(slug), "plano-de-acao-estrategico.docx"), "utf8")).toBe("docx")
+      expect(await readFile(path.join(aprovados(slug), "plano-de-acao-estrategico.json"), "utf8")).toBe('{"versao":1}')
+      expect(await avisos(slug)).toEqual([])
+    })
+
+    it("sem o JSON no rascunho aprova mesmo assim e avisa na atividade", async () => {
+      const slug = await prospectNaEtapa03()
+      await rascunho(slug, "plano.docx", "docx")
+      await proporDocumento(slug)
+      await servico.aprovarEntregavel(slug, "id1")
+      expect((await servico.estado(slug)).entregaveis.find((e) => e.id === "id1")?.status).toBe("aprovado")
+      expect(existsSync(path.join(aprovados(slug), "plano-de-acao-estrategico.docx"))).toBe(true)
+      expect(existsSync(path.join(aprovados(slug), "plano-de-acao-estrategico.json"))).toBe(false)
+      expect((await avisos(slug)).map((a) => (a as { texto: string }).texto)).toEqual([
+        "Aviso: plano-de-acao-estrategico.json não foi encontrado junto do documento aprovado; a etapa 10 vai precisar dele.",
+      ])
+    })
+
+    it("falha ao copiar o JSON não desfaz a aprovação do documento", async () => {
+      const slug = await prospectNaEtapa03()
+      await rascunho(slug, "plano.docx", "docx")
+      await rascunho(slug, "plano-de-acao-estrategico.json", "{}")
+      await proporDocumento(slug)
+      const arm = (servico as unknown as { arm: FsArmazenamento }).arm
+      const copiar = arm.copiar.bind(arm)
+      vi.spyOn(arm, "copiar").mockImplementation(async (s, o, d) => {
+        if (d.endsWith(".json")) throw new Error("disco cheio")
+        return copiar(s, o, d)
+      })
+      await servico.aprovarEntregavel(slug, "id1")
+      expect((await servico.estado(slug)).entregaveis.find((e) => e.id === "id1")?.status).toBe("aprovado")
+      expect(existsSync(path.join(aprovados(slug), "plano-de-acao-estrategico.docx"))).toBe(true)
+      expect((await avisos(slug)).length).toBe(1)
+    })
+  })
+
   it("editar seção pendente grava o rascunho e a aprovação avisa a IA da edição", async () => {
     const slug = await prospectNaEtapa03()
     await rascunho(slug, "s.md", "# Texto da IA")

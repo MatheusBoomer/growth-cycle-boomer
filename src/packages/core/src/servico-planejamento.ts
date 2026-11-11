@@ -19,6 +19,7 @@ import { etapaDoCatalogo, faseDaEtapa, insumoDoCatalogo } from "./catalogo"
 import { itensDoCatalogo } from "./catalogo-skills"
 import { extrairOverrides, montarDossie, type AnteriorDossie } from "./dossie"
 import {
+  acompanhantes,
   aprovarEntregavel,
   destinoAprovado,
   encontrarEntregavel,
@@ -49,6 +50,7 @@ import {
   ORDEM_ETAPAS,
   TIPOS_ENTREGAVEL,
   type Catalogo,
+  type Entregavel,
   type Estado,
   type EtapaId,
   type EventoConversa,
@@ -873,15 +875,57 @@ export class ServicoPlanejamento {
       let novo = comDecididoPor(aprovarEntregavel(e, id, this.agora()), id, autor)
       const destino = destinoAprovado(alvo)
       await this.arm.copiar(slug, alvo.arquivoRascunho, destino)
+      const avisos = await this.copiarAcompanhantes(slug, alvo)
       novo = me.reavaliarPronta(novo, alvo.etapa, this.catalogo, this.agora())
-      return { estado: novo, resultado: { ...alvo, destino } }
+      return { estado: novo, resultado: { ...alvo, destino, avisos } }
     })
+    for (const texto of aprovado.avisos) {
+      await this.registrarConversa(slug, aprovado.etapa, { tipo: "aviso", nivel: "alerta", texto, em: this.agora() })
+    }
     await this.enfileirar(
       slug,
       aprovado.etapa,
       mensagemAprovacao(aprovado.titulo, aprovado.nomeFinal, `clientes/${slug}/${aprovado.destino}`, aprovado.editadoEm !== undefined),
       autor,
     )
+  }
+
+  /**
+   * Copia os JSONs que acompanham o documento do plano. Acompanhante ausente ou que falha ao copiar não
+   * desfaz a aprovação do documento: vira um aviso na atividade da etapa.
+   */
+  private async copiarAcompanhantes(slug: string, alvo: Entregavel): Promise<string[]> {
+    const avisos: string[] = []
+    for (const { origem, destino } of acompanhantes(alvo)) {
+      const nome = origem.slice(origem.lastIndexOf("/") + 1)
+      try {
+        if (await this.arm.existeArquivo(slug, origem)) {
+          await this.arm.copiar(slug, origem, destino)
+          continue
+        }
+        avisos.push(`Aviso: ${nome} não foi encontrado junto do documento aprovado; a etapa 10 vai precisar dele.`)
+      } catch {
+        avisos.push(`Aviso: não consegui copiar ${nome} junto do documento aprovado; a etapa 10 vai precisar dele.`)
+      }
+    }
+    return avisos
+  }
+
+  /**
+   * Os JSONs gerados ao lado do documento em .app/rascunhos/ vão para a pasta da cópia da proposta
+   * (.app/propostas/), de onde a aprovação os pega. Falha aqui não barra a proposta: a aprovação avisa.
+   */
+  private async trazerAcompanhantes(slug: string, alvo: Entregavel, copia: string): Promise<void> {
+    const pasta = copia.slice(0, copia.lastIndexOf("/") + 1)
+    for (const { origem } of acompanhantes(alvo)) {
+      try {
+        if (await this.arm.existeArquivo(slug, origem)) {
+          await this.arm.copiar(slug, origem, `${pasta}${origem.slice(origem.lastIndexOf("/") + 1)}`)
+        }
+      } catch {
+        // acompanhante que não chegou vira aviso na aprovação
+      }
+    }
   }
 
   /** O analista corrige a seção pendente direto no visualizador; o texto vale como a proposta. */
@@ -1166,6 +1210,7 @@ export class ServicoPlanejamento {
     await this.mutar(slug, async (e) => {
       const novo = proporEntregavel(e, { etapa, tipo, titulo, arquivoRascunho: copia, nomeFinal }, id, this.agora())
       await this.arm.copiar(slug, rel, copia)
+      await this.trazerAcompanhantes(slug, { ...encontrarEntregavel(novo, id), arquivoRascunho: rel }, copia)
       return { estado: me.reavaliarPronta(novo, etapa, this.catalogo, this.agora()), resultado: undefined }
     })
     await this.registrarConversa(slug, etapa, { tipo: "card_entregavel", entregavelId: id, em: this.agora() })
