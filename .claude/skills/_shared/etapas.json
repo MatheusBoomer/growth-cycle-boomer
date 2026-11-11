@@ -97,8 +97,8 @@
       "numero": "08",
       "titulo": "Plano de ação",
       "rotuloStatus": "08 · Plano de ação",
-      "descricao": "Organiza tudo o que foi proposto num plano de ação priorizado, com responsável, prazo e forma de execução.",
-      "oQueEsperar": "O agente organiza tudo o que foi proposto no planejamento em um plano de ação cronológico e priorizado, com responsável, prazo e forma de execução para cada item. Tenha em mente as 2 ou 3 frentes mais urgentes que você quer priorizar.",
+      "descricao": "Monta o plano de ação com 10 campos por ação, abertura com metas e premissas, em documento Word e planilha Excel iguais.",
+      "oQueEsperar": "O agente começa confirmando o que já sabe e perguntando o que falta: quem executa do lado do cliente, quem opera a mídia, ferramentas, restrições de calendário, a margem de contribuição antes da mídia (para o piso de ROAS) e se a empresa aparece como Agência ou Boomer. Depois monta a abertura do plano e as ações, cada uma com dono, datas, evidência, meta e gatilho, e gera o documento Word e a planilha Excel. A etapa só fecha quando você responder sim à pergunta-guia: se o cliente fizer só isto por 3 meses, o resultado vem?",
       "skill": "08-plano-de-acao",
       "subagentes": [],
       "insumos": []

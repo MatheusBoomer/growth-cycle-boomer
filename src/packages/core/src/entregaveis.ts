@@ -23,6 +23,11 @@ const PASTA_POR_TIPO: Record<TipoEntregavel, string> = {
   apresentacao: "apresentacao",
 }
 
+// A planilha da etapa 08 é o plano de ação em Excel; não vai para a pasta da projeção da 06.
+const PASTA_POR_TIPO_E_ETAPA: Partial<Record<`${TipoEntregavel}:${EtapaId}`, string>> = {
+  "planilha:08": "plano-de-acao",
+}
+
 const NOME_FINAL = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const NOME_VERSIONADO = /-(?:v\d+|final|novo|nova|revisado|revisada)$/
 
@@ -47,7 +52,8 @@ export function normalizarNomeFinal(tipo: TipoEntregavel, nomeFinal: string, eta
 export function destinoAprovado(e: Pick<Entregavel, "tipo" | "nomeFinal" | "etapa">): string {
   if (e.tipo === "apresentacao") return "entrega/apresentacao-final.pptx"
   const nome = e.tipo === "secao" ? `${e.etapa}-${e.nomeFinal}` : e.nomeFinal
-  return `entrega/ativos-aprovados/${PASTA_POR_TIPO[e.tipo]}/${nome}${EXTENSAO_POR_TIPO[e.tipo]}`
+  const pasta = PASTA_POR_TIPO_E_ETAPA[`${e.tipo}:${e.etapa}`] ?? PASTA_POR_TIPO[e.tipo]
+  return `entrega/ativos-aprovados/${pasta}/${nome}${EXTENSAO_POR_TIPO[e.tipo]}`
 }
 
 export interface DadosProposta {
