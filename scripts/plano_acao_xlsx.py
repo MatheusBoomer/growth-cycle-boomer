@@ -77,7 +77,14 @@ def _escrever_acoes(ws, plano: dict, *, com_estilo: bool) -> int:
     total = len(pares)
     if total:
         ultima = get_column_letter(COLUNA_STATUS)
-        validacao = DataValidation(type="list", formula1='"' + ",".join(STATUS) + '"', allow_blank=True)
+        validacao = DataValidation(
+            type="list",
+            formula1='"' + ",".join(STATUS) + '"',
+            allow_blank=True,
+            showErrorMessage=True,
+            errorTitle="Status inválido",
+            error="Use: A fazer, Em andamento, Feito ou Atrasado.",
+        )
         validacao.add(f"{ultima}2:{ultima}{total + 1}")
         ws.add_data_validation(validacao)
     return total

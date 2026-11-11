@@ -87,6 +87,9 @@ def test_validacao_de_status(tmp_path):
     assert v.type == "list"
     assert v.formula1 == '"A fazer,Em andamento,Feito,Atrasado"'
     assert str(v.sqref) == "O2:O7"
+    assert v.showErrorMessage is True
+    assert v.errorTitle == "Status inválido"
+    assert v.error == "Use: A fazer, Em andamento, Feito ou Atrasado."
     assert STATUS == ["A fazer", "Em andamento", "Feito", "Atrasado"]
 
 
