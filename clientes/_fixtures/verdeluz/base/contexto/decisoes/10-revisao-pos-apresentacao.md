@@ -26,7 +26,7 @@ Plano final aprovado em documento (`plano-de-acao-final.docx`) e planilha (`plan
 - **Alteradas:** ação 6 (Conflito 1: Opção C; como, início, entrega, KPI, gatilho e horizonte), ação 17 (Complemento 1; como, evidência, KPI e gatilho), ação 18 (Complemento 2; como), ação 21 (Conflito 2: Opção C; como e KPI) e ação 23 (Complemento 3; como).
 
 ### Cobertura da meta e coerência
-- Nenhuma alavanca da meta ficou mais fraca: CAC (ações 1 e 7), custo por sessão paga (8), ROAS global (3 e 8), taxa de quebra (11, 12 e 19), dependência de mídia paga (15 e 23) e ticket médio (24) seguem com as mesmas ações. Receita captada (ações 2 e 14) e conversão (9, 10 e 18) também, embora o relatório as marque sem ação porque o nome da alavanca nessas ações não repete o nome exato do KPI.
+- Nenhuma alavanca da meta ficou mais fraca: CAC (ações 1 e 7), custo por sessão paga (8), ROAS global (3 e 8), taxa de quebra (11, 12 e 19), dependência de mídia paga (15 e 23), ticket médio (24) e conversão (9, 10 e 18) seguem com as mesmas ações. Receita captada (ações 2 e 14) também, embora o relatório a marque sem ação porque o nome da alavanca nessas ações ("Receita captada (ruptura dos líderes)" e "Receita captada de NOV") não contém o nome do KPI ("Receita captada do mês") e a comparação é de texto.
 - Nenhuma mudança de meta, verba ou cenário: os números batem com o deck. Documento e planilha saem do mesmo JSON.
 
 ### Pendências
