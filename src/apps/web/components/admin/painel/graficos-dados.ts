@@ -17,7 +17,7 @@ export const ETAPA_ARQUIVADA = ID_ETAPA_ARQUIVADA
 export const ROTULO_ARQUIVADA = "Briefing e benchmark (arquivada)"
 
 /** Ordem das fases quando o catálogo não chega à tela: a de `etapas.json`, mais a arquivada no fim. */
-export const ORDEM_FASES: readonly string[] = ["Contexto", "Diagnóstico", "Soluções e metas", "Mídia e ação", "Apresentação", FASE_ARQUIVADA]
+export const ORDEM_FASES: readonly string[] = ["Contexto", "Diagnóstico", "Soluções e metas", "Mídia e ação", "Apresentação", "Pós-apresentação", FASE_ARQUIVADA]
 
 /** Só tokens do tema. A arquivada e "Outras" usam tons fora da paleta de séries, sempre com rótulo ao lado. */
 const COR_ARQUIVADA = "var(--selo-opus)"
