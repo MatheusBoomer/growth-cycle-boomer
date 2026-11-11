@@ -10,6 +10,7 @@ import type { Acumulado, LinhaPresenca, LinhaUso } from "./metricas/tipos"
 import { normalizarSlug } from "./slug"
 import type { NivelEsforco } from "./modelos"
 import type { NotaSkill } from "./notas-skills"
+import { type FiltroReports, type ImagemReport, MSG_REPORTS_SEM_NUVEM, type MudancaReport, type NovoReport, type Report } from "./reports"
 import type { LinhaConfigModelo, RegistroUsoTurno } from "./nuvem/tipos"
 import { ORDEM_ETAPAS, type Estado, type EtapaId, type EventoConversa } from "./tipos"
 
@@ -371,6 +372,27 @@ export class FsArmazenamento {
 
   async marcarNotaSkill(_id: number, _resolvida: boolean, _autor: string): Promise<NotaSkill | null> {
     throw new ErroEntrada("A administração de pessoas só existe com os dados na nuvem.")
+  }
+
+  /** Em disco não há reports: todas as operações dizem que só existem na nuvem. */
+  async criarReport(_novo: NovoReport, _autor: string, _imagens: ImagemReport[]): Promise<Report> {
+    throw new ErroEntrada(MSG_REPORTS_SEM_NUVEM)
+  }
+
+  async listarReports(_filtro?: FiltroReports): Promise<Report[]> {
+    throw new ErroEntrada(MSG_REPORTS_SEM_NUVEM)
+  }
+
+  async lerReport(_id: number): Promise<Report | null> {
+    throw new ErroEntrada(MSG_REPORTS_SEM_NUVEM)
+  }
+
+  async atualizarReport(_id: number, _mudanca: MudancaReport, _por: string): Promise<Report | null> {
+    throw new ErroEntrada(MSG_REPORTS_SEM_NUVEM)
+  }
+
+  async baixarImagemReport(_caminho: string): Promise<Uint8Array> {
+    throw new ErroEntrada(MSG_REPORTS_SEM_NUVEM)
   }
 
   /** No disco, conversas e comentários vivem em .app/, que o reposicionamento do cliente de teste já apaga. */
