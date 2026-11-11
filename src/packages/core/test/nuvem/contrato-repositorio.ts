@@ -4,7 +4,8 @@ import { ErroConflitoVersao, ErroNaoEncontrado, ErroProspectExistente } from "..
 import { estadoInicial } from "../../src/maquina-estados"
 import type { Comentario } from "../../src/comentarios"
 import type { EventoConversa } from "../../src/tipos"
-import { novoAlvoDeContrato, novoItemDeContrato, novoSlug } from "./suite-viva"
+import { novoAlvoDeContrato, novoEmail, novoItemDeContrato, novoSlug } from "./suite-viva"
+import type { ContextoReport } from "../../src/reports"
 
 const EM = "2026-10-27T12:00:00.000Z"
 
@@ -429,6 +430,37 @@ export function contratoRepositorio(
         expect(await repo.listarUsos(slug)).toEqual([])
         expect(await repo.listarPresencas(slug)).toEqual([])
       })
+    })
+    it("cria, lista com filtro, lê, atualiza e apaga um report", async () => {
+      const repo = await criar()
+      const autor = novoEmail()
+      const contexto: ContextoReport = { url: "/prospects/acme?x=1", prospect: "acme", navegador: "UA", tela: { largura: 1440, altura: 900 } }
+      const bug = await repo.criarReport({ tipo: "bug", comentario: "Botão não salva", contexto, autor })
+      const melhoria = await repo.criarReport({ tipo: "melhoria", comentario: "Atalho", contexto: { ...contexto, prospect: null, tela: null }, autor })
+      const meus = (lista: { id: number }[]) => lista.map((r) => r.id).filter((id) => id === bug.id || id === melhoria.id)
+      try {
+        expect(bug).toMatchObject({ tipo: "bug", comentario: "Botão não salva", contexto, autor, status: "aberto", imagens: [], notaAdmin: null, atualizadoEm: null, atualizadoPor: null })
+        expect(new Date(bug.criadoEm).toISOString()).toBe(bug.criadoEm)
+        expect(meus(await repo.listarReports())).toEqual([melhoria.id, bug.id])
+        expect(meus(await repo.listarReports({ tipo: "bug" }))).toEqual([bug.id])
+        expect(meus(await repo.listarReports({ status: ["aberto", "em_andamento"] }))).toEqual([melhoria.id, bug.id])
+        expect(meus(await repo.listarReports({ status: ["resolvido"] }))).toEqual([])
+
+        await repo.definirImagensReport(bug.id, [`${bug.id}/0.png`])
+        expect((await repo.lerReport(bug.id))!.imagens).toEqual([`${bug.id}/0.png`])
+
+        const atualizado = await repo.atualizarReport(bug.id, { status: "resolvido", notaAdmin: "feito" }, "carla@boomer.com.br")
+        expect(atualizado).toMatchObject({ status: "resolvido", notaAdmin: "feito", atualizadoPor: "carla@boomer.com.br" })
+        expect(atualizado!.atualizadoEm).not.toBeNull()
+        const soNota = await repo.atualizarReport(bug.id, { notaAdmin: null }, "dora@boomer.com.br")
+        expect(soNota).toMatchObject({ status: "resolvido", notaAdmin: null, atualizadoPor: "dora@boomer.com.br" })
+        expect(await repo.atualizarReport(999999999, { status: "resolvido" }, "x")).toBeNull()
+        expect(await repo.lerReport(999999999)).toBeNull()
+      } finally {
+        await repo.apagarReport(bug.id)
+        await repo.apagarReport(melhoria.id)
+      }
+      expect(await repo.lerReport(bug.id)).toBeNull()
     })
   })
 }

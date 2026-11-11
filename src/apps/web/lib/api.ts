@@ -7,6 +7,8 @@ import type { EscolhaModelo, ListaDeModelos, Sugestao, UsoDaEtapa } from "@works
 import type { LinhaConfigModelo } from "@workspace/core/nuvem/tipos"
 import type { PessoaRegistrada } from "@workspace/core/nuvem/usuarios"
 import type { NotaSkill } from "@workspace/core/notas-skills"
+import type { MudancaReport, Report, StatusReport, TipoReport } from "@workspace/core/reports"
+import { consultaDoFiltro } from "./filtro-reports"
 import type { OpcoesPainel } from "@workspace/core/servico-planejamento"
 import type { Papel } from "@workspace/core/papeis"
 import type { EtapaId, ResultadoValidacao, ResumoProspect, RespostaTeste } from "@workspace/core/tipos"
@@ -157,6 +159,16 @@ export const api = {
   /** Só admin: resolve (`true`) ou reabre (`false`) uma nota. */
   marcarNotaSkill: (notaId: number, resolvida: boolean) =>
     chamar<{ nota: NotaSkill }>(`/api/admin/skills/notas/${notaId}`, comJson("PATCH", { resolvida })),
+  /** Qualquer usuário logado: envia um report de bug ou melhoria (formulário de `montarFormularioReport`). */
+  enviarReport: (form: FormData) => chamar<{ id: number }>("/api/reports", { method: "POST", body: form }),
+  /** Só admin: reports filtrados, os mais recentes primeiro. */
+  listarReports: (f: { status: StatusReport[]; tipo: TipoReport | null }) =>
+    chamar<{ reports: Report[] }>(`/api/admin/reports${consultaDoFiltro(f)}`, { cache: "no-store" }),
+  /** Só admin: muda status e/ou nota interna. */
+  atualizarReport: (id: number, mudanca: MudancaReport) =>
+    chamar<{ report: Report }>(`/api/admin/reports/${id}`, comJson("PATCH", mudanca)),
+  /** Só admin: endereço da n-ésima imagem do report (0 é o print da tela, quando existe). */
+  urlImagemReport: (id: number, n: number) => `/api/admin/reports/${id}/imagens/${n}`,
   /** Só admin: custo e tempo de cada projeto ativo e a média por etapa concluída. */
   metricasGerais: () => chamar<{ projetos: ProjetoComMetricas[]; medias: MediasPorEtapa }>("/api/admin/projetos", { cache: "no-store" }),
   /** Só admin: o resumo e as métricas de um projeto. As médias por etapa (mais caras) só vêm com `{ medias: true }`. */

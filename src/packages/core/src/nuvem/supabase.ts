@@ -5,6 +5,7 @@ import { ErroConflitoVersao, ErroNaoEncontrado, ErroProspectExistente } from "..
 import type { Acumulado, LinhaPresenca, LinhaUso } from "../metricas/tipos"
 import type { NivelEsforco } from "../modelos"
 import type { NotaSkill } from "../notas-skills"
+import type { ContextoReport, FiltroReports, ImagemReport, MudancaReport, NovoReport, Report, StatusReport, TipoReport } from "../reports"
 import { ORDEM_ETAPAS, type Estado, type EtapaId, type EventoConversa } from "../tipos"
 import type {
   ArmazemArquivos,
@@ -17,6 +18,7 @@ import type {
 
 const BUCKET_PROSPECTS = "planejamento-prospects"
 const BUCKET_SESSOES = "planejamento-sessoes"
+const BUCKET_REPORTS = "planejamento-reports"
 /** Limite de linhas por resposta do PostgREST. */
 const TAMANHO_PAGINA = 1000
 /** Objetos por página de `storage.list`. */
@@ -115,6 +117,38 @@ interface LinhaNotaSkillBanco {
 }
 
 const COLUNAS_NOTA_SKILL = "id, item, texto, autor, criada_em, resolvida_em, resolvida_por"
+
+interface LinhaReportBanco {
+  id: number | string
+  tipo: TipoReport
+  comentario: string
+  status: StatusReport
+  autor: string
+  contexto: ContextoReport
+  imagens: string[] | null
+  nota_admin: string | null
+  criado_em: string
+  atualizado_em: string | null
+  atualizado_por: string | null
+}
+
+const COLUNAS_REPORT = "id, tipo, comentario, status, autor, contexto, imagens, nota_admin, criado_em, atualizado_em, atualizado_por"
+
+function reportDe(l: LinhaReportBanco): Report {
+  return {
+    id: Number(l.id),
+    tipo: l.tipo,
+    comentario: l.comentario,
+    status: l.status,
+    autor: l.autor,
+    contexto: l.contexto,
+    imagens: l.imagens ?? [],
+    notaAdmin: l.nota_admin,
+    criadoEm: new Date(l.criado_em).toISOString(),
+    atualizadoEm: l.atualizado_em ? new Date(l.atualizado_em).toISOString() : null,
+    atualizadoPor: l.atualizado_por,
+  }
+}
 
 function notaSkillDe(l: LinhaNotaSkillBanco): NotaSkill {
   return {
@@ -555,6 +589,52 @@ export class SupabaseRepositorio implements Repositorio {
     if (erroLeitura) throw falha(erroLeitura)
     return atual ? notaSkillDe(atual as LinhaNotaSkillBanco) : null
   }
+
+  async criarReport(r: NovoReport & { autor: string }): Promise<Report> {
+    const { data, error } = await this.cliente
+      .from("reports")
+      .insert({ tipo: r.tipo, comentario: r.comentario, contexto: r.contexto, autor: r.autor })
+      .select(COLUNAS_REPORT)
+      .single()
+    if (error) throw falha(error)
+    return reportDe(data as LinhaReportBanco)
+  }
+
+  async definirImagensReport(id: number, caminhos: string[]): Promise<void> {
+    const { error } = await this.cliente.from("reports").update({ imagens: caminhos }).eq("id", id)
+    if (error) throw falha(error)
+  }
+
+  async apagarReport(id: number): Promise<void> {
+    const { error } = await this.cliente.from("reports").delete().eq("id", id)
+    if (error) throw falha(error)
+  }
+
+  async listarReports(filtro: FiltroReports = {}): Promise<Report[]> {
+    const linhas = await paginar<LinhaReportBanco>((de, ate) => {
+      let consulta = this.cliente.from("reports").select(COLUNAS_REPORT)
+      if (filtro.tipo !== undefined) consulta = consulta.eq("tipo", filtro.tipo)
+      if (filtro.status !== undefined) consulta = consulta.in("status", filtro.status)
+      return consulta.order("criado_em", { ascending: false }).order("id", { ascending: false }).range(de, ate)
+    })
+    return linhas.map(reportDe)
+  }
+
+  async lerReport(id: number): Promise<Report | null> {
+    const { data, error } = await this.cliente.from("reports").select(COLUNAS_REPORT).eq("id", id).maybeSingle()
+    if (error) throw falha(error)
+    return data ? reportDe(data as LinhaReportBanco) : null
+  }
+
+  async atualizarReport(id: number, mudanca: MudancaReport, por: string): Promise<Report | null> {
+    const campos: Record<string, unknown> = { atualizado_em: this.agora(), atualizado_por: por }
+    if (mudanca.status !== undefined) campos.status = mudanca.status
+    if (mudanca.notaAdmin !== undefined) campos.nota_admin = mudanca.notaAdmin
+    const { data, error } = await this.cliente.from("reports").update(campos).eq("id", id).select(COLUNAS_REPORT)
+    if (error) throw falha(error)
+    const linha = (data as LinhaReportBanco[] | null)?.[0]
+    return linha ? reportDe(linha) : null
+  }
 }
 
 /** Arquivos no Storage (objetos por conteúdo) com manifesto na tabela `arquivos`. */
@@ -635,6 +715,26 @@ export class SupabaseArmazem implements ArmazemArquivos {
     for (const bucket of [BUCKET_PROSPECTS, BUCKET_SESSOES]) {
       await this.apagarPasta(bucket, slug)
     }
+  }
+
+  async enviarImagemReport(caminho: string, imagem: ImagemReport): Promise<void> {
+    const { error } = await this.cliente.storage
+      .from(BUCKET_REPORTS)
+      .upload(caminho, imagem.bytes, { upsert: true, contentType: imagem.formato === "png" ? "image/png" : "image/jpeg" })
+    if (error) throw falha(error)
+  }
+
+  async baixarImagemReport(caminho: string): Promise<Uint8Array> {
+    const { data, error } = await this.cliente.storage.from(BUCKET_REPORTS).download(caminho)
+    if (error) {
+      if (ehObjetoAusente(error)) throw new ErroNaoEncontrado(`Imagem de report ${caminho} não encontrada.`)
+      throw falha(error)
+    }
+    return new Uint8Array(await data.arrayBuffer())
+  }
+
+  async apagarImagensReport(id: number): Promise<void> {
+    await this.apagarPasta(BUCKET_REPORTS, String(id))
   }
 
   /** Lista a pasta inteira antes de remover (remover durante a paginação deslocaria o offset). */

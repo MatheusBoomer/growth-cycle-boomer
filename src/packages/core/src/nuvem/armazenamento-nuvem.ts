@@ -5,6 +5,7 @@ import { ErroProspectExistente, ErroSincronizacao } from "../erros"
 import type { Acumulado, LinhaPresenca, LinhaUso } from "../metricas/tipos"
 import type { NivelEsforco } from "../modelos"
 import type { NotaSkill } from "../notas-skills"
+import type { FiltroReports, ImagemReport, MudancaReport, NovoReport, Report } from "../reports"
 import type { Estado, EtapaId, EventoConversa } from "../tipos"
 import type { Mesa } from "./mesa"
 import type { ArmazemArquivos, LinhaConfigModelo, RegistroUsoTurno, Repositorio } from "./tipos"
@@ -257,6 +258,52 @@ export class NuvemArmazenamento extends FsArmazenamento {
 
   override marcarNotaSkill(id: number, resolvida: boolean, autor: string): Promise<NotaSkill | null> {
     return this.repositorio.marcarNotaSkill(id, resolvida, autor)
+  }
+
+  /**
+   * Grava a linha, depois cada imagem em `<id>/<n>.<formato>`, depois a lista de caminhos. Se algo falha depois da
+   * linha criada, apaga imagens e linha (cada limpeza no seu try, para subir a falha original) e relança.
+   */
+  override async criarReport(novo: NovoReport, autor: string, imagens: ImagemReport[]): Promise<Report> {
+    const criado = await this.repositorio.criarReport({ ...novo, autor })
+    try {
+      const caminhos: string[] = []
+      for (const [n, imagem] of imagens.entries()) {
+        const caminho = `${criado.id}/${n}.${imagem.formato}`
+        await this.armazem.enviarImagemReport(caminho, imagem)
+        caminhos.push(caminho)
+      }
+      if (caminhos.length > 0) await this.repositorio.definirImagensReport(criado.id, caminhos)
+      return (await this.repositorio.lerReport(criado.id)) ?? { ...criado, imagens: caminhos }
+    } catch (e) {
+      try {
+        await this.armazem.apagarImagensReport(criado.id)
+      } catch {
+        // A falha original é a que importa; objeto órfão no bucket não aparece em lugar nenhum.
+      }
+      try {
+        await this.repositorio.apagarReport(criado.id)
+      } catch {
+        // Idem.
+      }
+      throw e
+    }
+  }
+
+  override listarReports(filtro?: FiltroReports): Promise<Report[]> {
+    return this.repositorio.listarReports(filtro)
+  }
+
+  override lerReport(id: number): Promise<Report | null> {
+    return this.repositorio.lerReport(id)
+  }
+
+  override atualizarReport(id: number, mudanca: MudancaReport, por: string): Promise<Report | null> {
+    return this.repositorio.atualizarReport(id, mudanca, por)
+  }
+
+  override baixarImagemReport(caminho: string): Promise<Uint8Array> {
+    return this.armazem.baixarImagemReport(caminho)
   }
 
   private cancelarAgendamento(slug: string): void {

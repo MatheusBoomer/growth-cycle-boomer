@@ -1,7 +1,8 @@
-import { afterAll, describe } from "vitest"
+import { afterAll, describe, expect, it } from "vitest"
 import { ErroProspectExistente } from "../../src/erros"
 import { criarClienteSupabase, SupabaseArmazem, SupabaseRepositorio } from "../../src/nuvem/supabase"
 import type { ArmazemArquivos, EntradaManifesto } from "../../src/nuvem/tipos"
+import type { ImagemReport } from "../../src/reports"
 import { SupabaseUsuarios } from "../../src/nuvem/usuarios-supabase"
 import { contratoArmazem } from "./contrato-armazem"
 import { contratoRepositorio } from "./contrato-repositorio"
@@ -50,6 +51,15 @@ class ArmazemComProspect implements ArmazemArquivos {
   apagarTudo(slug: string) {
     return this.armazem.apagarTudo(slug)
   }
+  enviarImagemReport(caminho: string, imagem: ImagemReport) {
+    return this.armazem.enviarImagemReport(caminho, imagem)
+  }
+  baixarImagemReport(caminho: string) {
+    return this.armazem.baixarImagemReport(caminho)
+  }
+  apagarImagensReport(id: number) {
+    return this.armazem.apagarImagensReport(id)
+  }
 }
 
 /** Suíte viva: só roda com SUPABASE_TESTE_URL e SUPABASE_TESTE_SERVICE_ROLE_KEY no .env da raiz. */
@@ -71,6 +81,28 @@ describe.skipIf(!suiteVivaHabilitada(process.env))("Supabase (integração)", ()
     "supabase",
     async () => new ArmazemComProspect(new SupabaseArmazem(cliente()), new SupabaseRepositorio(cliente())),
   )
+
+  // Com a chave pública (anon) do projeto de teste: nem a tabela nem o bucket dos reports podem ser lidos. Pega uma
+  // migração futura que dê grant a anon/authenticated ou torne o bucket público. Sem a chave, o caso é pulado.
+  it.skipIf(!process.env.SUPABASE_TESTE_PUBLISHABLE_KEY)("anon não lê reports nem as imagens do bucket", async () => {
+    const id = 1_000_000_000 + Math.floor(Math.random() * 1_000_000_000)
+    const caminho = `${id}/0.png`
+    const { error: erroEnvio } = await cliente()
+      .storage.from("planejamento-reports")
+      .upload(caminho, new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), { contentType: "image/png" })
+    expect(erroEnvio).toBeNull()
+    try {
+      const anon = criarClienteSupabase(process.env.SUPABASE_TESTE_URL ?? "", process.env.SUPABASE_TESTE_PUBLISHABLE_KEY ?? "")
+      const tabela = await anon.from("reports").select("id").limit(1)
+      expect(tabela.error !== null || (tabela.data ?? []).length === 0).toBe(true)
+      const baixar = await anon.storage.from("planejamento-reports").download(caminho)
+      expect(baixar.error).not.toBeNull()
+      const listar = await anon.storage.from("planejamento-reports").list(String(id))
+      expect(listar.error !== null || (listar.data ?? []).length === 0).toBe(true)
+    } finally {
+      await cliente().storage.from("planejamento-reports").remove([caminho])
+    }
+  })
 
   contratoUsuarios("supabase", async (agora) => ({
     repo: new SupabaseUsuarios(cliente(), agora),
@@ -139,6 +171,29 @@ describe.skipIf(!suiteVivaHabilitada(process.env))("Supabase (integração)", ()
       if (!ehItemDeContrato(String(linha.item))) continue
       const { error } = await c.from("notas_skills").delete().eq("id", linha.id)
       registrar("apagar notas_skills", error)
+    }
+
+    // Reports do contrato: só os de autor no formato exato de novoEmail, nunca um report real. As pastas de imagem do
+    // contrato do armazém usam ids a partir de 1.000.000.000, que um report real não alcança.
+    const { data: reports, error: erroReports } = await c.from("reports").select("id, autor")
+    registrar("ler reports", erroReports)
+    const pastasReport = new Set<string>()
+    for (const linha of reports ?? []) {
+      if (!ehEmailDeContrato(String(linha.autor))) continue
+      pastasReport.add(String(linha.id))
+      const { error } = await c.from("reports").delete().eq("id", linha.id)
+      registrar("apagar reports", error)
+    }
+    const { data: raizReports, error: erroRaizReports } = await c.storage.from("planejamento-reports").list("", { limit: 1000 })
+    registrar("listar planejamento-reports", erroRaizReports)
+    for (const o of raizReports ?? []) if (/^\d+$/.test(o.name) && Number(o.name) >= 1_000_000_000) pastasReport.add(o.name)
+    for (const pasta of pastasReport) {
+      const { data: objetos, error: erroPasta } = await c.storage.from("planejamento-reports").list(pasta, { limit: 1000 })
+      registrar(`listar planejamento-reports/${pasta}`, erroPasta)
+      const nomes = (objetos ?? []).map((o) => `${pasta}/${o.name}`)
+      if (nomes.length === 0) continue
+      const { error } = await c.storage.from("planejamento-reports").remove(nomes)
+      registrar(`remover em planejamento-reports/${pasta}`, error)
     }
 
     // Objetos sem linha no banco também vazam: a busca parte da raiz de cada bucket.

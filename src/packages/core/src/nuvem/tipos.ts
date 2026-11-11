@@ -2,6 +2,7 @@ import type { Comentario } from "../comentarios"
 import type { Acumulado, LinhaPresenca, LinhaUso } from "../metricas/tipos"
 import type { NivelEsforco } from "../modelos"
 import type { NotaSkill } from "../notas-skills"
+import type { FiltroReports, ImagemReport, MudancaReport, NovoReport, Report } from "../reports"
 import type { Estado, EtapaId, EventoConversa } from "../tipos"
 
 export interface EstadoVersionado {
@@ -127,6 +128,16 @@ export interface Repositorio {
    * `resolvidaEm` e `resolvidaPor`; reabrir limpa os dois. Null quando a nota não existe.
    */
   marcarNotaSkill(id: number, resolvida: boolean, autor: string): Promise<NotaSkill | null>
+  /** Grava com status "aberto" e sem imagens. O repositório não valida; quem chama valida. */
+  criarReport(r: NovoReport & { autor: string }): Promise<Report>
+  definirImagensReport(id: number, caminhos: string[]): Promise<void>
+  /** Só para desfazer um envio que falhou; id ausente é ignorado. */
+  apagarReport(id: number): Promise<void>
+  /** Os mais recentes primeiro. */
+  listarReports(filtro?: FiltroReports): Promise<Report[]>
+  lerReport(id: number): Promise<Report | null>
+  /** Aplica a mudança e grava `atualizadoEm` = agora e `atualizadoPor` = `por`. Null quando não existe. */
+  atualizarReport(id: number, mudanca: MudancaReport, por: string): Promise<Report | null>
 }
 
 /** Arquivos do prospect, endereçados pelo conteúdo (objeto `<slug>/<sha256>`) e listados por um manifesto. */
@@ -145,4 +156,10 @@ export interface ArmazemArquivos {
    * Não falha quando não há nada a apagar.
    */
   apagarTudo(slug: string): Promise<void>
+  /** Imagem de report no bucket próprio, em `<id>/<n>.<png|jpg>`. */
+  enviarImagemReport(caminho: string, imagem: ImagemReport): Promise<void>
+  /** ErroNaoEncontrado se não existe. */
+  baixarImagemReport(caminho: string): Promise<Uint8Array>
+  /** Apaga tudo de `<id>/`; não falha quando não há nada. */
+  apagarImagensReport(id: number): Promise<void>
 }

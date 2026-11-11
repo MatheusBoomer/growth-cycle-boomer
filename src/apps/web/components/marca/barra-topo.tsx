@@ -4,6 +4,7 @@ import { AlternarTema } from "./alternar-tema"
 import { LogoBoomer } from "./logo-boomer"
 import { LinkAdministracao } from "./link-administracao"
 import { MenuConta } from "./menu-conta"
+import { BotaoReportar } from "@/components/reports/botao-reportar"
 
 /** Barra fixa no topo: logo (volta ao início), nome da tela, `extra` (o que a tela quiser ter à direita, como o selo de custo), a conta de quem entrou (só no modo google) e o botão de tema. Sem ações de etapa. */
 export function BarraTopo({ titulo, subtitulo, extra }: { titulo: string; subtitulo?: string; extra?: ReactNode }) {
@@ -18,6 +19,7 @@ export function BarraTopo({ titulo, subtitulo, extra }: { titulo: string; subtit
         {subtitulo && <span className="text-muted-foreground font-medium"> · {subtitulo}</span>}
       </p>
       <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-2">
+        <BotaoReportar />
         <LinkAdministracao />
         {extra}
         <MenuConta />

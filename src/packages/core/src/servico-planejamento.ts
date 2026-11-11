@@ -42,6 +42,7 @@ import type { Acumulado, Limites, LinhaPresenca, LinhaUso } from "./metricas/tip
 import { alvosDaEtapa, ALVO_PRINCIPAL, NIVEIS_ESFORCO, validarEscolha, type EscolhaModelo, type ListaDeModelos, type NivelEsforco, type UsoDaEtapa } from "./modelos"
 import type { EntradaUsoTurno, LinhaConfigModelo, RegistroUsoTurno } from "./nuvem/tipos"
 import { LIMITE_TEXTO_NOTA, type NotaSkill } from "./notas-skills"
+import { type FiltroReports, type Report, validarImagensReport, validarMudancaReport, validarNovoReport } from "./reports"
 import { aplicarOverrides, lerKit, reposicionarNoFixture } from "./servico-teste"
 import { ehAdmin, normalizarEmail, podeVerProspect, type UsuarioComPapel } from "./papeis"
 import { normalizarSlug } from "./slug"
@@ -287,6 +288,33 @@ export class ServicoPlanejamento {
     const nota = await this.arm.marcarNotaSkill(id, resolvida, autor)
     if (!nota) throw new ErroNaoEncontrado("Nota inexistente.")
     return nota
+  }
+
+  /** Valida texto e imagens antes de tocar no armazenamento; o autor é sempre o da sessão. */
+  async criarReport(entrada: unknown, autor: string, tela: Uint8Array | null, extras: Uint8Array[]): Promise<Report> {
+    const novo = validarNovoReport(entrada)
+    const imagens = validarImagensReport(tela, extras)
+    return this.arm.criarReport(novo, autor, imagens)
+  }
+
+  listarReports(filtro?: FiltroReports): Promise<Report[]> {
+    return this.arm.listarReports(filtro)
+  }
+
+  /** ErroNaoEncontrado (404) se o report não existe; ErroEntrada (400) se a mudança é inválida. */
+  async atualizarReport(id: number, entrada: unknown, por: string): Promise<Report> {
+    const mudanca = validarMudancaReport(entrada)
+    const report = await this.arm.atualizarReport(id, mudanca, por)
+    if (!report) throw new ErroNaoEncontrado("Report não encontrado.")
+    return report
+  }
+
+  /** Bytes da n-ésima imagem do report; ErroNaoEncontrado se o report ou a imagem não existem. */
+  async imagemReport(id: number, n: number): Promise<{ bytes: Uint8Array; contentType: "image/png" | "image/jpeg" }> {
+    const report = await this.arm.lerReport(id)
+    const caminho = report?.imagens[n]
+    if (!caminho) throw new ErroNaoEncontrado("Imagem não encontrada.")
+    return { bytes: await this.arm.baixarImagemReport(caminho), contentType: caminho.endsWith(".png") ? "image/png" : "image/jpeg" }
   }
 
   /** Quantas notas abertas há em cada item (itens sem nota aberta não aparecem). */

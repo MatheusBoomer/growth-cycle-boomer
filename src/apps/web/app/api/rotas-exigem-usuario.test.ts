@@ -106,7 +106,8 @@ describe("varredura de app: toda rota confere o acesso", () => {
     expect(por("admin")).toEqual(expect.arrayContaining(["api/cliente-teste/route.ts", "api/sistema/route.ts", "api/uso/route.ts", "api/prospects/[slug]/teste/route.ts", "api/prospects/[slug]/teste/reposicionar/route.ts"]))
     expect(por("prospect")).toHaveLength(19)
     expect(por("prospect")).not.toContain("api/prospects/[slug]/teste/route.ts")
-    expect(por(undefined)).toEqual(["api/modelos/[insumoId]/route.ts", "api/prospects/route.ts"])
+    expect(por(undefined)).toEqual(["api/modelos/[insumoId]/route.ts", "api/prospects/route.ts", "api/reports/route.ts"])
+    expect(por("admin")).toEqual(expect.arrayContaining(["api/admin/reports/route.ts", "api/admin/reports/[id]/route.ts", "api/admin/reports/[id]/imagens/[n]/route.ts"]))
   })
 
   it("as isentas não chamam exigirUsuario (a lista não esconde rota que já autentica)", () => {
