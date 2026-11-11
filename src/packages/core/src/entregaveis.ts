@@ -37,6 +37,8 @@ const ACOMPANHANTES_DO_DOCUMENTO: Record<string, string[]> = {
 
 const NOME_FINAL = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const NOME_VERSIONADO = /-(?:v\d+|final|novo|nova|revisado|revisada)$/
+// Nomes estáveis que terminam como versão, mas são o nome fixo do arquivo (etapa:nome): o plano revisado da 10.
+const NOMES_ESTAVEIS = new Set(["10:plano-de-acao-final"])
 
 export function normalizarNomeFinal(tipo: TipoEntregavel, nomeFinal: string, etapa: EtapaId): string {
   let nome = nomeFinal.trim().toLowerCase()
@@ -48,7 +50,7 @@ export function normalizarNomeFinal(tipo: TipoEntregavel, nomeFinal: string, eta
       `nome_final "${nomeFinal}" inválido: use só letras minúsculas, números e hífens (ex.: investimento-total-mensal).`,
     )
   }
-  if (NOME_VERSIONADO.test(nome)) {
+  if (NOME_VERSIONADO.test(nome) && !NOMES_ESTAVEIS.has(`${etapa}:${nome}`)) {
     throw new ErroEntrada(
       `nome_final "${nomeFinal}" parece versionado. Use o nome estável: uma nova aprovação sobrescreve a anterior.`,
     )

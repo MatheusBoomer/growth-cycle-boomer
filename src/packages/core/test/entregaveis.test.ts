@@ -62,6 +62,13 @@ describe("normalizarNomeFinal", () => {
   it.each(["Investimento Mensal", "grafico_1", "roas-v2", "analise-final", ""])("recusa %s", (nome) => {
     expect(() => normalizarNomeFinal("grafico", nome, "03")).toThrow(ErroEntrada)
   })
+  it("aceita plano-de-acao-final na etapa 10, nome estável do plano revisado (documento e planilha)", () => {
+    expect(normalizarNomeFinal("documento", "plano-de-acao-final", "10")).toBe("plano-de-acao-final")
+    expect(normalizarNomeFinal("planilha", "plano-de-acao-final.xlsx", "10")).toBe("plano-de-acao-final")
+  })
+  it("plano-de-acao-final fora da etapa 10 continua parecendo versionado", () => {
+    expect(() => normalizarNomeFinal("documento", "plano-de-acao-final", "08")).toThrow(ErroEntrada)
+  })
 })
 
 describe("ciclo do entregável", () => {
