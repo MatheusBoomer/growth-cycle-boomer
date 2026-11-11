@@ -98,3 +98,32 @@ def test_contem_trecho_vazio_ou_so_pontuacao_e_falso():
     transcricao = t.normalizar("Qualquer coisa.")
     assert not t.contem_trecho(transcricao, "")
     assert not t.contem_trecho(transcricao, "  ...  ")
+
+
+def test_normalizar_unifica_nfd_e_nfc(tmp_path):
+    import unicodedata
+
+    nfd = unicodedata.normalize("NFD", "Só aprovamos o CRM depois de janeiro, não antes.")
+    nfc = unicodedata.normalize("NFC", "só aprovamos o CRM depois de janeiro")
+    assert nfd != nfc and nfc not in nfd.lower()
+    assert t.contem_trecho(t.normalizar(nfd), nfc)
+    assert t.contem_trecho(t.normalizar(nfc + " e mais"), unicodedata.normalize("NFD", nfc))
+
+
+def test_arquivo_que_nao_da_para_ler_vira_erro_de_transcricao(tmp_path, monkeypatch):
+    arq = tmp_path / "t.txt"
+    arq.write_text("fala", encoding="utf-8")
+
+    def sem_permissao(self):
+        raise PermissionError(13, "Permission denied")
+
+    monkeypatch.setattr(Path, "read_bytes", sem_permissao)
+    with pytest.raises(t.ErroTranscricao, match="Não foi possível ler"):
+        t.extrair_texto(arq)
+
+
+def test_diretorio_com_extensao_de_texto_vira_erro_de_transcricao(tmp_path):
+    pasta = tmp_path / "fala.txt"
+    pasta.mkdir()
+    with pytest.raises(t.ErroTranscricao):
+        t.extrair_texto(pasta)

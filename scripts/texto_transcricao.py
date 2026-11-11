@@ -7,6 +7,7 @@ aspas, travessão, maiúsculas e quebra de linha.
 from __future__ import annotations
 
 import re
+import unicodedata
 from pathlib import Path
 
 EXTENSOES_TEXTO = (".txt", ".md")
@@ -40,7 +41,10 @@ def extrair_texto(caminho: Path) -> str:
         raise ErroTranscricao(f"Transcrição não encontrada: {caminho}")
     if extensao == ".docx":
         return _extrair_docx(caminho)
-    dados = caminho.read_bytes()
+    try:
+        dados = caminho.read_bytes()
+    except OSError as erro:  # sem permissão, é um diretório etc.
+        raise ErroTranscricao(f"Não foi possível ler a transcrição {caminho}: {erro}") from erro
     try:
         return dados.decode("utf-8")
     except UnicodeDecodeError:
@@ -63,8 +67,8 @@ def _extrair_docx(caminho: Path) -> str:
 
 
 def normalizar(texto: str) -> str:
-    """Minúsculas, aspas/travessões/reticências padronizados, espaços colapsados, pontas aparadas."""
-    texto = texto.lower().translate(_SUBSTITUICOES)
+    """Acentos em NFC, minúsculas, aspas/travessões/reticências padronizados, espaços colapsados, pontas aparadas."""
+    texto = unicodedata.normalize("NFC", texto).lower().translate(_SUBSTITUICOES)
     texto = _ESPACOS.sub(" ", texto)
     return texto.strip(_PONTAS)
 
