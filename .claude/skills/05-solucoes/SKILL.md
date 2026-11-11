@@ -5,7 +5,7 @@ description: Abre cada problema encontrado no diagnóstico (Skills 03 e 04) em h
 
 # Skill 05 · Soluções
 
-Skill 5 de 9. Aplica a regra de ouro do treinamento "Do diagnóstico à
+Skill 5 de 10. Aplica a regra de ouro do treinamento "Do diagnóstico à
 solução": **nenhum problema sai do diagnóstico sem solução.** O cliente compra
 o plano, não o gráfico.
 

@@ -123,7 +123,7 @@ está rodando dentro da interface web, e estas regras substituem o jeito
   `gerar_plano_acao.py` com `--saida-docx`, `--saida-xlsx` e `--saida-json`), e o resultado é
   proposto com `propor_entregavel` (tipo `planilha` ou `documento`). O JSON
   do plano não é proposto: com o nome estável na mesma pasta, o app o copia
-  junto com o documento aprovado. Na etapa final, o roteiro da apresentação é
+  junto com o documento aprovado. Na apresentação final (09), o roteiro da apresentação é
   proposto como tipo `roteiro` (`.json`) e `gerar_apresentacao.py` gera o tipo
   `apresentacao` (`.pptx`).
 - Na etapa 10 (revisão pós-apresentação), `validar_revisao.py` confere o

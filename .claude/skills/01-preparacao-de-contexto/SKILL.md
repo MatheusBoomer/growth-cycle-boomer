@@ -5,7 +5,7 @@ description: Primeira etapa do Growth Cycle de um prospect novo. Lê a transcri�
 
 # Skill 01 — Preparação de Contexto
 
-Skill 1 de 9 do processo do Growth Cycle. Etapa nova, sem
+Skill 1 de 10 do processo do Growth Cycle. Etapa nova, sem
 equivalente nos prompts originais — criada para tirar do analista o trabalho
 manual de limpar a transcrição antes de usá-la.
 

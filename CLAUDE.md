@@ -130,4 +130,4 @@ os 13 arquivos com o leitor do Mermaid) e em `src/packages/core`
 
 A skill `dev-comentarios` executa os ajustes de interface marcados com o modo dev
 do app web (`.dev-comentarios/`, `npm run dev:comentarios` em `src/`). Ela não
-faz parte da sequência 01→09 e não segue os rituais de checagem do planejamento.
+faz parte da sequência 01→10 e não segue os rituais de checagem do planejamento.

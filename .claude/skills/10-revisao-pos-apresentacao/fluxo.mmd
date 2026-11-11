@@ -12,7 +12,8 @@ flowchart TD
   P6["Analista decide conflitos e pontos em aberto no chat"]
   P7["Fase 3 · Aplicar as decisões e revisar em cadeia"]
   V2["validar_revisao.py final, com o plano final"]
-  P8["Fase 3 · gerar_plano_acao.py (plano final)"]
+  P8["Fase 3 · validar_plano_acao.py e gerar_plano_acao.py (plano final)"]
+  D3{"Saiu ERRO?"}
   C2{"Analista aprova?"}
   P9["Fase 4 · Relatório (relatorio_revisao.py)"]
   C3{"Pergunta-guia: sim?"}
@@ -34,7 +35,9 @@ flowchart TD
   P6 --> P7
   P7 --> V2
   V2 --> P8
-  P8 --> C2
+  P8 --> D3
+  D3 -->|"sim"| P7
+  D3 -->|"não"| C2
   C2 -->|"sim"| P9
   C2 -->|"não, ajustar"| P7
   P9 --> C3

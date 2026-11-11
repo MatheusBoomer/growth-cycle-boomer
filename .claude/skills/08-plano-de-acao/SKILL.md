@@ -5,7 +5,7 @@ description: Transforma tudo que foi decidido no planejamento em um plano de aç
 
 # Skill 08 — Plano de Ação Estratégico
 
-Skill 8 de 9 — última etapa de conteúdo. Corresponde ao Prompt 9 do processo
+Skill 8 de 10 — última etapa de conteúdo. Corresponde ao Prompt 9 do processo
 manual (`prompts/`). Não é etapa de análise de dados, de revisão de cenários
 nem de estratégia nova: toda ação nasce do que já foi decidido. A única
 exceção é a ação corretiva de um problema já diagnosticado sem solução no
