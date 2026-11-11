@@ -20,7 +20,7 @@ Confira que existe material das 5 seções do deck em `entrega/ativos-aprovados/
 | 02. Desafios | `contexto/solucoes.json`, `secoes/05-solucoes.md` | 05 |
 | 03. Metas | `graficos/cenarios-*`, `graficos/tabela-cenarios-*`, `secoes/06-*.md` | 06 |
 | 04. Cenários e impactos | `secoes/06-*.md`, `secoes/07-midia-paga.md`, `graficos/tabela-*` | 06 e 07 |
-| 05. Plano de ação | `plano-de-acao/*.docx`, `secoes/08-*.md` | 08 |
+| 05. Plano de ação | `plano-de-acao/plano-de-acao-estrategico.docx` (documento) e `plano-de-acao/plano-de-acao-estrategico.xlsx` (planilha), `secoes/08-*.md` | 08 |
 
 Faltando material de uma seção, diga ao analista o que falta e de qual etapa
 vem; não monte um deck incompleto em silêncio.
@@ -61,7 +61,7 @@ adapte ao material de cada prospect):
 | 02. Desafios | divisória · `bullets` com a lista de desafios (título e impacto de cada problema) · um `desafio` por problema do registro, na ordem de prioridade, com `problema_id` · `cartoes` com os 3 pilares · um `bullets` por iniciativa de cada pilar (pilares e iniciativas vêm do analista; ver regras) |
 | 03. Metas | divisória · `imagem_larga` com a tabela de metas e os 3 cenários · `grafico` com as curvas dos cenários |
 | 04. Cenários e impactos | divisória · `bullets` com a metodologia (KPIs influenciadores e de resultado) · `imagem_larga` com as tabelas de projeção e de KPIs · `bullets` com as considerações · alocação de verba (`grafico` e `imagem_larga`) · estratégia por Curva ABC · calendário de mídia · ROAS esperado · dependência de mídia paga |
-| 05. Plano de ação | divisória · estrutura de campanhas (imagem aprovada, se houver) · `bullets` sobre as campanhas · `imagem_larga` com os planos de ação (B2C, B2B) |
+| 05. Plano de ação | divisória · estrutura de campanhas (imagem aprovada, se houver) · `bullets` sobre as campanhas · um `bullets` por horizonte (Imediato, Curto prazo, Médio prazo), com as ações, datas e donos lidos do documento e da planilha do plano |
 | Fechamento | obrigado |
 
 Regras:

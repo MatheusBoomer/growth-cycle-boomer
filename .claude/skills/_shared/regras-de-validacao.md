@@ -118,10 +118,10 @@ está rodando dentro da interface web, e estas regras substituem o jeito
   Chame `sinalizar_etapa_pronta` com o resumo de decisões (markdown) e o
   mesmo texto de handoff do "Encerramento e handoff" da skill.
 - A pasta `.app/` pertence ao app: fora de `.app/rascunhos/`, não escreva nela.
-- Scripts que geram arquivo (ex.: `preencher_projecao_xlsx.py`,
-  `preencher_plano_acao_docx.py`) recebem `--output` apontando para
-  `.app/rascunhos/`, e o resultado é proposto com `propor_entregavel`
-  (tipo `planilha` ou `documento`). Na etapa final, o roteiro da apresentação é
+- Scripts que geram arquivo recebem a saída apontando para
+  `.app/rascunhos/` (`preencher_projecao_xlsx.py` com `--output`;
+  `gerar_plano_acao.py` com `--saida-docx` e `--saida-xlsx`), e o resultado é
+  proposto com `propor_entregavel` (tipo `planilha` ou `documento`). Na etapa final, o roteiro da apresentação é
   proposto como tipo `roteiro` (`.json`) e `gerar_apresentacao.py` gera o tipo
   `apresentacao` (`.pptx`).
 
@@ -140,4 +140,4 @@ com o que falta:
    cliente. Garantido pelo validador (`nao_quantificavel` só com
    justificativa, e vira aviso).
 4. **Cada solução vira item do plano**, com dono, prazo e frente. Garantido
-   por `scripts/validar_solucoes.py --modo plano` na Skill 08.
+   por `scripts/validar_plano_acao.py` na Skill 08.
