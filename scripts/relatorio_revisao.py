@@ -15,6 +15,7 @@ from pathlib import Path
 
 from plano_acao_comum import GRUPOS_REVISAO as _GRUPOS
 from plano_acao_comum import acoes, diferencas, numeros_citados
+from texto_transcricao import normalizar
 from validar_plano_acao import ErroEntrada, _ler_json
 
 _SEM_MOTIVO = "sem motivo registrado"
@@ -118,13 +119,18 @@ def _secao_metas(plano_08: dict, plano_final: dict, revisao: dict, mudancas: dic
     return linhas + [""]
 
 
+def _cobre(kpi: str, alavanca: str) -> bool:
+    """True se um texto contém o outro depois de normalizar (a alavanca pode ser mais curta ou mais longa que o KPI)."""
+    kpi, alavanca = normalizar(kpi), normalizar(alavanca)
+    return bool(alavanca) and bool(kpi) and (kpi in alavanca or alavanca in kpi)
+
+
 def _alavancas(plano: dict, kpi: str) -> list[int]:
-    """Números das ações alavanca da meta cuja `alavanca` contém o kpi (sem diferenciar maiúsculas)."""
-    alvo = kpi.casefold()
+    """Números das ações alavanca da meta cuja `alavanca` e o kpi se contêm (em qualquer sentido)."""
     return [
         a["numero"] for _, a in acoes(plano)
         if a.get("alavanca_da_meta") is True and isinstance(a.get("alavanca"), str)
-        and alvo in a["alavanca"].casefold() and _inteiro(a.get("numero"))
+        and _cobre(kpi, a["alavanca"]) and _inteiro(a.get("numero"))
     ]
 
 

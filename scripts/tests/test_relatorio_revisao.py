@@ -224,3 +224,32 @@ def test_cli_json_de_tipo_errado_da_erro_sem_traceback(arquivos):
     arquivos["plano-final"].write_text("[1, 2]", encoding="utf-8")
     p = subprocess.run(_argv(arquivos), capture_output=True, text=True)
     assert p.returncode == 1 and p.stderr.startswith("ERRO: ") and "Traceback" not in p.stderr
+
+
+def _plano_com_alavancas(kpi, alavancas):
+    plano = plano_valido()
+    plano["abertura"]["metas"][0]["kpi"] = kpi
+    acoes_plano = [a for h in plano["horizontes"] for a in h["acoes"]]
+    for a in acoes_plano:
+        a["alavanca_da_meta"] = False
+    for a, alavanca in zip(acoes_plano, alavancas):
+        a["alavanca_da_meta"] = True
+        a["alavanca"] = alavanca
+    return plano, [a["numero"] for a in acoes_plano[: len(alavancas)]]
+
+
+@pytest.mark.parametrize("kpi, alavanca", [
+    ("Taxa de conversão global", "Taxa de conversão"),  # alavanca mais curta que o KPI
+    ("Receita captada do mês", "Receita captada do mês (pré-venda e vendas)"),  # alavanca mais longa
+    ("Taxa de Conversão Global", "taxa de conversao global".replace("conversao", "conversão")),  # caixa
+])
+def test_cobertura_compara_kpi_e_alavanca_nos_dois_sentidos(kpi, alavanca):
+    plano, numeros = _plano_com_alavancas(kpi, [alavanca])
+    linha = linhas_com(secao(r.montar_relatorio(plano, plano, revisao_valida()), "Cobertura da meta"), kpi)[0]
+    assert f"depois Ação {numeros[0]}" in linha and "⚠️" not in linha
+
+
+def test_cobertura_alavanca_vazia_ou_de_outro_assunto_nao_cobre():
+    plano, _ = _plano_com_alavancas("Taxa de conversão global", ["", "   ", "Ticket médio"])
+    linha = linhas_com(secao(r.montar_relatorio(plano, plano, revisao_valida()), "Cobertura da meta"), "Taxa de conversão global")[0]
+    assert "depois ⚠️ sem ação" in linha

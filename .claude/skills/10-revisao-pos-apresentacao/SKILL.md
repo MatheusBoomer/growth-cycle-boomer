@@ -357,7 +357,9 @@ A saída traz "O que mudou", "Metas e cenário", "Cobertura da meta" e
    motivo (complemento, conflito decidido ou ponto em aberto resolvido).
 2. **Cobertura da meta:** cada KPI influenciador do cenário e as ações que o
    movem na versão final. Aponte toda alavanca que ficou mais fraca e todo
-   KPI sem ação.
+   KPI sem ação. "⚠️ sem ação" é uma comparação de texto (o nome do KPI contra
+   o campo `alavanca` das ações); confira nas ações antes de apontar ao
+   analista.
 3. **Coerência:** documento e planilha iguais (garantido pelo
    `gerar_plano_acao.py`, que gera os dois do mesmo JSON); números que
    divergem da 06/07, com o antes e o depois, e os slides do deck que
