@@ -140,7 +140,7 @@ def _opcoes(v: _Validacao, conflito: dict, prefixo: str) -> None:
     else:
         chaves = set(opcoes)
     recomendacao = conflito.get("recomendacao_boomer")
-    if recomendacao not in chaves or not isinstance(recomendacao, str):
+    if not isinstance(recomendacao, str) or recomendacao not in chaves:
         v.erro(prefixo, f"recomendacao_boomer {recomendacao!r} não é uma opção existente.")
     decisao = conflito.get("decisao")
     if decisao is not None and (not isinstance(decisao, str) or decisao not in chaves):

@@ -179,6 +179,15 @@ def test_entrada_malformada_nao_levanta_e_gera_erro():
     assert tem(erros, "versao 1")
 
 
+@pytest.mark.parametrize("valor", [["A"], {}, {"A": 1}, 1, True])
+def test_recomendacao_e_decisao_de_tipo_errado_nao_levantam(valor):
+    revisao = revisao_valida()
+    revisao["conflitos"][0]["recomendacao_boomer"] = valor
+    revisao["conflitos"][1]["decisao"] = valor
+    erros, _ = validar(revisao)
+    assert tem(erros, "Conflito 1: recomendacao_boomer") and tem(erros, "Conflito 2: decisao")
+
+
 def test_conflito_sem_trecho_nem_opcoes_nao_levanta():
     revisao = com(lambda r: r["conflitos"].append({"numero": 3, "opcoes": "A", "acoes_afetadas": "6", "remove_acao": True}))
     erros, _ = validar(revisao)
