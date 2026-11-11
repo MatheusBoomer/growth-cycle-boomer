@@ -159,6 +159,20 @@ export function entregavelVisivel(
   return visivel
 }
 
+/**
+ * A versão imediatamente anterior do mesmo entregável (mesma etapa, tipo e nome final), qualquer que seja o
+ * status dela. Serve para mostrar o que mudou numa nova versão. null na primeira versão.
+ */
+export function versaoAnterior(entregaveis: Entregavel[], atual: Entregavel): Entregavel | null {
+  let anterior: Entregavel | null = null
+  for (const e of entregaveis) {
+    if (e.id === atual.id || e.tipo !== atual.tipo || e.etapa !== atual.etapa || e.nomeFinal !== atual.nomeFinal) continue
+    if (e.criadoEm >= atual.criadoEm) continue
+    if (!anterior || e.criadoEm > anterior.criadoEm) anterior = e
+  }
+  return anterior
+}
+
 /** Nome final do HTML ou da apresentação que acabou de chegar pendente na etapa aberta. null na primeira carga (`antes` = null). */
 export function htmlParaAbrir(antes: Entregavel[] | null, depois: Entregavel[], etapa: EtapaId): string | null {
   if (antes === null) return null

@@ -8,6 +8,7 @@ import {
   entregavelVisivel,
   htmlParaAbrir,
   proporEntregavel,
+  versaoAnterior,
 } from "../src/entregaveis"
 import { ErroEntrada, TransicaoInvalida } from "../src/erros"
 import { estadoInicial } from "../src/maquina-estados"
@@ -208,5 +209,29 @@ describe("apresentação final pronta para baixar", () => {
   })
   it("nada enquanto só houver versão aguardando aprovação", () => {
     expect(apresentacaoFinal([ap("a1", { status: "pendente" })])).toBeNull()
+  })
+})
+
+describe("versaoAnterior", () => {
+  const e = (id: string, criadoEm: string, nomeFinal = "roteiro-apresentacao", status: Entregavel["status"] = "substituido"): Entregavel => ({
+    id,
+    etapa: "03",
+    tipo: "roteiro",
+    titulo: "Roteiro",
+    arquivoRascunho: `.app/propostas/${id}.json`,
+    nomeFinal,
+    status,
+    ajustePedido: null,
+    criadoEm,
+    decididoEm: null,
+  })
+  it("é a versão imediatamente anterior do mesmo nome, de qualquer status", () => {
+    const lista = [e("a", "2026-09-28T10:00:00Z"), e("b", "2026-09-28T11:00:00Z", "roteiro-apresentacao", "aprovado"), e("c", "2026-09-28T12:00:00Z", "roteiro-apresentacao", "pendente")]
+    expect(versaoAnterior(lista, lista[2]!)?.id).toBe("b")
+    expect(versaoAnterior(lista, lista[1]!)?.id).toBe("a")
+  })
+  it("primeira versão não tem anterior, e outro nome final não conta", () => {
+    const lista = [e("a", "2026-09-28T10:00:00Z", "outro"), e("b", "2026-09-28T11:00:00Z")]
+    expect(versaoAnterior(lista, lista[1]!)).toBeNull()
   })
 })
