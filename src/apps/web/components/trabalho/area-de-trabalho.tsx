@@ -47,7 +47,8 @@ export function escolherEtapaInicial(estado: Estado): EtapaId {
     const id = ORDEM_ETAPAS.find((i) => grupo.includes(estado.etapas[i].status))
     if (id) return id
   }
-  return "final"
+  // tudo concluído: a última etapa (a revisão pós-apresentação)
+  return ORDEM_ETAPAS[ORDEM_ETAPAS.length - 1]!
 }
 
 const IDS_COLUNAS = ["chat", "painel", "trilha", "visualizador"]

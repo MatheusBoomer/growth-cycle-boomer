@@ -203,6 +203,7 @@ describe("rotuloEtapa", () => {
   it("número e fase; final e arquivada com nome próprio", () => {
     expect(rotuloEtapa("03", "Diagnóstico")).toBe("03 · Diagnóstico")
     expect(rotuloEtapa("final", "Apresentação")).toBe("Final · Apresentação")
+    expect(rotuloEtapa("10", "Pós-apresentação")).toBe("10 · Pós-apresentação")
     expect(rotuloEtapa("briefing-benchmark", "Arquivada")).toBe("Briefing e benchmark (arquivada)")
   })
 })

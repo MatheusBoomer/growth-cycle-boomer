@@ -9,6 +9,7 @@ import {
   estadoInicial,
   iniciarEtapa,
   reabrirEtapa,
+  recalcularLiberacoes,
   registrarMensagemAnalista,
   revisarEtapa,
   sinalizarPronta,
@@ -154,5 +155,27 @@ describe("máquina de estados", () => {
     expect(e.etapas.final.status).toBe("bloqueada")
     for (const id of ["04", "05", "06", "07", "08"] as const) e = confirmarValida(e, id, EM)
     expect(e.etapas.final.status).toBe("liberada")
+  })
+
+  it("a etapa 10 só libera com a final concluída e nenhuma etapa desatualizada", () => {
+    let e = concluirAte("08")
+    expect(e.etapas.final.status).toBe("liberada")
+    expect(e.etapas["10"].status).toBe("bloqueada")
+    e = concluir(e, "final")
+    expect(e.etapas["10"].status).toBe("liberada")
+    // a 03 desatualizada (estado montado à mão, como em um estado antigo) segura a 10 bloqueada
+    const comDesatualizada = recalcularLiberacoes({
+      ...e,
+      etapas: { ...e.etapas, "03": { ...e.etapas["03"], status: "desatualizada" } },
+    })
+    expect(comDesatualizada.etapas["10"].status).toBe("bloqueada")
+    expect(confirmarValida(comDesatualizada, "03", EM).etapas["10"].status).toBe("liberada")
+  })
+
+  it("reabrir a final marca a 10 concluída como desatualizada", () => {
+    const e = concluirAte("10")
+    expect(e.etapas["10"].status).toBe("concluida")
+    const r = reabrirEtapa(e, "final", EM).estado
+    expect(r.etapas["10"].status).toBe("desatualizada")
   })
 })

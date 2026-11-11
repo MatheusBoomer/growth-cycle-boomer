@@ -9,5 +9,6 @@
   { "etapa": "02", "alvo": "pesquisador-benchmark", "modelo": "haiku", "esforco": null, "motivo": "raspagem e resumo" },
   { "etapa": "05", "alvo": "pesquisador-benchmark", "modelo": "haiku", "esforco": null, "motivo": "raspagem e resumo" },
   { "etapa": "07", "alvo": "pesquisador-benchmark", "modelo": "haiku", "esforco": null, "motivo": "raspagem e resumo" },
-  { "etapa": "final", "alvo": "principal", "modelo": "haiku", "esforco": null, "motivo": "monta o .pptx a partir do roteiro aprovado" }
+  { "etapa": "final", "alvo": "principal", "modelo": "haiku", "esforco": null, "motivo": "monta o .pptx a partir do roteiro aprovado" },
+  { "etapa": "10", "alvo": "principal", "modelo": "sonnet", "esforco": null, "motivo": "leitura atenta de transcrição longa e julgamento sobre conflitos" }
 ]

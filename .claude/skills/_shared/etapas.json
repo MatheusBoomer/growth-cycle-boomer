@@ -114,6 +114,18 @@
       "skill": "09-apresentacao-final",
       "subagentes": [],
       "insumos": []
+    },
+    {
+      "id": "10",
+      "fase": "Pós-apresentação",
+      "numero": "10",
+      "titulo": "Revisão pós-apresentação",
+      "rotuloStatus": "10 · Revisão pós-apresentação",
+      "descricao": "Cruza a transcrição da reunião de apresentação com o plano de ação e gera o plano final, depois das suas decisões.",
+      "oQueEsperar": "Envie a transcrição completa da reunião em que o Growth Cycle foi apresentado. O agente separa o que foi dito em complementos (aplicados direto), conflitos (você decide cada um) e pontos em aberto, e mostra a análise num card para você conferir os trechos. Depois das suas decisões no chat, ele gera o plano final em documento e planilha, que é o que vai para a entrega formal. A etapa só fecha quando você responder sim à pergunta-guia.",
+      "skill": "10-revisao-pos-apresentacao",
+      "subagentes": [],
+      "insumos": [{ "id": "apresentacao-transcricao", "obrigatorio": true }]
     }
   ],
   "insumos": [
@@ -198,6 +210,18 @@
       "formatos": [".png", ".jpg", ".jpeg", ".pdf"],
       "modelo": null,
       "destino": "contexto/brutos/prints-campanhas/",
+      "validador": null,
+      "sensivel": false
+    },
+    {
+      "id": "apresentacao-transcricao",
+      "nome": "Transcrição da reunião de apresentação",
+      "descricao": "Transcrição completa da reunião em que o Growth Cycle foi apresentado ao cliente.",
+      "instrucao": "Exporte a transcrição completa do Google Drive e confira se cobre a reunião do início ao fim.",
+      "tipo": "arquivo",
+      "formatos": [".docx", ".txt", ".md"],
+      "modelo": null,
+      "destino": "contexto/brutos/apresentacao-transcricao-bruta",
       "validador": null,
       "sensivel": false
     }

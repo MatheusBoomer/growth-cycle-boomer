@@ -107,7 +107,7 @@ describe("usuário comum", () => {
 })
 
 describe("GET /api/admin/skills", () => {
-  it("traz os 15 itens do catálogo com a contagem de notas abertas e o texto de exportação", async () => {
+  it("traz os 16 itens do catálogo com a contagem de notas abertas e o texto de exportação", async () => {
     await servico.criarNota("etapa:03", "primeira", CHEFE)
     await servico.criarNota("etapa:03", "segunda", CHEFE)
     const resolvida = await servico.criarNota("etapa:03", "já feita", CHEFE)
@@ -120,10 +120,10 @@ describe("GET /api/admin/skills", () => {
     const { itens, textoExportacao, notasDisponiveis } = (await r.json()) as { itens: ItemDaLista[]; textoExportacao: string; notasDisponiveis: boolean }
 
     expect(notasDisponiveis).toBe(true)
-    expect(itens).toHaveLength(15)
+    expect(itens).toHaveLength(16)
     expect(itens[0]).toMatchObject({ id: "visao-geral", grupo: "Processo", temFluxo: true, notasAbertas: 1 })
     expect(itens.find((i) => i.id === "etapa:03")?.notasAbertas).toBe(2)
-    expect(itens.filter((i) => i.notasAbertas === 0)).toHaveLength(13)
+    expect(itens.filter((i) => i.notasAbertas === 0)).toHaveLength(14)
     for (const i of itens) expect(Object.keys(i).sort()).toEqual(["grupo", "id", "notasAbertas", "resumo", "temFluxo", "titulo"])
     expect(textoExportacao).toContain("- primeira (")
     expect(textoExportacao).toContain("- segunda (")
@@ -267,7 +267,7 @@ describe("sem repositório de usuários (modo fs)", () => {
     expect(l.status).toBe(200)
     const corpo = (await l.json()) as { itens: ItemDaLista[]; textoExportacao: string; notasDisponiveis: boolean }
     expect(corpo.notasDisponiveis).toBe(false)
-    expect(corpo.itens).toHaveLength(15)
+    expect(corpo.itens).toHaveLength(16)
     expect(corpo.itens.every((i) => i.notasAbertas === 0)).toBe(true)
     expect(corpo.textoExportacao).toBe("Nenhuma nota aberta.")
 

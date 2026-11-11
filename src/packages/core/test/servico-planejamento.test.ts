@@ -199,6 +199,29 @@ describe("prospect antigo, feito no terminal", () => {
   })
 })
 
+describe("resumo do prospect com a etapa 10", () => {
+  async function marcar(slug: string, status10: "liberada" | "concluida") {
+    const e = await servico.estado(slug)
+    for (const id of ["01", "02", "03", "04", "05", "06", "07", "08", "final"] as const) e.etapas[id].status = "concluida"
+    e.etapas["10"].status = status10
+    await writeFile(path.join(raiz, "clientes", slug, ".app/estado.json"), JSON.stringify(e))
+  }
+
+  it("tudo concluído menos a 10: etapa atual 10, 8 concluídas de 9 (a final não conta)", async () => {
+    const slug = await servico.criarProspect("Quase Pronto", null)
+    await marcar(slug, "liberada")
+    const resumo = (await servico.listarProspects(ADMIN)).find((p) => p.slug === slug)
+    expect(resumo).toMatchObject({ etapaAtual: "10", rotuloEtapaAtual: "10 · Revisão pós-apresentação", concluidas: 8, totalEtapas: 9 })
+  })
+
+  it("com a 10 concluída, o planejamento está concluído e a 10 conta", async () => {
+    const slug = await servico.criarProspect("Pronto", null)
+    await marcar(slug, "concluida")
+    const resumo = (await servico.listarProspects(ADMIN)).find((p) => p.slug === slug)
+    expect(resumo).toMatchObject({ etapaAtual: null, rotuloEtapaAtual: "Planejamento concluído", concluidas: 9, totalEtapas: 9 })
+  })
+})
+
 describe("ferramentas do agente", () => {
   it("propor_entregavel recusa arquivo inexistente ou fora de rascunhos", async () => {
     const slug = await prospectNaEtapa03()
@@ -803,7 +826,7 @@ describe("biblioteca", () => {
     const rel = "entrega/ativos-aprovados/graficos/cac.png"
     await imagem(slug, rel)
     await expect(
-      servico.ajustarBiblioteca(slug, rel, { etapa: "10" })
+      servico.ajustarBiblioteca(slug, rel, { etapa: "11" })
     ).rejects.toBeInstanceOf(ErroEntrada)
     await expect(
       servico.ajustarBiblioteca(slug, rel, { titulo: 5 })

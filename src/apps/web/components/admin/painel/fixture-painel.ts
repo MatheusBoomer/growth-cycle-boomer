@@ -58,6 +58,7 @@ function cheio(): PainelMetricas {
     { etapa: "07", fase: "Mídia e ação", usd: 7.9 },
     { etapa: "08", fase: "Mídia e ação", usd: 1.1 },
     { etapa: "final", fase: "Apresentação", usd: 5.6 },
+    { etapa: "10", fase: "Pós-apresentação", usd: 2.3 },
     { etapa: "briefing-benchmark", fase: "Arquivada", usd: 1.4 },
   ]
   const porProjeto: Projeto[] = [

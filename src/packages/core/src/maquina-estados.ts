@@ -43,7 +43,10 @@ function exigir(estado: Estado, id: EtapaId, permitidos: StatusEtapa[], acao: st
   }
 }
 
-/** Uma etapa está liberada se, e só se, a anterior está concluída (e, para a final, nada está desatualizado). */
+/** Etapas que só liberam sem nenhuma outra desatualizada: a apresentação final e a revisão pós-apresentação. */
+export const ETAPAS_DE_FECHAMENTO: readonly EtapaId[] = ["final", "10"]
+
+/** Uma etapa está liberada se, e só se, a anterior está concluída (e, para as de fechamento, nada está desatualizado). */
 export function recalcularLiberacoes(estado: Estado): Estado {
   const existeDesatualizada = ORDEM_ETAPAS.some((id) => estado.etapas[id].status === "desatualizada")
   let novo = estado
@@ -51,7 +54,7 @@ export function recalcularLiberacoes(estado: Estado): Estado {
     const anterior = etapaAnterior(id)
     const podeLiberar =
       anterior === null ||
-      (novo.etapas[anterior].status === "concluida" && (id !== "final" || !existeDesatualizada))
+      (novo.etapas[anterior].status === "concluida" && (!ETAPAS_DE_FECHAMENTO.includes(id) || !existeDesatualizada))
     const status = novo.etapas[id].status
     if (status === "bloqueada" && podeLiberar) novo = comEtapa(novo, id, { status: "liberada" }, novo.atualizadoEm)
     else if (status === "liberada" && !podeLiberar) novo = comEtapa(novo, id, { status: "bloqueada" }, novo.atualizadoEm)

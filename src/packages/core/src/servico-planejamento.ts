@@ -684,6 +684,7 @@ export class ServicoPlanejamento {
       etapaAtual: atual,
       rotuloEtapaAtual: atual ? etapaDoCatalogo(this.catalogo, atual).rotuloStatus : "Planejamento concluído",
       concluidas: ORDEM_ETAPAS.filter((id) => id !== "final" && e.etapas[id].status === "concluida").length,
+      // a apresentação final fica fora da contagem (não tem número); a 10 conta
       totalEtapas: ORDEM_ETAPAS.length - 1,
       pendencias: e.entregaveis.filter((x) => x.status === "pendente").length,
       teste: e.teste !== undefined,

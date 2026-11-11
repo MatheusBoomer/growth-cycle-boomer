@@ -5,6 +5,7 @@
 import { cp, mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
+import { normalizarEstado } from "../src/armazenamento"
 import { carregarCatalogo } from "../src/catalogo"
 import {
   MAPA_ETAPAS,
@@ -135,7 +136,8 @@ export async function migrarProspect(pasta: string, catalogo: Catalogo, opcoes: 
   const movimentos = planoDeArquivos(arquivos)
   validarMovimentos(slug, arquivos, movimentos)
   const migrado = migrarEstado(estado)
-  const statusMd = renderStatusMd(migrado as unknown as Estado, catalogo)
+  // O estado migrado ainda não tem a etapa 10 (o app a completa na leitura); o status.md lista todas as etapas do catálogo.
+  const statusMd = renderStatusMd(normalizarEstado(migrado as unknown as Estado), catalogo)
   if (!opcoes.aplicar) return relatorio("migrado", movimentos)
 
   if (opcoes.pastaBackup) await fazerBackup(pasta, slug, opcoes.pastaBackup)

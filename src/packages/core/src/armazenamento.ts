@@ -4,7 +4,7 @@ import path from "node:path"
 import { ehImagem } from "./biblioteca"
 import type { Comentario } from "./comentarios"
 import { ErroCaminhoForaDoProspect, ErroEntrada, ErroNaoEncontrado, ErroNumeracaoAntiga, ErroProspectExistente } from "./erros"
-import { etapaVazia } from "./maquina-estados"
+import { etapaVazia, recalcularLiberacoes } from "./maquina-estados"
 import { classificarNumeracao } from "./migracao-etapas"
 import type { Acumulado, LinhaPresenca, LinhaUso } from "./metricas/tipos"
 import { normalizarSlug } from "./slug"
@@ -50,11 +50,19 @@ export function arquivoVisivel(relativo: string): boolean {
 
 /** Completa um estado gravado antes de etapas ou campos novos existirem. */
 export function normalizarEstado(estado: Estado): Estado {
-  // estado.json gravado antes de uma etapa nova (ex.: 05 · Soluções) não tem a chave dela
+  // estado.json gravado antes de uma etapa nova (ex.: 10 · Revisão pós-apresentação) não tem a chave dela
   const etapas = { ...estado.etapas }
-  for (const id of ORDEM_ETAPAS) etapas[id] ??= etapaVazia("bloqueada")
+  let completou = false
+  for (const id of ORDEM_ETAPAS) {
+    if (etapas[id] === undefined) {
+      etapas[id] = etapaVazia("bloqueada")
+      completou = true
+    }
+  }
   // estado.json gravado antes do card de perguntas não tem o campo
-  return { ...estado, etapas, perguntas: estado.perguntas ?? [] }
+  const completo = { ...estado, etapas, perguntas: estado.perguntas ?? [] }
+  // a etapa que acabou de entrar nasce bloqueada: se a anterior já está concluída, ela precisa abrir liberada
+  return completou ? recalcularLiberacoes(completo) : completo
 }
 
 /**

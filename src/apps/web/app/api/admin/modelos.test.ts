@@ -91,7 +91,7 @@ describe("usuário comum", () => {
 })
 
 describe("GET /api/admin/modelos", () => {
-  it("traz as 9 etapas com rótulo e alvos, a config gravada, as sugestões e a lista", async () => {
+  it("traz as 10 etapas com rótulo e alvos, a config gravada, as sugestões e a lista", async () => {
     await servico.salvarConfigModelo("03", "principal", { modelo: "sonnet", esforco: "high" }, CHEFE, LISTA)
     entrarComo(CHEFE)
 
@@ -105,7 +105,7 @@ describe("GET /api/admin/modelos", () => {
       uso: Record<string, UsoDaEtapa>
       padrao: string | null
     }
-    expect(corpo.etapas.map((e) => e.id)).toEqual(["01", "02", "03", "04", "05", "06", "07", "08", "final"])
+    expect(corpo.etapas.map((e) => e.id)).toEqual(["01", "02", "03", "04", "05", "06", "07", "08", "final", "10"])
     for (const e of corpo.etapas) {
       expect(e.rotulo).not.toBe("")
       expect(e.alvos[0]).toBe("principal")
@@ -143,7 +143,7 @@ describe("GET /api/admin/modelos: resumo de uso com falha", () => {
     expect(r.status).toBe(200)
     const corpo = (await r.json()) as { uso: Record<string, UsoDaEtapa>; etapas: unknown[] }
     expect(corpo.uso).toEqual({})
-    expect(corpo.etapas).toHaveLength(9)
+    expect(corpo.etapas).toHaveLength(10)
     expect(erro).toHaveBeenCalledWith(expect.stringContaining("banco fora do ar"))
     erro.mockRestore()
   })

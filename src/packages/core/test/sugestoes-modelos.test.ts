@@ -23,6 +23,11 @@ describe("sugestões de modelo", () => {
     expect(s.every((x) => x.motivo.length > 0)).toBe(true)
   })
 
+  it("sugere o Sonnet para a etapa 10, que lê a transcrição da apresentação", () => {
+    const s = carregarSugestoes(RAIZ, catalogoReal())
+    expect(s.find((x) => x.etapa === "10" && x.alvo === "principal")).toMatchObject({ modelo: "sonnet", esforco: null })
+  })
+
   it("recusa sugestão de subagente que a etapa não tem", () => {
     const raiz = raizComSugestoes([{ ...BOA, etapa: "01" }])
     expect(() => carregarSugestoes(raiz, catalogoReal())).toThrow(/analista-dados/)
