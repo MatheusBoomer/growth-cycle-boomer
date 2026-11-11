@@ -232,7 +232,7 @@ SOLUÇÕES: [ids do registro, ex.: P1.S1]
 
 ## Formato do plano (JSON v2)
 
-O plano é um único `plano-de-acao.json`, versão 2. O esquema completo está em
+O plano é um único JSON, versão 2. O esquema completo está em
 `docs/superpowers/specs/2026-11-10-plano-de-acao-prompt-9-design.md`
 (Parte 2). Chaves de topo: `versao` (2), `prospect`, `data_referencia`,
 `janela_prova` (`inicio`, `fim`), `fim_ciclo`, `empresa_agencia`,
@@ -245,8 +245,17 @@ Cada ação tem `numero`, `frente`, os 10 campos (`acao`, `achado_origem`,
 tabela-resumo são derivados pelo gerador e não entram no JSON.
 
 Onde fica o JSON:
-- Interface: `clientes/<slug>/.app/rascunhos/plano-de-acao.json`.
-- Terminal: `clientes/<slug>/entrega/ativos-aprovados/plano-de-acao/plano-de-acao.json`.
+- **Em edição** (Fases 1 e 2), `plano-de-acao.json`:
+  - Interface: `clientes/<slug>/.app/rascunhos/plano-de-acao.json`.
+  - Terminal: `clientes/<slug>/entrega/plano-de-acao.json`.
+- **Validado**, `plano-de-acao-estrategico.json`: gravado pelo
+  `gerar_plano_acao.py` com `--saida-json` na Fase 3, junto com o documento e
+  a planilha, a partir do JSON em edição (o gerador não grava por cima do
+  arquivo que está lendo). É ele que a etapa 10 (revisão pós-apresentação)
+  lê como registro do plano apresentado.
+  - Interface: `clientes/<slug>/.app/rascunhos/plano-de-acao-estrategico.json`
+    (nome exato: o app o copia junto quando o analista aprova o documento).
+  - Terminal: `clientes/<slug>/entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.json`.
 
 ## Fase 1 · Abertura do plano
 
@@ -284,19 +293,21 @@ Checkpoint: o analista resolve cada [VALIDAR] e [PREENCHER] e aprova a lista.
 
 ## Fase 3 · Arquivos
 
-Com o plano aprovado e sem marcações, gere os dois arquivos de uma vez:
+Com o plano aprovado e sem marcações, gere os dois arquivos e o JSON
+validado de uma vez:
 
 ```
 python3 scripts/gerar_plano_acao.py \
   --plano <plano-de-acao.json> \
   --registro clientes/<slug>/contexto/solucoes.json \
   --saida-docx <pasta>/plano-de-acao-estrategico.docx \
-  --saida-xlsx <pasta>/plano-de-acao-estrategico.xlsx
+  --saida-xlsx <pasta>/plano-de-acao-estrategico.xlsx \
+  --saida-json <pasta>/plano-de-acao-estrategico.json
 ```
 
 O script valida em modo final (sem `--rascunho`): com `ERRO:`, não gera nada
-e sai com código diferente de zero; volte à Fase 2. Nunca escreva o `.docx`
-ou o `.xlsx` na mão. O `.docx` usa o modelo
+e sai com código diferente de zero; volte à Fase 2. Nunca escreva o `.docx`,
+o `.xlsx` ou o `plano-de-acao-estrategico.json` na mão. O `.docx` usa o modelo
 `.claude/skills/_shared/[MODELO] Plano de Ação Estratégico.docx` (padrão;
 `--modelo-docx` troca); `--modelo-xlsx` preenche um modelo de planilha quando
 existir.
@@ -304,6 +315,8 @@ existir.
 - **Interface:** `<pasta>` = `clientes/<slug>/.app/rascunhos/`. Proponha os
   dois com `propor_entregavel`: o `.docx` com tipo `documento` e o `.xlsx`
   com tipo `planilha`, ambos com `nome_final` `plano-de-acao-estrategico`.
+  O `plano-de-acao-estrategico.json` não é proposto: o app o leva junto com
+  o documento aprovado.
 - **Terminal:** `<pasta>` = `clientes/<slug>/entrega/ativos-aprovados/plano-de-acao/`
   (nome estável, sobrescreve).
 

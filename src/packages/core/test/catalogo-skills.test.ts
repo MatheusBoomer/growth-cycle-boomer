@@ -132,15 +132,12 @@ describe("fluxogramas do catálogo", () => {
   ]
   const comFluxo = () => itensDoCatalogo(RAIZ, catalogoReal()).filter((i) => i.temFluxo)
 
-  // A etapa 10 entra no catálogo na Task 7, mas a skill e o fluxo dela só existem na Task 9.
-  const comFluxoExistente = () => comFluxo().filter((i) => i.id !== "etapa:10")
-
   it("há 13 itens com fluxo", () => {
     expect(comFluxo()).toHaveLength(13)
   })
 
   it("todo item com fluxo tem o arquivo existente e não vazio", () => {
-    for (const i of comFluxoExistente()) {
+    for (const i of comFluxo()) {
       const fluxo = lerItemDoCatalogo(RAIZ, catalogoReal(), i.id)?.fluxo
       expect(fluxo, i.id).toBeTruthy()
       expect(fluxo!.trim().length, i.id).toBeGreaterThan(0)
@@ -148,7 +145,7 @@ describe("fluxogramas do catálogo", () => {
   })
 
   it("todo fluxo começa com flowchart TD e traz as três classDef da legenda", () => {
-    for (const i of comFluxoExistente()) {
+    for (const i of comFluxo()) {
       const fluxo = lerItemDoCatalogo(RAIZ, catalogoReal(), i.id)?.fluxo ?? ""
       const primeira = fluxo.split("\n").find((l) => l.trim() !== "")
       expect(primeira?.trim(), i.id).toBe("flowchart TD")
@@ -156,8 +153,7 @@ describe("fluxogramas do catálogo", () => {
     }
   })
 
-  // Task 9 reativa: remover comFluxoExistente e deixar os dois testes acima cobrirem a etapa:10
-  it.skip("a etapa:10 tem fluxo existente, com flowchart TD e as três classDef", () => {
+  it("a etapa:10 tem fluxo existente, com flowchart TD e as três classDef", () => {
     const fluxo = lerItemDoCatalogo(RAIZ, catalogoReal(), "etapa:10")?.fluxo
     expect(fluxo).toBeTruthy()
     expect(fluxo!.split("\n").find((l) => l.trim() !== "")?.trim()).toBe("flowchart TD")

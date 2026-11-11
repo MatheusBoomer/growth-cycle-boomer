@@ -120,10 +120,20 @@ está rodando dentro da interface web, e estas regras substituem o jeito
 - A pasta `.app/` pertence ao app: fora de `.app/rascunhos/`, não escreva nela.
 - Scripts que geram arquivo recebem a saída apontando para
   `.app/rascunhos/` (`preencher_projecao_xlsx.py` com `--output`;
-  `gerar_plano_acao.py` com `--saida-docx` e `--saida-xlsx`), e o resultado é
-  proposto com `propor_entregavel` (tipo `planilha` ou `documento`). Na etapa final, o roteiro da apresentação é
+  `gerar_plano_acao.py` com `--saida-docx`, `--saida-xlsx` e `--saida-json`), e o resultado é
+  proposto com `propor_entregavel` (tipo `planilha` ou `documento`). O JSON
+  do plano não é proposto: com o nome estável na mesma pasta, o app o copia
+  junto com o documento aprovado. Na etapa final, o roteiro da apresentação é
   proposto como tipo `roteiro` (`.json`) e `gerar_apresentacao.py` gera o tipo
   `apresentacao` (`.pptx`).
+- Na etapa 10 (revisão pós-apresentação), `validar_revisao.py` confere o
+  `revisao-plano.json` (com `--rascunho` antes das decisões, sem ele
+  depois), `validar_plano_acao.py` e `gerar_plano_acao.py` produzem o plano
+  final (`plano-de-acao-final`, tipos `documento` e `planilha`) e
+  `relatorio_revisao.py` dá a base do relatório final. `revisao-plano.json`
+  e `plano-de-acao-final.json` ficam em `.app/rascunhos/` com esses nomes, e
+  o app os copia junto com o documento aprovado; a análise da reunião é
+  proposta como `secao`.
 
 ## 8. Checklist de qualidade do diagnóstico
 

@@ -9,7 +9,8 @@ flowchart TD
   E07["07 · Mídia paga"]
   E08["08 · Plano de ação"]
   E09["09 · Apresentação final"]
-  FIM["Deck .pptx para o prospect"]
+  E10["10 · Revisão pós-apresentação"]
+  FIM["Entrega formal: deck e plano final"]
   AD["analista-dados"]
   PB["pesquisador-benchmark"]
   CK["Checagem do analista antes de cada avanço"]
@@ -23,7 +24,8 @@ flowchart TD
   E06 -->|"meta e 3 cenários"| E07
   E07 -->|"plano de mídia"| E08
   E08 -->|"plano de ação .docx + .xlsx"| E09
-  E09 -->|"roteiro aprovado"| FIM
+  E09 -->|"deck apresentado e transcrição da reunião"| E10
+  E10 -->|"plano final .docx + .xlsx"| FIM
 
   AD -.->|"KPIs e gráficos"| E03
   AD -.->|"impacto em R$ ou %"| E05

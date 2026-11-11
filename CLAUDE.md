@@ -41,6 +41,8 @@ certa pela descrição — ex.: `/03-diagnostico-performance`.
 08-plano-de-acao
         ↓
 09-apresentacao-final (roteiro + .pptx no molde da agência; comando: /apresentacao-final)
+        ↓
+10-revisao-pos-apresentacao (transcrição da reunião de apresentação → plano final .docx + .xlsx; comando: /10-revisao-pos-apresentacao)
 ```
 
 A etapa de briefing e benchmark de anúncios está desativada: a pasta dela fica
@@ -121,7 +123,7 @@ Siga as convenções dos fluxos existentes:
 - as três `classDef` no fim do arquivo.
 
 Antes de concluir, rode `npm test` em `src/apps/web` (`lib/fluxos.test.ts` valida
-os 12 arquivos com o leitor do Mermaid) e em `src/packages/core`
+os 13 arquivos com o leitor do Mermaid) e em `src/packages/core`
 (`test/catalogo-skills.test.ts`).
 
 ## Ferramenta de desenvolvimento da interface
