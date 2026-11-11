@@ -13,19 +13,11 @@ import argparse
 import sys
 from pathlib import Path
 
-from plano_acao_comum import acoes, diferencas
+from plano_acao_comum import GRUPOS_REVISAO as _GRUPOS
+from plano_acao_comum import acoes, diferencas, numeros_citados
 from validar_plano_acao import ErroEntrada, _ler_json
 
 _SEM_MOTIVO = "sem motivo registrado"
-
-# (chave no JSON, rótulo do motivo)
-_GRUPOS = (
-    ("complementos", "Complemento"),
-    ("conflitos", "Conflito"),
-    ("abertos", "Ponto em aberto"),
-    ("compromissos", "Compromisso"),
-)
-
 
 def _lista(valor) -> list:
     return valor if isinstance(valor, list) else []
@@ -38,19 +30,6 @@ def _inteiro(valor) -> bool:
 def _itens(revisao: dict, chave: str):
     """Itens dict de um grupo da revisão, na ordem do JSON."""
     return [i for i in _lista(revisao.get(chave)) if isinstance(i, dict)]
-
-
-def _numeros_citados(chave: str, item: dict) -> set[int]:
-    """Números de ação que o item cita (mesmos campos do validador da revisão)."""
-    citados: set[int] = set()
-    if _inteiro(item.get("acao")):
-        citados.add(item["acao"])
-    for campo in ("acoes", "acoes_afetadas"):
-        citados.update(n for n in _lista(item.get(campo)) if _inteiro(n))
-    destino = item.get("destino")
-    if chave == "abertos" and isinstance(destino, dict) and destino.get("tipo") == "acao":
-        citados.update(n for n in _lista(destino.get("acoes")) if _inteiro(n))
-    return citados
 
 
 def _rotulo_do_item(rotulo: str, chave: str, item: dict) -> str:
@@ -66,7 +45,7 @@ def _motivos(revisao: dict) -> dict[int, str]:
     motivos: dict[int, str] = {}
     for chave, rotulo in _GRUPOS:
         for item in _itens(revisao, chave):
-            for n in sorted(_numeros_citados(chave, item)):
+            for n in sorted(numeros_citados(chave, item)):
                 motivos.setdefault(n, _rotulo_do_item(rotulo, chave, item))
     return motivos
 
@@ -116,9 +95,6 @@ def _linha_divergencia(d: dict) -> str:
     texto = f"- {d.get('item', '(sem item)')}"
     if d.get("antes") is not None or d.get("depois") is not None:
         texto += f": {d.get('antes')} → {d.get('depois')}"
-    descricao = next((d[c] for c in ("descricao", "motivo") if isinstance(d.get(c), str) and d[c].strip()), None)
-    if descricao:
-        texto += f" ({descricao.strip()})"
     slides = [s for s in _lista(d.get("slides")) if isinstance(s, str)]
     if slides:
         texto += f" · slides: {', '.join(slides)}"

@@ -190,3 +190,32 @@ def diferencas(plano_a: dict, plano_b: dict) -> dict:
         "alteradas": alteradas,
         "metas_alteradas": metas,
     }
+
+
+# Grupos de itens do registro da revisão (etapa 10): (chave no JSON, rótulo das mensagens e do motivo).
+GRUPOS_REVISAO = (
+    ("complementos", "Complemento"),
+    ("conflitos", "Conflito"),
+    ("abertos", "Ponto em aberto"),
+    ("compromissos", "Compromisso"),
+)
+
+
+def _inteiro(valor) -> bool:
+    return isinstance(valor, int) and not isinstance(valor, bool)
+
+
+def numeros_citados(chave: str, item: dict) -> set[int]:
+    """Números de ação que um item da revisão cita: `acao`, `acoes`, `acoes_afetadas` e, num ponto
+    em aberto com destino do tipo `acao`, `destino.acoes`. `chave` é o grupo do item (`GRUPOS_REVISAO`)."""
+    citados: set[int] = set()
+    if _inteiro(item.get("acao")):
+        citados.add(item["acao"])
+    for campo in ("acoes", "acoes_afetadas"):
+        if isinstance(item.get(campo), list):
+            citados.update(n for n in item[campo] if _inteiro(n))
+    destino = item.get("destino")
+    if (chave == "abertos" and isinstance(destino, dict) and destino.get("tipo") == "acao"
+            and isinstance(destino.get("acoes"), list)):
+        citados.update(n for n in destino["acoes"] if _inteiro(n))
+    return citados

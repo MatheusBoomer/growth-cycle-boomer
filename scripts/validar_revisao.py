@@ -16,20 +16,13 @@ import sys
 from datetime import date
 from pathlib import Path
 
-from plano_acao_comum import ErroPlano, diferencas, ler_data
+from plano_acao_comum import GRUPOS_REVISAO as _GRUPOS
+from plano_acao_comum import ErroPlano, diferencas, ler_data, numeros_citados
 from texto_transcricao import ErroTranscricao, contem_trecho, extrair_texto, normalizar
 from validar_plano_acao import ErroEntrada, _ler_json
 
 _MAX_TRECHO = 300
 _MAX_LINHAS_RESUMO = 5
-
-# (chave no JSON, rótulo da mensagem)
-_GRUPOS = (
-    ("complementos", "Complemento"),
-    ("conflitos", "Conflito"),
-    ("abertos", "Ponto em aberto"),
-    ("compromissos", "Compromisso"),
-)
 
 
 def _inteiro(valor) -> bool:
@@ -336,15 +329,7 @@ def _acoes_citadas(revisao: dict) -> set[int]:
     citadas: set[int] = set()
     for chave, _ in _GRUPOS:
         for _, item in _itens_do_grupo(revisao, chave):
-            if _inteiro(item.get("acao")):
-                citadas.add(item["acao"])
-            for campo in ("acoes", "acoes_afetadas"):
-                if isinstance(item.get(campo), list):
-                    citadas.update(n for n in item[campo] if _inteiro(n))
-            destino = item.get("destino")
-            if (chave == "abertos" and isinstance(destino, dict) and destino.get("tipo") == "acao"
-                    and isinstance(destino.get("acoes"), list)):
-                citadas.update(n for n in destino["acoes"] if _inteiro(n))
+            citadas |= numeros_citados(chave, item)
     return citadas
 
 
