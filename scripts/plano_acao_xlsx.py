@@ -1,7 +1,7 @@
 """Gerador da planilha .xlsx do plano de ação v2.
 
 Duas abas: "Plano de Ação" (uma linha por ação, em ordem cronológica) e
-"Metas do plano" (a abertura do plano). Não valida o plano: quem valida é
+"Metas do plano" (o prospect e a abertura do plano). Não valida o plano: quem valida é
 gerar_plano_acao.py, que chama este módulo depois do validador.
 """
 from __future__ import annotations
@@ -93,7 +93,10 @@ def _escrever_acoes(ws, plano: dict, *, com_estilo: bool) -> int:
 def _blocos_de_metas(plano: dict) -> list[tuple[str, list]]:
     """Blocos da aba de metas como (título, linhas); cada linha é uma lista de células."""
     ab = plano.get("abertura") or {}
-    blocos: list[tuple[str, list]] = [("Cenário de referência", [[ab.get("cenario", "")]])]
+    blocos: list[tuple[str, list]] = [
+        ("Prospect", [[plano.get("prospect", "")]]),
+        ("Cenário de referência", [[ab.get("cenario", "")]]),
+    ]
     metas = [[m.get("kpi"), m.get("de"), m.get("para"), m.get("ate"), m.get("fonte")] for m in ab.get("metas", [])]
     blocos.append(("Metas", [["KPI", "De", "Para", "Até", "Fonte"]] + metas))
     for titulo, chave in (("O que cabe nos 3 meses", "cabe_nos_3_meses"),

@@ -632,18 +632,18 @@
       "titulo": "Plano de ação · Horizonte 1",
       "subtitulo": "Imediato: **26/10 a 30/10/2026**",
       "itens": [
-        "Teto de CAC de R$ 80 e regra de escala da verba (Agência)",
-        "Estoque de segurança de 60 dias e alerta de cobertura (Agência e Cliente)",
-        "Painel único de KPIs conciliando GA4 e Nuvemshop (Agência)",
+        "Teto de CAC de R$ 80 e regra de escala da verba (Boomer)",
+        "Estoque de segurança de 60 dias e alerta de cobertura (Boomer e Cliente)",
+        "Painel único de KPIs conciliando GA4 e Nuvemshop (Boomer)",
         "Margem por SKU da Curva A enviada pela Luiza (Cliente)",
-        "Cupom e UTM próprios para cada influenciadora (Agência e Cliente)"
+        "Cupom e UTM próprios para cada influenciadora (Boomer e Cliente)"
       ],
       "fonte": "plano-de-acao/plano-de-acao-estrategico.docx"
     },
     {
       "tipo": "bullets",
       "titulo": "Plano de ação · Horizonte 2",
-      "subtitulo": "Curto prazo: **02/11 a 27/11/2026**, até a Black Friday",
+      "subtitulo": "Curto prazo: **02/11 a 30/11/2026**, até a Black Friday",
       "itens": [
         "Campanhas de aquisição e recompra separadas; 15% do Meta realocado",
         "Black Friday com brinde, até 20% de desconto e lista de espera",
@@ -657,7 +657,7 @@
     {
       "tipo": "bullets",
       "titulo": "Plano de ação · Horizonte 3",
-      "subtitulo": "Médio prazo: **DEZ/2026 a MAI/2027**, até o Dia das Mães",
+      "subtitulo": "Médio prazo: **DEZ/2026 a SET/2027**, até o fim do ciclo",
       "itens": [
         "Reativação dos 7.176 clientes de compra única em JAN e FEV",
         "Convite do avulso para o kit e prova social nas páginas",

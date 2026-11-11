@@ -172,19 +172,25 @@ Nada a enviar nesta etapa.
 
 ### O que responder ao agente
 
-O agente começa pedindo três confirmações. Respostas usadas na produção deste cliente:
+O agente mostra o que já sabe e confirma as 9 perguntas da abertura, uma por mensagem. Respostas usadas na produção deste cliente:
 
-- **Data de hoje:** 22/10/2026. O plano começa na segunda-feira seguinte, 26/10/2026. Se você fizer o teste em outra data, diga a data real e peça que nenhuma ação caia em período passado.
-- **Cenário-base:** Realista.
-- **Frentes mais urgentes:** a ruptura do sérum e o estoque (P2), a eficiência da mídia paga (P1) e a recompra e o CRM (P3). A mensuração (P7) e o envio da margem por SKU entram na primeira semana, porque destravam o resto.
-- **Responsáveis:** o plano deve nomear a Marina e a Luiza pelo cliente, a Bruna na operação do site, o Caio no conteúdo e o Rafael nas campanhas. A Agência cuida do desenho e da medição.
-- **Horizontes:** Imediato (primeira semana), Curto Prazo (até a Black Friday de 27/11/2026) e Médio Prazo (até o Dia das Mães de 2027).
-- **Cobertura:** o validador exige que as 24 soluções do registro virem ação. Se o agente deixar alguma de fora, peça para incluir; nunca remova uma solução do registro.
-- Confira o `.docx` gerado (25 ações, 3 horizontes e a tabela-resumo) e aprove.
+1. **Data de hoje:** 22/10/2026. O plano começa na segunda-feira seguinte, 26/10/2026, e a janela de prova vai de 26/10/2026 a 25/01/2027. Se você fizer o teste em outra data, diga a data real e peça que nenhuma ação caia em período passado.
+2. **Cenário de referência:** Realista, com os números aprovados na 06 e na 07 (metas dos 3 meses pelos valores de JAN/27).
+3. **Frentes prioritárias:** a ruptura do sérum e o estoque (P2), a eficiência da mídia paga (P1) e a recompra e o CRM (P3). A mensuração (P7) e o envio da margem por SKU entram na primeira semana, porque destravam o resto.
+4. **Quem executa do lado do cliente:** Marina e Luiza (sócias), Bruna (e-commerce e atendimento) e Caio (conteúdo). Os nomes ficam no "como"; o dono é disciplina · empresa.
+5. **Quem opera a mídia:** a Boomer, com o Rafael (gestor de tráfego freelancer) executando sob a coordenação da Boomer. Não há agência parceira.
+6. **Ferramentas:** Nuvemshop, GA4, Google Merchant, ferramenta de e-mail (um fluxo de carrinho e a newsletter) e WhatsApp com consentimento.
+7. **Restrições de calendário:** Black Friday em 27/11/2026, prazo de 45 dias do laboratório e contabilidade que fecha o mês no dia 10. Sem troca de plataforma.
+8. **Margem de contribuição antes da mídia:** 35%. Com a quebra de 5,5% do Realista, o gerador calcula os pisos de ROAS de 2,86 (receita aprovada) e 3,02 (captada).
+9. **Empresa no campo Dono:** Boomer.
+
+- **Cobertura:** o validador exige que as 24 soluções do registro virem ação e que as alavancas da meta caibam na janela de prova. Se o agente deixar alguma solução de fora, peça para incluir; nunca remova uma solução do registro.
+- Confira o .docx e o .xlsx gerados (25 ações com os 10 campos, 3 horizontes, a abertura com os pisos de ROAS e a tabela-resumo; os dois com as mesmas ações, datas e números) e aprove os dois.
+- Na pergunta-guia, responda "sim".
 
 ### Handoff
 
-Nesta sessão, o plano de ação ficou fechado, e esta era a última etapa de conteúdo! Não preciso de nada novo. O próximo passo é montar a apresentação final, um arquivo .pptx editável no molde da agência, com o roteiro slide a slide para você aprovar antes.
+Nesta sessão, o plano de ação ficou fechado, em documento e planilha, e esta era a última etapa de conteúdo! Não preciso de nada novo. O próximo passo é montar a apresentação final, um arquivo .pptx editável no molde da agência, com o roteiro slide a slide para você aprovar antes.
 
 Quando estiver pronto, rode `/apresentacao-final`.
 

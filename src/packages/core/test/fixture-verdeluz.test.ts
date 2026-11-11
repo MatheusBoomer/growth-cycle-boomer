@@ -152,13 +152,25 @@ describe("fixture real da Verdeluz", () => {
     expect(total / 1024 / 1024).toBeLessThan(25)
   })
 
+  it("o plano de ação da 08 sai em documento e planilha, ambos aprovados", () => {
+    const xlsx = "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.xlsx"
+    expect(fixture.manifesto.arquivos).toContainEqual({ caminho: xlsx, etapa: "08" })
+    const planilhas = fixture.estadoCompleto.entregaveis.filter((e) => e.tipo === "planilha" && e.etapa === "08")
+    expect(planilhas).toHaveLength(1)
+    expect(planilhas[0]).toMatchObject({ status: "aprovado", nomeFinal: "plano-de-acao-estrategico", titulo: "Plano de ação estratégico (planilha)" })
+    expect(destinoAprovado(planilhas[0]!)).toBe(xlsx)
+    expect(fixture.estadoCompleto.entregaveis.filter((e) => e.tipo === "documento" && e.etapa === "08")).toHaveLength(1)
+  })
+
   it("o deck e o plano de ação levam a marca FICTÍCIO", () => {
     const script = [
-      "import sys, zipfile",
+      "import html, sys, zipfile",
       "z = zipfile.ZipFile(sys.argv[1])",
-      "print(sum(z.read(n).decode('utf-8', 'ignore').count('FICTÍCIO') for n in z.namelist() if n.endswith('.xml')))",
+      "# o openpyxl grava o texto da planilha como entidade (&#205;), por isso o unescape",
+      "print(sum(html.unescape(z.read(n).decode('utf-8', 'ignore')).count('FICTÍCIO') for n in z.namelist() if n.endswith('.xml')))",
     ].join("\n")
-    for (const rel of ["entrega/apresentacao-final.pptx", "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.docx"]) {
+    const plano = "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico"
+    for (const rel of ["entrega/apresentacao-final.pptx", `${plano}.docx`, `${plano}.xlsx`]) {
       const n = Number(execFileSync("python3", ["-c", script, caminhoNaBase(fixture, rel)], { encoding: "utf8" }).trim())
       expect(n, rel).toBeGreaterThan(0)
     }

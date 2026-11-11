@@ -104,6 +104,7 @@ function etapaDoArquivo(rel: string): EtapaManifesto {
     "dados/clientes-historico.xlsx": "04", "contexto/solucoes.json": "05",
     "entrega/ativos-aprovados/projecao/projecao-de-cenarios.xlsx": "06",
     "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.docx": "08",
+    "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.xlsx": "08",
     "entrega/ativos-aprovados/apresentacao/roteiro-apresentacao.json": "final", "entrega/apresentacao-final.pptx": "final",
   }
   if (tabela[rel]) return tabela[rel]!
@@ -142,6 +143,7 @@ function tipoDoAprovado(rel: string): { tipo: TipoEntregavel; etapa: EtapaId; no
   const unicos: Record<string, { tipo: TipoEntregavel; etapa: EtapaId; nomeFinal: string; titulo: string }> = {
     "projecao-de-cenarios.xlsx": { tipo: "planilha", etapa: "06", nomeFinal: "projecao-de-cenarios", titulo: "Planilha de projeção de cenários" },
     "plano-de-acao-estrategico.docx": { tipo: "documento", etapa: "08", nomeFinal: "plano-de-acao-estrategico", titulo: "Plano de ação estratégico" },
+    "plano-de-acao-estrategico.xlsx": { tipo: "planilha", etapa: "08", nomeFinal: "plano-de-acao-estrategico", titulo: "Plano de ação estratégico (planilha)" },
     "roteiro-apresentacao.json": { tipo: "roteiro", etapa: "final", nomeFinal: "roteiro-apresentacao", titulo: "Roteiro da apresentação final (55 slides)" },
     "apresentacao-final.pptx": { tipo: "apresentacao", etapa: "final", nomeFinal: "apresentacao", titulo: "Apresentação final (55 slides)" },
   }

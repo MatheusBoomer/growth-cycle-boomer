@@ -113,6 +113,15 @@ def test_aba_de_metas(tmp_path):
     assert "O que não cabe" not in texto  # lista vazia
 
 
+def test_aba_de_metas_abre_com_o_nome_do_prospect(tmp_path):
+    plano = ex.plano_valido()
+    plano["prospect"] = "Marca Teste (FICTÍCIO)"
+    _, _, wb = _gerar(plano, tmp_path)
+    ws = wb["Metas do plano"]
+    assert ws["A1"].value == "Prospect"
+    assert ws["A2"].value == "Marca Teste (FICTÍCIO)"
+
+
 def test_aba_de_metas_com_nao_cabe_e_piso_identico_ao_docx(tmp_path):
     plano = ex.plano_valido()
     plano["abertura"]["nao_cabe"] = ["Reposicionamento de marca"]
