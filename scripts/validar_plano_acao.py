@@ -326,7 +326,12 @@ def validar(plano, registro, rascunho: bool = False) -> tuple[list[str], list[st
                 erros.append(f"Solução {sid} do registro não virou nenhuma ação do plano.")
 
     # Avisos: não bloqueiam, mas o analista precisa ver.
-    dependidas = {d for a in lista for d in (a.get("depende_de") if isinstance(a.get("depende_de"), list) else [])}
+    dependidas = {
+        d
+        for a in lista
+        for d in (a.get("depende_de") if isinstance(a.get("depende_de"), list) else [])
+        if eh_numero(d)
+    }
     for a in lista:
         n = a.get("numero")
         nome = a.get("acao") if isinstance(a.get("acao"), str) else ""

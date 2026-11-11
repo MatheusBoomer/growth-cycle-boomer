@@ -286,6 +286,8 @@ def _malformar(p, caminho, valor):
         (["horizontes", 0, "acoes", 0, "depende_de"], "2"),
         (["horizontes", 0, "acoes", 0, "depende_de"], ["a", None, 2.5]),
         (["horizontes", 0, "acoes", 0, "depende_de"], 7),
+        (["horizontes", 0, "acoes", 0, "depende_de"], [[1]]),
+        (["horizontes", 0, "acoes", 0, "depende_de"], [{"a": 1}]),
         (["horizontes", 0, "acoes", 0, "dono"], 12),
         (["horizontes", 0, "acoes", 0, "gatilho"], 12),
         (["horizontes", 0, "acoes", 0, "inicio"], 20261026),
@@ -502,3 +504,13 @@ def test_cli_arquivo_nao_utf8(tmp_path, capsys):
     (tmp_path / "plano.json").write_bytes(b"\xff\xfe")
     assert v.main(argv) == 1
     assert capsys.readouterr().err.startswith("ERRO:")
+
+
+@pytest.mark.parametrize("deps", [[[1]], [{"a": 1}]])
+def test_cli_depende_de_malformado_nao_levanta(tmp_path, capsys, deps):
+    plano = copy.deepcopy(plano_valido())
+    acao(plano, 1)["acao"] = "Auditar o GA4"  # ativa o aviso que consulta as dependências
+    acao(plano, 1)["depende_de"] = deps
+    assert v.main(_gravar(tmp_path, plano)) == 1
+    err = capsys.readouterr().err
+    assert err.startswith("ERRO:") and "depende" in err and "Traceback" not in err
