@@ -87,9 +87,10 @@ Exatamente três, nesta ordem, sempre com data real em cada ação:
 A janela de prova (`janela_prova`, início e fim) começa na data de início do
 plano, o primeiro dia do Imediato (logo após a apresentação e a aprovação),
 e dura 3 meses (ex.: 26/10/2026 a 25/01/2027). Não confunda com o início do
-ciclo do cenário: `fim_ciclo` continua sendo o fim dos 12 meses do cenário. Toda ação cuja alavanca é um KPI da meta (`alavanca_da_meta: true`)
-começa e entrega dentro dela, mesmo estando no Médio prazo. Preparação de
-pico posterior fica com `alavanca_da_meta: false`.
+ciclo do cenário: `fim_ciclo` continua sendo o fim dos 12 meses do cenário.
+Toda ação cuja alavanca é um KPI da meta (`alavanca_da_meta: true`) começa e
+entrega dentro dela, mesmo estando no Médio prazo. Preparação de pico
+posterior fica com `alavanca_da_meta: false`.
 
 ## Frentes
 
@@ -351,8 +352,7 @@ Pergunte ao analista a resposta dele à pergunta-guia. A etapa só fecha com
 
 ## Encerramento e handoff
 
-Ao concluir, marque "08 · Plano de ação" como ✅ em
-`contexto/status-planejamento.md` e converse com o analista em linguagem natural, sem citar caminho
+Ao concluir, converse com o analista em linguagem natural, sem citar caminho
 de arquivo:
 
 "Nesta sessão, o plano de ação ficou fechado, em documento e planilha — esta
@@ -362,11 +362,11 @@ com o roteiro slide a slide para você aprovar antes.
 
 Quando estiver pronto, rode `/apresentacao-final`."
 
-Reescreva também o bloco "Próximo passo" de `contexto/status-planejamento.md`
-com esse mesmo pedido.
+Depois, conforme o modo (Regras 6 e 7):
 
-Decisões da etapa (Regras 6 e 7): no terminal, grave
-`contexto/decisoes/08-plano-de-acao.md`; na interface, não edite
-`contexto/status-planejamento.md` nem `contexto/decisoes/`: o app grava as
-decisões a partir do resumo enviado em `sinalizar_etapa_pronta`, junto com o
-mesmo texto de handoff.
+- **Terminal:** marque "08 · Plano de ação" como ✅ em
+  `contexto/status-planejamento.md`, reescreva o bloco "Próximo passo" desse
+  arquivo com o mesmo pedido e grave `contexto/decisoes/08-plano-de-acao.md`.
+- **Interface:** não edite `contexto/status-planejamento.md` nem
+  `contexto/decisoes/`. Chame `sinalizar_etapa_pronta` com o
+  `resumo_decisoes` e o mesmo texto de handoff; o app grava os dois.
