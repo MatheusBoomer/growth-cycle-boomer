@@ -11,6 +11,7 @@ sys.path.insert(0, str(RAIZ / "scripts"))
 sys.path.insert(0, str(RAIZ / "scripts" / "tests"))
 import plano_acao_comum as c  # noqa: E402
 import plano_v2_exemplo as ex  # noqa: E402
+from validar_plano_acao import validar  # noqa: E402
 
 
 def test_ler_data_valida():
@@ -57,28 +58,8 @@ def test_constantes_e_acoes():
 
 
 def test_plano_valido_cumpre_as_regras_do_exemplo():
-    plano = ex.plano_valido()
-    pares = c.acoes(plano)
-    por_num = {a["numero"]: a for _, a in pares}
-    ini, fim = (c.ler_data(plano["janela_prova"][k], "j") for k in ("inicio", "fim"))
-    ref, ciclo = c.ler_data(plano["data_referencia"], "r"), c.ler_data(plano["fim_ciclo"], "f")
-    for h, a in pares:
-        i, e = c.ler_data(a["inicio"], "i"), c.ler_data(a["entrega"], "e")
-        assert ref <= i <= e <= ciclo
-        assert a["dono"].rsplit(" · ", 1)[1] in {"Boomer", "Cliente"}
-        assert a["gatilho"].startswith("Se ") and " então " in a["gatilho"]
-        for d in a["depende_de"]:
-            assert c.ler_data(por_num[d]["entrega"], "d") <= i
-        if a["alavanca_da_meta"]:
-            assert ini <= i and e <= fim
-        if h == "Imediato":
-            assert (e - i).days <= 7
-        assert not a["acao"].lower().startswith(("otimizar", "acompanhar", "priorizar", "direcionar", "melhorar", "auditar", "mapear", "investigar"))
-    assert any(a["depende_de"] == [1] for _, a in pares)
-    assert any(h == "Médio prazo" and not a["alavanca_da_meta"] and c.ler_data(a["entrega"], "e") > fim for h, a in pares)
-    cobertas = {s for _, a in pares for s in a["solucoes"]}
-    assert cobertas == {s["id"] for p in ex.registro_valido()["problemas"] for s in p["solucoes"]}
-    assert "[VALIDAR]" not in str(plano) and "[PREENCHER]" not in str(plano)
+    # Sem erros e sem avisos: o exemplo atende a todas as regras do validador.
+    assert validar(ex.plano_valido(), ex.registro_valido()) == ([], [])
 
 
 def test_ler_data_rejeita_digitos_unicode():

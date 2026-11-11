@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import json
 import sys
 from pathlib import Path
 
@@ -22,8 +23,7 @@ def acao(plano: dict, numero: int) -> dict:
 
 
 def erros_de(plano, rascunho=False):
-    erros, avisos = v.validar(plano, registro_valido(), rascunho=rascunho)
-    assert avisos == []
+    erros, _ = v.validar(plano, registro_valido(), rascunho=rascunho)
     return erros
 
 
@@ -261,7 +261,7 @@ def test_rascunho_nao_perdoa_outros_erros():
 @pytest.mark.parametrize("ruim", [None, [], "texto", 42, {}, {"versao": 2}])
 def test_plano_malformado_na_raiz(ruim):
     erros, avisos = v.validar(ruim, registro_valido())
-    assert erros and avisos == []
+    assert erros and isinstance(avisos, list)
 
 
 def _malformar(p, caminho, valor):
@@ -301,7 +301,6 @@ def _malformar(p, caminho, valor):
         (["abertura", "margem_contribuicao"], True),
         (["data_referencia"], 20261022),
         (["fim_ciclo"], None),
-        (["prospect"], None),
         (["empresa_agencia"], None),
     ],
 )
@@ -310,7 +309,15 @@ def test_estrutura_quebrada_vira_erro_sem_excecao(caminho, valor):
     _malformar(plano, caminho, valor)
     erros, avisos = v.validar(plano, registro_valido())
     assert isinstance(erros, list) and all(isinstance(e, str) for e in erros)
-    assert avisos == []
+    assert isinstance(avisos, list)
+    assert erros, f"{caminho} = {valor!r} deveria gerar erro"
+
+
+def test_prospect_ausente_nao_levanta():
+    plano = copy.deepcopy(plano_valido())
+    plano["prospect"] = None
+    erros, avisos = v.validar(plano, registro_valido())
+    assert isinstance(erros, list) and isinstance(avisos, list)
 
 
 def test_estrutura_quebrada_numero_nao_inteiro_gera_erro():
@@ -319,5 +326,179 @@ def test_estrutura_quebrada_numero_nao_inteiro_gera_erro():
     assert erros_de(plano)
 
 
-def test_registro_pode_ser_qualquer_coisa_nesta_etapa():
-    assert v.validar(plano_valido(), None) == ([], [])
+@pytest.mark.parametrize("valor", ["true", "sim", 1, 0, None])
+def test_alavanca_da_meta_precisa_ser_booleano(valor):
+    plano = copy.deepcopy(plano_valido())
+    acao(plano, 6)["alavanca_da_meta"] = valor
+    assert tem(erros_de(plano), "alavanca_da_meta")
+
+
+def test_alavanca_da_meta_string_nao_burla_a_janela_de_prova():
+    plano = copy.deepcopy(plano_valido())
+    a = acao(plano, 6)
+    a["alavanca_da_meta"] = "true"
+    assert tem(erros_de(plano), "alavanca_da_meta")
+
+
+# --- cobertura das soluções ---
+
+def test_solucao_do_registro_sem_acao_bloqueia():
+    plano = copy.deepcopy(plano_valido())
+    acao(plano, 4)["solucoes"] = []
+    erros = erros_de(plano)
+    assert "Solução P1.S2 do registro não virou nenhuma ação do plano." in erros
+
+
+def test_acao_citando_solucao_inexistente_bloqueia():
+    plano = copy.deepcopy(plano_valido())
+    acao(plano, 3)["solucoes"] = ["P9.S1"]
+    erros = erros_de(plano)
+    assert any("cita a solução P9.S1, que não existe no registro." in e and "Ação 3" in e for e in erros), erros
+
+
+@pytest.mark.parametrize("valor", ["P1.S1", [["P1.S1"]], [1]])
+def test_solucoes_precisa_ser_lista_de_textos(valor):
+    plano = copy.deepcopy(plano_valido())
+    acao(plano, 3)["solucoes"] = valor
+    assert tem(erros_de(plano), "solucoes")
+
+
+def test_solucoes_ausente_equivale_a_lista_vazia():
+    plano = copy.deepcopy(plano_valido())
+    del acao(plano, 3)["solucoes"]
+    assert erros_de(plano) == []
+
+
+def test_registro_inutilizavel_vira_erro():
+    for ruim in (None, [], {}, {"problemas": "x"}):
+        erros, _ = v.validar(plano_valido(), ruim)
+        assert tem(erros, "registro"), ruim
+
+
+# --- avisos ---
+
+def avisos_de(plano, rascunho=False):
+    erros, avisos = v.validar(plano, registro_valido(), rascunho=rascunho)
+    assert erros == [], erros
+    return avisos
+
+
+@pytest.mark.parametrize("verbo", ["Otimizar", "acompanhar", "Priorizar", "direcionar", "Melhorar"])
+def test_aviso_verbo_vago(verbo):
+    plano = copy.deepcopy(plano_valido())
+    acao(plano, 6)["acao"] = f"{verbo} a rotina de revisão"
+    avisos = avisos_de(plano)
+    assert len(avisos) == 1 and "Ação 6" in avisos[0] and "vago" in avisos[0]
+
+
+def test_aviso_diagnostico_sem_acao_que_dependa_dele():
+    plano = copy.deepcopy(plano_valido())
+    acao(plano, 6)["acao"] = "Auditar a rotina de revisão"
+    avisos = avisos_de(plano)
+    assert len(avisos) == 1 and "Ação 6" in avisos[0] and "depend" in avisos[0]
+
+
+def test_diagnostico_com_acao_dependente_nao_avisa():
+    plano = copy.deepcopy(plano_valido())
+    acao(plano, 1)["acao"] = "Mapear os eventos do GA4"  # a ação 3 depende da 1
+    assert avisos_de(plano) == []
+
+
+def test_aviso_frente_sem_acao():
+    plano = copy.deepcopy(plano_valido())
+    for h in plano["horizontes"]:
+        h["acoes"] = [a for a in h["acoes"] if a["numero"] != 5]
+    avisos = avisos_de(plano)
+    assert len(avisos) == 1 and "Redução de Dependências" in avisos[0]
+
+
+def test_aviso_imediato_com_mais_de_sete_dias():
+    plano = copy.deepcopy(plano_valido())
+    acao(plano, 2)["entrega"] = "03/11/2026"  # 8 dias
+    avisos = avisos_de(plano)
+    assert len(avisos) == 1 and "Ação 2" in avisos[0] and "7 dias" in avisos[0]
+
+
+def test_imediato_com_exatamente_sete_dias_nao_avisa():
+    plano = copy.deepcopy(plano_valido())
+    acao(plano, 2)["entrega"] = "02/11/2026"  # 7 dias
+    assert avisos_de(plano) == []
+
+
+def test_aviso_margem_ausente_so_em_rascunho():
+    plano = copy.deepcopy(plano_valido())
+    plano["abertura"]["margem_contribuicao"] = None
+    avisos = avisos_de(plano, rascunho=True)
+    assert len(avisos) == 1 and "margem" in avisos[0]
+    erros, avisos_final = v.validar(plano, registro_valido())
+    assert tem(erros, "margem") and avisos_final == []
+
+
+# --- CLI ---
+
+def _gravar(tmp_path, plano=None, registro=None):
+    p, r = tmp_path / "plano.json", tmp_path / "registro.json"
+    p.write_text(json.dumps(plano_valido() if plano is None else plano, ensure_ascii=False), encoding="utf-8")
+    r.write_text(json.dumps(registro_valido() if registro is None else registro, ensure_ascii=False), encoding="utf-8")
+    return ["--plano", str(p), "--registro", str(r)]
+
+
+def test_cli_plano_valido(tmp_path, capsys):
+    assert v.main(_gravar(tmp_path)) == 0
+    assert capsys.readouterr().out == "OK: 6 ações, 3 soluções cobertas.\n"
+
+
+def test_cli_avisos_vao_para_stdout_antes_do_ok(tmp_path, capsys):
+    plano = copy.deepcopy(plano_valido())
+    acao(plano, 6)["acao"] = "Melhorar a rotina de revisão"
+    assert v.main(_gravar(tmp_path, plano)) == 0
+    linhas = capsys.readouterr().out.splitlines()
+    assert linhas[0].startswith("AVISO: ") and linhas[-1].startswith("OK: 6 ações")
+
+
+def test_cli_plano_invalido(tmp_path, capsys):
+    plano = copy.deepcopy(plano_valido())
+    acao(plano, 4)["solucoes"] = []
+    assert v.main(_gravar(tmp_path, plano)) == 1
+    cap = capsys.readouterr()
+    assert cap.err.startswith("ERRO: ") and "P1.S2" in cap.err and "OK:" not in cap.out
+
+
+def test_cli_rascunho_aceita_marcacao_e_margem_ausente(tmp_path, capsys):
+    plano = copy.deepcopy(plano_valido())
+    plano["abertura"]["margem_contribuicao"] = None
+    acao(plano, 6)["kpi_meta"] = "[VALIDAR: meta com o cliente]"
+    argv = _gravar(tmp_path, plano)
+    assert v.main(argv) == 1
+    capsys.readouterr()
+    assert v.main(argv + ["--rascunho"]) == 0
+    out = capsys.readouterr().out
+    assert "AVISO: " in out and "OK:" in out
+
+
+@pytest.mark.parametrize("conteudo", [None, "{ruim", "[1, 2"])
+def test_cli_json_ausente_ou_quebrado_vira_erro(tmp_path, capsys, conteudo):
+    argv = _gravar(tmp_path)
+    plano_arq = tmp_path / "plano.json"
+    if conteudo is None:
+        plano_arq.unlink()
+    else:
+        plano_arq.write_text(conteudo, encoding="utf-8")
+    assert v.main(argv) == 1
+    err = capsys.readouterr().err
+    assert err.startswith("ERRO:") and "Traceback" not in err
+
+
+def test_cli_registro_quebrado_vira_erro(tmp_path, capsys):
+    argv = _gravar(tmp_path)
+    (tmp_path / "registro.json").write_text("{ruim", encoding="utf-8")
+    assert v.main(argv) == 1
+    err = capsys.readouterr().err
+    assert err.startswith("ERRO:") and "registro" in err and "Traceback" not in err
+
+
+def test_cli_arquivo_nao_utf8(tmp_path, capsys):
+    argv = _gravar(tmp_path)
+    (tmp_path / "plano.json").write_bytes(b"\xff\xfe")
+    assert v.main(argv) == 1
+    assert capsys.readouterr().err.startswith("ERRO:")

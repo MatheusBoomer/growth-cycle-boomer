@@ -9,7 +9,9 @@ import pytest
 
 RAIZ = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RAIZ / "scripts"))
+sys.path.insert(0, str(RAIZ / "scripts" / "tests"))
 import validar_solucoes as vs  # noqa: E402
+from plano_v2_exemplo import plano_valido  # noqa: E402
 
 
 def registro_valido() -> dict:
@@ -172,35 +174,35 @@ def test_cli_markdown_sob_um_arquivo_vira_erro_legivel(tmp_path, capsys):
     assert "ERRO: não foi possível gravar a seção em" in err and "Traceback" not in err
 
 
-def plano_valido() -> dict:
-    def acao(nome, solucoes):
-        return {"acao": nome, "o_que": "x", "quando": "Semana 1", "por_quem": "Agência", "como": "y", "solucoes": solucoes}
-
-    return {
-        "prospect": "Marca Teste",
-        "horizontes": [
-            {"titulo": "H1", "intro": None, "acoes": [acao("Recuperar PIX", ["P1.S1"]), acao("Corrigir GA4", ["P2.S1"])]},
-            {"titulo": "H2", "intro": "i", "acoes": [acao("Monitorar estoque", ["P1.S2"])]},
-            {"titulo": "H3", "intro": "i", "acoes": [acao("Dashboard de KPIs", [])]},
-        ],
-        "tabela": [
-            {"num": 1, "acao": "Recuperar PIX", "frente": "Eficiência Operacional", "horizonte": "Imediato", "quando": "S1", "por_quem": "Agência"},
-            {"num": 2, "acao": "Corrigir GA4", "frente": "Governança", "horizonte": "Imediato", "quando": "S1", "por_quem": "Agência"},
-            {"num": 3, "acao": "Monitorar estoque", "frente": "Eficiência Operacional", "horizonte": "Curto Prazo", "quando": "M1", "por_quem": "Cliente"},
-            {"num": 4, "acao": "Dashboard de KPIs", "frente": "Governança", "horizonte": "Médio Prazo", "quando": "M3", "por_quem": "Agência"},
-        ],
-    }
-
-
 def test_plano_valido_passa():
     assert vs.validar_plano(registro_valido(), plano_valido()) == ([], [])
 
 
 def test_solucao_sem_acao_bloqueia():
     plano = plano_valido()
-    plano["horizontes"][1]["acoes"][0]["solucoes"] = []
+    plano["horizontes"][1]["acoes"][1]["solucoes"] = []
     erros, _ = vs.validar_plano(registro_valido(), plano)
     assert any("P1.S2" in e and "não virou nenhuma ação" in e for e in erros), erros
+
+
+def test_plano_que_nao_e_objeto_bloqueia():
+    erros, _ = vs.validar_plano(registro_valido(), ["x"])
+    assert erros
+
+
+def test_so_erros_de_solucao_passam_pela_delegacao():
+    plano = plano_valido()
+    plano["horizontes"][0]["acoes"][0]["gatilho"] = "sem formato"  # erro do plano, não de solução
+    plano["horizontes"][0]["acoes"][1]["solucoes"] = []
+    erros, avisos = vs.validar_plano(registro_valido(), plano)
+    assert erros == ["Solução P1.S1 do registro não virou nenhuma ação do plano."] and avisos == []
+
+
+def test_marcacoes_e_margem_ausente_nao_bloqueiam_a_cobertura():
+    plano = plano_valido()
+    plano["abertura"]["margem_contribuicao"] = None
+    plano["horizontes"][0]["acoes"][0]["como"] = "[PREENCHER: passo a passo]"
+    assert vs.validar_plano(registro_valido(), plano) == ([], [])
 
 
 def test_acao_citando_solucao_inexistente():
@@ -210,28 +212,12 @@ def test_acao_citando_solucao_inexistente():
     assert any("P9.S1" in e and "não existe no registro" in e for e in erros), erros
 
 
-def test_acao_com_nome_diferente_na_tabela():
-    plano = plano_valido()
-    plano["tabela"][0]["acao"] = "Recuperar PIX "
-    erros, _ = vs.validar_plano(registro_valido(), plano)
-    assert any("\"Recuperar PIX\"" in e and "tabela-resumo" in e for e in erros), erros
-
-
-def test_frente_vazia_e_quando_vazio():
-    plano = plano_valido()
-    plano["tabela"][2]["frente"] = ""
-    plano["horizontes"][0]["acoes"][1]["quando"] = ""
-    erros, _ = vs.validar_plano(registro_valido(), plano)
-    assert any("Monitorar estoque" in e and "frente vazia" in e for e in erros), erros
-    assert any("Corrigir GA4" in e and "quando" in e for e in erros), erros
-
-
 def test_cli_modo_plano(tmp_path, capsys):
     reg = tmp_path / "solucoes.json"
     reg.write_text(json.dumps(registro_valido(), ensure_ascii=False), encoding="utf-8")
     pl = tmp_path / "plano.json"
     plano = plano_valido()
-    plano["horizontes"][1]["acoes"][0]["solucoes"] = []
+    plano["horizontes"][1]["acoes"][1]["solucoes"] = []
     pl.write_text(json.dumps(plano, ensure_ascii=False), encoding="utf-8")
     assert vs.main(["--modo", "plano", "--registro", str(reg), "--plano", str(pl)]) == 1
     assert "plano de ação inválido" in capsys.readouterr().err
@@ -245,9 +231,9 @@ def test_cli_modo_plano(tmp_path, capsys):
         lambda p: p["horizontes"].__setitem__(0, "x"),
         lambda p: p["horizontes"][0]["acoes"].__setitem__(0, "texto"),
         lambda p: p["horizontes"][0]["acoes"][0].update(solucoes=[["P1.S1"]]),
-        lambda p: p["horizontes"][0]["acoes"][0].update(acao=["Recuperar PIX"]),
-        lambda p: p["horizontes"][0]["acoes"][0].update(acao=""),
-        lambda p: p["tabela"][0].update(acao=["Recuperar PIX"]),
+        lambda p: p["horizontes"][0]["acoes"][1].update(solucoes="P1.S1"),
+        lambda p: p["horizontes"][0]["acoes"][1].update(solucoes=["P9.S1"]),
+        lambda p: p.pop("horizontes"),
     ],
 )
 def test_plano_malformado_vira_erro_legivel(tmp_path, capsys, alterar):

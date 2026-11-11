@@ -2,16 +2,55 @@
 
 `validar(plano, registro, rascunho=False)` devolve `(erros, avisos)` e nunca levanta
 exceção por causa do conteúdo do plano: JSON malformado vira mensagem de erro.
-Cobertura das soluções, avisos e linha de comando ficam para a etapa seguinte.
+Também confere a cobertura das soluções do registro, devolve avisos que não bloqueiam e
+tem linha de comando:
+
+    python3 scripts/validar_plano_acao.py --plano <plano.json> --registro <solucoes.json> [--rascunho]
 """
 from __future__ import annotations
 
+import argparse
+import json
+import sys
 from datetime import date
+from pathlib import Path
 
-from plano_acao_comum import CAMPOS_ACAO, FRENTES, HORIZONTES, ErroPlano, ler_data, pisos_roas
+from plano_acao_comum import CAMPOS_ACAO, acoes, FRENTES, HORIZONTES, ErroPlano, ler_data, pisos_roas
 
 _SEPARADOR_DONO = " · "
 _MARCAS = ("[VALIDAR", "[PREENCHER")
+_VERBOS_VAGOS = ("otimizar", "acompanhar", "priorizar", "direcionar", "melhorar")
+_VERBOS_DIAGNOSTICO = ("auditar", "mapear", "investigar")
+_MAX_DIAS_IMEDIATO = 7
+
+
+class ErroEntrada(Exception):
+    """Arquivo de entrada ausente, ilegível ou que não é JSON."""
+
+
+def _ler_json(caminho: Path, nome: str):
+    try:
+        return json.loads(caminho.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        raise ErroEntrada(f"{nome} não encontrado: {caminho}")
+    except json.JSONDecodeError as e:
+        raise ErroEntrada(f"o {nome} não é um JSON válido (linha {e.lineno}): {e.msg}")
+    except (OSError, UnicodeDecodeError) as e:
+        raise ErroEntrada(f"não foi possível ler o {nome} ({caminho}): {e}")
+
+
+def _ids_do_registro(registro) -> list[str] | None:
+    """Ids de solução do registro, na ordem; None se o registro não tem a lista de problemas."""
+    if not isinstance(registro, dict) or not isinstance(registro.get("problemas"), list):
+        return None
+    ids: list[str] = []
+    for p in registro["problemas"]:
+        if not isinstance(p, dict) or not isinstance(p.get("solucoes"), list):
+            continue
+        for sol in p["solucoes"]:
+            if isinstance(sol, dict) and isinstance(sol.get("id"), str):
+                ids.append(sol["id"])
+    return ids
 
 
 def _vazio(valor) -> bool:
@@ -67,8 +106,9 @@ def _ciclos(grafo: dict[int, list[int]]) -> list[list[int]]:
 
 
 def validar(plano, registro, rascunho: bool = False) -> tuple[list[str], list[str]]:
-    """Valida o plano v2. `registro` ainda não é usado (cobertura vem na etapa seguinte)."""
+    """Valida o plano v2 contra o registro de soluções; devolve (erros, avisos)."""
     erros: list[str] = []
+    avisos: list[str] = []
     if not isinstance(plano, dict):
         return ["O plano precisa ser um objeto JSON com os campos da versao 2."], []
 
@@ -118,6 +158,7 @@ def validar(plano, registro, rascunho: bool = False) -> tuple[list[str], list[st
 
     # Reúne as ações com número e rótulo antes de checar uma a uma.
     lista: list[dict] = []
+    horizonte_da_acao: dict[int, str] = {}  # id(objeto da ação) -> nome do horizonte
     for h in horizontes:
         if not isinstance(h, dict):
             continue
@@ -128,6 +169,7 @@ def validar(plano, registro, rascunho: bool = False) -> tuple[list[str], list[st
         for a in brutas:
             if isinstance(a, dict):
                 lista.append(a)
+                horizonte_da_acao[id(a)] = h.get("nome")
             else:
                 erros.append(f'Horizonte "{h.get("nome")}": cada ação precisa ser um objeto.')
 
@@ -165,6 +207,8 @@ def validar(plano, registro, rascunho: bool = False) -> tuple[list[str], list[st
         for campo in CAMPOS_ACAO:
             if _vazio(a.get(campo)):
                 erros.append(f"{pre}campo {campo} vazio.")
+            elif campo not in ("inicio", "entrega") and not isinstance(a[campo], str):
+                erros.append(f"{pre}campo {campo} precisa ser texto (veio {a[campo]!r}).")
 
         if a.get("frente") not in FRENTES:
             erros.append(f'{pre}frente "{a.get("frente")}" fora das cinco frentes: {"; ".join(FRENTES)}.')
@@ -200,6 +244,9 @@ def validar(plano, registro, rascunho: bool = False) -> tuple[list[str], list[st
             if not (g.startswith("se ") and " então " in g):
                 erros.append(f'{pre}gatilho precisa seguir o formato "Se … então …".')
 
+        if "alavanca_da_meta" in a and not isinstance(a["alavanca_da_meta"], bool):
+            erros.append(f'{pre}alavanca_da_meta precisa ser true ou false (veio {a["alavanca_da_meta"]!r}).')
+
         if a.get("alavanca_da_meta") is True and janela_ini and janela_fim:
             fora = [
                 f"{rotulo} {_fmt(d)}"
@@ -211,6 +258,12 @@ def validar(plano, registro, rascunho: bool = False) -> tuple[list[str], list[st
                     f"{pre}é alavanca da meta, mas {' e '.join(fora)} ficam fora da janela de prova "
                     f"({_fmt(janela_ini)} a {_fmt(janela_fim)}); a janela termina em {_fmt(janela_fim)}."
                 )
+
+        if horizonte_da_acao.get(id(a)) == "Imediato" and ini and fim and (fim - ini).days > _MAX_DIAS_IMEDIATO:
+            avisos.append(
+                f"{pre}está no Imediato, mas leva {(fim - ini).days} dias "
+                f"(mais de {_MAX_DIAS_IMEDIATO} dias); reveja o horizonte ou quebre a ação."
+            )
 
     # Dependências: existência, ordem das datas e ciclos.
     grafo: dict[int, list[int]] = {}
@@ -246,6 +299,51 @@ def validar(plano, registro, rascunho: bool = False) -> tuple[list[str], list[st
     for ciclo in _ciclos(grafo):
         erros.append("Há ciclo de dependência entre as ações: " + " → ".join(str(x) for x in ciclo) + ".")
 
+    # Cobertura: toda solução do registro vira ação, e toda solução citada existe.
+    ids = _ids_do_registro(registro)
+    if ids is None:
+        erros.append('O registro de soluções não tem a lista "problemas"; não dá para conferir a cobertura.')
+    else:
+        conhecidos, cobertos = set(ids), set()
+        for a in lista:
+            n = a.get("numero")
+            pre = f'Ação {n if eh_numero(n) else "?"} ("{a.get("acao") if isinstance(a.get("acao"), str) else ""}"): '
+            sols = a.get("solucoes")
+            if sols is None:
+                sols = []
+            if not isinstance(sols, list):
+                erros.append(f'{pre}solucoes precisa ser uma lista de ids de solução (ex.: ["P1.S1"]).')
+                continue
+            for sid in sols:
+                if not isinstance(sid, str):
+                    erros.append(f'{pre}cada item de solucoes precisa ser um id de solução em texto (ex.: "P1.S1").')
+                elif sid in conhecidos:
+                    cobertos.add(sid)
+                else:
+                    erros.append(f"{pre}cita a solução {sid}, que não existe no registro.")
+        for sid in ids:
+            if sid not in cobertos:
+                erros.append(f"Solução {sid} do registro não virou nenhuma ação do plano.")
+
+    # Avisos: não bloqueiam, mas o analista precisa ver.
+    dependidas = {d for a in lista for d in (a.get("depende_de") if isinstance(a.get("depende_de"), list) else [])}
+    for a in lista:
+        n = a.get("numero")
+        nome = a.get("acao") if isinstance(a.get("acao"), str) else ""
+        pre = f'Ação {n if eh_numero(n) else "?"} ("{nome}"): '
+        palavras = nome.split()
+        primeira = palavras[0].lower() if palavras else ""
+        if primeira in _VERBOS_VAGOS:
+            avisos.append(f'{pre}começa com o verbo vago "{primeira}"; diga o que será feito, com objeto e resultado.')
+        if primeira in _VERBOS_DIAGNOSTICO and not (eh_numero(n) and n in dependidas):
+            avisos.append(
+                f'{pre}é uma ação de diagnóstico ("{primeira}") e nenhuma outra ação depende dela; '
+                "ligue o que ela descobre a uma ação seguinte via depende_de."
+            )
+    for frente in FRENTES:
+        if not any(a.get("frente") == frente for a in lista):
+            avisos.append(f'A frente "{frente}" não tem nenhuma ação no plano.')
+
     if not rascunho:
         for caminho, texto in _marcacoes(plano):
             marca = next(m for m in _MARCAS if m in texto)
@@ -254,7 +352,12 @@ def validar(plano, registro, rascunho: bool = False) -> tuple[list[str], list[st
             )
 
     if margem is None:
-        if not rascunho:
+        if rascunho:
+            avisos.append(
+                "A margem de contribuição está ausente: o piso de ROAS vai sair como [PREENCHER] até "
+                "informar abertura.margem_contribuicao."
+            )
+        else:
             erros.append(
                 "A margem de contribuição está ausente: sem ela o piso de ROAS fica [PREENCHER]. "
                 "Informe abertura.margem_contribuicao."
@@ -262,4 +365,32 @@ def validar(plano, registro, rascunho: bool = False) -> tuple[list[str], list[st
     elif pisos_roas(margem, None)["aprovada"] is None:
         erros.append(f"A margem de contribuição {margem!r} é inválida: use um número maior que 0 e até 1.")
 
-    return erros, []
+    return erros, avisos
+
+
+def main(argv: list[str] | None = None) -> int:
+    p = argparse.ArgumentParser(description="Valida o plano de ação v2 (Skill 08).")
+    p.add_argument("--plano", required=True, type=Path)
+    p.add_argument("--registro", required=True, type=Path)
+    p.add_argument("--rascunho", action="store_true", help="aceita marcações [VALIDAR]/[PREENCHER] e margem ausente")
+    a = p.parse_args(argv)
+    try:
+        plano = _ler_json(a.plano, "plano")
+        registro = _ler_json(a.registro, "registro")
+    except ErroEntrada as e:
+        print(f"ERRO: {e}", file=sys.stderr)
+        return 1
+    erros, avisos = validar(plano, registro, rascunho=a.rascunho)
+    for aviso in avisos:
+        print(f"AVISO: {aviso}")
+    if erros:
+        for erro in erros:
+            print(f"ERRO: {erro}", file=sys.stderr)
+        return 1
+    total = len(_ids_do_registro(registro) or [])
+    print(f"OK: {len(acoes(plano))} ações, {total} soluções cobertas.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
