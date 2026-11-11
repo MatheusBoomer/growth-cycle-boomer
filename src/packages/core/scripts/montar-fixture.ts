@@ -5,7 +5,7 @@ import { createHash } from "node:crypto"
 import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { carregarCatalogo } from "../src/catalogo"
-import { destinoAprovado, EXTENSAO_POR_TIPO } from "../src/entregaveis"
+import { acompanhantes, destinoAprovado, EXTENSAO_POR_TIPO } from "../src/entregaveis"
 import { estadoInicial } from "../src/maquina-estados"
 import { ORDEM_ETAPAS, type Entregavel, type Estado, type EstadoInsumo, type EtapaId, type TipoEntregavel } from "../src/tipos"
 import { caminhoSaidaSeguro, type EtapaManifesto, type Manifesto } from "../src/fixture"
@@ -69,6 +69,7 @@ const INSUMOS: { etapa: EtapaId; id: string; arquivo: string; resumo: string }[]
   { etapa: "03", id: "produtos-curva-abc", arquivo: "dados/produtos-curva-abc.xlsx", resumo: "58 linhas de dados" },
   { etapa: "04", id: "clientes-historico", arquivo: "dados/clientes-historico.xlsx", resumo: "10400 linhas de dados" },
   { etapa: "07", id: "prints-campanhas", arquivo: "contexto/brutos/prints-campanhas/print-01.png", resumo: "4 prints de campanha" },
+  { etapa: "10", id: "apresentacao-transcricao", arquivo: "contexto/brutos/apresentacao-transcricao-bruta.docx", resumo: "Transcrição da reunião de apresentação (22/11/2026)" },
 ]
 
 /** Arquivos que o analista envia (kit de cada etapa). */
@@ -77,6 +78,7 @@ const KIT: Partial<Record<EtapaId, string[]>> = {
   "03": ["dados/historico-mensal.xlsx", "dados/produtos-curva-abc.xlsx"],
   "04": ["dados/clientes-historico.xlsx"],
   "07": [1, 2, 3, 4].map((n) => `contexto/brutos/prints-campanhas/print-0${n}.png`),
+  "10": ["contexto/brutos/apresentacao-transcricao-bruta.docx"],
 }
 
 const emBarras = (p: string) => p.split(path.sep).join("/")
@@ -105,6 +107,12 @@ function etapaDoArquivo(rel: string): EtapaManifesto {
     "entrega/ativos-aprovados/projecao/projecao-de-cenarios.xlsx": "06",
     "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.docx": "08",
     "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.xlsx": "08",
+    "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.json": "08",
+    "contexto/brutos/apresentacao-transcricao-bruta.docx": "10",
+    "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-final.docx": "10",
+    "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-final.xlsx": "10",
+    "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-final.json": "10",
+    "entrega/ativos-aprovados/plano-de-acao/revisao-plano.json": "10",
     "entrega/ativos-aprovados/apresentacao/roteiro-apresentacao.json": "final", "entrega/apresentacao-final.pptx": "final",
   }
   if (tabela[rel]) return tabela[rel]!
@@ -144,6 +152,8 @@ function tipoDoAprovado(rel: string): { tipo: TipoEntregavel; etapa: EtapaId; no
     "projecao-de-cenarios.xlsx": { tipo: "planilha", etapa: "06", nomeFinal: "projecao-de-cenarios", titulo: "Planilha de projeção de cenários" },
     "plano-de-acao-estrategico.docx": { tipo: "documento", etapa: "08", nomeFinal: "plano-de-acao-estrategico", titulo: "Plano de ação estratégico" },
     "plano-de-acao-estrategico.xlsx": { tipo: "planilha", etapa: "08", nomeFinal: "plano-de-acao-estrategico", titulo: "Plano de ação estratégico (planilha)" },
+    "plano-de-acao-final.docx": { tipo: "documento", etapa: "10", nomeFinal: "plano-de-acao-final", titulo: "Plano de ação final" },
+    "plano-de-acao-final.xlsx": { tipo: "planilha", etapa: "10", nomeFinal: "plano-de-acao-final", titulo: "Plano de ação final (planilha)" },
     "roteiro-apresentacao.json": { tipo: "roteiro", etapa: "final", nomeFinal: "roteiro-apresentacao", titulo: "Roteiro da apresentação final (55 slides)" },
     "apresentacao-final.pptx": { tipo: "apresentacao", etapa: "final", nomeFinal: "apresentacao", titulo: "Apresentação final (55 slides)" },
   }
@@ -187,6 +197,11 @@ async function main() {
     const titulo = ap.titulo || ((await readFile(path.join(producao, rel), "utf8")).match(/^#\s+(.+)$/m)?.[1] ?? ap.nomeFinal)
     const e: Entregavel = { id, etapa: ap.etapa, tipo: ap.tipo, titulo, arquivoRascunho: rascunho, nomeFinal: ap.nomeFinal, status: "aprovado", ajustePedido: null, criadoEm: momento(ap.etapa, 30), decididoEm: momento(ap.etapa, 50) }
     if (destinoAprovado(e) !== rel) throw new Error(`Entregável inconsistente: ${rel} contra ${destinoAprovado(e)}`)
+    // Os JSONs que acompanham o documento do plano ficam também ao lado da proposta, como o app os deixa ao propor.
+    for (const { origem, destino } of acompanhantes(e)) {
+      await copiar(path.join(producao, destino), naBase(origem))
+      arquivos.push({ caminho: origem, etapa: ap.etapa })
+    }
     entregaveis.push(e)
   }
 
@@ -208,7 +223,7 @@ async function main() {
 
   const insumos: EstadoInsumo[] = INSUMOS.map((i) => ({ etapa: i.etapa, insumoId: i.id, status: "valido", problemas: [], avisos: [], resumo: i.resumo, arquivo: i.arquivo, atualizadoEm: momento(i.etapa, 5) }))
   const base = estadoInicial({ slug: "verdeluz-teste", nome: NOME_DO_CLIENTE, site: SITE }, PRIMEIRO)
-  const estado: Estado = { ...base, etapas, entregaveis, insumos, perguntas: [], filaAutomatica: [], atualizadoEm: momento("final", 55) }
+  const estado: Estado = { ...base, etapas, entregaveis, insumos, perguntas: [], filaAutomatica: [], atualizadoEm: momento(ORDEM_ETAPAS.at(-1)!, 55) }
   await writeFile(path.join(saida, "estado-completo.json"), JSON.stringify(estado, null, 2))
 
   const kit: Manifesto["kit"] = KIT

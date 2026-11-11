@@ -1,0 +1,178 @@
+{
+  "versao": 1,
+  "prospect": "Verdeluz Cosméticos Veganos (FICTÍCIO)",
+  "data_hoje": "23/11/2026",
+  "data_reuniao": "22/11/2026",
+  "participantes": {
+    "boomer": [
+      {
+        "nome": "Camila",
+        "funcao": "Estrategista"
+      },
+      {
+        "nome": "Rafael",
+        "funcao": "Gestor de tráfego (freelancer, sob coordenação da Boomer)"
+      }
+    ],
+    "cliente": [
+      {
+        "nome": "Marina",
+        "funcao": "Sócia (formulação e marca)"
+      },
+      {
+        "nome": "Luiza",
+        "funcao": "Sócia (finanças e operações)"
+      }
+    ]
+  },
+  "resumo": "As sócias aprovaram o diagnóstico, o cenário Realista e o rumo do plano. Trouxeram a realidade da operação: a reunião mensal precisa vir depois do fechamento da contabilidade, o WhatsApp só tem consentimento de quem comprou a partir de ABR/2026 e o Caio já tem sessão de fotos em dezembro. Recusaram desconto extra no cupom das influenciadoras e a descontinuação da Curva C antes do Dia das Mães.",
+  "complementos": [
+    {
+      "numero": 1,
+      "acoes": [
+        17
+      ],
+      "o_que_mudou": "A reunião mensal de resultados passa para o primeiro dia útil depois do dia 10, quando a contabilidade fecha o mês; a primeira fica em 11/12/2026.",
+      "trecho": {
+        "texto": "Ela tem que ser depois do dia 10, quando a contabilidade fecha o mês",
+        "quem": "Luiza (cliente)",
+        "posicao": "≈28 min"
+      }
+    },
+    {
+      "numero": 2,
+      "acoes": [
+        18
+      ],
+      "o_que_mudou": "As fotos novas dos kits saem da sessão que o Caio já tem marcada para a primeira semana de dezembro, com todos os kits de uma vez.",
+      "trecho": {
+        "texto": "o Caio já tem uma sessão de fotos marcada para a primeira semana de dezembro",
+        "quem": "Marina (cliente)",
+        "posicao": "≈29 min"
+      }
+    },
+    {
+      "numero": 3,
+      "acoes": [
+        23
+      ],
+      "o_que_mudou": "Na reativação, o WhatsApp vai só para quem comprou a partir de ABR/2026 (consentimento registrado no checkout); os clientes mais antigos recebem só e-mail.",
+      "trecho": {
+        "texto": "O consentimento a gente só tem de quem comprou a partir de abril, quando entrou o aviso no checkout",
+        "quem": "Luiza (cliente)",
+        "posicao": "≈29 min"
+      }
+    }
+  ],
+  "conflitos": [
+    {
+      "numero": 1,
+      "acao": 6,
+      "recomendacao_plano": "Criar um cupom e uma UTM próprios para cada influenciadora, para medir quanto cada parceira vende e comparar com a permuta.",
+      "trecho": {
+        "texto": "Já testamos cupom de primeira compra com duas parceiras e não funcionou, quase ninguém usou",
+        "quem": "Marina (cliente)",
+        "posicao": "≈26 min"
+      },
+      "impacto": "A ação 6 não é alavanca da meta, mas é a única que mede o retorno das influenciadoras (P7.S2, cerca de R$ 4 mil em alguns meses). O teste citado foi diferente do que o plano propõe: duas parceiras, três semanas, 10% na primeira compra e sem link, ou seja, mediu se o desconto convencia, não quanto cada parceira vende. Ele não invalida a recomendação.",
+      "opcoes": {
+        "A": "Manter o plano: cupom e UTM por influenciadora, com o desconto que cada parceira negociar. Risco: as sócias não querem mais desconto para quem já compraria.",
+        "B": "Seguir o que foi dito: medir só pela UTM no link da bio, sem cupom. Risco: a venda de quem digita o código do story fica sem atribuição.",
+        "C": "Cupom próprio por parceira sem desconto extra (benefício de brinde), mais a UTM no link da bio, e 60 dias com todas as parceiras ativas antes de julgar."
+      },
+      "recomendacao_boomer": "C",
+      "decisao": "C",
+      "remove_acao": false,
+      "alavanca_descoberta": null,
+      "substituta": null,
+      "acoes_afetadas": [
+        6
+      ]
+    },
+    {
+      "numero": 2,
+      "acao": 21,
+      "recomendacao_plano": "Revisar os 38 SKUs da Curva C em FEV e MAR/2027 e descontinuar os que não somam R$ 5 mil por ano.",
+      "trecho": {
+        "texto": "Tirar produto de linha eu não faço antes do Dia das Mães",
+        "quem": "Marina (cliente)",
+        "posicao": "≈30 min"
+      },
+      "impacto": "A ação 21 não é alavanca da meta e não muda nenhum KPI dos 3 meses. Ela libera os brindes e o item adicional do carrinho (ação 22, ABR/2027); adiar a ação inteira empurra a ação 22 para depois do Dia das Mães.",
+      "opcoes": {
+        "A": "Manter o plano: revisar e descontinuar até 31/03/2027. Risco: a Marina não aprova a lista e a ação trava.",
+        "B": "Seguir o que foi dito: adiar a revisão inteira para JUN/2027. Risco: a ação 22 perde os SKUs escolhidos e também sai do Dia das Mães.",
+        "C": "Revisar em FEV e MAR/2027 como previsto, escolhendo brindes e o item adicional, e descontinuar só a partir de JUN/2027."
+      },
+      "recomendacao_boomer": "C",
+      "decisao": "C",
+      "remove_acao": false,
+      "alavanca_descoberta": null,
+      "substituta": null,
+      "acoes_afetadas": [
+        21
+      ]
+    }
+  ],
+  "abertos": [
+    {
+      "numero": 1,
+      "tema": "Assinatura do sérum com entrega a cada 60 dias",
+      "trecho": {
+        "texto": "Vou pensar se faz sentido para a gente",
+        "quem": "Marina (cliente)",
+        "posicao": "≈31 min"
+      },
+      "destino_sugerido": "Confirmar com a Marina na primeira reunião de resultados, com a recompra medida pela régua de reposição.",
+      "destino": {
+        "tipo": "confirmar",
+        "ate": "11/12/2026"
+      }
+    },
+    {
+      "numero": 2,
+      "tema": "Espaço do TikTok no plano",
+      "trecho": {
+        "texto": "Vamos ver como ele anda até o começo do ano",
+        "quem": "Luiza (cliente)",
+        "posicao": "≈32 min"
+      },
+      "destino_sugerido": "Descartar nesta versão: o TikTok segue orgânico e volta à pauta se crescer.",
+      "destino": {
+        "tipo": "descartado",
+        "motivo": "O TikTok segue como canal orgânico, sem venda direta e sem linha na verba aprovada na 07; volta à pauta da reunião de resultados se o orgânico crescer."
+      }
+    }
+  ],
+  "compromissos": [
+    {
+      "numero": 1,
+      "texto": "Enviar a pauta fixa da reunião mensal de resultados até 27/11/2026 para as sócias aprovarem.",
+      "trecho": {
+        "texto": "a pauta fixa da reunião a gente manda até sexta, dia 27, para vocês aprovarem",
+        "quem": "Camila (Boomer)",
+        "posicao": "≈28 min"
+      },
+      "no_plano": true,
+      "fora_do_escopo": false,
+      "acoes": [
+        17
+      ],
+      "tratamento": null
+    },
+    {
+      "numero": 2,
+      "texto": "Ler o texto do rótulo novo do sérum e dar um retorno à Marina.",
+      "trecho": {
+        "texto": "Consigo dar uma olhada no texto do rótulo novo e te mando um retorno até sexta",
+        "quem": "Camila (Boomer)",
+        "posicao": "≈33 min"
+      },
+      "no_plano": false,
+      "fora_do_escopo": true,
+      "acoes": [],
+      "tratamento": "Fora do escopo: a Camila faz uma leitura única do texto, como cortesia, e alinha com as sócias na reunião de 11/12/2026 que revisão de rótulo não faz parte do Growth Cycle."
+    }
+  ],
+  "divergencias_cenario": []
+}

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Gera os documentos brutos da Verdeluz (marca FICTÍCIA): kickoff-transcricao-bruta.docx, formulario-cliente.docx,
-site-simulado.md e prints-campanhas/print-01.png a print-04.png (painéis simulados de Meta Ads e Google Ads).
+site-simulado.md, prints-campanhas/print-01.png a print-04.png (painéis simulados de Meta Ads e Google Ads) e
+apresentacao-transcricao-bruta.docx (reunião de apresentação do Growth Cycle, insumo da etapa 10).
 
     python3 scripts/fixture_verdeluz/gerar_brutos.py --saida <pasta>
 """
@@ -22,11 +23,11 @@ from docx.shared import Pt  # noqa: E402
 try:
     from . import ancoras as a
     from . import gerar_dados
-    from .textos import FALANTES, FORMULARIO, KICKOFF, SITE_SIMULADO
+    from .textos import APRESENTACAO, FALANTES, FALANTES_APRESENTACAO, FORMULARIO, KICKOFF, SITE_SIMULADO
 except ImportError:  # execução direta do script
     import ancoras as a  # type: ignore[no-redef]
     import gerar_dados  # type: ignore[no-redef]
-    from textos import FALANTES, FORMULARIO, KICKOFF, SITE_SIMULADO  # type: ignore[no-redef]
+    from textos import APRESENTACAO, FALANTES, FALANTES_APRESENTACAO, FORMULARIO, KICKOFF, SITE_SIMULADO  # type: ignore[no-redef]
 
 PALAVRAS_POR_SEGUNDO = 1.6
 
@@ -45,6 +46,26 @@ def _gravar_kickoff(destino: Path) -> None:
         d.add_paragraph(f"{_marca(tempo)} {FALANTES[chave]}: {fala}")
         tempo += len(fala.split()) / PALAVRAS_POR_SEGUNDO + 4
     d.add_paragraph(f"{_marca(tempo)} [fim da gravação]")
+    d.sections[0].footer.paragraphs[0].text = "FICTÍCIO · cliente de teste da agência"
+    d.save(destino)
+
+
+def marcas_apresentacao() -> list[tuple[str, str, str]]:
+    """(marca de tempo, falante, fala) de cada fala da reunião de apresentação, no ritmo do kickoff."""
+    tempo, saida = 0.0, []
+    for chave, fala, slides in APRESENTACAO:
+        saida.append((_marca(tempo), FALANTES_APRESENTACAO[chave], fala))
+        tempo += len(fala.split()) / PALAVRAS_POR_SEGUNDO + 4 + slides
+    saida.append((_marca(tempo), "", "[fim da gravação]"))
+    return saida
+
+
+def _gravar_apresentacao(destino: Path) -> None:
+    d = docx.Document()
+    d.add_heading("Transcrição bruta da reunião de apresentação do Growth Cycle (FICTÍCIO)", level=1)
+    d.add_paragraph("Verdeluz Cosméticos Veganos (FICTÍCIO). Reunião de 22/11/2026. Gravação transcrita automaticamente, sem revisão. Documento fictício para o cliente de teste.")
+    for marca, falante, fala in marcas_apresentacao():
+        d.add_paragraph(f"{marca} {falante}: {fala}" if falante else f"{marca} {fala}")
     d.sections[0].footer.paragraphs[0].text = "FICTÍCIO · cliente de teste da agência"
     d.save(destino)
 
@@ -138,6 +159,7 @@ def gerar(saida: Path, semente: int = 2026) -> None:
     saida.mkdir(parents=True, exist_ok=True)
     _gravar_kickoff(saida / "kickoff-transcricao-bruta.docx")
     _gravar_formulario(saida / "formulario-cliente.docx")
+    _gravar_apresentacao(saida / "apresentacao-transcricao-bruta.docx")
     (saida / "site-simulado.md").write_text(SITE_SIMULADO, encoding="utf-8")
     _prints(saida / "prints-campanhas", gerar_dados._serie_mensal(np.random.default_rng(semente)))
 

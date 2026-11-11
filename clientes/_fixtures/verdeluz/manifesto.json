@@ -413,6 +413,62 @@
     {
       "caminho": ".app/propostas/d2544efa-51b4-4c3e-a7d5-2ef5dc1003fb.md",
       "etapa": "07"
+    },
+    {
+      "caminho": "contexto/brutos/apresentacao-transcricao-bruta.docx",
+      "etapa": "10"
+    },
+    {
+      "caminho": "contexto/decisoes/10-revisao-pos-apresentacao.md",
+      "etapa": "10"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.json",
+      "etapa": "08"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-final.json",
+      "etapa": "10"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/plano-de-acao/revisao-plano.json",
+      "etapa": "10"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/secoes/10-revisao-pos-apresentacao.md",
+      "etapa": "10"
+    },
+    {
+      "caminho": ".app/propostas/8b01f5d4-76a6-46b3-4d1a-2375236ba2c0.md",
+      "etapa": "10"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-final.docx",
+      "etapa": "10"
+    },
+    {
+      "caminho": ".app/propostas/befefdb5-0042-9752-5b9b-0ffa2d698dc7.docx",
+      "etapa": "10"
+    },
+    {
+      "caminho": "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-final.xlsx",
+      "etapa": "10"
+    },
+    {
+      "caminho": ".app/propostas/b4f58ac6-a029-b14c-6232-ae19995f165d.xlsx",
+      "etapa": "10"
+    },
+    {
+      "caminho": ".app/propostas/plano-de-acao-estrategico.json",
+      "etapa": "08"
+    },
+    {
+      "caminho": ".app/propostas/plano-de-acao-final.json",
+      "etapa": "10"
+    },
+    {
+      "caminho": ".app/propostas/revisao-plano.json",
+      "etapa": "10"
     }
   ],
   "kit": {
@@ -432,6 +488,9 @@
       "contexto/brutos/prints-campanhas/print-02.png",
       "contexto/brutos/prints-campanhas/print-03.png",
       "contexto/brutos/prints-campanhas/print-04.png"
+    ],
+    "10": [
+      "contexto/brutos/apresentacao-transcricao-bruta.docx"
     ]
   }
 }

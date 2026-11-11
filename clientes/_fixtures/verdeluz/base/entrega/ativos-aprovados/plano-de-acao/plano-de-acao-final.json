@@ -1,0 +1,614 @@
+{
+  "versao": 2,
+  "prospect": "Verdeluz Cosméticos Veganos (FICTÍCIO)",
+  "data_referencia": "22/10/2026",
+  "janela_prova": {
+    "inicio": "26/10/2026",
+    "fim": "25/01/2027"
+  },
+  "fim_ciclo": "30/09/2027",
+  "empresa_agencia": "Boomer",
+  "agencia_parceira": null,
+  "abertura": {
+    "cenario": "Realista",
+    "metas": [
+      {
+        "kpi": "Receita captada do mês",
+        "de": "R$ 76.412 (JAN/26)",
+        "para": "R$ 90.568 (JAN/27)",
+        "ate": "25/01/2027",
+        "fonte": "06 · Realista, JAN/27"
+      },
+      {
+        "kpi": "Taxa de conversão global",
+        "de": "1,25% (JAN/26)",
+        "para": "1,42% (JAN/27)",
+        "ate": "25/01/2027",
+        "fonte": "06 · Realista, JAN/27"
+      },
+      {
+        "kpi": "Ticket médio",
+        "de": "R$ 199,51 (JAN/26)",
+        "para": "R$ 201,69 (JAN/27)",
+        "ate": "25/01/2027",
+        "fonte": "06 · Realista, JAN/27"
+      },
+      {
+        "kpi": "Custo por sessão paga",
+        "de": "R$ 1,67 (SET/26)",
+        "para": "R$ 1,55 (JAN/27)",
+        "ate": "25/01/2027",
+        "fonte": "06 · Realista, JAN/27"
+      },
+      {
+        "kpi": "Dependência de mídia paga",
+        "de": "54,8% (SET/26)",
+        "para": "51,5% (JAN/27)",
+        "ate": "25/01/2027",
+        "fonte": "06 · Realista, JAN/27"
+      },
+      {
+        "kpi": "ROAS global",
+        "de": "3,06x (SET/26)",
+        "para": "3,60x (JAN/27)",
+        "ate": "25/01/2027",
+        "fonte": "07 · ROAS esperado, JAN/27"
+      },
+      {
+        "kpi": "Taxa de quebra",
+        "de": "7,1% (SET/26)",
+        "para": "5,5%",
+        "ate": "25/01/2027",
+        "fonte": "06 · Realista, quebra média do ciclo"
+      },
+      {
+        "kpi": "CAC",
+        "de": "R$ 112,68 (SET/26)",
+        "para": "até R$ 80",
+        "ate": "25/01/2027",
+        "fonte": "05 · P1.S1 (teto de CAC), premissa do Realista"
+      }
+    ],
+    "cabe_nos_3_meses": [
+      "Receita captada do Realista de R$ 101.959 em OUT/26, R$ 213.244 em NOV/26, R$ 145.365 em DEZ/26 e R$ 90.568 em JAN/27.",
+      "Toda a estrutura das alavancas da meta no ar e medida: regra de verba, estoque ligado à mídia, recuperação de carrinho, pagamento e as réguas de reposição e de reativação.",
+      "Quebra na média de 5,5% do Realista e CAC sob o teto de R$ 80."
+    ],
+    "nao_cabe": [
+      "Os +40% das sócias (Otimista, R$ 1.708.647) são teto, não compromisso destes 3 meses: dependem de P1.S2, P2.S2, P3.S3, P4.S3, P5.S3 e P8 com efeito pleno, que amadurece depois de JAN/27.",
+      "A dependência de mídia paga de 45% é a meta de SET/27; em JAN/27 o compromisso é 51,5%.",
+      "O efeito da reativação dos 7.176 clientes de compra única (5% de segunda compra) se mede em 12 meses; em JAN/27 só o primeiro disparo e a primeira leitura."
+    ],
+    "premissas": [
+      "Verba de mídia aprovada conforme a 07: R$ 49.304 em NOV/26, R$ 30.710 em DEZ/26 e R$ 25.135 em JAN/27 (R$ 341.683 no ciclo).",
+      "Reposição do sérum pedida na Semana 1, com prazo de 45 dias do laboratório; até lá, o alerta de cobertura protege a verba.",
+      "Margem por SKU da Curva A enviada pela Luiza até 30/10/2026.",
+      "Nuvemshop mantida (sem troca de plataforma) e consentimento do WhatsApp confirmado antes dos disparos.",
+      "O Rafael segue como gestor de tráfego freelancer, executando sob a coordenação da Boomer durante os 12 meses."
+    ],
+    "margem_contribuicao": 0.35,
+    "taxa_quebra": 0.055
+  },
+  "horizontes": [
+    {
+      "nome": "Imediato",
+      "titulo": "HORIZONTE 1 · IMEDIATO (26/10 a 30/10/2026)",
+      "intro": "Primeira semana depois da apresentação: o que destrava o resto (regra de verba, estoque, medição e margem).",
+      "acoes": [
+        {
+          "numero": 1,
+          "frente": "Mídia Paga / Canal Principal",
+          "acao": "Fixar o teto de CAC de R$ 80 e a regra de escala da verba",
+          "achado_origem": "04 · CAC: de R$ 49,53 (OUT/25) para R$ 112,68 (SET/26), +127%, e LTV/CAC de 2,77x no último mês",
+          "alavanca": "CAC",
+          "alavanca_da_meta": true,
+          "como": "A verba de cada mês segue o plano de mídia da 07 (R$ 49.304 em NOV/26, R$ 30.710 em DEZ/26 e R$ 25.135 em JAN/27). Qualquer aumento acima dele sobe em degraus de até 15% por quinzena, só se o CAC do período ficar abaixo de R$ 80 e o ROAS global acima de 3,5x; o degrau é revertido se o CAC passar do teto por 2 semanas seguidas. A Boomer registra a regra por escrito, a Luiza aprova o teto e o Rafael (gestor de tráfego freelancer, sob coordenação da Boomer) aplica a regra nas campanhas.",
+          "dono": "Gestor de tráfego · Boomer",
+          "inicio": "26/10/2026",
+          "entrega": "28/10/2026",
+          "depende_de": [],
+          "evidencia": "Regra de escala por escrito, aprovada pela Luiza, e degrau de cada quinzena registrado no painel de KPIs",
+          "kpi_meta": "CAC de R$ 112,68 (SET/26) para até R$ 80 até 25/01/2027",
+          "gatilho": "Se o CAC passar de R$ 80 por 2 semanas seguidas, então reverter o último degrau de verba e só voltar a subir quando o CAC fechar uma quinzena abaixo do teto",
+          "solucoes": [
+            "P1.S1"
+          ]
+        },
+        {
+          "numero": 2,
+          "frente": "Produto / Mix / Portfólio",
+          "acao": "Calcular o estoque de segurança dos três líderes e pedir a reposição do sérum",
+          "achado_origem": "03 · Curva ABC: o sérum responde por 22,0% do faturamento e tem 38 unidades em estoque, cerca de 7 dias de venda; ruptura em MAR e ABR",
+          "alavanca": "Receita captada (ruptura dos líderes)",
+          "alavanca_da_meta": true,
+          "como": "A Luiza passa à Boomer as vendas mensais e o saldo atual do sérum, do hidratante e do protetor. A Boomer calcula o ponto de pedido de cada um para 60 dias de venda (prazo de 45 dias do laboratório mais 15 dias de folga) e a Luiza faz o pedido de reposição do sérum nesta semana.",
+          "dono": "Gestão comercial · Cliente",
+          "inicio": "26/10/2026",
+          "entrega": "30/10/2026",
+          "depende_de": [],
+          "evidencia": "Planilha de cobertura com o ponto de pedido dos três líderes e pedido de reposição do sérum enviado ao laboratório",
+          "kpi_meta": "Cobertura do sérum de cerca de 7 dias para 60 dias de venda, com o pedido de reposição feito até 30/10/2026",
+          "gatilho": "Se o pedido de reposição do sérum não sair até 30/10/2026, então o sérum fica fora da Black Friday (Ação 14) e a verba dele vai para o hidratante, o protetor e o Kit Rotina Essencial",
+          "solucoes": [
+            "P2.S1"
+          ]
+        },
+        {
+          "numero": 3,
+          "frente": "Produto / Mix / Portfólio",
+          "acao": "Ligar o estoque à mídia com um alerta de cobertura de 7 dias",
+          "achado_origem": "07 · Prints de campanha: o sérum, com cerca de 7 dias de estoque, concentra 22% da verba do Google no mês",
+          "alavanca": "ROAS global",
+          "alavanca_da_meta": true,
+          "como": "A Bruna envia o saldo de estoque dos três líderes toda segunda-feira e sempre que um deles passar de 10 para menos de 7 dias de cobertura. No mesmo dia, o Rafael pausa as campanhas do produto e retira o item do feed do Merchant. A Boomer mantém a planilha de cobertura.",
+          "dono": "Gestor de tráfego · Boomer",
+          "inicio": "26/10/2026",
+          "entrega": "30/10/2026",
+          "depende_de": [],
+          "evidencia": "Planilha de cobertura publicada e registro semanal da checagem (e de cada pausa) no painel",
+          "kpi_meta": "Nenhum dia de anúncio ativo de líder com cobertura abaixo de 7 dias até 25/01/2027",
+          "gatilho": "Se um líder ficar com anúncio ativo e cobertura abaixo de 7 dias por mais de 1 dia, então o Rafael pausa a campanha no mesmo dia e a Bruna passa a enviar o saldo diariamente",
+          "solucoes": [
+            "P2.S3"
+          ]
+        },
+        {
+          "numero": 4,
+          "frente": "Monitoramento e Governança",
+          "acao": "Montar o painel único de KPIs conciliando GA4 e Nuvemshop",
+          "achado_origem": "03 · Atribuição: o GA4 registra 4,0% mais vendas que a Nuvemshop (6.494 contra 6.244) e o ROAS do Meta no GA4 está abaixo de 1x de JUL a SET",
+          "alavanca": "Mensuração dos KPIs da meta",
+          "alavanca_da_meta": false,
+          "como": "A Boomer cruza o relatório de pedidos da Nuvemshop (com o status de cada pedido) com as vendas do GA4, explica a diferença de 4,0% e publica o painel com investimento, sessões, pedidos aprovados, quebra e CAC. A Bruna exporta o relatório de pedidos toda segunda-feira.",
+          "dono": "Analista de dados · Boomer",
+          "inicio": "26/10/2026",
+          "entrega": "30/10/2026",
+          "depende_de": [],
+          "evidencia": "Link do painel com OUT/26 conciliado e nota explicando a diferença entre GA4 e Nuvemshop",
+          "kpi_meta": "Primeira versão do painel publicada até 30/10/2026, com a diferença de 4,0% entre GA4 e Nuvemshop explicada",
+          "gatilho": "Se o painel não estiver publicado até 30/10/2026, então a regra de escala da Ação 1 fica congelada, sem degrau novo, até o painel sair",
+          "solucoes": [
+            "P7.S1"
+          ]
+        },
+        {
+          "numero": 5,
+          "frente": "Monitoramento e Governança",
+          "acao": "Enviar a margem por SKU da Curva A e dos kits",
+          "achado_origem": "05 · Ressalvas: a margem por SKU segue pendente e é necessária para P6 e para validar P3 e P8; hoje só há a estimativa de 68% no produto e 62% nos kits",
+          "alavanca": "Margem de contribuição (descontos e kits)",
+          "alavanca_da_meta": false,
+          "como": "A Luiza pede à contabilidade a margem de cada um dos 9 SKUs da Curva A (inclusive os kits) e envia a planilha à Boomer. Com ela, a Boomer confere o brinde e os descontos da Black Friday e a margem dos novos kits.",
+          "dono": "Gestão comercial · Cliente",
+          "inicio": "26/10/2026",
+          "entrega": "30/10/2026",
+          "depende_de": [],
+          "evidencia": "Planilha de margem por SKU recebida pela Boomer",
+          "kpi_meta": "Margem dos 9 SKUs da Curva A entregue até 30/10/2026",
+          "gatilho": "Se a margem por SKU não chegar até 30/10/2026, então a Black Friday roda só com brinde, sem desconto acima de 10% em nenhum SKU",
+          "solucoes": []
+        }
+      ]
+    },
+    {
+      "nome": "Curto prazo",
+      "titulo": "HORIZONTE 2 · CURTO PRAZO (02/11 a 30/11/2026)",
+      "intro": "Até o primeiro grande marco do calendário: a Black Friday, pico de NOV. Ajustes de mídia, funil, pagamento e CRM que sustentam a meta dentro da janela de prova.",
+      "acoes": [
+        {
+          "numero": 6,
+          "frente": "Monitoramento e Governança",
+          "acao": "Criar cupom e UTM próprios para cada influenciadora",
+          "achado_origem": "03 · Mensuração: as influenciadoras (cerca de R$ 4 mil em alguns meses) não têm cupom nem UTM individuais",
+          "alavanca": "Atribuição das influenciadoras",
+          "alavanca_da_meta": false,
+          "como": "A Bruna cria na Nuvemshop um cupom por influenciadora, sem desconto extra: o benefício é um brinde (por exemplo, a nécessaire Verdeluz) acima de um valor mínimo, para não repetir o desconto do PRIMEIRA10. O Caio padroniza a bio das parceiras com o link com UTM e a Marina avisa as parceiras. A Boomer monta o relatório mensal de vendas por cupom e por link e compara com a permuta atual; nenhuma parceria é julgada antes de 60 dias com todas as parceiras ativas.",
+          "dono": "Operação do e-commerce · Cliente",
+          "inicio": "23/11/2026",
+          "entrega": "27/11/2026",
+          "depende_de": [],
+          "evidencia": "Lista de cupons ativos na Nuvemshop, um por influenciadora, e links com UTM nas bios",
+          "kpi_meta": "100% das influenciadoras ativas com cupom (sem desconto extra) e UTM próprios até 27/11/2026",
+          "gatilho": "Se alguma influenciadora seguir sem cupom próprio depois de 27/11/2026, então a permuta dela fica suspensa até o cupom estar ativo",
+          "solucoes": [
+            "P7.S2"
+          ]
+        },
+        {
+          "numero": 7,
+          "frente": "Mídia Paga / Canal Principal",
+          "acao": "Separar as campanhas de aquisição e de recompra",
+          "achado_origem": "04 · CAC: verba do segundo semestre 43% maior e 17% menos clientes novos (de 2.091 para 1.732)",
+          "alavanca": "CAC",
+          "alavanca_da_meta": true,
+          "como": "O Rafael cria campanhas distintas para público novo (CAC de até R$ 80) e para clientes existentes (ROAS próprio, maior), para a recompra não mascarar o custo de trazer cliente novo. A Boomer confere o resultado separado no painel.",
+          "dono": "Gestor de tráfego · Boomer",
+          "inicio": "02/11/2026",
+          "entrega": "06/11/2026",
+          "depende_de": [
+            1
+          ],
+          "evidencia": "Print do gerenciador do Meta e do Google com as campanhas de aquisição e de recompra separadas, cada uma com meta própria",
+          "kpi_meta": "CAC de aquisição medido em separado a partir de NOV/26 e de R$ 112,68 (SET/26) para até R$ 80 até 25/01/2027",
+          "gatilho": "Se o CAC da campanha de aquisição passar de R$ 80 por 2 semanas, então reverter o último degrau de verba da aquisição, sem tocar na recompra",
+          "solucoes": [
+            "P1.S3"
+          ]
+        },
+        {
+          "numero": 8,
+          "frente": "Mídia Paga / Canal Principal",
+          "acao": "Realocar 15% da prospecção ampla do Meta para Google Shopping, Performance Max e remarketing",
+          "achado_origem": "03 · Conversão: Meta em 0,80% (abaixo de 1% nos 12 meses) e Google em 2,05%; ROAS global de 6,48x para 3,06x (-53%)",
+          "alavanca": "Custo por sessão paga e ROAS global",
+          "alavanca_da_meta": true,
+          "como": "O Rafael move a verba seguindo a alocação da 07: Meta a 62% e Google a 38% em NOV/26, e Google de 42% a 48% nos meses seguintes. Avaliar o CAC por plataforma por 2 semanas antes de qualquer novo ajuste.",
+          "dono": "Gestor de tráfego · Boomer",
+          "inicio": "02/11/2026",
+          "entrega": "13/11/2026",
+          "depende_de": [
+            1
+          ],
+          "evidencia": "Print da distribuição de verba por plataforma em 13/11/2026 e tabela de alocação atualizada no painel",
+          "kpi_meta": "Custo por sessão paga de R$ 1,67 (SET/26) para R$ 1,55 e ROAS global de 3,06x (SET/26) para 3,60x em JAN/27",
+          "gatilho": "Se o CAC do Google passar de R$ 80 por 2 semanas depois da realocação, então devolver metade dos 15% ao Meta e manter o restante no remarketing",
+          "solucoes": [
+            "P1.S2"
+          ]
+        },
+        {
+          "numero": 9,
+          "frente": "Eficiência Operacional",
+          "acao": "Ativar a recuperação de carrinho em 3 toques",
+          "achado_origem": "03 · Conversão: abandono de carrinho de 78% declarado e um único e-mail de recuperação, uma hora depois",
+          "alavanca": "Taxa de conversão",
+          "alavanca_da_meta": true,
+          "como": "A Boomer escreve a sequência de 1 hora, 24 horas e 72 horas com o produto abandonado e a avaliação mais relevante. A Bruna configura o fluxo na ferramenta de e-mail e confirma o consentimento do WhatsApp. Medir a recuperação por toque desde o primeiro dia.",
+          "dono": "Operação do e-commerce · Cliente",
+          "inicio": "02/11/2026",
+          "entrega": "13/11/2026",
+          "depende_de": [],
+          "evidencia": "Fluxo de 3 toques ativo na ferramenta de e-mail (print) e relatório de recuperação por toque",
+          "kpi_meta": "Conversão global de 1,25% (JAN/26) para 1,42% em JAN/27",
+          "gatilho": "Se a recuperação dos 3 toques não superar a do e-mail único atual em 2 semanas, então a Boomer reescreve o segundo e o terceiro toques e passa o WhatsApp a primeiro canal",
+          "solucoes": [
+            "P5.S1"
+          ]
+        },
+        {
+          "numero": 10,
+          "frente": "Eficiência Operacional",
+          "acao": "Mostrar frete e prazo por CEP na página de produto e no carrinho",
+          "achado_origem": "02 · Hipótese de funil: a página de frete e trocas fica no rodapé; 03 · conversão do Google abaixo de 2% desde JUN",
+          "alavanca": "Taxa de conversão",
+          "alavanca_da_meta": true,
+          "como": "A Bruna ativa o cálculo de frete por CEP na Nuvemshop, inclui o aviso de frete grátis (acima de R$ 249 no Sul e Sudeste e de R$ 349 nas demais regiões) nas páginas de produto e no carrinho e coloca a página de frete e trocas no menu principal. A Boomer confere as páginas dos três líderes.",
+          "dono": "Operação do e-commerce · Cliente",
+          "inicio": "02/11/2026",
+          "entrega": "13/11/2026",
+          "depende_de": [],
+          "evidencia": "Prints das páginas do sérum, do hidratante e do protetor com o cálculo por CEP e da página de frete e trocas no menu",
+          "kpi_meta": "Cálculo por CEP no ar nos três líderes até 13/11/2026, sustentando a conversão de 1,42% em JAN/27",
+          "gatilho": "Se o cálculo por CEP não estiver no ar até 13/11/2026, então a regra de frete grátis entra como faixa fixa no topo das páginas dos líderes antes da campanha de 23/11/2026",
+          "solucoes": [
+            "P5.S2"
+          ]
+        },
+        {
+          "numero": 11,
+          "frente": "Eficiência Operacional",
+          "acao": "Revisar o antifraude e ativar a nova tentativa de captura dos cartões recusados",
+          "achado_origem": "03 · Quebra por meio de pagamento: cartão com 7,5% de quebra, 66% da perda (R$ 52,4 mil)",
+          "alavanca": "Taxa de quebra",
+          "alavanca_da_meta": true,
+          "como": "A Bruna pede ao gateway o relatório de recusas por emissor dos últimos 90 dias, revisa com o suporte as regras de antifraude que mais recusam e ativa a nova tentativa de captura com oferta de outro cartão ou do PIX. A Boomer acompanha a quebra do cartão no painel.",
+          "dono": "Operação do e-commerce · Cliente",
+          "inicio": "02/11/2026",
+          "entrega": "20/11/2026",
+          "depende_de": [],
+          "evidencia": "Relatório de recusas por emissor, regras alteradas registradas pelo gateway e nova tentativa ativa (print)",
+          "kpi_meta": "Quebra total de 7,1% (SET/26) para 5,5% até 25/01/2027",
+          "gatilho": "Se a quebra do cartão continuar acima de 7,5% por 2 semanas depois da mudança, então a Bruna pede ao gateway a revisão das regras do emissor com mais recusas e a troca de antifraude entra na reunião mensal",
+          "solucoes": [
+            "P4.S1"
+          ]
+        },
+        {
+          "numero": 12,
+          "frente": "Eficiência Operacional",
+          "acao": "Enviar lembrete 30 minutos antes de o PIX expirar",
+          "achado_origem": "03 · Quebra por meio de pagamento: PIX com 3,6% de quebra, 21% da perda",
+          "alavanca": "Taxa de quebra",
+          "alavanca_da_meta": true,
+          "como": "A Boomer escreve a mensagem, com a opção de gerar um novo código com um clique, e a Bruna configura o gatilho na plataforma de pagamento, por e-mail e, com consentimento, por WhatsApp. Medir a taxa de pagamento dos PIX lembrados contra os não lembrados.",
+          "dono": "Operação do e-commerce · Cliente",
+          "inicio": "02/11/2026",
+          "entrega": "20/11/2026",
+          "depende_de": [],
+          "evidencia": "Gatilho ativo na plataforma de pagamento (print) e relatório de pagamento dos PIX lembrados contra os não lembrados",
+          "kpi_meta": "Quebra total de 7,1% (SET/26) para 5,5% até 25/01/2027, com a do PIX abaixo de 3,6%",
+          "gatilho": "Se a taxa de pagamento dos PIX lembrados não superar a dos não lembrados em 2 semanas, então o lembrete passa a sair primeiro por WhatsApp, com o código novo no corpo da mensagem",
+          "solucoes": [
+            "P4.S2"
+          ]
+        },
+        {
+          "numero": 13,
+          "frente": "Produto / Mix / Portfólio",
+          "acao": "Qualificar o segundo fornecedor de embalagem do sérum",
+          "achado_origem": "02 · Gargalo de estoque: fornecedor único de embalagem e prazo de 45 dias do laboratório; ruptura de 2 semanas em MAR e 1,5 em ABR",
+          "alavanca": "Receita captada (ruptura nos picos)",
+          "alavanca_da_meta": false,
+          "como": "A Marina leva ao laboratório a conversa de prazo já marcada, pede prioridade de produção para o sérum, o hidratante e o protetor e cota ao menos um segundo fornecedor de embalagem. A Boomer recebe o prazo combinado e atualiza o ponto de pedido.",
+          "dono": "Gestão de produto · Cliente",
+          "inicio": "02/11/2026",
+          "entrega": "27/11/2026",
+          "depende_de": [
+            2
+          ],
+          "evidencia": "Cotação do segundo fornecedor e prazo de prioridade confirmado por escrito pelo laboratório",
+          "kpi_meta": "Segundo fornecedor cotado e prazo de produção dos três líderes confirmado até 27/11/2026",
+          "gatilho": "Se o laboratório não confirmar a prioridade até 27/11/2026, então a Boomer recalcula o ponto de pedido com o prazo atual e a Marina antecipa para JAN/2027 o pedido de reposição do Dia das Mães",
+          "solucoes": [
+            "P2.S2"
+          ]
+        },
+        {
+          "numero": 14,
+          "frente": "Redução de Dependências",
+          "acao": "Rodar a Black Friday com brinde, até 20% de desconto e lista de espera",
+          "achado_origem": "03 · Sazonalidade: NOV/25 concentra 15,6% da receita do ano (R$ 190,3 mil) com 35% de desconto no kit e no sérum",
+          "alavanca": "Receita captada de NOV",
+          "alavanca_da_meta": true,
+          "como": "A Marina e a Luiza definem o brinde (por exemplo, a nécessaire Verdeluz acima de um valor mínimo) com a margem da Curva A. A Bruna abre a lista de espera no site em 02/11 e a Boomer envia e-mail e WhatsApp (com consentimento) à base antes de ligar a mídia fria. Campanha de 23/11 a 30/11/2026, com desconto de até 20% e o sérum com no máximo 10%. Conferir o estoque do sérum antes de abrir a campanha.",
+          "dono": "Estrategista de marketing · Boomer",
+          "inicio": "02/11/2026",
+          "entrega": "30/11/2026",
+          "depende_de": [
+            2,
+            5
+          ],
+          "evidencia": "Página da lista de espera no ar em 02/11/2026, disparos à base registrados na ferramenta de e-mail e campanha no ar de 23/11 a 30/11/2026",
+          "kpi_meta": "Receita captada de NOV de R$ 190.258 (NOV/25) para R$ 213.244 em NOV/26, com desconto máximo de 20% (35% em NOV/25)",
+          "gatilho": "Se a cobertura do sérum estiver abaixo de 7 dias em 20/11/2026, então o sérum sai da campanha e a verba da Black Friday vai para o Kit Rotina Essencial, o hidratante e o protetor",
+          "solucoes": [
+            "P6.S1",
+            "P6.S2"
+          ]
+        },
+        {
+          "numero": 15,
+          "frente": "Redução de Dependências",
+          "acao": "Lançar a régua de reposição por produto",
+          "achado_origem": "04 · Recorrência: 69,0% da base (7.176 clientes) comprou uma vez só e o sérum dura cerca de 60 dias sem lembrete de reposição",
+          "alavanca": "Dependência de mídia paga",
+          "alavanca_da_meta": true,
+          "como": "A Boomer desenha os fluxos (sérum aos 45 dias, protetor e hidratante aos 55 dias) e a mensagem de cada toque. A Bruna configura na ferramenta de e-mail, com a data do último pedido como gatilho, e, com consentimento, no WhatsApp. Medir a segunda compra de quem recebe a régua contra quem não recebe.",
+          "dono": "Estrategista de CRM · Boomer",
+          "inicio": "09/11/2026",
+          "entrega": "27/11/2026",
+          "depende_de": [],
+          "evidencia": "Três fluxos ativos na ferramenta de e-mail (print) e primeiro relatório de disparos",
+          "kpi_meta": "Dependência de mídia paga de 54,8% (SET/26) para 51,5% em JAN/27",
+          "gatilho": "Se a segunda compra de quem recebe a régua não superar a de quem não recebe em 30 dias, então a Boomer troca a oferta do segundo toque pelo kit que complementa o produto",
+          "solucoes": [
+            "P3.S1"
+          ]
+        },
+        {
+          "numero": 16,
+          "frente": "Monitoramento e Governança",
+          "acao": "Configurar os eventos de funil no GA4",
+          "achado_origem": "03 · Mensuração: sem dados de funil (carrinho e checkout); o abandono de 78% é declarado, não medido",
+          "alavanca": "Taxa de conversão (medição por etapa)",
+          "alavanca_da_meta": false,
+          "como": "O Rafael cria os eventos de visualização de produto, carrinho, início do checkout, pagamento e compra e confere um pedido de teste em cada etapa. A Boomer leva ao painel a adição ao carrinho, o carrinho para checkout e o checkout para compra.",
+          "dono": "Gestor de tráfego · Boomer",
+          "inicio": "02/11/2026",
+          "entrega": "13/11/2026",
+          "depende_de": [
+            4
+          ],
+          "evidencia": "Pedido de teste registrado em cada evento no GA4 (print) e etapas do funil no painel",
+          "kpi_meta": "5 eventos de funil registrando 100% dos pedidos de teste até 13/11/2026",
+          "gatilho": "Se os eventos não estiverem validados até 13/11/2026, então a Black Friday é medida pelo relatório de carrinhos da Nuvemshop e a configuração fica concluída até 04/12/2026",
+          "solucoes": [
+            "P7.S3"
+          ]
+        },
+        {
+          "numero": 17,
+          "frente": "Monitoramento e Governança",
+          "acao": "Instituir a reunião mensal de resultados com os gatilhos de escala e contenção",
+          "achado_origem": "06 · Ressalvas: a meta Realista só fecha com conversão perto de 1,8% no platô, CAC sob o teto de R$ 80 e sem nova ruptura",
+          "alavanca": "KPIs da meta (governança)",
+          "alavanca_da_meta": false,
+          "como": "Usar a reunião de resultados que a Verdeluz já tem, no primeiro dia útil depois do dia 10, quando a contabilidade fecha o mês. Pauta fixa: painel de KPIs, CAC contra o teto de R$ 80, ROAS global, quebra, cobertura dos líderes e andamento das ações. Gatilho de contenção: CAC acima do teto por 2 semanas ou cobertura do sérum abaixo de 7 dias.",
+          "dono": "Analista de dados · Boomer",
+          "inicio": "23/11/2026",
+          "entrega": "27/11/2026",
+          "depende_de": [
+            4
+          ],
+          "evidencia": "Pauta fixa aprovada pelas sócias e convites da reunião de 11/12/2026 e dos meses seguintes enviados",
+          "kpi_meta": "Primeira reunião em 11/12/2026 e uma por mês, no primeiro dia útil depois do dia 10, até SET/27",
+          "gatilho": "Se a pauta não estiver aprovada até 27/11/2026, então a reunião de 11/12/2026 usa a pauta da Boomer e a aprovação passa para essa reunião",
+          "solucoes": []
+        }
+      ]
+    },
+    {
+      "nome": "Médio prazo",
+      "titulo": "HORIZONTE 3 · MÉDIO PRAZO (DEZ/2026 a SET/2027)",
+      "intro": "Até o fim do ciclo do cenário. As alavancas da meta (reativação, prova social, boleto e kit) ficam prontas até JAN/2027; o resto prepara o Dia das Mães (MAI/2027) e distribui a demanda do ano.",
+      "acoes": [
+        {
+          "numero": 18,
+          "frente": "Eficiência Operacional",
+          "acao": "Incluir prova social e atualizar as fotos dos kits",
+          "achado_origem": "03 · Conversão do Meta em 0,80%; 05 · ponto forte: mais de 900 avaliações do sérum; fotos de alguns kits antigas",
+          "alavanca": "Taxa de conversão",
+          "alavanca_da_meta": true,
+          "como": "O Caio e a Bruna escolhem as avaliações mais relevantes do sérum, do hidratante e do protetor e põem o selo vegano em destaque nas páginas dos três líderes e dos kits principais. As fotos novas de todos os kits saem da sessão que o Caio já tem marcada para a primeira semana de dezembro, e a Marina aprova as fotos.",
+          "dono": "Conteúdo · Cliente",
+          "inicio": "01/12/2026",
+          "entrega": "15/01/2027",
+          "depende_de": [],
+          "evidencia": "Prints das páginas dos três líderes e dos kits principais com o bloco de avaliações e as fotos novas",
+          "kpi_meta": "Conversão global de 1,25% (JAN/26) para 1,42% em JAN/27",
+          "gatilho": "Se as páginas não estiverem atualizadas até 15/01/2027, então os anúncios dos kits seguem só com as fotos aprovadas dos líderes e a atualização entra na reunião de FEV/2027",
+          "solucoes": [
+            "P5.S3"
+          ]
+        },
+        {
+          "numero": 19,
+          "frente": "Eficiência Operacional",
+          "acao": "Reduzir o vencimento do boleto para 2 dias e priorizar o PIX",
+          "achado_origem": "03 · Quebra por meio de pagamento: boleto com 17,0% de quebra, 13% da perda",
+          "alavanca": "Taxa de quebra",
+          "alavanca_da_meta": true,
+          "como": "A Bruna altera o prazo do boleto na plataforma de pagamento, ativa o lembrete no dia do vencimento e põe o PIX em primeiro na tela de pagamento. A Boomer acompanha a quebra do boleto no painel.",
+          "dono": "Operação do e-commerce · Cliente",
+          "inicio": "01/12/2026",
+          "entrega": "11/12/2026",
+          "depende_de": [],
+          "evidencia": "Prints da configuração do boleto (2 dias), do lembrete no dia do vencimento e da tela de pagamento com o PIX em primeiro",
+          "kpi_meta": "Quebra total de 7,1% (SET/26) para 5,5% até 25/01/2027, com a do boleto abaixo de 17,0%",
+          "gatilho": "Se a quebra do boleto continuar acima de 17,0% em JAN/2027, então a Boomer recomenda tirar o boleto da tela de pagamento e a Luiza decide na reunião de FEV/2027, pelo critério da parcela de pedidos de boleto que migra para o PIX",
+          "solucoes": [
+            "P4.S3"
+          ]
+        },
+        {
+          "numero": 20,
+          "frente": "Produto / Mix / Portfólio",
+          "acao": "Lançar dois novos kits a partir da Curva A",
+          "achado_origem": "03 · Curva ABC: kits somam 24,0% do faturamento (7 kits) e têm ticket maior que o avulso",
+          "alavanca": "Ticket médio",
+          "alavanca_da_meta": false,
+          "como": "A Marina e a Luiza fecham a composição (sérum com protetor, e hidratante com limpeza) e o preço com a margem por SKU. A Boomer define a verba de lançamento dentro da alocação de ABR da 07. O estoque de segurança dos componentes fica pronto antes do lançamento.",
+          "dono": "Gestão de produto · Cliente",
+          "inicio": "04/01/2027",
+          "entrega": "31/03/2027",
+          "depende_de": [
+            2,
+            5
+          ],
+          "evidencia": "Kits publicados no site com preço e margem validados e estoque dos componentes registrado na planilha de cobertura",
+          "kpi_meta": "Dois kits no ar até 31/03/2027, antes do pré-aquecimento do Dia das Mães (R$ 177.845 de receita captada em MAI/27)",
+          "gatilho": "Se os kits não estiverem no ar até 31/03/2027, então o pré-aquecimento do Dia das Mães usa só o Kit Rotina Essencial e os novos kits entram depois de MAI/2027",
+          "solucoes": [
+            "P8.S1"
+          ]
+        },
+        {
+          "numero": 21,
+          "frente": "Produto / Mix / Portfólio",
+          "acao": "Revisar os 38 SKUs da Curva C e definir o destino de cada um",
+          "achado_origem": "03 · Curva ABC: a Curva C reúne 38 SKUs que somam 5,4% do faturamento (cerca de R$ 63 mil)",
+          "alavanca": "Ticket médio (mix)",
+          "alavanca_da_meta": false,
+          "como": "A Boomer lista os SKUs abaixo de R$ 5 mil por ano. A Marina decide o destino de cada um (descontinuar, brinde ou adicional) e a Luiza confirma o estoque parado. Nenhum SKU sai de linha antes do Dia das Mães: a descontinuação aprovada vale a partir de JUN/2027. Os brindes alimentam a Black Friday seguinte.",
+          "dono": "Gestão de produto · Cliente",
+          "inicio": "01/02/2027",
+          "entrega": "31/03/2027",
+          "depende_de": [
+            5
+          ],
+          "evidencia": "Lista dos 38 SKUs com o destino de cada um aprovada pela Marina",
+          "kpi_meta": "Destino definido para os 38 SKUs até 31/03/2027, com os abaixo de R$ 5 mil por ano descontinuados a partir de JUN/2027",
+          "gatilho": "Se a lista não estiver aprovada até 31/03/2027, então a Curva C segue sem campanha própria, como define a 07, e o item adicional da Ação 22 começa com um único SKU",
+          "solucoes": [
+            "P8.S2"
+          ]
+        },
+        {
+          "numero": 22,
+          "frente": "Produto / Mix / Portfólio",
+          "acao": "Oferecer um item adicional no carrinho dos três líderes",
+          "achado_origem": "03 · Curva ABC e ticket médio de R$ 195,46; 07 · uma venda paga custa R$ 109,90, mais que o preço médio de um SKU da Curva C (R$ 63,98)",
+          "alavanca": "Ticket médio",
+          "alavanca_da_meta": false,
+          "como": "A Bruna escolhe o item entre os SKUs da Curva C com estoque, ativa a oferta no carrinho do sérum, do hidratante e do protetor e mede a adesão. A Boomer acompanha o efeito no ticket médio.",
+          "dono": "Operação do e-commerce · Cliente",
+          "inicio": "01/04/2027",
+          "entrega": "30/04/2027",
+          "depende_de": [
+            21
+          ],
+          "evidencia": "Oferta ativa no carrinho dos três líderes (print) e taxa de adesão no painel",
+          "kpi_meta": "Ticket médio de R$ 208,85 (MAI/26) para R$ 214,16 em MAI/27",
+          "gatilho": "Se o ticket médio de ABR/2027 ficar abaixo dos R$ 196,09 do Realista por 2 semanas, então trocar o item adicional por outro SKU da Curva C com estoque",
+          "solucoes": [
+            "P8.S3"
+          ]
+        },
+        {
+          "numero": 23,
+          "frente": "Redução de Dependências",
+          "acao": "Configurar e disparar a reativação dos 7.176 clientes de compra única",
+          "achado_origem": "04 · Recorrência: 7.176 clientes (69,0%) com 1 compra; LTV de R$ 578,17 dos recorrentes contra R$ 191,95 da compra única",
+          "alavanca": "Dependência de mídia paga (pedidos de recorrentes)",
+          "alavanca_da_meta": true,
+          "como": "A Boomer segmenta os 7.176 clientes pelo primeiro produto comprado e escreve a oferta do kit que complementa esse produto, sem desconto profundo. A Bruna configura a régua e faz o primeiro disparo até 08/01/2027, no vale de JAN: por e-mail para toda a base e por WhatsApp só para quem comprou a partir de ABR/2026, quando o consentimento passou a ser registrado no checkout. O segundo envio sai em FEV/2027.",
+          "dono": "Estrategista de CRM · Boomer",
+          "inicio": "01/12/2026",
+          "entrega": "08/01/2027",
+          "depende_de": [
+            15
+          ],
+          "evidencia": "Régua configurada com os segmentos por produto e relatório do primeiro disparo (enviados, aberturas e pedidos)",
+          "kpi_meta": "Segunda compra de 5% dos 7.176 clientes em 12 meses, com o primeiro disparo até 08/01/2027 e dependência de mídia paga de 51,5% em JAN/27",
+          "gatilho": "Se o primeiro disparo não sair até 08/01/2027, então a reativação vira o primeiro item da reunião de FEV/2027 e a régua de reposição (Ação 15) cobre a base em JAN",
+          "solucoes": [
+            "P3.S2"
+          ]
+        },
+        {
+          "numero": 24,
+          "frente": "Redução de Dependências",
+          "acao": "Convidar o comprador de avulso para o Kit Rotina Essencial",
+          "achado_origem": "04 · Recorrência: os pedidos de recorrentes não crescem (1.237 e 1.184 entre os semestres); 03 · kits com ticket maior que o avulso",
+          "alavanca": "Ticket médio",
+          "alavanca_da_meta": true,
+          "como": "A Bruna inclui o convite no fluxo de pós-compra e no e-mail de reposição, com frete grátis como benefício. A Marina valida o benefício de frete com a margem do kit. A Boomer mede a participação de kits nos pedidos de recorrentes.",
+          "dono": "Operação do e-commerce · Cliente",
+          "inicio": "01/12/2026",
+          "entrega": "18/12/2026",
+          "depende_de": [
+            15,
+            5
+          ],
+          "evidencia": "Convite ativo no pós-compra e na régua de reposição (print) e participação de kits nos pedidos de recorrentes no painel",
+          "kpi_meta": "Ticket médio de R$ 199,51 (JAN/26) para R$ 201,69 em JAN/27",
+          "gatilho": "Se a participação de kits nos pedidos de recorrentes não subir em 30 dias, então trocar o frete grátis pela nécessaire Verdeluz como benefício, dentro da margem do kit",
+          "solucoes": [
+            "P3.S3"
+          ]
+        },
+        {
+          "numero": 25,
+          "frente": "Redução de Dependências",
+          "acao": "Definir duas ou três datas menores no calendário com campanha de kit",
+          "achado_origem": "03 · Sazonalidade: NOV/25 concentra 15,6% da receita do ano e DEZ cai para R$ 126,1 mil",
+          "alavanca": "Concentração da receita em NOV",
+          "alavanca_da_meta": false,
+          "como": "A Boomer propõe em DEZ/2026 o calendário (por exemplo, o aniversário da marca e o Dia do Cliente) e a mecânica de kit de cada data, sem desconto profundo. A Marina e a Luiza escolhem as datas com a margem por SKU. A primeira data roda a partir de AGO/2027, com meta de receita própria no painel.",
+          "dono": "Estrategista de marketing · Boomer",
+          "inicio": "01/12/2026",
+          "entrega": "31/08/2027",
+          "depende_de": [
+            5
+          ],
+          "evidencia": "Calendário das datas aprovado pelas sócias e campanha da primeira data no ar",
+          "kpi_meta": "Participação de NOV na receita captada do ciclo de 15,6% (NOV/25) para 13,4% (Realista)",
+          "gatilho": "Se a primeira data menor não estiver no ar até 31/08/2027, então a campanha de kit se concentra no Dia do Cliente, em SET/2027, e a outra data fica fora deste ciclo",
+          "solucoes": [
+            "P6.S3"
+          ]
+        }
+      ]
+    }
+  ]
+}

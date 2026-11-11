@@ -105,6 +105,17 @@
       "handoff": "Esta é a última etapa do processo. A apresentação está pronta em entrega/apresentacao-final.pptx e abre no Google Slides (Arquivo, Importar slides) ou no PowerPoint. Antes de enviar ao prospect, vale abrir o arquivo e conferir os slides de tabela ao lado de texto, onde o título pode ficar sob a imagem. Para o plano de ação, suba o `.docx` no Drive se quiser o link no slide. Também é bom fechar com o cliente as pendências da Semana 1: a margem por SKU da Curva A, o brinde da Black Friday, o estoque de segurança e o segundo fornecedor de embalagem.",
       "origem": "app",
       "observacao": null
+    },
+    "10": {
+      "status": "concluida",
+      "sessionId": null,
+      "iniciadaEm": "2026-10-22T19:00:00.000Z",
+      "concluidaEm": "2026-10-22T19:55:00.000Z",
+      "sinalizada": true,
+      "resumoDecisoes": "## 10 · Revisão pós-apresentação: Verdeluz Cosméticos Veganos (FICTÍCIO)\n\nPlano final aprovado em documento (`plano-de-acao-final.docx`) e planilha (`plano-de-acao-final.xlsx`), gerados do mesmo JSON pelo `scripts/gerar_plano_acao.py`. O plano apresentado (`plano-de-acao-estrategico.*`) fica como registro. `validar_revisao.py` em modo final e `validar_plano_acao.py` sem erro e sem aviso: 25 ações, 24 soluções cobertas.\n\n### Abertura\n- **Data de hoje:** 23/11/2026. **Reunião de apresentação:** 22/11/2026, cerca de 34 minutos.\n- **Participantes:** Camila (estrategista) e Rafael (gestor de tráfego, freelancer sob coordenação da Boomer) pela Boomer; Marina e Luiza (sócias) pela Verdeluz.\n\n### Complementos aplicados\n- **Complemento 1 · Ação 17:** reunião mensal de resultados no primeiro dia útil depois do dia 10, quando a contabilidade fecha o mês. Primeira reunião em 11/12/2026.\n- **Complemento 2 · Ação 18:** fotos novas de todos os kits na sessão que o Caio já tem marcada para a primeira semana de dezembro.\n- **Complemento 3 · Ação 23:** reativação por e-mail para toda a base e por WhatsApp só para quem comprou a partir de ABR/2026 (consentimento registrado no checkout).\n\n### Decisões do analista\n- **Conflito 1 · Ação 6 (cupom e UTM por influenciadora): Opção C.** Cupom próprio por parceira sem desconto extra, com brinde como benefício, mais a UTM no link da bio, e 60 dias com todas as parceiras ativas antes de julgar. O \"já testamos cupom de primeira compra\" foi investigado: duas parceiras, três semanas, 10% na primeira compra e sem link. O teste mediu se o desconto convencia, não quanto cada parceira vende, e não invalida a recomendação. A ação passa a 23/11 a 27/11/2026 e sai do Imediato para o Curto prazo.\n- **Conflito 2 · Ação 21 (Curva C): Opção C.** A revisão segue em FEV e MAR/2027, e a descontinuação aprovada só vale a partir de JUN/2027, depois do Dia das Mães. A ação 22 (item adicional no carrinho) não muda.\n- **Ponto em aberto 1 · Assinatura do sérum:** confirmar com a Marina até 11/12/2026, na primeira reunião de resultados.\n- **Ponto em aberto 2 · TikTok:** descartado nesta versão. Segue orgânico, sem linha na verba aprovada na 07, e volta à pauta da reunião de resultados se crescer.\n- **Compromisso 1 · Pauta da reunião mensal até 27/11/2026:** no plano (ação 17).\n- **Compromisso 2 · Texto do rótulo novo do sérum:** fora do escopo. A Camila faz uma leitura única, como cortesia, e alinha com as sócias na reunião de 11/12/2026 que revisão de rótulo não faz parte do Growth Cycle.\n\n### O que mudou no plano\n- **Incluídas:** nenhuma. **Removidas:** nenhuma.\n- **Alteradas:** ação 6 (Conflito 1: Opção C; como, início, entrega, KPI, gatilho e horizonte), ação 17 (Complemento 1; como, evidência, KPI e gatilho), ação 18 (Complemento 2; como), ação 21 (Conflito 2: Opção C; como e KPI) e ação 23 (Complemento 3; como).\n\n### Cobertura da meta e coerência\n- Nenhuma alavanca da meta ficou mais fraca: CAC (ações 1 e 7), custo por sessão paga (8), ROAS global (3 e 8), taxa de quebra (11, 12 e 19), dependência de mídia paga (15 e 23) e ticket médio (24) seguem com as mesmas ações. Receita captada (ações 2 e 14) e conversão (9, 10 e 18) também, embora o relatório as marque sem ação porque o nome da alavanca nessas ações não repete o nome exato do KPI.\n- Nenhuma mudança de meta, verba ou cenário: os números batem com o deck. Documento e planilha saem do mesmo JSON.\n\n### Pendências\n- Ponto em aberto 1 · Assinatura do sérum: confirmar até 11/12/2026.\n\n### Pergunta-guia\n- \"Se o cliente fizer exatamente isto, e só isto, por 3 meses, eu apostaria o dinheiro do projeto que o resultado vem?\" Resposta do analista: sim.",
+      "handoff": "Nesta sessão, o plano de ação foi revisado com o que o cliente trouxe na reunião de apresentação. O plano final, em documento Word e planilha Excel, é o que vai para a entrega formal ao cliente; o plano apresentado fica guardado como registro. Não preciso de mais nada: esta era a última etapa do Growth Cycle.",
+      "origem": "app",
+      "observacao": null
     }
   },
   "entregaveis": [
@@ -575,6 +586,42 @@
       "ajustePedido": null,
       "criadoEm": "2026-10-22T17:30:00.000Z",
       "decididoEm": "2026-10-22T17:50:00.000Z"
+    },
+    {
+      "id": "8b01f5d4-76a6-46b3-4d1a-2375236ba2c0",
+      "etapa": "10",
+      "tipo": "secao",
+      "titulo": "Revisão do plano de ação pós-apresentação",
+      "arquivoRascunho": ".app/propostas/8b01f5d4-76a6-46b3-4d1a-2375236ba2c0.md",
+      "nomeFinal": "revisao-pos-apresentacao",
+      "status": "aprovado",
+      "ajustePedido": null,
+      "criadoEm": "2026-10-22T19:30:00.000Z",
+      "decididoEm": "2026-10-22T19:50:00.000Z"
+    },
+    {
+      "id": "befefdb5-0042-9752-5b9b-0ffa2d698dc7",
+      "etapa": "10",
+      "tipo": "documento",
+      "titulo": "Plano de ação final",
+      "arquivoRascunho": ".app/propostas/befefdb5-0042-9752-5b9b-0ffa2d698dc7.docx",
+      "nomeFinal": "plano-de-acao-final",
+      "status": "aprovado",
+      "ajustePedido": null,
+      "criadoEm": "2026-10-22T19:30:00.000Z",
+      "decididoEm": "2026-10-22T19:50:00.000Z"
+    },
+    {
+      "id": "b4f58ac6-a029-b14c-6232-ae19995f165d",
+      "etapa": "10",
+      "tipo": "planilha",
+      "titulo": "Plano de ação final (planilha)",
+      "arquivoRascunho": ".app/propostas/b4f58ac6-a029-b14c-6232-ae19995f165d.xlsx",
+      "nomeFinal": "plano-de-acao-final",
+      "status": "aprovado",
+      "ajustePedido": null,
+      "criadoEm": "2026-10-22T19:30:00.000Z",
+      "decididoEm": "2026-10-22T19:50:00.000Z"
     }
   ],
   "insumos": [
@@ -647,6 +694,16 @@
       "resumo": "4 prints de campanha",
       "arquivo": "contexto/brutos/prints-campanhas/print-01.png",
       "atualizadoEm": "2026-10-22T17:05:00.000Z"
+    },
+    {
+      "etapa": "10",
+      "insumoId": "apresentacao-transcricao",
+      "status": "valido",
+      "problemas": [],
+      "avisos": [],
+      "resumo": "Transcrição da reunião de apresentação (22/11/2026)",
+      "arquivo": "contexto/brutos/apresentacao-transcricao-bruta.docx",
+      "atualizadoEm": "2026-10-22T19:05:00.000Z"
     }
   ],
   "perguntas": [],
