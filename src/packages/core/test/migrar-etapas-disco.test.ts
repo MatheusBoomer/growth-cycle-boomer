@@ -351,9 +351,10 @@ describe("migrarFixture", () => {
     expect(estado.entregaveis.map((e) => [e.id, e.etapa])).toEqual([["p8", "07"]])
 
     // O leitor oficial do fixture aceita o resultado: manifesto, base/ e estado batem entre si. A migração não cria a
-    // etapa 10 (nasceu depois dela); o fixture a ganha na montagem, aqui acrescentada à mão.
-    await writeFile(path.join(pasta, "estado-completo.json"), JSON.stringify({ ...estado, etapas: { ...estado.etapas, "10": etapaVazia("concluida") } }))
+    // etapa 10 (nasceu depois dela): o leitor completa a chave que falta, como faz com o estado de um prospect.
+    expect(estado.etapas["10"]).toBeUndefined()
     const fixture = await carregarFixture(raiz, "antigo")
+    expect(fixture.estadoCompleto.etapas["10"]?.status).toBe("bloqueada")
     expect(fixture.manifesto.arquivos).toHaveLength(manifesto.arquivos.length)
     // A pasta temporária de remoções não sobra.
     expect(depois.some((c) => c.includes("migrar-etapas-removidos"))).toBe(false)
