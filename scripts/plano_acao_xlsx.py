@@ -17,6 +17,7 @@ from plano_acao_comum import (
     ErroPlano,
     acoes_cronologicas_com_horizonte,
     ler_data,
+    limpar_texto,
     texto_depende,
     texto_piso_roas,
 )
@@ -68,7 +69,7 @@ def _escrever_acoes(ws, plano: dict, *, com_estilo: bool) -> int:
             ws.column_dimensions[get_column_letter(col)].width = LARGURAS[col - 1]
     for linha, (horizonte, a) in enumerate(pares, start=2):
         for col, valor in enumerate(_valores_da_acao(horizonte, a), start=1):
-            cel = ws.cell(linha, col, valor)
+            cel = ws.cell(linha, col, limpar_texto(valor))
             if col in COLUNAS_DATA:
                 cel.number_format = FORMATO_DATA
             if com_estilo:
@@ -112,7 +113,7 @@ def _blocos_de_metas(plano: dict) -> list[tuple[str, list]]:
 def _escrever_metas(ws, plano: dict, *, com_estilo: bool) -> None:
     linha = ws.max_row + 1 if ws.max_row > 1 or ws["A1"].value is not None else 1
     for titulo, linhas in _blocos_de_metas(plano):
-        cel = ws.cell(linha, 1, titulo)
+        cel = ws.cell(linha, 1, limpar_texto(titulo))
         if com_estilo:
             cel.font = Font(bold=True, color="FFFFFF")
             for col in range(1, 6):
@@ -120,7 +121,7 @@ def _escrever_metas(ws, plano: dict, *, com_estilo: bool) -> None:
         linha += 1
         for i, valores in enumerate(linhas):
             for col, valor in enumerate(valores, start=1):
-                cel = ws.cell(linha, col, valor)
+                cel = ws.cell(linha, col, limpar_texto(valor))
                 if com_estilo:
                     cel.alignment = _ALINHA_TEXTO
                     if titulo == "Metas" and i == 0:

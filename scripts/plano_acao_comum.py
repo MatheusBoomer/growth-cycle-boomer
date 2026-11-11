@@ -31,6 +31,15 @@ CAMPOS_ACAO = (
 )
 
 _PADRAO_DATA = re.compile(r"^\d{2}/\d{2}/\d{4}$", re.ASCII)
+# Caracteres que o XML 1.0 não admite (e que o openpyxl recusa): controles menos \t, \n e \r.
+_CONTROLES_ILEGAIS = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\ufffe\uffff]")
+
+
+def limpar_texto(texto):
+    """Remove caracteres de controle ilegais em XML; mantém \t e \n. Valor que não é texto passa direto."""
+    if not isinstance(texto, str):
+        return texto
+    return _CONTROLES_ILEGAIS.sub("", texto)
 
 
 class ErroPlano(Exception):

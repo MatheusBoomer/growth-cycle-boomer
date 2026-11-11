@@ -107,7 +107,7 @@ def test_aba_de_metas(tmp_path):
     _, _, wb = _gerar(ex.plano_valido(), tmp_path)
     texto = _texto_metas(wb["Metas do plano"])
     for esperado in ("Cenário de referência", "Realista", "Metas", "KPI", "Taxa de quebra", "36,1%",
-                     "25/01/2027", "06 · mês 3", "O que cabe nos 3 meses", "Recuperação de PIX e boleto",
+                     "25/01/2027", "06 · Realista, JAN/27", "O que cabe nos 3 meses", "Recuperação de PIX e boleto",
                      "Premissas", "Verba de mídia mantida", "Piso de ROAS", "5,00", "6,25"):
         assert esperado in texto, esperado
     assert "O que não cabe" not in texto  # lista vazia
@@ -182,3 +182,19 @@ def test_modelo_minimo_e_preenchido_sem_alterar_o_original(tmp_path):
     assert metas["A1"].value == "Título do modelo"
     assert "6,25" in _texto_metas(metas)
     assert modelo.read_bytes() == original
+
+
+def test_caracteres_de_controle_ilegais_nao_quebram_a_planilha(tmp_path):
+    plano = ex.plano_valido()
+    plano["horizontes"][0]["acoes"][0]["como"] = "passo\x0b um\x00\x1f fim\nlinha 2"
+    plano["abertura"]["premissas"].append("premissa\x0c com controle")
+    saida, _, wb = _gerar(plano, tmp_path)
+    ws = wb[ex_aba_plano()]
+    como = [r[6].value for r in ws.iter_rows(min_row=2)]
+    assert "passo um fim\nlinha 2" in como
+    assert "premissa com controle" in _texto_metas(wb["Metas do plano"])
+
+
+def ex_aba_plano():
+    from plano_acao_xlsx import ABA_PLANO
+    return ABA_PLANO

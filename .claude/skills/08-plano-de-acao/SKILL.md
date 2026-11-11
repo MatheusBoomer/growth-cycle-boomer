@@ -90,7 +90,9 @@ e dura 3 meses (ex.: 26/10/2026 a 25/01/2027). Não confunda com o início do
 ciclo do cenário: `fim_ciclo` continua sendo o fim dos 12 meses do cenário.
 Toda ação cuja alavanca é um KPI da meta (`alavanca_da_meta: true`) começa e
 entrega dentro dela, mesmo estando no Médio prazo. Preparação de pico
-posterior fica com `alavanca_da_meta: false`.
+posterior fica com `alavanca_da_meta: false`. O campo é obrigatório em toda
+ação (true ou false, nunca omitido). A janela tem de 85 a 95 dias, começa na
+data de referência ou depois e termina antes do fim do ciclo.
 
 ## Frentes
 
@@ -146,7 +148,7 @@ Nomes exatos, para bater com o registro de soluções:
   → prazo para cada causa provável. Ex. para taxa de quebra: antifraude →
   revisar regras com o gateway até dd/mm; Pix ou boleto expirado → régua de
   recuperação 1h e 24h no CRM; ruptura de estoque → bloquear anúncio de SKU
-  sem estoque. E a meta: quebra de X% para Y% até o mês 3.
+  sem estoque. E a meta: quebra de X% para Y% até o fim da janela de prova.
 - **Erro 3 · Meta que o histórico não sustenta.** A meta de 3 meses é
   ancorada no melhor mês do próprio cliente, não no benchmark. Benchmark é
   horizonte, não compromisso. Nunca use meta sem número ("redução gradual",
@@ -236,7 +238,7 @@ O plano é um único `plano-de-acao.json`, versão 2. O esquema completo está e
 `janela_prova` (`inicio`, `fim`), `fim_ciclo`, `empresa_agencia`,
 `agencia_parceira` (ou `null`), `abertura` (`cenario`, `metas`,
 `cabe_nos_3_meses`, `nao_cabe`, `premissas`, `margem_contribuicao`,
-`taxa_quebra`) e `horizontes` (3, com `nome`, `titulo`, `intro`, `acoes`).
+`taxa_quebra`, fração entre 0 e 1, ex.: 0.055) e `horizontes` (3, com `nome`, `titulo`, `intro`, `acoes`).
 Cada ação tem `numero`, `frente`, os 10 campos (`acao`, `achado_origem`,
 `alavanca`, `como`, `dono`, `inicio`, `entrega`, `depende_de`, `evidencia`,
 `kpi_meta`, `gatilho`), `alavanca_da_meta` e `solucoes`. Pisos de ROAS e
@@ -249,8 +251,9 @@ Onde fica o JSON:
 ## Fase 1 · Abertura do plano
 
 Monte a abertura: cenário de referência; metas do plano, um número por KPI,
-cada uma com o mês e o valor de origem no cenário (`fonte`, ex.: "06 · mês
-3"); o que cabe e o que não cabe nos 3 meses (quando a meta pedida for maior
+cada uma com o mês e o valor de origem no cenário (`fonte`, ex.: "06 ·
+Realista, JAN/27"; o mês da meta é o último mês da janela de prova); o que
+cabe e o que não cabe nos 3 meses (quando a meta pedida for maior
 que o cenário); premissas (o que precisa ser verdade: verba aprovada,
 estoque, acessos, prazos de terceiros); margem, quebra e os pisos de ROAS
 resultantes, com uma frase dizendo com qual ROAS cada piso se compara
@@ -272,7 +275,8 @@ python3 scripts/validar_plano_acao.py \
   --rascunho
 ```
 
-`--rascunho` aceita as marcações e a margem ausente. `ERRO:` → corrija o
+`--rascunho` aceita as marcações e a margem ausente (`null` ou [PREENCHER] no
+rascunho; na versão final, margem ausente é erro). `ERRO:` → corrija o
 plano e rode de novo antes de mostrar; nunca apague solução do registro para
 passar. `AVISO:` → corrija ou mostre ao analista com a sua leitura.
 

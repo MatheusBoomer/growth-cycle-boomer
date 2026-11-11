@@ -16,14 +16,14 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-from openpyxl.utils.exceptions import InvalidFileException
+from openpyxl.utils.exceptions import IllegalCharacterError, InvalidFileException
 
 from plano_acao_comum import ErroPlano
 from plano_acao_docx import MODELO_DOCX_PADRAO, gerar_docx
 from plano_acao_xlsx import gerar_xlsx
 from validar_plano_acao import ErroEntrada, _ler_json, validar
 
-_FALHAS_DE_ARQUIVO = (OSError, zipfile.BadZipFile, InvalidFileException, KeyError)
+_FALHAS_DE_ARQUIVO = (OSError, zipfile.BadZipFile, InvalidFileException, IllegalCharacterError, KeyError)
 
 
 class ErroValidacao(ErroPlano):

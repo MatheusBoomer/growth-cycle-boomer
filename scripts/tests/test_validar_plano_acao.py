@@ -514,3 +514,126 @@ def test_cli_depende_de_malformado_nao_levanta(tmp_path, capsys, deps):
     assert v.main(_gravar(tmp_path, plano)) == 1
     err = capsys.readouterr().err
     assert err.startswith("ERRO:") and "depende" in err and "Traceback" not in err
+
+
+# --- onda final de correções ---
+
+@pytest.mark.parametrize("rascunho", [False, True])
+def test_alavanca_da_meta_ausente_e_erro(rascunho):
+    plano = copy.deepcopy(plano_valido())
+    del acao(plano, 6)["alavanca_da_meta"]
+    assert tem(erros_de(plano, rascunho=rascunho), "alavanca_da_meta")
+
+
+@pytest.mark.parametrize("rascunho", [False, True])
+def test_alavanca_da_meta_ausente_nao_burla_janela(rascunho):
+    plano = copy.deepcopy(plano_valido())
+    a = acao(plano, 6)
+    del a["alavanca_da_meta"]
+    a["entrega"] = "15/03/2027"
+    assert tem(erros_de(plano, rascunho=rascunho), "alavanca_da_meta")
+
+
+@pytest.mark.parametrize("valor", [5.5, 1, 1.0, -0.1, "0.055", True, False])
+def test_taxa_quebra_invalida(valor):
+    plano = copy.deepcopy(plano_valido())
+    plano["abertura"]["taxa_quebra"] = valor
+    erros = erros_de(plano)
+    assert tem(erros, "taxa_quebra inválida: use fração entre 0 e 1 (ex.: 0.055)"), erros
+
+
+@pytest.mark.parametrize("valor", [None, 0, 0.055, 0.2])
+def test_taxa_quebra_valida(valor):
+    plano = copy.deepcopy(plano_valido())
+    plano["abertura"]["taxa_quebra"] = valor
+    assert erros_de(plano) == []
+
+
+def test_rascunho_margem_com_marcador_vale_como_ausente():
+    plano = copy.deepcopy(plano_valido())
+    plano["abertura"]["margem_contribuicao"] = "[PREENCHER: margem do cliente]"
+    erros, avisos = v.validar(plano, registro_valido(), rascunho=True)
+    assert erros == [], erros
+    assert any("margem" in a for a in avisos)
+
+
+def test_final_margem_com_marcador_continua_erro():
+    plano = copy.deepcopy(plano_valido())
+    plano["abertura"]["margem_contribuicao"] = "[PREENCHER: margem do cliente]"
+    erros = erros_de(plano)
+    assert tem(erros, "margem de contribuição") and tem(erros, "marcação")
+
+
+def test_rascunho_margem_texto_comum_continua_invalida():
+    plano = copy.deepcopy(plano_valido())
+    plano["abertura"]["margem_contribuicao"] = "vinte por cento"
+    assert tem(erros_de(plano, rascunho=True), "margem de contribuição")
+
+
+def test_abertura_cenario_vazio_e_erro_no_final():
+    for vazio in ("", "  ", None):
+        plano = copy.deepcopy(plano_valido())
+        plano["abertura"]["cenario"] = vazio
+        assert tem(erros_de(plano), "abertura.cenario"), vazio
+    plano["abertura"]["cenario"] = ""
+    assert not tem(erros_de(plano, rascunho=True), "abertura.cenario")
+
+
+def test_abertura_metas_vazias_e_erro_no_final():
+    plano = copy.deepcopy(plano_valido())
+    plano["abertura"]["metas"] = []
+    assert tem(erros_de(plano), "abertura.metas")
+    assert not tem(erros_de(plano, rascunho=True), "abertura.metas")
+    del plano["abertura"]["metas"]
+    assert tem(erros_de(plano), "abertura.metas")
+
+
+@pytest.mark.parametrize("campo", ["kpi", "de", "para", "ate", "fonte"])
+@pytest.mark.parametrize("vazio", ["", "  ", None])
+def test_meta_sem_campo_e_erro_no_final(campo, vazio):
+    plano = copy.deepcopy(plano_valido())
+    plano["abertura"]["metas"][0][campo] = vazio
+    assert tem(erros_de(plano), f"abertura.metas[1].{campo}")
+
+
+@pytest.mark.parametrize("campo", ["kpi", "de", "para", "fonte"])
+def test_meta_sem_chave_e_erro_no_final(campo):
+    plano = copy.deepcopy(plano_valido())
+    del plano["abertura"]["metas"][0][campo]
+    assert tem(erros_de(plano), f"abertura.metas[1].{campo}")
+
+
+def test_janela_inicio_depois_do_fim():
+    plano = copy.deepcopy(plano_valido())
+    plano["janela_prova"]["inicio"] = "26/01/2027"
+    assert tem(erros_de(plano), "janela de prova: o início")
+
+
+def test_janela_fim_depois_do_fim_do_ciclo():
+    plano = copy.deepcopy(plano_valido())
+    plano["janela_prova"]["fim"] = "01/10/2027"
+    assert tem(erros_de(plano), "depois do fim do ciclo")
+
+
+def test_janela_inicio_antes_da_referencia():
+    plano = copy.deepcopy(plano_valido())
+    plano["janela_prova"]["inicio"] = "21/10/2026"
+    assert tem(erros_de(plano), "antes da data de referência")
+
+
+@pytest.mark.parametrize("fim", ["18/01/2027", "30/01/2027"])  # 84 e 96 dias desde 26/10/2026
+def test_janela_fora_de_85_a_95_dias_avisa(fim):
+    plano = copy.deepcopy(plano_valido())
+    plano["janela_prova"]["fim"] = fim
+    erros, avisos = v.validar(plano, registro_valido())
+    assert erros == [], erros
+    texto = " ".join(avisos)
+    assert "janela de prova" in texto and "85" in texto and "95" in texto
+
+
+@pytest.mark.parametrize("fim", ["19/01/2027", "29/01/2027"])  # 85 e 95 dias
+def test_janela_nos_limites_85_95_nao_avisa(fim):
+    plano = copy.deepcopy(plano_valido())
+    plano["janela_prova"]["fim"] = fim
+    erros, avisos = v.validar(plano, registro_valido())
+    assert erros == [] and avisos == []

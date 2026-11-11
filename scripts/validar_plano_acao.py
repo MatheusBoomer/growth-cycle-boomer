@@ -22,6 +22,7 @@ _MARCAS = ("[VALIDAR", "[PREENCHER")
 _VERBOS_VAGOS = ("otimizar", "acompanhar", "priorizar", "direcionar", "melhorar")
 _VERBOS_DIAGNOSTICO = ("auditar", "mapear", "investigar")
 _MAX_DIAS_IMEDIATO = 7
+_JANELA_DIAS = (85, 95)
 
 
 class ErroEntrada(Exception):
@@ -131,21 +132,61 @@ def validar(plano, registro, rascunho: bool = False) -> tuple[list[str], list[st
         janela_fim = data(janela.get("fim"), "janela_prova.fim")
     else:
         erros.append("janela_prova ausente: informe inicio e fim em dd/mm/aaaa.")
+    if janela_ini and janela_fim:
+        if janela_ini > janela_fim:
+            erros.append(
+                f"janela de prova: o início {_fmt(janela_ini)} é depois do fim {_fmt(janela_fim)}."
+            )
+        else:
+            dias = (janela_fim - janela_ini).days
+            if not _JANELA_DIAS[0] <= dias <= _JANELA_DIAS[1]:
+                avisos.append(
+                    f"A janela de prova tem {dias} dias; o esperado é de {_JANELA_DIAS[0]} a "
+                    f"{_JANELA_DIAS[1]} dias (cerca de três meses)."
+                )
+    if janela_fim and fim_ciclo and janela_fim > fim_ciclo:
+        erros.append(
+            f"janela de prova: o fim {_fmt(janela_fim)} é depois do fim do ciclo ({_fmt(fim_ciclo)})."
+        )
+    if janela_ini and referencia and janela_ini < referencia:
+        erros.append(
+            f"janela de prova: o início {_fmt(janela_ini)} fica antes da data de referência {_fmt(referencia)}."
+        )
 
     abertura = plano.get("abertura")
     margem = None
     if abertura is None or isinstance(abertura, dict):
         abertura = abertura or {}
         margem = abertura.get("margem_contribuicao")
+        if rascunho and isinstance(margem, str) and "[PREENCHER" in margem:
+            margem = None  # no rascunho, o marcador vale como margem ausente
+        quebra = abertura.get("taxa_quebra")
+        if quebra is not None and (
+            not isinstance(quebra, (int, float)) or isinstance(quebra, bool) or not 0 <= quebra < 1
+        ):
+            erros.append(
+                f"abertura.taxa_quebra inválida: use fração entre 0 e 1 (ex.: 0.055); veio {quebra!r}."
+            )
+        if not rascunho and _vazio(abertura.get("cenario")):
+            erros.append("abertura.cenario vazio: informe o cenário (Pessimista, Realista ou Otimista).")
         metas = abertura.get("metas")
         if isinstance(metas, list):
+            if not metas and not rascunho:
+                erros.append("abertura.metas vazia: informe ao menos uma meta (kpi, de, para, ate e fonte).")
             for i, meta in enumerate(metas, start=1):
                 if isinstance(meta, dict):
                     data(meta.get("ate"), f"abertura.metas[{i}].ate")
+                    if not rascunho:
+                        for campo in ("kpi", "de", "para", "fonte"):
+                            valor = meta.get(campo)
+                            if _vazio(valor) or not isinstance(valor, str):
+                                erros.append(f"abertura.metas[{i}].{campo} vazio: informe um texto.")
                 else:
                     erros.append(f"abertura.metas[{i}]: a meta precisa ser um objeto com kpi, de, para, ate e fonte.")
         elif metas is not None:
             erros.append("abertura.metas precisa ser uma lista.")
+        elif not rascunho:
+            erros.append("abertura.metas ausente: informe ao menos uma meta (kpi, de, para, ate e fonte).")
     else:
         erros.append("abertura precisa ser um objeto.")
 
@@ -244,7 +285,9 @@ def validar(plano, registro, rascunho: bool = False) -> tuple[list[str], list[st
             if not (g.startswith("se ") and " então " in g):
                 erros.append(f'{pre}gatilho precisa seguir o formato "Se … então …".')
 
-        if "alavanca_da_meta" in a and not isinstance(a["alavanca_da_meta"], bool):
+        if "alavanca_da_meta" not in a:
+            erros.append(f"{pre}alavanca_da_meta ausente: informe true ou false.")
+        elif not isinstance(a["alavanca_da_meta"], bool):
             erros.append(f'{pre}alavanca_da_meta precisa ser true ou false (veio {a["alavanca_da_meta"]!r}).')
 
         if a.get("alavanca_da_meta") is True and janela_ini and janela_fim:

@@ -28,6 +28,7 @@ from xml.sax.saxutils import escape
 from plano_acao_comum import (
     FRENTES,
     acoes,
+    limpar_texto,
     tabela_resumo,
     texto_depende,
     texto_piso_roas,
@@ -99,10 +100,11 @@ def _run(text: str, bold=False, sz=None, color=None, highlight=None) -> str:
     if highlight:
         rpr.append(f'<w:highlight w:val="{highlight}"/>')
     rpr.append('<w:rtl w:val="0"/>')
+    linhas = limpar_texto(text).replace("\r\n", "\n").replace("\r", "\n").split("\n")
+    corpo = "<w:br/>".join(f'<w:t xml:space="preserve">{escape(linha)}</w:t>' for linha in linhas)
     return (
         '<w:r w:rsidDel="00000000" w:rsidR="00000000" w:rsidRPr="00000000">'
-        f'<w:rPr>{"".join(rpr)}</w:rPr>'
-        f'<w:t xml:space="preserve">{escape(text)}</w:t></w:r>'
+        f'<w:rPr>{"".join(rpr)}</w:rPr>{corpo}</w:r>'
     )
 
 
@@ -279,7 +281,7 @@ def _abertura(plano: dict) -> list[str]:
     ab = plano.get("abertura") or {}
     partes = [subtitulo_paragrafo("Metas do plano")]
     for m in ab.get("metas", []):
-        partes.append(texto_paragrafo(f"{m['kpi']}: de {m['de']} para {m['para']} até {m['ate']}"))
+        partes.append(texto_paragrafo(f"{m['kpi']}: de {m['de']} para {m['para']} até {m['ate']} (fonte: {m['fonte']})"))
     partes.append(texto_paragrafo(f"Cenário de referência: {ab.get('cenario', '')}", after=240))
     blocos = [("O que cabe nos 3 meses", ab.get("cabe_nos_3_meses")),
               ("O que não cabe", ab.get("nao_cabe")),

@@ -8,7 +8,10 @@ scripts/validar_solucoes.py: garante em código a regra de ouro do treinamento
 
 registro: confere hipóteses, 1 a 3 soluções, impacto e frente de cada problema
 e, com --markdown, gera a seção aprovável a partir do registro.
-plano: confere que toda solução do registro virou ação do plano de ação.
+plano: confere que toda solução do registro virou ação do plano de ação. É um atalho:
+`--modo plano` delega ao `validar_plano_acao.py` (em modo rascunho) e mostra só os erros de
+cobertura das soluções. Para validar o plano inteiro (datas, donos, dependências, janela de
+prova, marcações), prefira rodar `scripts/validar_plano_acao.py` direto.
 ERRO: (código 1) bloqueia; AVISO: não bloqueia.
 """
 
@@ -21,13 +24,8 @@ import sys
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-FRENTES = (
-    "Mídia Paga / Canal Principal",
-    "Eficiência Operacional",
-    "Produto / Mix / Portfólio",
-    "Redução de Dependências",
-    "Monitoramento e Governança",
-)
+from plano_acao_comum import FRENTES
+
 TIPOS_IMPACTO = ("R$", "%", "nao_quantificavel")
 MIN_SOLUCOES, MAX_SOLUCOES = 1, 3
 RE_PROBLEMA = re.compile(r"^P\d+$")

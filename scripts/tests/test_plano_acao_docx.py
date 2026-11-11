@@ -77,7 +77,7 @@ def test_docx_abertura(tmp_path):
     saida, _ = _gerar(ex.plano_valido(), tmp_path)
     texto = _texto(saida)
     assert "Metas do plano" in texto
-    assert "Taxa de quebra: de 36,1% para 25% até 25/01/2027" in texto
+    assert "Taxa de quebra: de 36,1% para 25% até 25/01/2027 (fonte: 06 · Realista, JAN/27)" in texto
     assert "Cenário de referência: Realista" in texto
     assert "O que cabe nos 3 meses" in texto
     assert "Recuperação de PIX e boleto" in texto
@@ -166,3 +166,24 @@ def test_docx_preserva_modelo(tmp_path):
 def test_docx_numeros_com_virgula_e_sem_garantia(tmp_path):
     saida, _ = _gerar(ex.plano_valido(), tmp_path)
     assert "garant" not in _texto(saida).lower()
+
+
+def test_docx_quebra_de_linha_vira_w_br(tmp_path):
+    plano = ex.plano_valido()
+    plano["horizontes"][0]["acoes"][0]["como"] = "passo 1\npasso 2"
+    saida, _ = _gerar(plano, tmp_path)
+    xml = _xml(saida)
+    assert "<w:br/>" in xml
+    assert "passo 1\npasso 2" not in xml
+    parseString(xml)  # continua XML válido
+    assert "COMO: passo 1passo 2" in _paragrafos(saida)
+
+
+def test_docx_remove_caracteres_de_controle_ilegais(tmp_path):
+    plano = ex.plano_valido()
+    plano["horizontes"][0]["acoes"][0]["como"] = "passo\x0b um\x00\x1f\ttab"
+    saida, _ = _gerar(plano, tmp_path)
+    xml = _xml(saida)
+    parseString(xml)
+    assert "\x0b" not in xml and "\x00" not in xml and "\x1f" not in xml
+    assert "passo um\ttab" in xml

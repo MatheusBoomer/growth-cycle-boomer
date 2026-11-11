@@ -113,6 +113,27 @@ def test_falha_no_xlsx_nao_deixa_docx(tmp_path, capsys):
         assert list((tmp_path / "out").iterdir()) == []
 
 
+def test_caractere_ilegal_no_texto_gera_os_dois_arquivos(tmp_path, capsys):
+    plano = ex.plano_valido()
+    plano["horizontes"][0]["acoes"][0]["como"] = "passo 1\x0b passo 2"
+    codigo, cap, docx, xlsx = _rodar(tmp_path, capsys, plano=plano)
+    assert codigo == 0, cap.err
+    assert docx.exists() and xlsx.exists()
+
+
+def test_illegal_character_error_vira_erro_amigavel(tmp_path, capsys, monkeypatch):
+    from openpyxl.utils.exceptions import IllegalCharacterError
+
+    def quebrar(*args, **kwargs):
+        raise IllegalCharacterError("\x0b")
+
+    monkeypatch.setattr(g, "gerar_xlsx", quebrar)
+    codigo, cap, docx, xlsx = _rodar(tmp_path, capsys)
+    assert codigo == 1
+    assert cap.err.startswith("ERRO:") and "Traceback" not in cap.err
+    assert not docx.exists() and not xlsx.exists()
+
+
 def test_falha_nao_apaga_arquivos_finais_existentes(tmp_path, capsys):
     (tmp_path / "out").mkdir()
     docx = tmp_path / "out" / "plano-de-acao-estrategico.docx"

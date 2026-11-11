@@ -77,7 +77,7 @@ def plano_valido() -> dict:
         "abertura": {
             "cenario": "Realista",
             "metas": [
-                {"kpi": "Taxa de quebra", "de": "36,1%", "para": "25%", "ate": "25/01/2027", "fonte": "06 · mês 3"},
+                {"kpi": "Taxa de quebra", "de": "36,1%", "para": "25%", "ate": "25/01/2027", "fonte": "06 · Realista, JAN/27"},
             ],
             "cabe_nos_3_meses": ["Recuperação de PIX e boleto", "Medição do funil no GA4"],
             "nao_cabe": [],
