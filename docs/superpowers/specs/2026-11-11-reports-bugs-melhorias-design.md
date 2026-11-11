@@ -109,7 +109,7 @@ A validação dos bytes da imagem fica no servidor e confere três coisas: a ass
 | `PATCH /api/admin/reports/[id]` | admin | Muda o `status` e/ou a `nota_admin`. |
 | `GET /api/admin/reports/[id]/imagens/[n]` | admin | Devolve os bytes da imagem com o `Content-Type` certo e `Cache-Control: private`. |
 
-As rotas novas entram na varredura de `rotas-exigem-usuario.test.ts`. Elas devolvem 400 quando a validação falha, 401/403 quando o acesso é negado, 404 quando o report não existe e 503 no modo `fs`.
+As rotas novas entram na varredura de `rotas-exigem-usuario.test.ts`. Elas devolvem 400 quando a validação falha, 401/403 quando o acesso é negado, 404 quando o report não existe e 400 no modo `fs`, com a mensagem "Os reports só existem com os dados na nuvem.", seguindo o padrão das notas.
 
 ## Aba "Reports" no admin
 
@@ -131,7 +131,7 @@ As rotas novas entram na varredura de `rotas-exigem-usuario.test.ts`. Elas devol
   - Imagem inválida, grande demais ou acima da quantidade recebe 400.
   - O autor vem da sessão.
   - O `PATCH` registra `atualizado_por`.
-  - O modo `fs` devolve 503.
+  - O modo `fs` devolve 400 com a mensagem de nuvem.
 - **Supabase:** um caso em `test:supabase` cobre criar, listar, ler a imagem e atualizar, e confirma que `anon` não acessa a tabela nem o bucket.
 - **Varredura de rotas:** as rotas novas aparecem na varredura e passam.
 - **Build:** rodar `next build` numa worktree sem `.env` antes do PR, porque um componente de cliente não pode importar módulo com `node:`.
