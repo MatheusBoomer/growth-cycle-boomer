@@ -524,3 +524,26 @@ def test_cli_como_script_devolve_o_codigo_de_saida(arquivos):
     ruim = subprocess.run([sys.executable, str(RAIZ / "scripts" / "validar_revisao.py"), *_argv(arquivos, sem=("--plano-08",))],
                           capture_output=True, text=True)
     assert ruim.returncode == 2  # argparse: argumento obrigatório ausente
+
+
+@pytest.mark.parametrize("plano_final", [None, [], "x"])
+def test_modo_final_exige_plano_final_objeto(plano_final):
+    erros, _ = v.validar(revisao_valida(), transcricao_exemplo(), plano_valido(), plano_final)
+    assert tem(erros, "plano final ausente ou inválido")
+
+
+def test_rascunho_nao_exige_plano_final():
+    erros, _ = validar(revisao_valida(), final=False, rascunho=True)
+    assert not tem(erros, "plano final")
+
+
+def test_cli_modo_final_sem_plano_final_da_erro(arquivos, capsys):
+    assert v.main(_argv(arquivos, sem=("--plano-final",))) == 1
+    assert "plano final ausente ou inválido" in capsys.readouterr().err
+
+
+def test_cli_modo_final_com_plano_final_null_da_erro(arquivos, tmp_path, capsys):
+    arquivos["--plano-final"] = str(tmp_path / "null.json")
+    (tmp_path / "null.json").write_text("null", encoding="utf-8")
+    assert v.main(_argv(arquivos)) == 1
+    assert "plano final ausente ou inválido" in capsys.readouterr().err

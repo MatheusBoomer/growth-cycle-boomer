@@ -359,8 +359,10 @@ def _modo_final(v: _Validacao, revisao: dict, plano_08, plano_final) -> None:
     _final_conflitos(v, revisao)
     _final_abertos(v, revisao)
     _final_compromissos(v, revisao)
-    if plano_final is not None:
+    if isinstance(plano_final, dict):
         _final_rastreabilidade(v, revisao, plano_08, plano_final)
+    else:
+        v.erro("", "plano final ausente ou inválido: a rastreabilidade não foi conferida.")
 
 
 # --- Linha de comando ------------------------------------------------------------------------
