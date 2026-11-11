@@ -79,3 +79,32 @@ def test_plano_valido_cumpre_as_regras_do_exemplo():
     cobertas = {s for _, a in pares for s in a["solucoes"]}
     assert cobertas == {s["id"] for p in ex.registro_valido()["problemas"] for s in p["solucoes"]}
     assert "[VALIDAR]" not in str(plano) and "[PREENCHER]" not in str(plano)
+
+
+def test_ler_data_rejeita_digitos_unicode():
+    with pytest.raises(c.ErroPlano, match="dd/mm/aaaa"):
+        c.ler_data("٢٦/١٠/٢٠٢٦", "x")
+
+
+def _plano_fora_de_ordem():
+    def a(numero, inicio):
+        return {"numero": numero, "acao": f"A{numero}", "frente": c.FRENTES[0],
+                "inicio": inicio, "entrega": "30/12/2026", "dono": "X · Boomer"}
+    return {"horizontes": [
+        {"nome": "Imediato", "acoes": [a(5, "10/11/2026"), a(2, "03/11/2026")]},
+        {"nome": "Curto prazo", "acoes": [a(4, "03/11/2026"), a(1, "26/10/2026")]},
+        {"nome": "Médio prazo", "acoes": [a(3, "02/11/2026")]},
+    ]}
+
+
+def test_acoes_cronologicas_ordena_por_inicio_e_desempata_por_numero():
+    # 1 (26/10), 3 (02/11), 2 e 4 empatadas em 03/11 (numero menor primeiro), 5 (10/11)
+    assert [a["numero"] for a in c.acoes_cronologicas(_plano_fora_de_ordem())] == [1, 3, 2, 4, 5]
+
+
+def test_tabela_resumo_ordena_e_mantem_o_horizonte_de_cada_acao():
+    linhas = c.tabela_resumo(_plano_fora_de_ordem())
+    assert [l["numero"] for l in linhas] == [1, 3, 2, 4, 5]
+    assert {l["numero"]: l["horizonte"] for l in linhas} == {
+        1: "Curto prazo", 3: "Médio prazo", 2: "Imediato", 4: "Curto prazo", 5: "Imediato"}
+    assert linhas[0]["periodo"] == "26/10/2026 a 30/12/2026"

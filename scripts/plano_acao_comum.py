@@ -30,7 +30,7 @@ CAMPOS_ACAO = (
     "gatilho",
 )
 
-_PADRAO_DATA = re.compile(r"^\d{2}/\d{2}/\d{4}$")
+_PADRAO_DATA = re.compile(r"^\d{2}/\d{2}/\d{4}$", re.ASCII)
 
 
 class ErroPlano(Exception):
