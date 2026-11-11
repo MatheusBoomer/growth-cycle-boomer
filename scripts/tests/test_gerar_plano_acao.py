@@ -46,10 +46,6 @@ def _paragrafos_docx(docx: Path) -> list[str]:
             for p in dom.getElementsByTagName("w:p")]
 
 
-def _dd(texto: str) -> str:
-    return texto.strip()
-
-
 def _conjunto_docx(docx: Path) -> set:
     ps = _paragrafos_docx(docx)
     saida = set()
@@ -101,7 +97,7 @@ def test_erro_nao_gera_nada(tmp_path, capsys):
     assert codigo == 1
     assert "ERRO:" in cap.err
     assert not docx.exists() and not xlsx.exists()
-    assert list((tmp_path / "out").glob("*")) == [] if (tmp_path / "out").exists() else True
+    assert (list((tmp_path / "out").glob("*")) == []) if (tmp_path / "out").exists() else True
 
 
 def test_falha_no_xlsx_nao_deixa_docx(tmp_path, capsys):
@@ -143,7 +139,7 @@ def test_nao_menciona_garantia(tmp_path, capsys):
 
 def test_avisos_vao_para_stdout_antes_do_ok(tmp_path, capsys):
     plano = ex.plano_valido()
-    # tira uma solução do plano para gerar aviso de cobertura (se o validador avisa) ou usa rascunho-like
+    # todo AVISO do validador sai em stdout, antes da linha OK, sem nada a mais
     erros, avisos = g.validar(copy.deepcopy(plano), ex.registro_valido(), rascunho=False)
     assert erros == []
     codigo, cap, _, _ = _rodar(tmp_path, capsys, plano=plano)
@@ -225,4 +221,48 @@ def test_gerar_com_erro_levanta_erro_validacao(tmp_path):
     with pytest.raises(g.ErroValidacao) as e:
         g.gerar(plano, ex.registro_valido(), tmp_path / "a.docx", tmp_path / "a.xlsx")
     assert e.value.erros
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_arquivos_finais_seguem_o_umask(tmp_path):
+    import os
+    docx, xlsx = tmp_path / "a.docx", tmp_path / "a.xlsx"
+    g.gerar(ex.plano_valido(), ex.registro_valido(), docx, xlsx)
+    umask = os.umask(0)
+    os.umask(umask)
+    esperado = 0o666 & ~umask
+    assert docx.stat().st_mode & 0o777 == esperado
+    assert xlsx.stat().st_mode & 0o777 == esperado
+
+
+def test_recusa_saida_igual_ao_modelo_do_outro_tipo(tmp_path, capsys):
+    # saída .xlsx apontando para o modelo .docx
+    modelo = tmp_path / "modelo.docx"
+    modelo.write_bytes(MODELO_DOCX_PADRAO.read_bytes())
+    original = modelo.read_bytes()
+    codigo, cap, docx, _ = _rodar(tmp_path, capsys, saida_xlsx=modelo, extra=("--modelo-docx", str(modelo)))
+    assert codigo == 1
+    assert "ERRO:" in cap.err
+    assert modelo.read_bytes() == original
+    assert not docx.exists()
+
+
+def test_recusa_saida_igual_ao_plano_ou_registro(tmp_path, capsys):
+    p, r = _entradas(tmp_path)
+    original = p.read_bytes()
+    codigo = g.main(["--plano", str(p), "--registro", str(r),
+                     "--saida-docx", str(p), "--saida-xlsx", str(tmp_path / "a.xlsx")])
+    err = capsys.readouterr().err
+    assert codigo == 1 and "ERRO:" in err and "entrada" in err
+    assert p.read_bytes() == original
+    assert not (tmp_path / "a.xlsx").exists()
+
+
+def test_mensagem_sem_modelo_xlsx_nao_diz_none(tmp_path, monkeypatch):
+    def quebra(plano, saida, modelo=None):
+        raise OSError("disco cheio")
+    monkeypatch.setattr(g, "gerar_xlsx", quebra)
+    with pytest.raises(c.ErroPlano) as e:
+        g.gerar(ex.plano_valido(), ex.registro_valido(), tmp_path / "a.docx", tmp_path / "a.xlsx")
+    assert "None" not in str(e.value) and "disco cheio" in str(e.value)
     assert list(tmp_path.iterdir()) == []

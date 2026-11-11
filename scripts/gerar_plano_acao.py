@@ -44,19 +44,37 @@ def _mesmo_arquivo(a: Path, b: Path) -> bool:
         return False
 
 
-def _recusar_colisoes(saida_docx: Path, saida_xlsx: Path, modelo_docx: Path, modelo_xlsx: Path | None) -> None:
+def _recusar_colisoes(
+    saida_docx: Path,
+    saida_xlsx: Path,
+    modelo_docx: Path,
+    modelo_xlsx: Path | None,
+    caminhos_entrada: tuple[Path, ...] = (),
+) -> None:
     if _mesmo_arquivo(saida_docx, saida_xlsx):
         raise ErroPlano(f"a saída .docx e a saída .xlsx são o mesmo arquivo ({saida_docx}).")
-    if _mesmo_arquivo(saida_docx, modelo_docx):
-        raise ErroPlano(f"a saída .docx não pode ser o próprio modelo ({modelo_docx}); escolha outro caminho.")
-    if modelo_xlsx is not None and _mesmo_arquivo(saida_xlsx, modelo_xlsx):
-        raise ErroPlano(f"a saída .xlsx não pode ser o próprio modelo ({modelo_xlsx}); escolha outro caminho.")
+    modelos = [m for m in (modelo_docx, modelo_xlsx) if m is not None]
+    entradas = [Path(e) for e in caminhos_entrada]
+    for nome, saida in ((".docx", saida_docx), (".xlsx", saida_xlsx)):
+        for modelo in modelos:
+            if _mesmo_arquivo(saida, modelo):
+                raise ErroPlano(f"a saída {nome} não pode ser um dos modelos ({modelo}); escolha outro caminho.")
+        for entrada in entradas:
+            if _mesmo_arquivo(saida, entrada):
+                raise ErroPlano(f"a saída {nome} não pode ser um arquivo de entrada ({entrada}); escolha outro caminho.")
 
 
 def _temporario(destino: Path) -> Path:
     destino.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(delete=False, dir=destino.parent, prefix=".plano-", suffix=destino.suffix) as f:
         return Path(f.name)
+
+
+def _permissao_padrao(caminho: Path) -> None:
+    """NamedTemporaryFile cria o arquivo com 0600; o final precisa seguir o umask (o app web lê o arquivo)."""
+    umask = os.umask(0)
+    os.umask(umask)
+    os.chmod(caminho, 0o666 & ~umask)
 
 
 def gerar(
@@ -66,20 +84,23 @@ def gerar(
     saida_xlsx: Path,
     modelo_docx: Path = MODELO_DOCX_PADRAO,
     modelo_xlsx: Path | None = None,
+    caminhos_entrada: tuple[Path, ...] = (),
 ) -> dict:
     """Valida o plano e grava o .docx e o .xlsx. Devolve {"docx","xlsx","total_acoes","avisos"}.
 
     Levanta ErroValidacao (plano inválido) ou ErroPlano (modelo ruim, caminhos em conflito,
     falha de arquivo); nesses casos nenhum arquivo final é criado nem alterado.
+    `caminhos_entrada` são os arquivos lidos pela CLI (plano, registro): nenhuma saída pode ser um deles.
     """
     saida_docx, saida_xlsx, modelo_docx = Path(saida_docx), Path(saida_xlsx), Path(modelo_docx)
     modelo_xlsx = Path(modelo_xlsx) if modelo_xlsx is not None else None
 
-    _recusar_colisoes(saida_docx, saida_xlsx, modelo_docx, modelo_xlsx)
+    _recusar_colisoes(saida_docx, saida_xlsx, modelo_docx, modelo_xlsx, tuple(caminhos_entrada))
     erros, avisos = validar(plano, registro, rascunho=False)
     if erros:
         raise ErroValidacao(erros, avisos)
 
+    clausula_xlsx = f" com o modelo {modelo_xlsx}" if modelo_xlsx is not None else ""
     temporarios: list[Path] = []
     try:
         tmp_docx = _temporario(saida_docx)
@@ -93,7 +114,9 @@ def gerar(
         try:
             resumo = gerar_xlsx(plano, tmp_xlsx, modelo_xlsx)
         except _FALHAS_DE_ARQUIVO as e:
-            raise ErroPlano(f"não foi possível gerar o .xlsx com o modelo {modelo_xlsx}: {e}") from e
+            raise ErroPlano(f"não foi possível gerar o .xlsx{clausula_xlsx}: {e}") from e
+        _permissao_padrao(tmp_docx)
+        _permissao_padrao(tmp_xlsx)
         os.replace(tmp_docx, saida_docx)
         temporarios.remove(tmp_docx)
         os.replace(tmp_xlsx, saida_xlsx)
@@ -120,7 +143,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         plano = _ler_json(a.plano, "plano")
         registro = _ler_json(a.registro, "registro")
-        resumo = gerar(plano, registro, a.saida_docx, a.saida_xlsx, a.modelo_docx, a.modelo_xlsx)
+        resumo = gerar(plano, registro, a.saida_docx, a.saida_xlsx, a.modelo_docx, a.modelo_xlsx,
+                       caminhos_entrada=(a.plano, a.registro))
     except ErroValidacao as e:
         for aviso in e.avisos:
             print(f"AVISO: {aviso}")
