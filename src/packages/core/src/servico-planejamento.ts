@@ -317,7 +317,6 @@ export class ServicoPlanejamento {
     return { bytes: await this.arm.baixarImagemReport(caminho), contentType: caminho.endsWith(".png") ? "image/png" : "image/jpeg" }
   }
 
-
   /** Quantas notas abertas há em cada item (itens sem nota aberta não aparecem). */
   async contagemNotasAbertas(): Promise<Record<string, number>> {
     const contagem: Record<string, number> = {}
