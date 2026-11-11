@@ -159,10 +159,14 @@ PowerPoint. Falta uma etapa: depois da reunião em que você apresentar o
 Growth Cycle ao cliente, eu reviso o plano de ação com o que ele trouxer e
 gero o plano final, que é o que vai para a entrega formal. Para isso,
 preciso da transcrição completa dessa reunião: espere o Google Drive
-disponibilizar, exporte em documento Word (.docx) ou texto (.txt) e confira
+disponibilizar, exporte em Word, texto ou Markdown e confira
 se ela cobre a reunião do início ao fim.
 
-Quando estiver com a transcrição, rode `/10-revisao-pos-apresentacao`."
+Quando estiver com a transcrição, [CHAMADA]"
+
+Troque `[CHAMADA]` conforme o modo: no **terminal**, "rode
+`/10-revisao-pos-apresentacao`."; na **interface** (onde comando de barra não
+existe), "abra a etapa 10 · Revisão pós-apresentação."
 
 Depois, conforme o modo (Regras 6 e 7):
 
