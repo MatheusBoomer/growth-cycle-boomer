@@ -54,7 +54,7 @@ export function normalizarEstado(estado: Estado): Estado {
   const etapas = { ...estado.etapas }
   let completou = false
   for (const id of ORDEM_ETAPAS) {
-    if (etapas[id] === undefined) {
+    if (etapas[id] == null) {
       etapas[id] = etapaVazia("bloqueada")
       completou = true
     }
