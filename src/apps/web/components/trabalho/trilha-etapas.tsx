@@ -36,6 +36,12 @@ export function TrilhaEtapas({
   const [abertas, setAbertas] = useState<Set<string>>(
     () => new Set(fases.filter((f) => f.situacao !== "" || f.fase === faseSelecionada).map((f) => f.fase)),
   )
+  // Trocou de etapa (ex.: "Concluir e ir para" a próxima fase): abre a fase dela, sem esperar um clique.
+  const [faseVista, setFaseVista] = useState(faseSelecionada)
+  if (faseVista !== faseSelecionada) {
+    setFaseVista(faseSelecionada)
+    if (faseSelecionada && !abertas.has(faseSelecionada)) setAbertas(new Set([...abertas, faseSelecionada]))
+  }
   const alternar = (fase: string) =>
     setAbertas((atual) => {
       const nova = new Set(atual)

@@ -69,3 +69,13 @@ describe("chat: bordas e compositor", () => {
     expect(h).toContain("rounded-[22px]")
   })
 })
+
+describe("resposta ao vivo", () => {
+  it("o texto que chega ao vivo já vem sem bolha, como a resposta final (não pula no fim do turno)", () => {
+    const h = renderToStaticMarkup(
+      createElement(ProvedorConta, { email: null, children: createElement(ChatEtapa, { slug: "iszi", etapa: "01", dados: dadosDe("01", null), eventos: [], delta: "Calculando o LTV" }) }),
+    )
+    expect(h).toContain("Calculando o LTV")
+    expect(h).not.toContain('data-slot="bubble-content"')
+  })
+})

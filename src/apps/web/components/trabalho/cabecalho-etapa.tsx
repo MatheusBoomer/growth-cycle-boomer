@@ -27,7 +27,7 @@ export function CabecalhoEtapa({
       {antes}
       <div className="min-w-0">
         {linha && <p className="text-muted-foreground text-xs">{linha}</p>}
-        <h1 className="text-texto-forte truncate font-serif text-[26px] leading-none tracking-[-0.01em] sm:text-[32px]">{titulo}</h1>
+        <h1 className="text-texto-forte truncate font-serif text-[26px] leading-[1.1] tracking-[-0.01em] sm:text-[32px]">{titulo}</h1>
       </div>
       {selo}
       <div className="ml-auto flex shrink-0 items-center gap-2">

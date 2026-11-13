@@ -46,8 +46,10 @@ describe("PainelEtapa: concluir só quando tudo estiver pronto", () => {
     expect(h).not.toContain("O que falta")
   })
 
-  it("só falta o agente fechar: a linha de espera, sem botão", () => {
-    const h = html(["O agente ainda não sinalizou que a etapa está completa"], false)
+  it("só falta o agente fechar (com entregável aprovado): a linha de espera, sem botão", () => {
+    const d = dadosDe(["O agente ainda não sinalizou que a etapa está completa"], false) as unknown as { estado: Record<string, unknown> }
+    d.estado.entregaveis = [{ id: "a", etapa: "04", status: "aprovado", titulo: "A", tipo: "grafico", arquivoRascunho: "a.png", nomeFinal: "a.png" }]
+    const h = renderToStaticMarkup(createElement(PainelEtapa, { slug: "x", etapa: "04", dados: d as unknown as RespostaEstado }))
     expect(h).toContain("Tudo aprovado · esperando o agente fechar a etapa")
     expect(h).not.toContain("Concluir etapa")
   })
@@ -58,3 +60,4 @@ describe("PainelEtapa: concluir só quando tudo estiver pronto", () => {
     expect(h).toContain("Concluir etapa e ir para 05 · Soluções")
   })
 })
+

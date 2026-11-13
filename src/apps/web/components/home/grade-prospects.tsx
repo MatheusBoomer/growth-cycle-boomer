@@ -153,6 +153,7 @@ export function GradeProspects({
       donos,
       etapas: etapa === TODOS ? [] : [etapa as EtapaId],
       soPendentes,
+      buscaPorDono: admin,
       email,
     })
     return separarPorSituacao(ordenarProspects(filtrados, ordem))

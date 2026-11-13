@@ -19,6 +19,8 @@ describe("CabecalhoEtapa", () => {
     expect(h).toContain(">Apresentação<")
   })
 
+  it("o título não corta o pé das letras (entrelinha 1.1, não leading-none)", () => expect(html()).toMatch(/<h1 class="[^"]*leading-\[1\.1\]/))
+
   it("selo 'Agente trabalhando' só com o agente rodando nesta etapa", () => {
     expect(html({ trabalhando: true })).toContain("Agente trabalhando")
     expect(html()).not.toContain("Agente trabalhando")

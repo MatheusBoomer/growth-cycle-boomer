@@ -34,7 +34,13 @@ describe("filtrarProspects", () => {
       p("Verdeluz", "bia@boomer.com", { rotuloEtapaAtual: "01 · Preparação de contexto" }),
     ]
     expect(nomes(filtrarProspects(comRotulo, { ...sem, busca: "diagnostico" }))).toEqual(["Iszi"])
-    expect(nomes(filtrarProspects(comRotulo, { ...sem, busca: "Ana" }))).toEqual(["Iszi"])
+    expect(nomes(filtrarProspects(comRotulo, { ...sem, busca: "Ana", buscaPorDono: true }))).toEqual(["Iszi"])
+  })
+
+  it("sem buscaPorDono (quem não é admin), o próprio nome não puxa a lista inteira", () => {
+    const meus = [p("Matriz", "matheus@boomer.com", { rotuloEtapaAtual: "01 · Preparação" }), p("Iszi", "matheus@boomer.com", { rotuloEtapaAtual: "01 · Preparação" })]
+    expect(nomes(filtrarProspects(meus, { ...sem, busca: "mat" }))).toEqual(["Matriz"])
+    expect(nomes(filtrarProspects(meus, { ...sem, busca: "mat", buscaPorDono: true }))).toEqual(["Matriz", "Iszi"])
   })
 
   it("donos filtra sem diferença de maiúsculas e aceita mais de um", () => {

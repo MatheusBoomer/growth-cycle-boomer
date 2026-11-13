@@ -23,7 +23,7 @@ import { CardInsumo } from "@/components/cards/card-insumo"
 import { useAmbiente } from "@/components/marca/conta-contexto"
 import { api, mensagemDeErro, urlArquivo, type AcaoEtapa } from "@/lib/api"
 import { celebrarEtapaConcluida } from "@/lib/confete"
-import { estadoDoConcluir } from "@/lib/concluir"
+import { contagemInsumos, estadoDoConcluir } from "@/lib/concluir"
 import { useVisualizador } from "./contexto-visualizador"
 
 const COR: Record<StatusEntregavel, string> = { pendente: "bg-aviso", aprovado: "bg-sucesso", substituido: "bg-muted-foreground/40" }
@@ -33,19 +33,25 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
   const estadoEtapa = dados.estado.etapas[etapa]
   const entregaveis = dados.estado.entregaveis.filter((e) => e.etapa === etapa && e.status !== "substituido")
   const condicoes = dados.condicoes[etapa]
-  const concluir = estadoDoConcluir({ condicoes, sinalizada: estadoEtapa.sinalizada === true, turnoAtivoAqui: dados.turnoAtivo === etapa })
+  const insumos = contagemInsumos(etapaCat.insumos, dados.estado.insumos, etapa)
+  const concluir = estadoDoConcluir({ condicoes, sinalizada: estadoEtapa.sinalizada === true, turnoAtivoAqui: dados.turnoAtivo === etapa, temEntregaveis: entregaveis.length > 0 })
   const indice = dados.catalogo.etapas.findIndex((e) => e.id === etapa)
   const rotuloProxima = dados.catalogo.etapas[indice + 1]?.rotuloStatus ?? null
   const [ocupado, setOcupado] = useState<AcaoEtapa | null>(null)
   const { nuvem } = useAmbiente()
-  const { abrir, abrirArquivo } = useVisualizador()
+  const { abrir, abrirArquivo, irParaEtapa } = useVisualizador()
   const final = apresentacaoFinal(dados.estado.entregaveis.filter((e) => e.etapa === etapa))
 
   async function executar(acao: AcaoEtapa, sucesso: string) {
     setOcupado(acao)
     try {
       await api.acaoEtapa(slug, etapa, acao)
-      if (acao === "concluir") celebrarEtapaConcluida(dados.catalogo.etapas.at(-1)?.id !== etapa)
+      if (acao === "concluir") {
+        celebrarEtapaConcluida(dados.catalogo.etapas.at(-1)?.id !== etapa)
+        // O botão promete "e ir para <próxima>": abre a próxima etapa, como o fim de etapa do chat.
+        const proxima = dados.catalogo.etapas[dados.catalogo.etapas.findIndex((e) => e.id === etapa) + 1]?.id
+        if (proxima) irParaEtapa(proxima)
+      }
       else toast.success(sucesso)
     } catch (e) {
       toast.error(mensagemDeErro(e))
@@ -144,8 +150,7 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
           <h3 className="mb-2 flex items-center justify-between text-sm font-medium tracking-tight">
             Insumos
             <span className="text-muted-foreground font-mono text-[11px] font-normal">
-              {etapaCat.insumos.filter((ref) => dados.estado.insumos.some((i) => i.etapa === etapa && i.insumoId === ref.id && i.status === "valido")).length}/
-              {etapaCat.insumos.length}
+              {insumos.recebidos}/{insumos.total}
             </span>
           </h3>
           {etapaCat.insumos.length === 0 ? (

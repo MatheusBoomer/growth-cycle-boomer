@@ -37,7 +37,12 @@ export function FimDaEtapa({ slug, etapa, dados }: { slug: string; etapa: EtapaI
 
   const aberta = estadoEtapa.status === "em_andamento" || estadoEtapa.status === "pronta"
   // Regra do usuário: o botão só aparece com tudo pronto; antes disso, nada (os contadores do painel mostram o que falta).
-  if (!aberta || estadoDoConcluir({ condicoes, sinalizada: estadoEtapa.sinalizada === true, turnoAtivoAqui: dados.turnoAtivo === etapa }) !== "pronto") return null
+  if (!aberta || estadoDoConcluir({
+      condicoes,
+      sinalizada: estadoEtapa.sinalizada === true,
+      turnoAtivoAqui: dados.turnoAtivo === etapa,
+      temEntregaveis: dados.estado.entregaveis.some((e) => e.etapa === etapa && e.status !== "substituido"),
+    }) !== "pronto") return null
 
   async function concluirEIr() {
     setConcluindo(true)

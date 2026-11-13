@@ -72,16 +72,18 @@ describe("TrilhaEtapas: árvore por fase", () => {
     const raiz = document.createElement("div")
     document.body.append(raiz)
     const r = createRoot(raiz)
-    await act(async () => {
-      r.render(
-        createElement(ProvedorConta, {
-          email: null,
-          ambiente: { executor: "sdk", nuvem: true },
-          children: createElement(TrilhaEtapas, { catalogo: catalogoFases, estado: estadoFases, selecionada: "04" as never, aoSelecionar: () => {}, bibliotecaAberta: false, totalBiblioteca: 3, aoAbrirBiblioteca: () => {} }),
-        }),
-      )
-    })
-    return { raiz, desmontar: () => act(async () => r.unmount()) }
+    const desenhar = (selecionada: string) =>
+      act(async () => {
+        r.render(
+          createElement(ProvedorConta, {
+            email: null,
+            ambiente: { executor: "sdk", nuvem: true },
+            children: createElement(TrilhaEtapas, { catalogo: catalogoFases, estado: estadoFases, selecionada: selecionada as never, aoSelecionar: () => {}, bibliotecaAberta: false, totalBiblioteca: 3, aoAbrirBiblioteca: () => {} }),
+          }),
+        )
+      })
+    await desenhar("04")
+    return { raiz, trocar: desenhar, desmontar: () => act(async () => r.unmount()) }
   }
   const fase = (raiz: HTMLElement, nome: string) => [...raiz.querySelectorAll("button[aria-expanded]")].find((b) => b.textContent?.includes(nome)) as HTMLElement
   const etapaBotao = (raiz: HTMLElement, titulo: string) => [...raiz.querySelectorAll("button:not([aria-expanded])")].find((b) => b.textContent?.includes(titulo)) as HTMLButtonElement | undefined
@@ -107,6 +109,14 @@ describe("TrilhaEtapas: árvore por fase", () => {
     expect(etapaBotao(raiz, "Soluções")).toBeUndefined()
     await act(async () => fase(raiz, "Soluções e metas").click())
     expect(etapaBotao(raiz, "Soluções")!.disabled).toBe(true)
+    await desmontar()
+  })
+
+  it("ao trocar para uma etapa de fase fechada, a fase abre e a etapa aparece selecionada", async () => {
+    const { raiz, trocar, desmontar } = await montarFases()
+    expect(etapaBotao(raiz, "Soluções")).toBeUndefined()
+    await trocar("05")
+    expect(etapaBotao(raiz, "Soluções")?.getAttribute("aria-current")).toBe("step")
     await desmontar()
   })
 

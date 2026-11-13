@@ -7,7 +7,6 @@ import type {
   EventoConversa,
   RespostaEstado,
 } from "@workspace/core/tipos"
-import { Bubble, BubbleContent } from "@workspace/ui/components/bubble"
 import { Marker, MarkerContent } from "@workspace/ui/components/marker"
 import { Message, MessageContent } from "@workspace/ui/components/message"
 import {
@@ -167,17 +166,16 @@ export function ChatEtapa({
                     <Message align="start">
                       <MessageContent>
                         {(delta || aoVivo.length === 0) && (
-                          <Bubble variant="muted">
-                            <BubbleContent>
-                              {delta ? (
-                                <Markdown>{delta}</Markdown>
-                              ) : (
-                                <span className="block shimmer truncate">
-                                  Pensando…
-                                </span>
-                              )}
-                            </BubbleContent>
-                          </Bubble>
+                          // Sem bolha, como a resposta final: o texto não "pula" quando o turno termina.
+                          <div className="text-foreground/90 leading-relaxed">
+                            {delta ? (
+                              <Markdown>{delta}</Markdown>
+                            ) : (
+                              <span className="block shimmer truncate">
+                                Pensando…
+                              </span>
+                            )}
+                          </div>
                         )}
                         {aoVivo.length > 0 && (
                           <ThoughtLine itens={aoVivo} slug={slug} aoVivo />

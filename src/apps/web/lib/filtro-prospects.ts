@@ -11,6 +11,8 @@ export interface FiltroProspects {
   etapas: EtapaId[]
   /** Só quem tem aprovação pendente. */
   soPendentes: boolean
+  /** A busca também olha o analista (só admin: para os outros o dono é sempre a própria pessoa). */
+  buscaPorDono?: boolean
   /** E-mail de quem está usando a tela; não filtra sozinho (a tela o usa para montar `donos`). */
   email: string | null
 }
@@ -23,13 +25,13 @@ function simplificar(texto: string): string {
 }
 
 /** Filtros da home: busca por nome, etapa ou analista; dono, etapa e pendência. Puro, para testar sem tela. */
-export function filtrarProspects(lista: ResumoProspect[], { busca, donos, etapas, soPendentes }: FiltroProspects): ResumoProspect[] {
+export function filtrarProspects(lista: ResumoProspect[], { busca, donos, etapas, soPendentes, buscaPorDono = false }: FiltroProspects): ResumoProspect[] {
   const termo = simplificar(busca.trim())
   const donosAceitos = new Set(donos.map(normalizarEmail))
   const etapasAceitas = new Set<EtapaId>(etapas)
   return lista.filter((p) => {
-    // Nome, etapa ou analista (quem não é admin só recebe os próprios prospects, então o dono é sempre ele mesmo).
-    const onde = [p.nome, p.rotuloEtapaAtual ?? "", p.dono ? nomeCurto(p.dono) : ""].map(simplificar)
+    // Nome, etapa e, para admin, o analista (para os outros o dono é sempre a própria pessoa e puxaria a lista inteira).
+    const onde = [p.nome, p.rotuloEtapaAtual ?? "", buscaPorDono && p.dono ? nomeCurto(p.dono) : ""].map(simplificar)
     if (termo !== "" && !onde.some((t) => t.includes(termo))) return false
     if (donosAceitos.size > 0 && (p.dono === null || !donosAceitos.has(normalizarEmail(p.dono)))) return false
     if (etapasAceitas.size > 0 && (p.etapaAtual === null || !etapasAceitas.has(p.etapaAtual))) return false
