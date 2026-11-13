@@ -140,8 +140,8 @@ export function CatalogoSkills() {
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-muted-foreground text-sm">Fluxo e texto de cada etapa, subagente e regra. As notas anotam o que melhorar.</p>
+      {/* A frase que explica a aba fica no cabeçalho da administração. */}
+      <div className="flex flex-wrap items-center justify-end gap-2">
         <Button variant="outline" size="sm" onClick={copiarNotas}>
           Copiar notas abertas
         </Button>

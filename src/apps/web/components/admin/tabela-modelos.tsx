@@ -57,7 +57,6 @@ export function TabelaModelos() {
 
   return (
     <section className="flex flex-col gap-4">
-      <p className="text-muted-foreground text-sm">Vale a partir do próximo turno de cada etapa. Padrão deixa a escolha com o Claude Code.</p>
       {!dados.lista.completa && (
         <Alert>
           <AlertDescription>lista completa indisponível agora: só Haiku, Sonnet e Opus (mais recentes) aparecem.</AlertDescription>
