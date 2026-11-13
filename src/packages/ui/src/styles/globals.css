@@ -205,6 +205,25 @@
     mix-blend-mode: normal;
 }
 
+/* Faixa de cor que varre o texto e assenta na cor base (Dia Text Reveal, entrada). Ver components/marca/texto-revelado.tsx. */
+.texto-revelado {
+    background-image: linear-gradient(90deg, var(--cor-base, currentColor) 0%, var(--cor-base, currentColor) 42%, #ffd29a 45%, #ff8a3d 48%, #eb610a 51%, #5b9df0 55%, transparent 60%, transparent 100%);
+    background-size: 260% 100%;
+    background-position: 100% 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: revelar 1.07s cubic-bezier(.6, .1, .2, 1) var(--atraso, 0s) forwards;
+}
+
+@keyframes revelar {
+    to { background-position: 0% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .texto-revelado { animation: none; background-image: none; color: var(--cor-base, currentColor); }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
