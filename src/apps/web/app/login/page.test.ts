@@ -93,8 +93,11 @@ describe("página /login", () => {
     expect(fetchFalso).not.toHaveBeenCalled()
   })
 
-  it("modo off: não há login, vai para /", async () => {
+  it("modo off (local): mostra a tela de login para conferir, e o botão entra direto por /auth/entrar", async () => {
     vi.stubEnv("PLANEJAMENTO_AUTH", "")
-    await expect(renderizar()).rejects.toThrow("NEXT_REDIRECT:/")
+    const html = await renderizar()
+    expect(html).toContain("Entrar com Google")
+    expect(html).toMatch(/<a [^>]*href="\/auth\/entrar"/)
+    expect(redirect).not.toHaveBeenCalled()
   })
 })

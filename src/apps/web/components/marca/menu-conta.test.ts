@@ -24,6 +24,14 @@ describe("BarraTopo com o menu da conta", () => {
     expect(html).toContain("Acme")
   })
 
+  it("modo local sem login: só o botão Sair, que volta à tela de login", () => {
+    const html = renderToStaticMarkup(
+      createElement(ProvedorConta, { email: null, ambiente: { executor: "cli", nuvem: false, semLogin: true }, children: createElement(BarraTopo, { titulo: "Growth Cycle" }) }),
+    )
+    expect(html).toMatch(/<form [^>]*action="\/auth\/sair"/)
+    expect(html).toContain("Sair")
+  })
+
   it("fora de um provedor (páginas que usavam a barra antes): nada da conta aparece", () => {
     const html = renderToStaticMarkup(createElement(BarraTopo, { titulo: "Growth Cycle" }))
     expect(html).not.toContain("Sair")

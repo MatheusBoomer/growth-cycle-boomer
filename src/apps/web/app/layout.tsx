@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google"
 import { connection } from "next/server"
 
 import "@workspace/ui/globals.css"
+import { modoDeAutenticacao } from "@workspace/core/autenticacao"
 import { dadosNaNuvem, executorDoAmbiente } from "@workspace/core/sistema"
 import { Toaster } from "@workspace/ui/components/sonner"
 import { cn } from "@workspace/ui/lib/utils"
@@ -31,7 +32,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const email = usuario?.email ?? null
   const papel = usuario?.papel ?? "usuario"
   // Só o modo (nunca segredo): esconde na nuvem o que só faz sentido na máquina do analista.
-  const ambiente = { executor: executorDoAmbiente(process.env), nuvem: dadosNaNuvem(process.env) }
+  const ambiente = { executor: executorDoAmbiente(process.env), nuvem: dadosNaNuvem(process.env), semLogin: modoDeAutenticacao(process.env) === "off" }
   return (
     <html lang="pt-BR" suppressHydrationWarning className={cn("antialiased", fontSans.variable, fontMono.variable, fontSerif.variable, "font-sans")}>
       <body>

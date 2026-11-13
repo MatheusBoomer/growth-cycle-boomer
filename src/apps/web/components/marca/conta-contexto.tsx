@@ -8,6 +8,8 @@ import type { ExecutorDoAmbiente } from "@workspace/core/sistema"
 export interface Ambiente {
   executor: ExecutorDoAmbiente
   nuvem: boolean
+  /** Modo local sem login (PLANEJAMENTO_AUTH=off): a barra mostra um "Sair" que só volta à tela de login, para conferi-la. */
+  semLogin?: boolean
 }
 
 /** Sem provedor (testes, páginas antigas): o modo local de sempre. */

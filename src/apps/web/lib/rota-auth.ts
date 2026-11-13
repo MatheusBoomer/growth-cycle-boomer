@@ -80,7 +80,7 @@ export function loginLigado(env: Record<string, string | undefined> = process.en
 }
 
 /** Redireciona para `/` sem tocar no Supabase (modo off: não há login a fazer). */
-export function redirecionarSemLogin(request: NextRequest, status = 307, env: Record<string, string | undefined> = process.env): NextResponse {
+export function redirecionarSemLogin(request: NextRequest, status = 307, env: Record<string, string | undefined> = process.env, caminho = "/"): NextResponse {
   const origem = origemDoRedirecionamento(request.headers, env, new URL(request.url).protocol)
-  return NextResponse.redirect(new URL("/", origem), status)
+  return NextResponse.redirect(new URL(caminho, origem), status)
 }

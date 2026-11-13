@@ -1,13 +1,19 @@
 import type { NextRequest } from "next/server"
 import { caminhoProximoSeguro } from "@workspace/core/autenticacao"
 import { origemPublica } from "@/lib/origem-publica"
+import { COOKIE_BOAS_VINDAS } from "@/lib/boas-vindas"
 import { contextoDeRota, loginLigado, redirecionarSemLogin } from "@/lib/rota-auth"
 
 export const dynamic = "force-dynamic"
 
 /** Começa o login: pede ao Supabase a URL do Google (o verificador do PKCE vai para os cookies) e redireciona para ela. */
 export async function GET(request: NextRequest) {
-  if (!loginLigado()) return redirecionarSemLogin(request)
+  if (!loginLigado()) {
+    // Modo local sem login: entra direto, com a entrada de boas-vindas (como depois de um login de verdade).
+    const resposta = redirecionarSemLogin(request)
+    resposta.cookies.set(COOKIE_BOAS_VINDAS, "1", { path: "/", maxAge: 120, sameSite: "lax", httpOnly: false })
+    return resposta
+  }
   const { supabase, origem, redirecionar, redirecionarParaFora, lembrarProximo } = contextoDeRota(request)
   try {
     // searchParams já decodifica uma vez; o destino é validado aqui e de novo no callback.
