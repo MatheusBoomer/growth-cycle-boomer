@@ -26,15 +26,13 @@ async function capturarTela(): Promise<string | null> {
 
 /**
  * Botão da barra do topo para reportar bug ou melhoria. Tira o print ANTES de abrir o diálogo, para o diálogo não sair
- * na imagem. Some quando os dados não estão na nuvem (não há onde guardar o report).
+ * na imagem. Aparece sempre; sem a nuvem (app local) o diálogo avisa que o report só fica guardado no app publicado.
  */
 export function BotaoReportar() {
   const { nuvem } = useAmbiente()
   const [capturando, setCapturando] = useState(false)
   const [aberto, setAberto] = useState(false)
   const [print, setPrint] = useState<string | null>(null)
-
-  if (!nuvem) return null
 
   async function abrir() {
     setCapturando(true)
@@ -56,7 +54,7 @@ export function BotaoReportar() {
         <MessageSquareWarningIcon aria-hidden="true" />
         <span className="max-sm:sr-only">Reportar</span>
       </Button>
-      <DialogoReport aberto={aberto} aoMudarAberto={setAberto} print={print} aoRemoverPrint={() => setPrint(null)} />
+      <DialogoReport aberto={aberto} aoMudarAberto={setAberto} print={print} aoRemoverPrint={() => setPrint(null)} semNuvem={!nuvem} />
     </>
   )
 }

@@ -12,6 +12,7 @@ import type { Marca } from "@/lib/anotacoes"
 import { renderizarAnotada } from "@/lib/anotacoes-canvas"
 import { api } from "@/lib/api"
 import { base64ParaBlob, contextoDaTela, extraAceito, montarFormularioReport } from "@/lib/report-envio"
+import { NotaAdmin } from "@/components/admin/aviso-admin"
 
 interface Extra {
   arquivo: File
@@ -30,12 +31,15 @@ export function DialogoReport({
   aoMudarAberto,
   print,
   aoRemoverPrint,
+  semNuvem = false,
 }: {
   aberto: boolean
   aoMudarAberto: (aberto: boolean) => void
   /** Data URL PNG do print, ou null quando a captura falhou ou foi removida. */
   print: string | null
   aoRemoverPrint: () => void
+  /** App rodando com os dados desta máquina: não há onde guardar o report. */
+  semNuvem?: boolean
 }) {
   const [tipo, setTipo] = useState<TipoReport | null>(null)
   const [comentario, setComentario] = useState("")
@@ -235,11 +239,14 @@ export function DialogoReport({
           </div>
         </div>
 
+        {semNuvem && (
+          <NotaAdmin>Este é o app local: o report não fica guardado aqui. No app publicado ele vai para a aba Reports da administração.</NotaAdmin>
+        )}
         <DialogFooter>
           <Button variant="ghost" onClick={() => mudarAberto(false)} disabled={enviando}>
             Cancelar
           </Button>
-          <Button onClick={enviar} disabled={!podeEnviar}>
+          <Button onClick={enviar} disabled={!podeEnviar || semNuvem}>
             {enviando ? "Enviando…" : "Enviar"}
           </Button>
         </DialogFooter>

@@ -381,7 +381,8 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   return (
     <ContextoVisualizador.Provider value={controle}>
       <ProvedorReferencias>
-        <div className="flex h-svh flex-col">
+        {/* Fundo liso: o brilho do topo da página ficaria só atrás da barra (transparente) e pareceria uma barra colorida. */}
+        <div className="flex h-svh flex-col bg-background">
           <AvisoPresenca slug={slug} etapa={etapa} />
           <BarraTopo
             titulo="Growth Cycles"
