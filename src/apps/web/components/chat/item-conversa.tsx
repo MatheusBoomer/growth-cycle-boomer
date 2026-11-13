@@ -13,7 +13,7 @@ import { CardEntregavel } from "@/components/cards/card-entregavel"
 import { CardInsumo } from "@/components/cards/card-insumo"
 import { HistoricoPerguntas } from "@/components/cards/historico-perguntas"
 import { useVisualizador } from "@/components/trabalho/contexto-visualizador"
-import { faixaDeMarcacoes } from "@/lib/anotacoes"
+import { faixaDeMarcacoes, numerosDaEtiqueta } from "@/lib/anotacoes"
 import { caminhoNoProspect, extrairAnexos, nomeDoAnexo, partesComMencoes, semRodape } from "@/lib/mencoes"
 import { EtiquetaAnexo, iconeDoTipo } from "./etiqueta-anexo"
 import { RespostaAgente } from "./resposta-agente"
@@ -68,6 +68,7 @@ function ReferenciasDaMensagem({ referencias, dados }: { referencias: Referencia
             nome={r.titulo}
             icone={tipo ? iconeDoTipo(tipo) : undefined}
             detalhe={faixaDeMarcacoes(r.primeiraMarcacao, r.marcacoes) || "ajuste pedido"}
+            numeros={numerosDaEtiqueta(r.primeiraMarcacao, r.marcacoes)}
           />
         )
       })}

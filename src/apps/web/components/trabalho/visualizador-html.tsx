@@ -1,16 +1,15 @@
 "use client"
 
-import { ExternalLinkIcon, Maximize2Icon, Minimize2Icon, XIcon } from "lucide-react"
+import { ExternalLinkIcon, FileTextIcon, Maximize2Icon, Minimize2Icon, XIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 import type { Entregavel } from "@workspace/core/tipos"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@workspace/ui/components/empty"
-import { Spinner } from "@workspace/ui/components/spinner"
 import { ROTULO_STATUS_ENTREGAVEL } from "@/components/cards/card-entregavel"
 import { urlArquivo } from "@/lib/api"
 import { alvoDeDigitacao } from "@/lib/layout-colunas"
 import { comScriptDeInteracao } from "@/lib/presenca"
+import { BarraVisualizador, CarregandoVisualizador, EstadoVisualizador } from "@/components/trabalho/barra-visualizador"
 
 export function VisualizadorHtml({
   slug,
@@ -55,12 +54,7 @@ export function VisualizadorHtml({
 
   return (
     <section className="flex h-full min-h-0 flex-col" aria-label="Visualizador de relatório">
-      <header className="flex items-center gap-2 border-b px-3 py-2">
-        <h2 className="truncate text-sm font-medium">{entregavel?.titulo ?? "Relatório"}</h2>
-        {entregavel && (
-          <Badge variant={entregavel.status === "aprovado" ? "sucesso" : entregavel.status === "pendente" ? "aviso" : "outline"}>{ROTULO_STATUS_ENTREGAVEL[entregavel.status]}</Badge>
-        )}
-        <div className="ml-auto flex items-center gap-1">
+      <BarraVisualizador titulo={entregavel?.titulo ?? "Relatório"} selo={entregavel && <Badge variant={entregavel.status === "aprovado" ? "sucesso" : entregavel.status === "pendente" ? "aviso" : "outline"}>{ROTULO_STATUS_ENTREGAVEL[entregavel.status]}</Badge>}>
           {entregavel && (
             <>
               <Button variant="ghost" size="icon-sm" aria-label={telaCheia ? "Sair da tela cheia" : "Tela cheia"} onClick={aoAlternarTelaCheia}>
@@ -80,29 +74,21 @@ export function VisualizadorHtml({
           <Button variant="ghost" size="icon-sm" aria-label="Fechar" onClick={aoFechar}>
             <XIcon />
           </Button>
-        </div>
-      </header>
+      </BarraVisualizador>
       {entregavel && html === undefined ? (
-        <div className="flex flex-1 items-center justify-center">
-          <Spinner />
-        </div>
+        <CarregandoVisualizador texto="Carregando o relatório…" />
       ) : entregavel && html !== null ? (
         <iframe
           key={entregavel.id}
           srcDoc={comScriptDeInteracao(html!)}
           title={entregavel.titulo}
           sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
-          className="min-h-0 w-full flex-1 bg-papel"
+          className="m-3 min-h-0 w-[calc(100%-1.5rem)] flex-1 rounded-xl border border-border bg-papel"
         />
       ) : (
-        <Empty className="flex-1">
-          <EmptyHeader>
-            <EmptyTitle>Relatório indisponível</EmptyTitle>
-            <EmptyDescription>
-              {entregavel ? "Não consegui carregar o arquivo. Tente abrir em nova aba." : "Este relatório não está mais entre os entregáveis da etapa."}
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <EstadoVisualizador icone={<FileTextIcon />} titulo="Relatório" destaque="indisponível">
+          {entregavel ? "Não consegui carregar o arquivo. Tente abrir em nova aba." : "Este relatório não está mais entre os entregáveis da etapa."}
+        </EstadoVisualizador>
       )}
     </section>
   )

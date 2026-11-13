@@ -66,33 +66,38 @@ export function ModalRoteiro({
   return (
     <Dialog open={aberto} onOpenChange={(a) => !a && aoMudarIndice(null)}>
       <DialogContent className="h-[92vh] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden p-0 sm:max-w-[min(96vw,1500px)]">
-        <div className="flex flex-wrap items-center gap-2 border-b py-2 pr-12 pl-4">
-          <DialogTitle className="mr-2 font-mono text-sm">
-            Slide {atual + 1} / {slides.length}
+        <div className="flex flex-wrap items-center gap-2.5 border-b border-border py-3 pr-14 pl-5">
+          <DialogTitle className="text-[15px] tracking-normal">
+            Roteiro <em>slide a slide</em>
           </DialogTitle>
           <DialogDescription className="sr-only">Roteiro da apresentação, um slide por vez. Use as setas do teclado para navegar.</DialogDescription>
-          <Button size="icon-sm" variant="outline" aria-label="Slide anterior" title="Slide anterior (←)" disabled={atual === 0} onClick={() => aoMudarIndice(atual - 1)}>
-            <ChevronLeftIcon />
-          </Button>
-          <Button size="icon-sm" variant="outline" aria-label="Próximo slide" title="Próximo slide (→)" disabled={atual >= slides.length - 1} onClick={() => aoMudarIndice(atual + 1)}>
-            <ChevronRightIcon />
-          </Button>
           {comparacao && (
-            <div className="ml-2 flex items-center gap-1.5">
-              <Button size="sm" variant="outline" disabled={mudancaAnterior === undefined} onClick={() => mudancaAnterior !== undefined && aoMudarIndice(mudancaAnterior)}>
-                <ChevronsLeftIcon /> Alterado anterior
+            <div className="flex items-center gap-1">
+              <Badge variant={mudancas.length === 0 ? "outline" : "aviso"}>
+                {mudancas.length === 0 ? "nenhuma mudança" : `${mudancas.length} ${mudancas.length === 1 ? "mudança" : "mudanças"}`}
+              </Badge>
+              <Button size="icon-sm" variant="ghost" aria-label="Alterado anterior" title="Alterado anterior" disabled={mudancaAnterior === undefined} onClick={() => mudancaAnterior !== undefined && aoMudarIndice(mudancaAnterior)}>
+                <ChevronsLeftIcon />
               </Button>
-              <Button size="sm" variant="outline" disabled={proximaMudanca === undefined} onClick={() => proximaMudanca !== undefined && aoMudarIndice(proximaMudanca)}>
-                Próximo alterado <ChevronsRightIcon />
+              <Button size="icon-sm" variant="ghost" aria-label="Próximo alterado" title="Próximo alterado" disabled={proximaMudanca === undefined} onClick={() => proximaMudanca !== undefined && aoMudarIndice(proximaMudanca)}>
+                <ChevronsRightIcon />
               </Button>
-              <span className="text-muted-foreground text-xs">
-                {mudancas.length === 0 ? "nenhum slide mudou" : `${mudancas.length} ${mudancas.length === 1 ? "slide mudou" : "slides mudaram"}`}
-              </span>
             </div>
           )}
+          <div className="ml-auto flex items-center gap-1 font-mono text-xs text-muted-foreground">
+            <Button size="icon-sm" variant="ghost" aria-label="Slide anterior" title="Slide anterior (←)" disabled={atual === 0} onClick={() => aoMudarIndice(atual - 1)}>
+              <ChevronLeftIcon />
+            </Button>
+            <span aria-live="polite">
+              {atual + 1} / {slides.length}
+            </span>
+            <Button size="icon-sm" variant="ghost" aria-label="Próximo slide" title="Próximo slide (→)" disabled={atual >= slides.length - 1} onClick={() => aoMudarIndice(atual + 1)}>
+              <ChevronRightIcon />
+            </Button>
+          </div>
         </div>
         <div className="flex min-h-0">
-          <nav aria-label="Slides" className="hidden w-60 shrink-0 overflow-y-auto border-r p-2 md:block">
+          <nav aria-label="Slides" className="hidden w-[210px] shrink-0 overflow-y-auto border-r border-border p-2 md:block">
             <ol className="space-y-0.5">
               {slides.map((s, i) => {
                 const st = comparacao?.slides[i]?.status ?? "igual"
@@ -103,24 +108,24 @@ export function ModalRoteiro({
                       type="button"
                       onClick={() => aoMudarIndice(i)}
                       aria-current={i === atual ? "true" : undefined}
-                      className={cn("hover:bg-accent flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-xs", i === atual && "bg-accent font-medium")}
+                      className={cn("flex w-full items-center gap-2 rounded-[10px] px-2 py-1.5 text-left text-[12.5px] text-muted-foreground hover:bg-muted hover:text-foreground", i === atual && "bg-muted font-medium text-foreground")}
                     >
-                      <span className="text-muted-foreground w-6 shrink-0 text-right font-mono">{i + 1}</span>
+                      <span className="w-[18px] shrink-0 text-right font-mono text-[11px] text-muted-foreground">{String(i + 1).padStart(2, "0")}</span>
                       <span className="truncate">{resumoDoSlide(s).titulo}</span>
-                      <span className={cn("ml-auto size-2 shrink-0 rounded-full", PONTO[st])} title={st === "igual" ? undefined : st} />
+                      <span className={cn("ml-auto size-[7px] shrink-0 rounded-full", PONTO[st])} title={st === "igual" ? undefined : st} />
                     </button>
                   </li>
                 )
               })}
             </ol>
           </nav>
-          <div className="min-w-0 flex-1 overflow-y-auto p-4">
+          <div className="min-w-0 flex-1 overflow-y-auto p-5">
             <div className={cn("grid gap-6", r.imagens.length > 0 ? "xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]" : "mx-auto max-w-3xl")}>
               {r.imagens.length > 0 && (
                 <div className="space-y-3">
                   {r.imagens.map((img) => (
                     // eslint-disable-next-line @next/next/no-img-element -- arquivo local servido pela rota do app
-                    <img key={img} src={urlArquivo(slug, img)} alt={r.titulo} title={img} className="bg-papel mx-auto h-auto max-h-[72vh] w-auto max-w-full rounded-md border" />
+                    <img key={img} src={urlArquivo(slug, img)} alt={r.titulo} title={img} className="mx-auto h-auto max-h-[72vh] w-auto max-w-full rounded-xl border border-border bg-papel" />
                   ))}
                 </div>
               )}
@@ -131,17 +136,17 @@ export function ModalRoteiro({
                   </Badge>
                   {status !== "igual" && <EtiquetaMudanca status={status} />}
                 </div>
-                <h2 className="text-lg leading-snug font-semibold">{r.titulo}</h2>
-                {slide.pendencia && <p className="border-aviso/60 bg-aviso-fundo text-aviso rounded-md border p-2 text-sm">Pendência: {slide.pendencia}</p>}
+                <h2 className="text-[19px] leading-[1.2] font-medium tracking-[-0.02em]">{r.titulo}</h2>
+                {slide.pendencia && <p className="rounded-[14px] bg-aviso-fundo px-3.5 py-3 text-[13px] text-aviso">Pendência: {slide.pendencia}</p>}
                 {r.linhas.length > 0 && (
-                  <ul className="list-disc space-y-1.5 pl-5 text-sm">
+                  <ul className="list-disc space-y-1 pl-4 text-[13px] leading-normal text-muted-foreground">
                     {r.linhas.map((l, j) => (
                       <li key={j}>{l}</li>
                     ))}
                   </ul>
                 )}
                 {comparado && comparado.diferencas.length > 0 && (
-                  <div className="space-y-1 rounded-md border p-2">
+                  <div className="grid gap-2 rounded-2xl border border-border p-3.5">
                     <p className="text-xs font-medium">O que mudou neste slide</p>
                     <DiferencasDoSlide diferencas={comparado.diferencas} />
                   </div>

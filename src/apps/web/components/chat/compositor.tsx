@@ -15,7 +15,7 @@ import { renderizarAnotada } from "@/lib/anotacoes-canvas"
 import { separadorAntes } from "@/lib/citacao"
 import { consultaDeMencao, textoParaAgente } from "@/lib/mencoes"
 import { descartarSuperadas, numerar } from "@/lib/referencias"
-import { faixaDeMarcacoes } from "@/lib/anotacoes"
+import { faixaDeMarcacoes, numerosDaEtiqueta } from "@/lib/anotacoes"
 import { useReferencias } from "./contexto-referencias"
 import { EtiquetaAnexo, iconeDoTipo } from "./etiqueta-anexo"
 
@@ -232,6 +232,7 @@ export function Compositor({
                 nome={r.titulo}
                 icone={iconeDoTipo(r.tipo)}
                 detalhe={faixaDeMarcacoes(numeracao[i]!.primeira, numeracao[i]!.quantidade) || "ajuste pedido"}
+                numeros={numerosDaEtiqueta(numeracao[i]!.primeira, numeracao[i]!.quantidade)}
                 aoRemover={() => ref.remover(r.entregavelId)}
                 aoAbrir={r.urlImagem ? () => ref.iniciarMarcacao(r.entregavelId) : undefined}
               />

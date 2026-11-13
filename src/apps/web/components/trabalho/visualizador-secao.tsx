@@ -1,12 +1,11 @@
 "use client"
 
-import { Maximize2Icon, Minimize2Icon, PencilIcon, QuoteIcon, XIcon } from "lucide-react"
+import { FileTextIcon, Maximize2Icon, MessageSquareIcon, Minimize2Icon, PencilIcon, XIcon } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import type { Entregavel } from "@workspace/core/tipos"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@workspace/ui/components/empty"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { ROTULO_STATUS_ENTREGAVEL } from "@/components/cards/card-entregavel"
@@ -15,6 +14,7 @@ import { api, mensagemDeErro, urlArquivo } from "@/lib/api"
 import { citacao } from "@/lib/citacao"
 import { alvoDeDigitacao } from "@/lib/layout-colunas"
 import { useVisualizador } from "./contexto-visualizador"
+import { BarraVisualizador, CarregandoVisualizador, EstadoVisualizador } from "@/components/trabalho/barra-visualizador"
 
 /**
  * Seção de texto aberta na coluna larga. Selecionar um trecho mostra "Citar no chat" (o trecho
@@ -107,14 +107,7 @@ export function VisualizadorSecao({
 
   return (
     <section className="flex h-full min-h-0 flex-col" aria-label="Visualizador de seção">
-      <header className="flex items-center gap-2 border-b px-3 py-2">
-        <h2 className="truncate text-sm font-medium">{entregavel?.titulo ?? "Seção"}</h2>
-        {entregavel && (
-          <Badge variant={entregavel.status === "aprovado" ? "sucesso" : entregavel.status === "pendente" ? "aviso" : "outline"}>
-            {entregavel.editadoEm && entregavel.status === "pendente" ? "Editada por você" : ROTULO_STATUS_ENTREGAVEL[entregavel.status]}
-          </Badge>
-        )}
-        <div className="ml-auto flex items-center gap-1">
+      <BarraVisualizador titulo={entregavel?.titulo ?? "Seção"} selo={entregavel && <Badge variant={entregavel.status === "aprovado" ? "sucesso" : entregavel.status === "pendente" ? "aviso" : "outline"}>{entregavel.editadoEm && entregavel.status === "pendente" ? "Editada por você" : ROTULO_STATUS_ENTREGAVEL[entregavel.status]}</Badge>}>
           {editando ? (
             <>
               <Button variant="ghost" size="sm" disabled={salvando} onClick={() => setRascunho(null)}>
@@ -127,8 +120,8 @@ export function VisualizadorSecao({
           ) : (
             podeEditar &&
             typeof texto === "string" && (
-              <Button variant="ghost" size="sm" onClick={() => setRascunho(texto)}>
-                <PencilIcon /> Editar
+              <Button variant="ghost" size="sm" className="h-[30px] text-muted-foreground" onClick={() => setRascunho(texto)}>
+                <PencilIcon /> Editar texto
               </Button>
             )
           )}
@@ -140,12 +133,9 @@ export function VisualizadorSecao({
           <Button variant="ghost" size="icon-sm" aria-label="Fechar" onClick={aoFechar}>
             <XIcon />
           </Button>
-        </div>
-      </header>
+      </BarraVisualizador>
       {entregavel && texto === undefined ? (
-        <div className="flex flex-1 items-center justify-center">
-          <Spinner />
-        </div>
+        <CarregandoVisualizador texto="Carregando o texto…" />
       ) : entregavel && typeof texto === "string" ? (
         editando ? (
           <div className="flex min-h-0 flex-1 flex-col gap-2 p-3">
@@ -159,30 +149,29 @@ export function VisualizadorSecao({
             />
           </div>
         ) : (
-          <div ref={corpo} className="relative min-h-0 flex-1 overflow-y-auto p-5" onMouseUp={aoSoltar} onScroll={() => setSelecao(null)}>
+          <div ref={corpo} className="relative min-h-0 flex-1 overflow-y-auto px-6.5 py-5.5" onMouseUp={aoSoltar} onScroll={() => setSelecao(null)}>
             <Markdown>{texto}</Markdown>
             {selecao && (
-              <Button
-                size="sm"
-                className="absolute z-10 -translate-y-full shadow-md"
+              <div
+                className="absolute z-10 flex -translate-y-full gap-1 rounded-full bg-foreground p-1 text-[12.5px] text-background shadow-(--sombra-card)"
                 style={{ top: selecao.topo - 6, left: Math.max(selecao.esquerda, 8) }}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={citar}
               >
-                <QuoteIcon /> Citar no chat
-              </Button>
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 rounded-full px-3 py-1.5 font-medium hover:bg-background/15 [&_svg]:size-3.5"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={citar}
+                >
+                  <MessageSquareIcon /> Pedir ajuste
+                </button>
+              </div>
             )}
           </div>
         )
       ) : (
-        <Empty className="flex-1">
-          <EmptyHeader>
-            <EmptyTitle>Seção indisponível</EmptyTitle>
-            <EmptyDescription>
-              {entregavel ? "Não consegui carregar o texto." : "Esta seção não está mais entre os entregáveis da etapa."}
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <EstadoVisualizador icone={<FileTextIcon />} titulo="Seção" destaque="indisponível">
+          {entregavel ? "Não consegui carregar o texto." : "Esta seção não está mais entre os entregáveis da etapa."}
+        </EstadoVisualizador>
       )}
     </section>
   )

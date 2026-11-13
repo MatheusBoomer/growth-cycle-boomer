@@ -3,17 +3,8 @@
 import { BarChart3Icon, FileIcon, FileSpreadsheetIcon, FileTextIcon, GlobeIcon, ImageIcon, PresentationIcon, TableIcon, XIcon } from "lucide-react"
 import type { ReactNode } from "react"
 import type { TipoEntregavel } from "@workspace/core/tipos"
-import {
-  Attachment,
-  AttachmentAction,
-  AttachmentActions,
-  AttachmentContent,
-  AttachmentDescription,
-  AttachmentMedia,
-  AttachmentTitle,
-  AttachmentTrigger,
-} from "@workspace/ui/components/attachment"
 import { Spinner } from "@workspace/ui/components/spinner"
+import { cn } from "@workspace/ui/lib/utils"
 
 function IconeDoArquivo({ nome }: { nome: string }) {
   const ext = nome.split(".").pop()?.toLowerCase() ?? ""
@@ -45,6 +36,7 @@ export function EtiquetaAnexo({
   aoAbrir,
   icone,
   detalhe,
+  numeros,
 }: {
   nome: string
   estado?: "uploading" | "done" | "error"
@@ -53,24 +45,42 @@ export function EtiquetaAnexo({
   aoAbrir?: () => void
   /** Ícone no lugar do que o nome do arquivo sugere (referência de ajuste). */
   icone?: ReactNode
-  /** Linha extra abaixo do nome, ex.: "marcações 1 a 2". */
+  /** Texto extra (ex.: "marcações 1 a 2"); aparece ao passar o mouse e para leitores de tela. */
   detalhe?: string
+  /** Números das marcações desta referência, no círculo laranja (ex.: "1" ou "1-2"). */
+  numeros?: string
 }) {
+  const dica = erro ?? (detalhe ? `${nome} · ${detalhe}` : nome)
   return (
-    <Attachment size="sm" state={estado} title={erro ?? nome} className="min-w-0">
-      <AttachmentMedia>{estado === "uploading" ? <Spinner /> : (icone ?? <IconeDoArquivo nome={nome} />)}</AttachmentMedia>
-      <AttachmentContent>
-        <AttachmentTitle>{nome}</AttachmentTitle>
-        {(erro ?? detalhe) && <AttachmentDescription>{erro ?? detalhe}</AttachmentDescription>}
-      </AttachmentContent>
-      {aoAbrir && <AttachmentTrigger aria-label={`Abrir ${nome}`} onClick={aoAbrir} />}
-      {aoRemover && (
-        <AttachmentActions>
-          <AttachmentAction aria-label={`Remover ${nome}`} onClick={aoRemover}>
-            <XIcon />
-          </AttachmentAction>
-        </AttachmentActions>
+    <span
+      data-slot="etiqueta-anexo"
+      data-state={estado}
+      title={dica}
+      className={cn(
+        "relative inline-flex max-w-[260px] min-w-0 items-center gap-1.5 rounded-full border border-border bg-card py-1 pr-1.5 pl-2.5 text-[12.5px] text-card-foreground transition-colors has-[>button[data-abrir]]:hover:bg-muted/50 [&_svg]:size-3.5 [&_svg]:shrink-0",
+        estado === "error" && "border-destructive/40 text-destructive",
+        !aoRemover && "pr-2.5",
       )}
-    </Attachment>
+    >
+      {numeros && (
+        <span className="grid h-[18px] min-w-[18px] place-items-center rounded-full bg-primary px-1 font-mono text-[10.5px] font-semibold text-primary-foreground">
+          {numeros}
+        </span>
+      )}
+      {estado === "uploading" ? <Spinner /> : (icone ?? <IconeDoArquivo nome={nome} />)}
+      <span className="min-w-0 truncate">{nome}</span>
+      {(erro ?? detalhe) && <span className="sr-only">{erro ?? detalhe}</span>}
+      {aoAbrir && <button type="button" data-abrir aria-label={`Abrir ${nome}`} onClick={aoAbrir} className="absolute inset-0 rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50" />}
+      {aoRemover && (
+        <button
+          type="button"
+          aria-label={`Remover ${nome}`}
+          onClick={aoRemover}
+          className="relative grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground [&_svg]:size-3"
+        >
+          <XIcon />
+        </button>
+      )}
+    </span>
   )
 }

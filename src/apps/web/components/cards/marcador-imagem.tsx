@@ -1,6 +1,6 @@
 "use client"
 
-import { CircleIcon, HashIcon, SquareIcon, Trash2Icon } from "lucide-react"
+import { CircleIcon, HashIcon, SquareIcon, XIcon } from "lucide-react"
 import { useRef, useState, type PointerEvent } from "react"
 import { Button } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
@@ -76,27 +76,35 @@ export function MarcadorImagem({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="text-muted-foreground mr-1 text-sm">Marcar:</span>
-        {FERRAMENTAS.map(({ forma, icone: Icone, dica }) => (
-          <Button
-            key={forma}
-            size="sm"
-            variant={ferramenta === forma ? "default" : "outline"}
-            title={dica}
-            aria-pressed={ferramenta === forma}
-            onClick={() => setFerramenta(forma)}
-          >
-            <Icone /> {ROTULO_FORMA[forma]}
-          </Button>
-        ))}
-        <Button size="sm" variant="ghost" className="ml-auto" onClick={aoFechar}>
+        <span id="marcar-rotulo" className="mr-1 text-[13px] text-muted-foreground">
+          Marcar:
+        </span>
+        <div role="radiogroup" aria-labelledby="marcar-rotulo" className="inline-flex gap-0.5 rounded-full border border-border p-[3px]">
+          {FERRAMENTAS.map(({ forma, icone: Icone, dica }) => (
+            <button
+              key={forma}
+              type="button"
+              role="radio"
+              title={dica}
+              aria-checked={ferramenta === forma}
+              onClick={() => setFerramenta(forma)}
+              className={cn(
+                "flex items-center gap-1.5 rounded-full px-3 py-[5px] text-[12.5px] text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:size-3.5",
+                ferramenta === forma && "bg-foreground text-background hover:text-background",
+              )}
+            >
+              <Icone /> {ROTULO_FORMA[forma]}
+            </button>
+          ))}
+        </div>
+        <Button size="sm" variant="ghost" className="ml-auto text-muted-foreground" onClick={aoFechar}>
           Concluir marcação
         </Button>
       </div>
 
       <div
         ref={areaRef}
-        className="relative touch-none overflow-hidden rounded-md border bg-papel select-none"
+        className="relative touch-none overflow-hidden rounded-2xl border border-border bg-papel select-none"
         style={{ cursor: "crosshair" }}
         onPointerDown={aoPressionar}
         onPointerMove={aoMover}
@@ -115,28 +123,31 @@ export function MarcadorImagem({
         {marcas.map((m, i) => (
           <span
             key={m.id}
-            className="absolute flex size-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-destructive text-xs font-semibold text-background shadow ring-2 ring-background"
+            className="absolute flex size-[22px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground ring-3 ring-papel"
             style={{ left: `${m.x}%`, top: `${m.y}%` }}
           >
             {primeiroNumero + i}
           </span>
         ))}
       </div>
-      <p className="text-muted-foreground text-xs">{instrucao}</p>
+      <p className="text-xs text-muted-foreground">{instrucao}</p>
 
       {marcas.length > 0 && (
-        <ul className="flex flex-wrap gap-2">
+        <ul className="flex flex-wrap gap-1.5">
           {marcas.map((m, i) => (
-            <li key={m.id} className="bg-muted flex items-center gap-1.5 rounded-full py-0.5 pr-1 pl-2.5 text-xs">
-              {primeiroNumero + i} · {ROTULO_FORMA[m.forma]}
+            <li key={m.id} className="flex items-center gap-1.5 rounded-full border border-border bg-card py-1 pr-1.5 pl-1.5 text-[12.5px]">
+              <span className="grid size-[18px] place-items-center rounded-full bg-primary font-mono text-[10.5px] font-semibold text-primary-foreground">
+                {primeiroNumero + i}
+              </span>
+              {ROTULO_FORMA[m.forma]}
               <Button
                 size="icon-sm"
                 variant="ghost"
-                className="size-5"
+                className="size-5 rounded-full text-muted-foreground [&_svg]:size-3"
                 aria-label={`Apagar marcação ${primeiroNumero + i}`}
                 onClick={() => aoMudar(marcas.filter((x) => x.id !== m.id))}
               >
-                <Trash2Icon />
+                <XIcon />
               </Button>
             </li>
           ))}
@@ -149,7 +160,7 @@ export function MarcadorImagem({
 function Forma({ marca: m, destacada }: { marca: Marca; destacada: boolean }) {
   if (m.forma === "numero") return null
   const comum = {
-    className: cn("fill-destructive/10 stroke-destructive", destacada && "fill-destructive/20"),
+    className: cn("fill-primary/10 stroke-primary", destacada && "fill-primary/20"),
     strokeWidth: destacada ? 3 : 2,
     vectorEffect: "non-scaling-stroke" as const,
   }
