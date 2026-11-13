@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Geist_Mono, Inter } from "next/font/google"
+import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google"
 import { connection } from "next/server"
 
 import "@workspace/ui/globals.css"
@@ -12,8 +12,10 @@ import { VerificacaoSistema } from "@/components/sistema/verificacao-sistema"
 import { ThemeProvider } from "@/components/theme-provider"
 import { usuarioDaRequisicao } from "@/lib/sessao"
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
+const fontSans = Geist({ subsets: ["latin"], variable: "--font-sans" })
 const fontMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
+// Só para destaques: palavra de destaque dos títulos, nomes de etapa e números grandes. Nunca em texto corrido.
+const fontSerif = Instrument_Serif({ subsets: ["latin"], weight: "400", style: ["normal", "italic"], variable: "--font-serif" })
 
 export const metadata: Metadata = { title: "Growth Cycle · Boomer" }
 
@@ -32,7 +34,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // Só o modo (nunca segredo): esconde na nuvem o que só faz sentido na máquina do analista.
   const ambiente = { executor: executorDoAmbiente(process.env), nuvem: dadosNaNuvem(process.env) }
   return (
-    <html lang="pt-BR" suppressHydrationWarning className={cn("antialiased", fontMono.variable, "font-sans", inter.variable)}>
+    <html lang="pt-BR" suppressHydrationWarning className={cn("antialiased", fontSans.variable, fontMono.variable, fontSerif.variable, "font-sans")}>
       <body>
         <ThemeProvider>
           <FundoOndasAscii />
