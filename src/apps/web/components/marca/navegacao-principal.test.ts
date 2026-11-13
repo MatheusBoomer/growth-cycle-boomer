@@ -50,11 +50,23 @@ describe("NavegacaoPrincipal", () => {
     await desmontar()
   })
 
-  it("no celular, Administração fica só ícone e o nome vai para leitor de tela", async () => {
+  it("abaixo de lg (celular, tablet, meia tela), os itens ficam só ícone e o nome vai para leitor de tela", async () => {
     const { raiz, desmontar } = await montar("admin")
-    const admin = link(raiz, "Administração")
-    expect(admin.querySelector("svg")?.getAttribute("class")).toContain("sm:hidden")
-    expect(admin.querySelector("span")?.className).toContain("max-sm:sr-only")
+    for (const nome of ["Prospects", "Administração"]) {
+      const item = link(raiz, nome)
+      expect(item.querySelector("svg")?.getAttribute("class"), nome).toContain("lg:hidden")
+      expect(item.querySelector("span")?.className, nome).toContain("max-lg:sr-only")
+    }
     await desmontar()
+  })
+
+  it("o relógio só aparece de lg para cima, para a barra caber em meia tela", async () => {
+    const { Relogio } = await import("./relogio")
+    const raiz = document.createElement("div")
+    document.body.append(raiz)
+    const r = createRoot(raiz)
+    await act(async () => r.render(createElement(Relogio)))
+    expect(raiz.querySelector("span")?.className).toContain("max-lg:hidden")
+    await act(async () => r.unmount())
   })
 })
