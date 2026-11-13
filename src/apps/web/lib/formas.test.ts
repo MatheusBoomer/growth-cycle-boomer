@@ -23,6 +23,15 @@ describe("formas do redesign", () => {
     expect(cls).not.toMatch(/bg-linear|from-primario-claro/)
   })
 
+  it("proporção do protótipo (36 px de altura, 16 px de folga lateral no padrão)", () => {
+    expect(buttonVariants({ size: "default" })).toMatch(/\bh-9\b/)
+    expect(buttonVariants({ size: "default" })).toMatch(/\bpx-4\b/)
+    expect(buttonVariants({ size: "sm" })).toMatch(/\bh-8\b/)
+    expect(buttonVariants({ size: "sm" })).toMatch(/\bpx-3\.5\b/)
+    expect(buttonVariants({ size: "lg" })).toMatch(/\bh-10\b/)
+    expect(buttonVariants({ size: "icon" })).toMatch(/\bsize-9\b/)
+  })
+
   it("selo é pílula", () => expect(badgeVariants({})).toContain("rounded-full"))
 
   it("card tem raio de 18 px", () => expect(ler("card.tsx")).toContain("rounded-[18px]"))
