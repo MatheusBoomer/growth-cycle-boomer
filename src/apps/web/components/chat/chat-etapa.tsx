@@ -104,12 +104,12 @@ export function ChatEtapa({
           <div
             aria-hidden="true"
             data-slot="desfoque-chat"
-            className="pointer-events-none absolute inset-x-0 top-0 z-10 h-10 bg-linear-to-b from-background to-transparent"
+            className="pointer-events-none absolute inset-x-0 top-0 z-10 h-10 bg-linear-to-b from-(--vidro-1) to-transparent"
           />
           <div
             aria-hidden="true"
             data-slot="desfoque-chat"
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-12 bg-linear-to-t from-background to-transparent"
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-12 bg-linear-to-t from-(--vidro-2) to-transparent"
           />
           <MessageScroller className="min-h-0 flex-1">
             <MessageScrollerViewport>
@@ -169,7 +169,7 @@ export function ChatEtapa({
                           // Sem bolha, como a resposta final: o texto não "pula" quando o turno termina.
                           <div className="text-foreground/90 text-[15px] leading-relaxed">
                             {delta ? (
-                              <Markdown>{delta}</Markdown>
+                              <Markdown className="text-[15px]">{delta}</Markdown>
                             ) : (
                               <span className="block shimmer truncate">
                                 Pensando…

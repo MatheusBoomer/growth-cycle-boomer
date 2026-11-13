@@ -107,7 +107,7 @@ export function ItemConversa({
         <Message align="end">
           <MessageContent>
             {semRodape(evento.texto).trim() && (
-              <Bubble variant="tinted" align="end">
+              <Bubble variant="outline" align="end">
                 <BubbleContent className="whitespace-pre-wrap">
                   <TextoComMencoes texto={evento.texto} />
                 </BubbleContent>

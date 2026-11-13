@@ -46,7 +46,7 @@ export function RespostaAgente({ texto, ultima }: { texto: string; ultima: boole
       <MessageContent>
         <div ref={corpo}>
           <div className="text-foreground/90 text-[15px] leading-relaxed">
-            <Markdown>{texto}</Markdown>
+            <Markdown className="text-[15px]">{texto}</Markdown>
           </div>
         </div>
         <MessageFooter

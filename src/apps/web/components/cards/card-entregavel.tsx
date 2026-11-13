@@ -69,7 +69,7 @@ export function CardEntregavel({ slug, entregavel: e, anterior = null }: { slug:
       )}
     >
       <CardHeader>
-        <CardTitle className="font-serif text-[19px] leading-snug font-normal">{e.titulo}</CardTitle>
+        <CardTitle className="font-serif text-[20px] leading-snug font-normal italic">{e.titulo}</CardTitle>
         <CardDescription>
           {ROTULO_TIPO[e.tipo]} · vai para a apresentação como <code className="font-mono">{nomeNaApresentacao}</code>
         </CardDescription>
@@ -129,7 +129,7 @@ export function CardEntregavel({ slug, entregavel: e, anterior = null }: { slug:
         )}
       </CardContent>
       {e.status === "pendente" && !ajusteNaImagem && (
-        <CardFooter className="gap-2">
+        <CardFooter className="gap-2 border-0 bg-transparent pt-0">
           <Button
             className="brilho-passa"
             onClick={aprovar}

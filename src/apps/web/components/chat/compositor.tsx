@@ -1,6 +1,6 @@
 "use client"
 
-import { FileIcon, PaperclipIcon, PanelRightOpenIcon, SendIcon, SquareIcon } from "lucide-react"
+import { ArrowUpIcon, AtSignIcon, FileIcon, PanelRightOpenIcon, PlusIcon, SquareIcon } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import type { EtapaId } from "@workspace/core/tipos"
@@ -347,19 +347,28 @@ export function Compositor({
           rows={3}
           aria-label="Mensagem para o agente"
           // Dentro da pílula do compositor: sem borda nem fundo próprios (o brilho do foco fica na pílula).
-          className="border-0 bg-transparent px-1 shadow-none focus-visible:ring-0 dark:bg-transparent"
+          className="resize-none border-0 bg-transparent px-1 shadow-none focus-visible:ring-0 dark:bg-transparent"
         />
         </div>
         <div className="flex items-center gap-2">
           <input ref={entradaArquivo} type="file" multiple hidden onChange={(e) => void anexar(e.target.files)} />
+          <Button variant="outline" size="xs" aria-label="Anexar arquivo" disabled={desabilitado} onClick={() => entradaArquivo.current?.click()}>
+            <PlusIcon aria-hidden="true" /> Anexar
+          </Button>
           <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Anexar arquivo"
+            variant="outline"
+            size="xs"
+            aria-label="Mencionar um arquivo"
             disabled={desabilitado}
-            onClick={() => entradaArquivo.current?.click()}
+            onClick={() => {
+              // Põe um "@" no fim e abre a lista de arquivos, como se a pessoa tivesse digitado.
+              const novo = texto === "" || texto.endsWith(" ") || texto.endsWith("\n") ? `${texto}@` : `${texto} @`
+              setTexto(novo)
+              atualizarConsulta(novo, novo.length)
+              campo.current?.focus()
+            }}
           >
-            <PaperclipIcon />
+            <AtSignIcon aria-hidden="true" /> Mencionar
           </Button>
           {ativoAqui ? (
             <Button
@@ -370,8 +379,14 @@ export function Compositor({
               <SquareIcon /> Parar
             </Button>
           ) : (
-            <Button className="ml-auto" onClick={() => void enviar()} disabled={!podeEnviar}>
-              {enviando ? <Spinner /> : <SendIcon />} Enviar
+            <Button
+              aria-label="Enviar"
+              title="Enviar (Enter)"
+              className="bg-foreground text-background ml-auto size-9 rounded-full p-0 shadow-none ring-0 hover:brightness-100 hover:opacity-90"
+              onClick={() => void enviar()}
+              disabled={!podeEnviar}
+            >
+              {enviando ? <Spinner /> : <ArrowUpIcon />}
             </Button>
           )}
         </div>

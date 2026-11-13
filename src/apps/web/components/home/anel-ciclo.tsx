@@ -19,7 +19,7 @@ export function AnelCiclo({ concluidas, total, atual, tamanho }: { concluidas: n
     <svg width={tamanho} height={tamanho} viewBox={`0 0 ${tamanho} ${tamanho}`} role="img" aria-label={`${feitas} de ${total} etapas concluídas`} className="shrink-0">
       {Array.from({ length: total }, (_, i) => {
         const estado = i < feitas ? "concluida" : i === feitas && atual ? "atual" : "pendente"
-        const cor = estado === "concluida" ? "var(--sucesso)" : estado === "atual" ? "var(--primary)" : "color-mix(in srgb, var(--foreground) 12%, transparent)"
+        const cor = estado === "concluida" ? "var(--chart-3)" : estado === "atual" ? "var(--primary)" : "color-mix(in srgb, var(--foreground) 12%, transparent)"
         return (
           <path
             key={i}
