@@ -204,5 +204,8 @@
     }
   body {
     @apply bg-background text-foreground;
+    /* Brilho quente difuso no topo, no lugar do antigo fundo ASCII. */
+    background-image: radial-gradient(50% 40% at 18% 0%, var(--brilho), transparent 70%);
+    background-attachment: fixed;
     }
 }

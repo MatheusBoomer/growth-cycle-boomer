@@ -23,4 +23,15 @@ describe("temas do redesign", () => {
   })
 
   it("os tokens do fundo ASCII saíram", () => expect(CSS).not.toMatch(/--orb-|--pontos/))
+
+  it("o fundo da página é o brilho quente, preso à janela", () => {
+    const body = /body\s*\{[^}]*\}/.exec(CSS)![0]
+    expect(body).toMatch(/radial-gradient\([^)]*var\(--brilho\)/)
+    expect(body).toMatch(/background-attachment:\s*fixed/)
+  })
+
+  it("o layout não monta mais o fundo ASCII", () => {
+    const layout = readFileSync(path.resolve(import.meta.dirname, "../app/layout.tsx"), "utf-8")
+    expect(layout).not.toMatch(/FundoOndasAscii/)
+  })
 })

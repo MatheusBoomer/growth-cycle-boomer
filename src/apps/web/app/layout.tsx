@@ -7,7 +7,6 @@ import { dadosNaNuvem, executorDoAmbiente } from "@workspace/core/sistema"
 import { Toaster } from "@workspace/ui/components/sonner"
 import { cn } from "@workspace/ui/lib/utils"
 import { ProvedorConta } from "@/components/marca/conta-contexto"
-import { FundoOndasAscii } from "@/components/marca/fundo-ondas-ascii"
 import { VerificacaoSistema } from "@/components/sistema/verificacao-sistema"
 import { ThemeProvider } from "@/components/theme-provider"
 import { usuarioDaRequisicao } from "@/lib/sessao"
@@ -37,7 +36,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <html lang="pt-BR" suppressHydrationWarning className={cn("antialiased", fontSans.variable, fontMono.variable, fontSerif.variable, "font-sans")}>
       <body>
         <ThemeProvider>
-          <FundoOndasAscii />
           <ProvedorConta email={email} papel={papel} ambiente={ambiente}>{children}</ProvedorConta>
           <VerificacaoSistema />
           <Toaster />
