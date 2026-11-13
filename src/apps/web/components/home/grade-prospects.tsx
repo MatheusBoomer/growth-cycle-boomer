@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@workspace/ui/components/select"
 import { cn } from "@workspace/ui/lib/utils"
+import type { EtapaParaEscolher } from "@/components/home/escolha-etapa"
 import { BarraTopo } from "@/components/marca/barra-topo"
 import { FaixaDithered } from "@/components/marca/faixa-dithered"
 import { useEmailDaConta, usePapel } from "@/components/marca/conta-contexto"
@@ -128,7 +129,7 @@ export function GradeProspects({
   avatares,
 }: {
   prospects: ResumoProspect[]
-  etapas: { id: EtapaId; rotulo: string }[]
+  etapas: EtapaParaEscolher[]
   /** E-mail do dono (minúsculo) para a URL da foto, só de quem tem foto. */
   avatares: Record<string, string>
 }) {

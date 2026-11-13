@@ -22,7 +22,7 @@ class Redirecionou extends Error {}
 
 beforeEach(() => {
   for (const m of [usuarioDaRequisicao, listarProspects, servidor, redirect, grade, entrada, cookiesDaRequisicao.get]) m.mockReset()
-  servidor.mockReturnValue({ servico: { listarProspects }, usuarios: null, catalogo: { etapas: [{ id: "01", rotuloStatus: "01 · Preparação" }] } })
+  servidor.mockReturnValue({ servico: { listarProspects }, usuarios: null, catalogo: { etapas: [{ id: "01", rotuloStatus: "01 · Preparação", fase: "Contexto" }] } })
   redirect.mockImplementation((destino: string) => {
     throw Object.assign(new Redirecionou(destino), { destino })
   })
@@ -50,7 +50,7 @@ describe("página inicial", () => {
     listarProspects.mockResolvedValue(lista)
     const elemento = (await Pagina()) as { type: unknown; props: Record<string, unknown> }
     expect(elemento.type).toBe(grade)
-    expect(elemento.props).toEqual({ prospects: lista, etapas: [{ id: "01", rotulo: "01 · Preparação" }], avatares: {} })
+    expect(elemento.props).toEqual({ prospects: lista, etapas: [{ id: "01", rotulo: "01 · Preparação", fase: "Contexto" }], avatares: {} })
   })
 
   describe("entrada logo depois do login", () => {

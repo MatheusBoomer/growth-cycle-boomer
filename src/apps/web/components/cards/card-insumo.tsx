@@ -1,6 +1,6 @@
 "use client"
 
-import { CircleCheckIcon, DownloadIcon, FileSpreadsheetIcon, FileTextIcon, LinkIcon, XIcon } from "lucide-react"
+import { CircleCheckIcon, DownloadIcon, FileSpreadsheetIcon, FileTextIcon, FileXIcon, LinkIcon, XIcon } from "lucide-react"
 import { useRef, useState } from "react"
 import { toast } from "sonner"
 import type { EstadoInsumo, EtapaId, InsumoCatalogo } from "@workspace/core/tipos"
@@ -23,6 +23,7 @@ import { Input } from "@workspace/ui/components/input"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
 import { api, mensagemDeErro } from "@/lib/api"
+import { IconeModal } from "@/components/marca/icone-modal"
 
 export interface PropsCardInsumo {
   slug: string
@@ -45,14 +46,21 @@ function ExcluirEnvio({ nome, aoExcluir }: { nome: string; aoExcluir: () => void
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir este arquivo?</AlertDialogTitle>
+            <IconeModal tom="perigo">
+              <FileXIcon />
+            </IconeModal>
+            <AlertDialogTitle>
+              Excluir este <em>arquivo?</em>
+            </AlertDialogTitle>
             <AlertDialogDescription>
               O arquivo de {nome} vai para a Lixeira do computador e sai desta etapa. Depois é só enviar o arquivo certo.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={aoExcluir}>Excluir</AlertDialogAction>
+            <AlertDialogAction variant="destructive" onClick={aoExcluir}>
+              Excluir
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

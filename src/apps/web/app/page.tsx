@@ -20,7 +20,7 @@ export default async function Pagina() {
   // Só o admin vê o analista nos cartões; para os outros nem consulta, e para o admin vão só as fotos dos donos
   // listados (nunca o diretório inteiro de e-mails).
   const avatares = usuario.papel === "admin" ? await avataresDosDonos(prospects.map((p) => p.dono)) : {}
-  const etapas = catalogo.etapas.map((e) => ({ id: e.id, rotulo: e.rotuloStatus }))
+  const etapas = catalogo.etapas.map((e) => ({ id: e.id, rotulo: e.rotuloStatus, fase: e.fase }))
   const grade = <GradeProspects prospects={prospects} etapas={etapas} avatares={avatares} />
   // Logo depois de um login de verdade o retorno do Google deixa este cookie; a entrada o apaga ao montar.
   const acabouDeEntrar = (await cookies()).get(COOKIE_BOAS_VINDAS)?.value === "1"

@@ -127,6 +127,7 @@
     --vidro-interno: rgb(45 35 20 / 0.03);
     --sombra-card: 0 1px 0 0 #ffffff inset, 0 1px 2px rgb(45 35 20 / 0.04), 0 12px 28px -18px rgb(60 45 25 / 0.22);
     --brilho: rgb(235 97 10 / 0.1);
+    --veu: rgb(30 25 15 / 0.32);
 }
 
 /* Tema escuro: quase preto neutro */
@@ -182,6 +183,7 @@
     --vidro-interno: rgb(0 0 0 / 0.25);
     --sombra-card: 0 1px 0 0 rgb(255 255 255 / 0.04) inset, 0 20px 40px -24px rgb(0 0 0 / 0.6);
     --brilho: rgb(235 97 10 / 0.12);
+    --veu: rgb(0 0 0 / 0.62);
 }
 
 /* Card de vidro: gradiente quase opaco (o fundo de ondas só aparece de leve), borda fina, luz de 1 px no topo e sombra longa. */
@@ -300,4 +302,14 @@
     background-image: radial-gradient(50% 40% at 18% 0%, var(--brilho), transparent 70%);
     background-attachment: fixed;
     }
+}
+
+/* Modais (protótipo 8-modais.html): a janela sobe 14 px, cresce de 98% e sai do desfoque. */
+@keyframes entrar-modal {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); filter: blur(4px); }
+}
+.entrar-modal[data-open] { animation: entrar-modal 0.45s cubic-bezier(.2,.7,.1,1); }
+.entrar-modal[data-closed] { animation: entrar-modal 0.2s ease-in reverse forwards; }
+@media (prefers-reduced-motion: reduce) {
+  [data-slot$="-content"] { animation: none !important; }
 }

@@ -1,5 +1,6 @@
 "use client"
 
+import { ShieldIcon } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 import { nomeCurto } from "@workspace/core/autenticacao"
@@ -24,6 +25,7 @@ import { CartaoNumero } from "@/components/admin/painel/numeros-grandes"
 import { useEmailDaConta } from "@/components/marca/conta-contexto"
 import { numerosDePessoas } from "@/lib/numeros-pessoas"
 import { api, mensagemDeErro, type PessoaComProjetos } from "@/lib/api"
+import { IconeModal } from "@/components/marca/icone-modal"
 
 export interface RotuloAcao {
   texto: "Tornar admin" | "Retirar admin"
@@ -181,7 +183,12 @@ export function TabelaPessoas() {
       <AlertDialog open={alvo !== null} onOpenChange={(v) => !v && !salvando && setAlvo(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{rotulo ? `${rotulo.texto}: ${alvo ? nomeCurto(alvo.email) : ""}?` : ""}</AlertDialogTitle>
+            <IconeModal tom="acao">
+              <ShieldIcon />
+            </IconeModal>
+            <AlertDialogTitle>
+              {rotulo?.texto}: <em>{alvo ? nomeCurto(alvo.email) : ""}?</em>
+            </AlertDialogTitle>
             <AlertDialogDescription>{rotulo?.confirmacao}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

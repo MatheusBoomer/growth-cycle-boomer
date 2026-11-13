@@ -1,6 +1,6 @@
 "use client"
 
-import { DownloadIcon, FolderOpenIcon, PresentationIcon } from "lucide-react"
+import { DownloadIcon, FolderOpenIcon, LockOpenIcon, PresentationIcon } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import { apresentacaoFinal, TIPOS_VISUALIZADOR } from "@workspace/core/entregaveis"
@@ -25,6 +25,7 @@ import { api, mensagemDeErro, urlArquivo, type AcaoEtapa } from "@/lib/api"
 import { celebrarEtapaConcluida } from "@/lib/confete"
 import { contagemInsumos, estadoDoConcluir } from "@/lib/concluir"
 import { useVisualizador } from "./contexto-visualizador"
+import { CaixaAviso, IconeModal } from "@/components/marca/icone-modal"
 
 const COR: Record<StatusEntregavel, string> = { pendente: "bg-aviso", aprovado: "bg-sucesso", substituido: "bg-muted-foreground/40" }
 
@@ -192,13 +193,21 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
             <AlertDialogTrigger render={<Button variant="outline" className="w-full" />}>Reabrir etapa</AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Reabrir {etapaCat.rotuloStatus}?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  O chat desta etapa volta a aceitar mensagens.
-                  {posterioresConcluidas.length > 0 &&
-                    ` As etapas ${posterioresConcluidas.map((e) => e.numero || e.titulo).join(", ")} ficam desatualizadas até você revisar ou confirmar cada uma.`}
-                </AlertDialogDescription>
+                <IconeModal tom="aviso">
+                  <LockOpenIcon />
+                </IconeModal>
+                <AlertDialogTitle>
+                  Reabrir <em>{etapaCat.titulo}?</em>
+                </AlertDialogTitle>
+                <AlertDialogDescription>O chat desta etapa volta a aceitar mensagens.</AlertDialogDescription>
               </AlertDialogHeader>
+              {posterioresConcluidas.length > 0 && (
+                <CaixaAviso>
+                  {posterioresConcluidas.length === 1 ? "A etapa " : "As etapas "}
+                  {posterioresConcluidas.map((e) => e.numero || e.titulo).join(", ")}
+                  {posterioresConcluidas.length === 1 ? " fica desatualizada" : " ficam desatualizadas"} até você revisar ou confirmar cada uma.
+                </CaixaAviso>
+              )}
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                 <AlertDialogAction onClick={() => executar("reabrir", "Etapa reaberta.")}>Reabrir</AlertDialogAction>
