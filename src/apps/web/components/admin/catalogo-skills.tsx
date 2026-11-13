@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 import { ID_VISAO_GERAL } from "@workspace/core/catalogo-skills-tipos"
 import type { NotaSkill } from "@workspace/core/notas-skills"
-import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Button } from "@workspace/ui/components/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@workspace/ui/components/select"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@workspace/ui/components/sheet"
@@ -15,6 +14,7 @@ import { api, mensagemDeErro, type CatalogoSkills as DadosCatalogo, type Detalhe
 import { agruparPorGrupo, semFrontmatter } from "@/lib/catalogo-skills-tela"
 import { Fluxograma } from "./fluxograma"
 import { NotasSkill } from "./notas-skill"
+import { AvisoAdmin } from "@/components/admin/aviso-admin"
 
 const LEGENDA = "Laranja: aprovação do analista · Azul: subagente · Verde: entrega"
 
@@ -128,9 +128,7 @@ export function CatalogoSkills() {
 
   if (erro && !catalogo) {
     return (
-      <Alert>
-        <AlertDescription>{erro}</AlertDescription>
-      </Alert>
+      <AvisoAdmin mensagem={erro} aba="skills" />
     )
   }
   if (!catalogo) return <Skeleton className="h-96 w-full" />
@@ -147,9 +145,7 @@ export function CatalogoSkills() {
         </Button>
       </div>
       {erro && (
-        <Alert>
-          <AlertDescription>{erro}</AlertDescription>
-        </Alert>
+        <AvisoAdmin mensagem={erro} aba="skills" />
       )}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[14rem_minmax(0,1fr)_18rem]">
         <aside>
@@ -183,9 +179,7 @@ export function CatalogoSkills() {
 
         <div className="flex min-w-0 flex-col gap-4">
           {erroDetalhe ? (
-            <Alert>
-              <AlertDescription>{erroDetalhe}</AlertDescription>
-            </Alert>
+            <AvisoAdmin mensagem={erroDetalhe} aba="skills" />
           ) : detalhe === null ? (
             <Skeleton className="h-72 w-full" />
           ) : (

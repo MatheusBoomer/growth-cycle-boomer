@@ -94,8 +94,8 @@
     --chart-1: #eb610a;
     --chart-2: #3987e5;
     --chart-3: #199e70;
-    --chart-4: #94a3b8;
-    --chart-5: #64748b;
+    --chart-4: #8b4fd1;
+    --chart-5: #b86e00;
     --radius: 0.5rem;
     --sidebar: #ffffff;
     --sidebar-foreground: #17150f;
@@ -161,8 +161,8 @@
     --chart-1: #f2762e;
     --chart-2: #5b9df0;
     --chart-3: #2fbf8c;
-    --chart-4: #cbd5e1;
-    --chart-5: #8696ad;
+    --chart-4: #c084fc;
+    --chart-5: #fbbf24;
 
     --texto-forte: #ffffff;
     --sucesso: #2fbf8c;
@@ -313,3 +313,14 @@
 @media (prefers-reduced-motion: reduce) {
   [data-slot$="-content"] { animation: none !important; }
 }
+
+/* Esqueleto de carregamento: um brilho passa por cima, em vez de pulsar (protótipo 11). */
+.esqueleto { position: relative; overflow: hidden; }
+.esqueleto::after {
+  content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.06), transparent);
+  animation: esqueleto-brilho 1.6s ease-in-out infinite;
+}
+:root:not(.dark) .esqueleto::after { background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.7), transparent); }
+@keyframes esqueleto-brilho { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .esqueleto::after { animation: none; display: none; } }

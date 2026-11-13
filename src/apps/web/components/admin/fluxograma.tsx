@@ -6,8 +6,29 @@ import { useEffect, useId, useRef, useState } from "react"
 import { Button } from "@workspace/ui/components/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@workspace/ui/components/dialog"
 import { Skeleton } from "@workspace/ui/components/skeleton"
+import { comCoresDoTema, misturar, variaveisMermaid, type CoresFluxo } from "@/lib/tema-mermaid"
 
 let renderizacoes = 0
+
+/** Lê as cores do tema aberto (tokens em hex; o que não for hex cai no valor do tema escuro). */
+function coresDoTema(): CoresFluxo {
+  const estilo = getComputedStyle(document.documentElement)
+  const ler = (nome: string, padrao: string) => {
+    const v = estilo.getPropertyValue(nome).trim()
+    return /^#[0-9a-f]{6}$/i.test(v) ? v : padrao
+  }
+  const fundo = ler("--popover", "#141416")
+  const texto = ler("--foreground", "#f4f4f5")
+  return {
+    fundo,
+    texto,
+    borda: misturar(texto, fundo, 0.18),
+    textoApagado: ler("--muted-foreground", "#8b8b93"),
+    acento: ler("--primary", "#eb610a"),
+    azul: ler("--chart-2", "#5b9df0"),
+    verde: ler("--chart-3", "#2fbf8c"),
+  }
+}
 
 /** Degraus do zoom, em % do tamanho original do desenho. */
 export const NIVEIS_ZOOM = [25, 50, 75, 100, 125, 150, 200, 300, 400]
@@ -62,14 +83,18 @@ export function Fluxograma({ codigo }: { codigo: string }) {
     void (async () => {
       try {
         const { default: mermaid } = await import("mermaid")
+        const cores = coresDoTema()
         mermaid.initialize({
           startOnLoad: false,
           securityLevel: "strict",
           suppressErrorRendering: true,
-          theme: resolvedTheme === "light" ? "default" : "dark",
+          // Tema "base" com as cores do app (o "default"/"dark" do Mermaid destoa); as classes do catálogo também.
+          theme: "base",
+          themeVariables: variaveisMermaid(cores),
+          flowchart: { curve: "basis", padding: 14 },
         })
         renderizacoes += 1
-        const { svg: desenho } = await mermaid.render(`${idBase}-${renderizacoes}`, codigo)
+        const { svg: desenho } = await mermaid.render(`${idBase}-${renderizacoes}`, comCoresDoTema(codigo, cores))
         if (cancelado) return
         setSvg(desenho)
         setErro(false)

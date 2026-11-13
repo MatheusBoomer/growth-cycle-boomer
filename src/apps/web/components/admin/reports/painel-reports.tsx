@@ -5,14 +5,18 @@ import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { nomeCurto } from "@workspace/core/autenticacao"
 import { ROTULO_STATUS, ROTULO_TIPO, STATUS_REPORT, type Report, type StatusReport, textoReports, TIPOS_REPORT, type TipoReport } from "@workspace/core/reports"
-import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
+import { cn } from "@workspace/ui/lib/utils"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { api, mensagemDeErro } from "@/lib/api"
 import { STATUS_PADRAO } from "@/lib/filtro-reports"
 import { DetalheReport } from "./detalhe-report"
 import { dataHora, SeloTipo } from "./formatos"
+import { AvisoAdmin } from "@/components/admin/aviso-admin"
+
+const SEGMENTO = "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+const SEGMENTO_LIGADO = "bg-foreground text-background hover:text-background"
 
 /** Aba Reports do admin: filtros por tipo e status, lista dos mais recentes, detalhe lateral e cópia em Markdown. */
 export function PainelReports() {
@@ -66,32 +70,30 @@ export function PainelReports() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <div role="group" aria-label="Tipo" className="border-border flex gap-0.5 rounded-full border p-1">
+        <div role="group" aria-label="Tipo" className="inline-flex gap-0.5 rounded-full border border-border bg-muted/30 p-[3px]">
           {[null, ...TIPOS_REPORT].map((t) => (
-            <Button
+            <button
               key={t ?? "todos"}
-              size="sm"
-              variant="ghost"
-              className={tipo === t ? "bg-accent text-foreground shadow-(--sombra-card)" : "text-muted-foreground"}
+              type="button"
               aria-pressed={tipo === t}
               onClick={() => setTipo(t)}
+              className={cn(SEGMENTO, tipo === t && SEGMENTO_LIGADO)}
             >
               {t ? ROTULO_TIPO[t] : "Todos"}
-            </Button>
+            </button>
           ))}
         </div>
-        <div role="group" aria-label="Status" className="flex flex-wrap gap-1">
-          {STATUS_REPORT.map((s) => (
-            <Button
-              key={s}
-              size="sm"
-              variant={status.includes(s) ? "secondary" : "ghost"}
-              aria-pressed={status.includes(s)}
-              onClick={() => alternarStatus(s)}
-            >
-              {ROTULO_STATUS[s]}
-            </Button>
-          ))}
+        {/* Status é de escolha múltipla: cada um liga e desliga; a contagem aparece nos ligados (é o que veio da lista). */}
+        <div role="group" aria-label="Status" className="inline-flex flex-wrap gap-0.5 rounded-full border border-border bg-muted/30 p-[3px]">
+          {STATUS_REPORT.map((s) => {
+            const ligado = status.includes(s)
+            return (
+              <button key={s} type="button" aria-pressed={ligado} onClick={() => alternarStatus(s)} className={cn(SEGMENTO, ligado && SEGMENTO_LIGADO)}>
+                {ROTULO_STATUS[s]}
+                {ligado && reports && <span className="font-mono text-[11px] opacity-60">{reports.filter((r) => r.status === s).length}</span>}
+              </button>
+            )
+          })}
         </div>
         <Button size="sm" variant="outline" className="ml-auto" onClick={copiar} disabled={!reports || reports.length === 0}>
           <CopyIcon /> Copiar para o Claude
@@ -99,13 +101,11 @@ export function PainelReports() {
       </div>
 
       {erro ? (
-        <Alert>
-          <AlertDescription>{erro}</AlertDescription>
-        </Alert>
+        <AvisoAdmin mensagem={erro} aba="reports" />
       ) : !reports ? (
         <Skeleton className="h-64 w-full" />
       ) : reports.length === 0 ? (
-        <p className="text-muted-foreground py-8 text-center text-sm">Nenhum report com esses filtros.</p>
+        <p className="rounded-[18px] border border-dashed border-border py-8 text-center text-sm text-muted-foreground">Nenhum report com esses filtros.</p>
       ) : (
         <ul className="flex flex-col gap-1">
           {reports.map((r) => (

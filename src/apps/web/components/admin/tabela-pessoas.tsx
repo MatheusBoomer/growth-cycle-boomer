@@ -15,7 +15,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@workspace/ui/components/alert-dialog"
-import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Skeleton } from "@workspace/ui/components/skeleton"
@@ -26,6 +25,7 @@ import { useEmailDaConta } from "@/components/marca/conta-contexto"
 import { numerosDePessoas } from "@/lib/numeros-pessoas"
 import { api, mensagemDeErro, type PessoaComProjetos } from "@/lib/api"
 import { IconeModal } from "@/components/marca/icone-modal"
+import { AvisoAdmin } from "@/components/admin/aviso-admin"
 
 export interface RotuloAcao {
   texto: "Tornar admin" | "Retirar admin"
@@ -115,9 +115,7 @@ export function TabelaPessoas() {
 
   if (erro) {
     return (
-      <Alert>
-        <AlertDescription>{erro}</AlertDescription>
-      </Alert>
+      <AvisoAdmin mensagem={erro} aba="pessoas" />
     )
   }
   if (!lista) return <Skeleton className="h-40 w-full" />

@@ -3,19 +3,20 @@
 import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { FiltroPainel } from "@workspace/core/metricas/painel"
-import { Alert, AlertDescription } from "@workspace/ui/components/alert"
-import { Button } from "@workspace/ui/components/button"
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@workspace/ui/components/empty"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { api, mensagemDeErro, type RespostaPainel } from "@/lib/api"
 import { filtroDeParametros, parametrosDeFiltro, type PeriodoRapido } from "@/lib/painel-filtro"
 import { painelParaCsv } from "@/lib/painel-csv"
 import { BarraFiltros } from "./painel/barra-filtros"
-import { EtapasPainelContext, TEXTO_SEM_USO, type EtapaRotulada } from "./painel/comuns"
+import { EtapasPainelContext, type EtapaRotulada } from "./painel/comuns"
 import { GraficosPainel } from "./painel/graficos-painel"
 import { ListaProjetos } from "./painel/lista-projetos"
 import { SecaoMediasPorEtapa } from "./painel/medias-por-etapa"
 import { NumerosGrandes } from "./painel/numeros-grandes"
+import { AvisoAdmin, ehSemNuvem } from "@/components/admin/aviso-admin"
+import { EstadoVisualizador } from "@/components/trabalho/barra-visualizador"
+import { Button } from "@workspace/ui/components/button"
+import { BarChart3Icon } from "lucide-react"
 
 // Reexportados porque o detalhe do projeto e os testes importam daqui.
 export { MarcaEstimado, formatarDataHora, type EtapaRotulada } from "./painel/comuns"
@@ -106,15 +107,10 @@ export function PainelProjetos({ etapas }: { etapas: EtapaRotulada[] }) {
     [filtro, periodo, gravarNaUrl],
   )
 
+  const temFiltro = filtro.donos.length + filtro.projetos.length + filtro.etapas.length + filtro.modelos.length > 0 || filtro.incluirTestes
+
   const alertaDeErro = erro !== null && (
-    <Alert>
-      <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
-        <span>{erro}</span>
-        <Button type="button" variant="outline" size="sm" onClick={atualizar}>
-          Tentar de novo
-        </Button>
-      </AlertDescription>
-    </Alert>
+    <AvisoAdmin mensagem={erro} aba="projetos" aoTentarDeNovo={ehSemNuvem(erro) ? undefined : atualizar} />
   )
   // Sem nenhuma resposta ainda não há filtros para mostrar: só o erro (com a nova tentativa) ou o esqueleto.
   if (!resposta) return alertaDeErro || <Skeleton className="h-64 w-full" />
@@ -141,12 +137,25 @@ export function PainelProjetos({ etapas }: { etapas: EtapaRotulada[] }) {
       {/* Recarregando, ou com o último pedido em erro: o conteúdo que fica na tela é o antigo, então fica esmaecido. */}
       <div aria-busy={desatualizado} className={desatualizado ? "flex flex-col gap-6 opacity-60 transition-opacity" : "flex flex-col gap-6"}>
         {semUso ? (
-          <Empty>
-            <EmptyHeader>
-              <EmptyTitle>{TEXTO_SEM_USO}</EmptyTitle>
-              <EmptyDescription>Troque o período ou limpe os filtros para ver outros dados.</EmptyDescription>
-            </EmptyHeader>
-          </Empty>
+          <EstadoVisualizador
+            icone={<BarChart3Icon />}
+            titulo="Nenhum uso"
+            destaque="neste período"
+            acao={
+              temFiltro && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => gravarNaUrl(parametrosDeFiltro({ ...filtro, donos: [], projetos: [], etapas: [], modelos: [], incluirTestes: false }, periodo))}
+                >
+                  Limpar filtros
+                </Button>
+              )
+            }
+          >
+            Troque o período ou limpe os filtros para ver outros dados.
+          </EstadoVisualizador>
         ) : (
           <>
             <NumerosGrandes painel={painel} />

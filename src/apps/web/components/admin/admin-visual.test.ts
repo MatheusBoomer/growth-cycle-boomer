@@ -16,10 +16,10 @@ describe("administração na linguagem nova", () => {
     expect(ler("tabela-modelos.tsx")).not.toContain("Vale a partir do próximo turno de cada etapa")
   })
 
-  it("detalhe do projeto: nome em serifada e números grandes em serifada", () => {
+  it("detalhe do projeto (protótipo 11): nome com destaque serifado e números grandes", () => {
     const d = ler("detalhe-projeto.tsx")
-    expect(d).toMatch(/<h2 className="[^"]*font-serif[^"]*">\{projeto\.nome\}/)
-    expect(d).toMatch(/<dd className="[^"]*font-serif/)
+    expect(d).toMatch(/<TituloDestacado texto=\{projeto\.nome\} \/>/)
+    expect(d).toMatch(/<dd className="[^"]*text-\[30px\]/)
   })
   it("card de modelos: 'Etapa NN' pequeno acima do nome da etapa", () => expect(ler("cartao-etapa-modelos.tsx")).toMatch(/partesDoRotulo\(etapa\.rotulo\)/))
   it("cabeçalho do admin não corta letras ao quebrar (entrelinha 1.05)", () => expect(ler("cabecalho-admin.tsx")).toMatch(/<h1 className="[^"]*leading-\[1\.05\]/))
