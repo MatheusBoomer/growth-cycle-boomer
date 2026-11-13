@@ -1,14 +1,38 @@
 "use client"
 
-import { PanelLeftCloseIcon, PanelLeftOpenIcon, PanelRightCloseIcon, PanelRightOpenIcon } from "lucide-react"
+import {
+  PanelLeftCloseIcon,
+  PanelLeftOpenIcon,
+  PanelRightCloseIcon,
+  PanelRightOpenIcon,
+} from "lucide-react"
 import Link from "next/link"
-import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as EventoPonteiro } from "react"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as EventoPonteiro,
+} from "react"
 import { toast } from "sonner"
 import { entregavelVisivel, htmlParaAbrir } from "@workspace/core/entregaveis"
-import { ORDEM_ETAPAS, type Entregavel, type EtapaId, type Estado, type StatusEtapa } from "@workspace/core/tipos"
+import {
+  ORDEM_ETAPAS,
+  type Entregavel,
+  type EtapaId,
+  type Estado,
+  type StatusEtapa,
+} from "@workspace/core/tipos"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@workspace/ui/components/empty"
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@workspace/ui/components/empty"
 import {
   ResizableHandle,
   ResizablePanel,
@@ -27,13 +51,22 @@ import { ProvedorReferencias } from "@/components/chat/contexto-referencias"
 import { useAreaDeTrabalho } from "@/hooks/use-area-de-trabalho"
 import { useBiblioteca } from "@/hooks/use-biblioteca"
 import { totalVisivel } from "@/lib/biblioteca"
-import { CHAVE_COLUNA_DIREITA, chaveColunas, layoutParaPainel, layoutParaVisualizador, lerLayout, salvarLayout, type Layout } from "@/lib/layout-colunas"
+import {
+  CHAVE_COLUNA_DIREITA,
+  chaveColunas,
+  layoutParaPainel,
+  layoutParaVisualizador,
+  lerLayout,
+  salvarLayout,
+  type Layout,
+} from "@/lib/layout-colunas"
 import { AvisoPresenca } from "./aviso-presenca"
 import { ContextoVisualizador } from "./contexto-visualizador"
 import { EtapaLiberada } from "./etapa-liberada"
 import { ROTULO_STATUS } from "./icone-status"
 import { PainelEtapa } from "./painel-etapa"
 import { SeloCusto } from "./selo-custo"
+import { CabecalhoEtapa } from "./cabecalho-etapa"
 import { TrilhaEtapas } from "./trilha-etapas"
 import { VisualizadorArquivo } from "./visualizador-arquivo"
 import { VisualizadorApresentacao } from "./visualizador-apresentacao"
@@ -42,7 +75,11 @@ import { VisualizadorPlanilha } from "./visualizador-planilha"
 import { VisualizadorSecao } from "./visualizador-secao"
 
 export function escolherEtapaInicial(estado: Estado): EtapaId {
-  const prioridades: StatusEtapa[][] = [["em_andamento", "pronta"], ["desatualizada"], ["liberada"]]
+  const prioridades: StatusEtapa[][] = [
+    ["em_andamento", "pronta"],
+    ["desatualizada"],
+    ["liberada"],
+  ]
   for (const grupo of prioridades) {
     const id = ORDEM_ETAPAS.find((i) => grupo.includes(estado.etapas[i].status))
     if (id) return id
@@ -54,24 +91,36 @@ export function escolherEtapaInicial(estado: Estado): EtapaId {
 const IDS_COLUNAS = ["chat", "painel", "trilha", "visualizador"]
 
 export function AreaDeTrabalho({ slug }: { slug: string }) {
-  const { dados, erro, conversas, deltas, carregarConversa } = useAreaDeTrabalho(slug)
+  const { dados, erro, conversas, deltas, carregarConversa } =
+    useAreaDeTrabalho(slug)
   const admin = usePapel() === "admin"
   const [selecionada, setSelecionada] = useState<EtapaId | null>(null)
   const [trilhaRecolhida, setTrilhaRecolhida] = useState(false)
   const [painelRecolhido, setPainelRecolhido] = useState(false)
   const [arrastando, setArrastando] = useState(false)
   // `secao`: a coluna mostra a seção de texto do nome final (o benchmark tem HTML e seção com o mesmo nome).
-  const [visualizador, setVisualizador] = useState<{ etapa: EtapaId; nomeFinal: string; secao?: boolean; planilha?: boolean } | null>(null)
+  const [visualizador, setVisualizador] = useState<{
+    etapa: EtapaId
+    nomeFinal: string
+    secao?: boolean
+    planilha?: boolean
+  } | null>(null)
   const [telaCheia, setTelaCheia] = useState(false)
-  const [entregaveisVistos, setEntregaveisVistos] = useState<Entregavel[] | null>(null)
-  const [abertosSozinhos, setAbertosSozinhos] = useState<ReadonlySet<string>>(new Set())
+  const [entregaveisVistos, setEntregaveisVistos] = useState<
+    Entregavel[] | null
+  >(null)
+  const [abertosSozinhos, setAbertosSozinhos] = useState<ReadonlySet<string>>(
+    new Set()
+  )
   const grupoRef = useGroupRef()
   const trilhaRef = usePanelRef()
   const painelRef = usePanelRef()
   // Última largura (%) do painel aberto: é com ela que ele volta quando o analista o mostra de novo.
   const larguraPainel = useRef(22)
-  const etapa = selecionada ?? (dados ? escolherEtapaInicial(dados.estado) : null)
-  const visualizadorAberto = visualizador !== null && visualizador.etapa === etapa
+  const etapa =
+    selecionada ?? (dados ? escolherEtapaInicial(dados.estado) : null)
+  const visualizadorAberto =
+    visualizador !== null && visualizador.etapa === etapa
   const [arquivoAberto, setArquivoAberto] = useState<string | null>(null)
   const colunaDireitaRef = useGroupRef()
   const inserirNoCompositor = useRef<((texto: string) => void) | null>(null)
@@ -86,7 +135,11 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   // Estado ajustado durante a renderização: é o padrão do React para reagir a dado novo sem efeito.
   if (dados && etapa && dados.estado.entregaveis !== entregaveisVistos) {
     setEntregaveisVistos(dados.estado.entregaveis)
-    const nome = htmlParaAbrir(entregaveisVistos, dados.estado.entregaveis, etapa)
+    const nome = htmlParaAbrir(
+      entregaveisVistos,
+      dados.estado.entregaveis,
+      etapa
+    )
     if (nome && !abertosSozinhos.has(`${etapa}/${nome}`)) {
       setAbertosSozinhos(new Set(abertosSozinhos).add(`${etapa}/${nome}`))
       setVisualizador({ etapa, nomeFinal: nome })
@@ -94,7 +147,9 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   }
 
   const abrir = useCallback((etapaAlvo: EtapaId, nomeFinal: string) => {
-    setAbertosSozinhos((atual) => new Set(atual).add(`${etapaAlvo}/${nomeFinal}`))
+    setAbertosSozinhos((atual) =>
+      new Set(atual).add(`${etapaAlvo}/${nomeFinal}`)
+    )
     setVisualizador({ etapa: etapaAlvo, nomeFinal })
   }, [])
   const abrirSecao = useCallback((etapaAlvo: EtapaId, nomeFinal: string) => {
@@ -115,26 +170,37 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
       const grupo = grupoRef.current
       if (!grupo) return
       try {
-        grupo.setLayout(layoutParaPainel(grupo.getLayout(), aberto, larguraPainel.current))
+        grupo.setLayout(
+          layoutParaPainel(grupo.getLayout(), aberto, larguraPainel.current)
+        )
       } catch {
         // grupo ainda montando: vale o layout que ele tiver
       }
     },
-    [grupoRef],
+    [grupoRef]
   )
   const abrirArquivo = useCallback(
     (caminho: string) => {
       if (painelRef.current?.isCollapsed()) mostrarPainel(true)
       setArquivoAberto(caminho)
     },
-    [painelRef, mostrarPainel],
+    [painelRef, mostrarPainel]
   )
   const fecharArquivo = useCallback(() => setArquivoAberto(null), [])
-  const mencionar = useCallback((caminho: string) => inserirNoCompositor.current?.(`@${caminho} `), [])
-  const inserirTexto = useCallback((texto: string) => inserirNoCompositor.current?.(texto), [])
-  const registrarCompositor = useCallback((inserir: ((texto: string) => void) | null) => {
-    inserirNoCompositor.current = inserir
-  }, [])
+  const mencionar = useCallback(
+    (caminho: string) => inserirNoCompositor.current?.(`@${caminho} `),
+    []
+  )
+  const inserirTexto = useCallback(
+    (texto: string) => inserirNoCompositor.current?.(texto),
+    []
+  )
+  const registrarCompositor = useCallback(
+    (inserir: ((texto: string) => void) | null) => {
+      inserirNoCompositor.current = inserir
+    },
+    []
+  )
   const selecionarEtapa = useCallback((id: EtapaId) => {
     setBibliotecaAberta(false)
     setSelecionada(id)
@@ -154,13 +220,33 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   useEffect(() => {
     const el = trilhaCaixaRef.current
     if (!el) return
-    const observador = new ResizeObserver(([entrada]) => setLarguraTrilha(entrada?.contentRect.width ?? 0))
+    const observador = new ResizeObserver(([entrada]) =>
+      setLarguraTrilha(entrada?.contentRect.width ?? 0)
+    )
     observador.observe(el)
     return () => observador.disconnect()
   }, [carregado])
   const controle = useMemo(
-    () => ({ abrir, abrirSecao, abrirPlanilha, abrirArquivo, mencionar, inserirNoCompositor: inserirTexto, registrarCompositor, irParaEtapa: selecionarEtapa }),
-    [abrir, abrirSecao, abrirPlanilha, abrirArquivo, mencionar, inserirTexto, registrarCompositor, selecionarEtapa],
+    () => ({
+      abrir,
+      abrirSecao,
+      abrirPlanilha,
+      abrirArquivo,
+      mencionar,
+      inserirNoCompositor: inserirTexto,
+      registrarCompositor,
+      irParaEtapa: selecionarEtapa,
+    }),
+    [
+      abrir,
+      abrirSecao,
+      abrirPlanilha,
+      abrirArquivo,
+      mencionar,
+      inserirTexto,
+      registrarCompositor,
+      selecionarEtapa,
+    ]
   )
 
   // Arquivo aberto (janela embaixo do painel da etapa): mesmo princípio do visualizador de
@@ -171,7 +257,10 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
     if (!grupo) return
     try {
       const salvo = lerLayout(CHAVE_COLUNA_DIREITA)
-      const aberto = salvo && (salvo.arquivo ?? 0) > 0 && (salvo.etapa ?? 0) > 0 ? salvo : { etapa: 45, arquivo: 55 }
+      const aberto =
+        salvo && (salvo.arquivo ?? 0) > 0 && (salvo.etapa ?? 0) > 0
+          ? salvo
+          : { etapa: 45, arquivo: 55 }
       grupo.setLayout(temArquivo ? aberto : { etapa: 100, arquivo: 0 })
     } catch {
       // grupo ainda montando: vale o layout que ele tiver
@@ -179,7 +268,8 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   }, [temArquivo, colunaDireitaRef])
 
   useEffect(() => {
-    if (etapa && dados && conversas[etapa] === undefined) void carregarConversa(etapa)
+    if (etapa && dados && conversas[etapa] === undefined)
+      void carregarConversa(etapa)
   }, [etapa, dados, conversas, carregarConversa])
 
   // O visualizador fica sempre montado (recolhido quando fechado): abrir ou fechar não remonta o
@@ -189,7 +279,13 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
     const grupo = grupoRef.current
     if (!grupo) return
     try {
-      grupo.setLayout(layoutParaVisualizador(grupo.getLayout(), lerLayout(chaveColunas(visualizadorAberto)), visualizadorAberto))
+      grupo.setLayout(
+        layoutParaVisualizador(
+          grupo.getLayout(),
+          lerLayout(chaveColunas(visualizadorAberto)),
+          visualizadorAberto
+        )
+      )
     } catch {
       // grupo ainda montando ou já desmontado: vale o layout que ele tiver
     }
@@ -232,189 +328,297 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   const etapaCat = dados.catalogo.etapas.find((e) => e.id === etapa)!
   const estadoEtapa = dados.estado.etapas[etapa]
   const indice = ORDEM_ETAPAS.indexOf(etapa)
-  const mostrarChat = estadoEtapa.status !== "liberada" && estadoEtapa.status !== "bloqueada"
+  const mostrarChat =
+    estadoEtapa.status !== "liberada" && estadoEtapa.status !== "bloqueada"
   const salvoInicial = lerLayout(chaveColunas(false))
-  const layoutInicial = salvoInicial && Object.keys(salvoInicial).sort().join() === IDS_COLUNAS.join() ? salvoInicial : undefined
+  const layoutInicial =
+    salvoInicial &&
+    Object.keys(salvoInicial).sort().join() === IDS_COLUNAS.join()
+      ? salvoInicial
+      : undefined
   function aoMudarLayout(layout: Layout) {
     // Só grava quando o layout corresponde ao estado atual (não no meio de uma troca).
-    if ((layout.visualizador ?? 0) > 0 === visualizadorAberto) salvarLayout(chaveColunas(visualizadorAberto), layout)
+    if ((layout.visualizador ?? 0) > 0 === visualizadorAberto)
+      salvarLayout(chaveColunas(visualizadorAberto), layout)
   }
   const aberto = visualizadorAberto
-    ? entregavelVisivel(dados.estado.entregaveis, etapa, visualizador.nomeFinal, visualizador.secao ? ["secao"] : visualizador.planilha ? ["planilha"] : undefined)
+    ? entregavelVisivel(
+        dados.estado.entregaveis,
+        etapa,
+        visualizador.nomeFinal,
+        visualizador.secao
+          ? ["secao"]
+          : visualizador.planilha
+            ? ["planilha"]
+            : undefined
+      )
     : null
   const Visualizador = visualizador?.secao
     ? VisualizadorSecao
     : visualizador?.planilha
       ? VisualizadorPlanilha
-      : aberto?.tipo === "apresentacao" ? VisualizadorApresentacao : VisualizadorHtml
+      : aberto?.tipo === "apresentacao"
+        ? VisualizadorApresentacao
+        : VisualizadorHtml
   const painelVisualizador = visualizadorAberto ? (
     // key: versão nova remonta o visualizador, sem levar rascunho de comentário da anterior.
-    <Visualizador key={aberto?.id ?? "nenhum"} slug={slug} entregavel={aberto} telaCheia={telaCheia} aoAlternarTelaCheia={alternarTelaCheia} aoFechar={fechar} />
+    <Visualizador
+      key={aberto?.id ?? "nenhum"}
+      slug={slug}
+      entregavel={aberto}
+      telaCheia={telaCheia}
+      aoAlternarTelaCheia={alternarTelaCheia}
+      aoFechar={fechar}
+    />
   ) : null
 
   // O iframe do visualizador captura o mouse: durante o arraste de uma alça, ele deixa de receber eventos.
   function aoApertar(ev: EventoPonteiro<HTMLDivElement>) {
-    if ((ev.target as Element).closest('[data-slot="resizable-handle"]')) setArrastando(true)
+    if ((ev.target as Element).closest('[data-slot="resizable-handle"]'))
+      setArrastando(true)
   }
 
   return (
     <ContextoVisualizador.Provider value={controle}>
       <ProvedorReferencias>
-      <div className="flex h-svh flex-col">
-        <AvisoPresenca slug={slug} etapa={etapa} />
-        <BarraTopo
-          titulo="Growth Cycle"
-          subtitulo={dados.estado.prospect.nome}
-          extra={admin ? <SeloCusto slug={slug} etapa={etapa} /> : undefined}
-        />
-        <FaixaTeste slug={slug} dados={dados} etapa={etapa} />
-        <div className={cn("relative min-h-0 flex-1 p-3", arrastando && "[&_iframe]:pointer-events-none")} onPointerDownCapture={aoApertar}>
-          <ResizablePanelGroup groupRef={grupoRef} orientation="horizontal" defaultLayout={layoutInicial} onLayoutChanged={aoMudarLayout}>
-            <ResizablePanel
-              id="trilha"
-              panelRef={trilhaRef}
-              defaultSize="240px"
-              minSize="180px"
-              maxSize="30%"
-              collapsible
-              collapsedSize="0%"
-              onResize={(tamanho) => setTrilhaRecolhida(tamanho.asPercentage === 0)}
+        <div className="flex h-svh flex-col">
+          <AvisoPresenca slug={slug} etapa={etapa} />
+          <BarraTopo
+            titulo="Growth Cycles"
+            subtitulo={dados.estado.prospect.nome}
+            extra={
+              admin ? (
+                <span className="max-sm:hidden">
+                  <SeloCusto slug={slug} etapa={etapa} />
+                </span>
+              ) : undefined
+            }
+          />
+          <FaixaTeste slug={slug} dados={dados} etapa={etapa} />
+          <div
+            className={cn(
+              "relative min-h-0 flex-1 p-3",
+              arrastando && "[&_iframe]:pointer-events-none"
+            )}
+            onPointerDownCapture={aoApertar}
+          >
+            <ResizablePanelGroup
+              groupRef={grupoRef}
+              orientation="horizontal"
+              defaultLayout={layoutInicial}
+              onLayoutChanged={aoMudarLayout}
             >
-              <div ref={trilhaCaixaRef} className="vidro h-full overflow-hidden rounded-2xl">
-                <TrilhaEtapas
-                  catalogo={dados.catalogo}
-                  estado={dados.estado}
-                  selecionada={etapa}
-                  aoSelecionar={selecionarEtapa}
-                  bibliotecaAberta={bibliotecaAberta}
-                  totalBiblioteca={biblioteca.itens ? totalVisivel(biblioteca.itens) : null}
-                  aoAbrirBiblioteca={() => {
-                    setBibliotecaAberta(true)
-                    void biblioteca.recarregar()
-                  }}
-                />
-              </div>
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-            <ResizablePanel id="chat" minSize="360px">
-              <main className="vidro flex h-full min-h-0 flex-col overflow-hidden rounded-2xl">
-                <header className="flex items-center gap-3 border-b px-4 py-3">
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label={trilhaRecolhida ? "Mostrar etapas" : "Recolher etapas"}
-                    onClick={() => (trilhaRecolhida ? trilhaRef.current?.expand() : trilhaRef.current?.collapse())}
-                  >
-                    {trilhaRecolhida ? <PanelLeftOpenIcon /> : <PanelLeftCloseIcon />}
-                  </Button>
-                  <h1 className="text-sm font-semibold tracking-tight">{etapaCat.rotuloStatus}</h1>
-                  <Badge variant={estadoEtapa.status === "concluida" ? "sucesso" : estadoEtapa.status === "desatualizada" ? "aviso" : "secondary"}>
-                    {ROTULO_STATUS[estadoEtapa.status]}
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="ml-auto"
-                    aria-label={painelRecolhido ? "Mostrar painel" : "Recolher painel"}
-                    onClick={() => mostrarPainel(painelRecolhido)}
-                  >
-                    {painelRecolhido ? <PanelRightOpenIcon /> : <PanelRightCloseIcon />}
-                  </Button>
-                </header>
-                {mostrarChat ? (
-                  <ChatEtapa slug={slug} etapa={etapa} dados={dados} eventos={conversas[etapa] ?? []} delta={deltas[etapa] ?? ""} />
-                ) : (
-                  <EtapaLiberada slug={slug} etapa={etapa} dados={dados} />
-                )}
-              </main>
-            </ResizablePanel>
-            <ResizableHandle withHandle className={cn(!visualizadorAberto && "hidden")} />
-            <ResizablePanel
-              id="visualizador"
-              defaultSize="0%"
-              minSize="320px"
-              collapsible
-              collapsedSize="0%"
-              onResize={(tamanho) => {
-                // Arrastar o visualizador até sumir é o mesmo que fechá-lo.
-                if (tamanho.asPercentage === 0 && visualizadorAberto) fechar()
-              }}
-            >
-              {/* Em tela cheia o conteúdo vai para a camada fixa abaixo; o painel fica vazio. */}
-              {telaCheia ? null : <div className="vidro h-full overflow-hidden rounded-2xl">{painelVisualizador}</div>}
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-            <ResizablePanel
-              id="painel"
-              panelRef={painelRef}
-              defaultSize="320px"
-              minSize="240px"
-              maxSize="40%"
-              collapsible
-              collapsedSize="0%"
-              onResize={(tamanho) => {
-                setPainelRecolhido(tamanho.asPercentage === 0)
-                if (tamanho.asPercentage > 0) larguraPainel.current = tamanho.asPercentage
-              }}
-            >
-              <ResizablePanelGroup
-                groupRef={colunaDireitaRef}
-                orientation="vertical"
-                onLayoutChanged={(layout: Layout) => {
-                  if (temArquivo && (layout.arquivo ?? 0) > 0) salvarLayout(CHAVE_COLUNA_DIREITA, layout)
+              <ResizablePanel
+                id="trilha"
+                panelRef={trilhaRef}
+                defaultSize="240px"
+                minSize="180px"
+                maxSize="30%"
+                collapsible
+                collapsedSize="0%"
+                onResize={(tamanho) =>
+                  setTrilhaRecolhida(tamanho.asPercentage === 0)
+                }
+              >
+                <div
+                  ref={trilhaCaixaRef}
+                  className="h-full overflow-hidden rounded-2xl vidro"
+                >
+                  <TrilhaEtapas
+                    catalogo={dados.catalogo}
+                    estado={dados.estado}
+                    selecionada={etapa}
+                    aoSelecionar={selecionarEtapa}
+                    bibliotecaAberta={bibliotecaAberta}
+                    totalBiblioteca={
+                      biblioteca.itens ? totalVisivel(biblioteca.itens) : null
+                    }
+                    aoAbrirBiblioteca={() => {
+                      setBibliotecaAberta(true)
+                      void biblioteca.recarregar()
+                    }}
+                  />
+                </div>
+              </ResizablePanel>
+              <ResizableHandle withHandle />
+              <ResizablePanel id="chat" minSize="360px">
+                <main className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl vidro">
+                  <CabecalhoEtapa
+                    numero={etapaCat.numero || null}
+                    fase={etapaCat.fase ?? null}
+                    titulo={etapaCat.titulo}
+                    trabalhando={dados.turnoAtivo === etapa}
+                    selo={
+                      estadoEtapa.status === "em_andamento" ? undefined : (
+                        <Badge
+                          variant={
+                            estadoEtapa.status === "concluida"
+                              ? "sucesso"
+                              : estadoEtapa.status === "desatualizada"
+                                ? "aviso"
+                                : "secondary"
+                          }
+                        >
+                          {ROTULO_STATUS[estadoEtapa.status]}
+                        </Badge>
+                      )
+                    }
+                    antes={
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={
+                          trilhaRecolhida ? "Mostrar etapas" : "Recolher etapas"
+                        }
+                        onClick={() =>
+                          trilhaRecolhida
+                            ? trilhaRef.current?.expand()
+                            : trilhaRef.current?.collapse()
+                        }
+                      >
+                        {trilhaRecolhida ? (
+                          <PanelLeftOpenIcon />
+                        ) : (
+                          <PanelLeftCloseIcon />
+                        )}
+                      </Button>
+                    }
+                    depois={
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={
+                          painelRecolhido ? "Mostrar painel" : "Recolher painel"
+                        }
+                        onClick={() => mostrarPainel(painelRecolhido)}
+                      >
+                        {painelRecolhido ? (
+                          <PanelRightOpenIcon />
+                        ) : (
+                          <PanelRightCloseIcon />
+                        )}
+                      </Button>
+                    }
+                  />
+                  {mostrarChat ? (
+                    <ChatEtapa
+                      slug={slug}
+                      etapa={etapa}
+                      dados={dados}
+                      eventos={conversas[etapa] ?? []}
+                      delta={deltas[etapa] ?? ""}
+                    />
+                  ) : (
+                    <EtapaLiberada slug={slug} etapa={etapa} dados={dados} />
+                  )}
+                </main>
+              </ResizablePanel>
+              <ResizableHandle
+                withHandle
+                className={cn(!visualizadorAberto && "hidden")}
+              />
+              <ResizablePanel
+                id="visualizador"
+                defaultSize="0%"
+                minSize="320px"
+                collapsible
+                collapsedSize="0%"
+                onResize={(tamanho) => {
+                  // Arrastar o visualizador até sumir é o mesmo que fechá-lo.
+                  if (tamanho.asPercentage === 0 && visualizadorAberto) fechar()
                 }}
               >
-                <ResizablePanel id="etapa" minSize="120px">
-                  <div className="vidro h-full overflow-hidden rounded-2xl">
-                    <PainelEtapa slug={slug} etapa={etapa} dados={dados} />
+                {/* Em tela cheia o conteúdo vai para a camada fixa abaixo; o painel fica vazio. */}
+                {telaCheia ? null : (
+                  <div className="h-full overflow-hidden rounded-2xl vidro">
+                    {painelVisualizador}
                   </div>
-                </ResizablePanel>
-                <ResizableHandle withHandle className={cn(!temArquivo && "hidden")} />
-                <ResizablePanel
-                  id="arquivo"
-                  defaultSize="0%"
-                  minSize="160px"
-                  collapsible
-                  collapsedSize="0%"
-                  onResize={(tamanho) => {
-                    // Arrastar a janela do arquivo até sumir é o mesmo que fechá-la.
-                    if (tamanho.asPercentage === 0 && temArquivo) fecharArquivo()
+                )}
+              </ResizablePanel>
+              <ResizableHandle withHandle />
+              <ResizablePanel
+                id="painel"
+                panelRef={painelRef}
+                defaultSize="320px"
+                minSize="240px"
+                maxSize="40%"
+                collapsible
+                collapsedSize="0%"
+                onResize={(tamanho) => {
+                  setPainelRecolhido(tamanho.asPercentage === 0)
+                  if (tamanho.asPercentage > 0)
+                    larguraPainel.current = tamanho.asPercentage
+                }}
+              >
+                <ResizablePanelGroup
+                  groupRef={colunaDireitaRef}
+                  orientation="vertical"
+                  onLayoutChanged={(layout: Layout) => {
+                    if (temArquivo && (layout.arquivo ?? 0) > 0)
+                      salvarLayout(CHAVE_COLUNA_DIREITA, layout)
                   }}
                 >
-                  {arquivoAberto && (
-                    <div className="vidro h-full overflow-hidden rounded-2xl">
-                      <VisualizadorArquivo
-                        slug={slug}
-                        caminho={arquivoAberto}
-                        aoMencionar={() => mencionar(arquivoAberto)}
-                        aoFechar={fecharArquivo}
-                      />
+                  <ResizablePanel id="etapa" minSize="120px">
+                    <div className="h-full overflow-hidden rounded-2xl vidro">
+                      <PainelEtapa slug={slug} etapa={etapa} dados={dados} />
                     </div>
-                  )}
-                </ResizablePanel>
-              </ResizablePanelGroup>
-            </ResizablePanel>
-          </ResizablePanelGroup>
-          {bibliotecaAberta && (
-            <div
-              className="vidro bg-background/95 absolute inset-y-3 right-3 z-30 overflow-hidden rounded-2xl backdrop-blur-xl"
-              // 12 px de borda externa + largura do card da trilha + 12 px da alça.
-              style={{ left: larguraTrilha > 0 ? larguraTrilha + 24 : 12 }}
-            >
-              <Biblioteca
-                slug={slug}
-                catalogo={dados.catalogo}
-                itens={biblioteca.itens}
-                erro={biblioteca.erro}
-                aoAjustar={(caminho, mudanca) => void biblioteca.ajustar(caminho, mudanca)}
-                aoMencionar={mencionarDaBiblioteca}
-                aoFechar={fecharBiblioteca}
-              />
-            </div>
-          )}
-          {visualizadorAberto && telaCheia && <div className="bg-background fixed inset-0 z-40">{painelVisualizador}</div>}
+                  </ResizablePanel>
+                  <ResizableHandle
+                    withHandle
+                    className={cn(!temArquivo && "hidden")}
+                  />
+                  <ResizablePanel
+                    id="arquivo"
+                    defaultSize="0%"
+                    minSize="160px"
+                    collapsible
+                    collapsedSize="0%"
+                    onResize={(tamanho) => {
+                      // Arrastar a janela do arquivo até sumir é o mesmo que fechá-la.
+                      if (tamanho.asPercentage === 0 && temArquivo)
+                        fecharArquivo()
+                    }}
+                  >
+                    {arquivoAberto && (
+                      <div className="h-full overflow-hidden rounded-2xl vidro">
+                        <VisualizadorArquivo
+                          slug={slug}
+                          caminho={arquivoAberto}
+                          aoMencionar={() => mencionar(arquivoAberto)}
+                          aoFechar={fecharArquivo}
+                        />
+                      </div>
+                    )}
+                  </ResizablePanel>
+                </ResizablePanelGroup>
+              </ResizablePanel>
+            </ResizablePanelGroup>
+            {bibliotecaAberta && (
+              <div
+                className="absolute inset-y-3 right-3 z-30 overflow-hidden rounded-2xl bg-background/95 vidro backdrop-blur-xl"
+                // 12 px de borda externa + largura do card da trilha + 12 px da alça.
+                style={{ left: larguraTrilha > 0 ? larguraTrilha + 24 : 12 }}
+              >
+                <Biblioteca
+                  slug={slug}
+                  catalogo={dados.catalogo}
+                  itens={biblioteca.itens}
+                  erro={biblioteca.erro}
+                  aoAjustar={(caminho, mudanca) =>
+                    void biblioteca.ajustar(caminho, mudanca)
+                  }
+                  aoMencionar={mencionarDaBiblioteca}
+                  aoFechar={fecharBiblioteca}
+                />
+              </div>
+            )}
+            {visualizadorAberto && telaCheia && (
+              <div className="fixed inset-0 z-40 bg-background">
+                {painelVisualizador}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
       </ProvedorReferencias>
     </ContextoVisualizador.Provider>
   )

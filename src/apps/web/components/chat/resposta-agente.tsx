@@ -3,7 +3,6 @@
 import { CheckIcon, CopyIcon, QuoteIcon } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
-import { Bubble, BubbleContent } from "@workspace/ui/components/bubble"
 import { Button } from "@workspace/ui/components/button"
 import { Message, MessageContent, MessageFooter } from "@workspace/ui/components/message"
 import { cn } from "@workspace/ui/lib/utils"
@@ -46,11 +45,9 @@ export function RespostaAgente({ texto, ultima }: { texto: string; ultima: boole
     <Message align="start">
       <MessageContent>
         <div ref={corpo}>
-          <Bubble variant="muted">
-            <BubbleContent>
-              <Markdown>{texto}</Markdown>
-            </BubbleContent>
-          </Bubble>
+          <div className="text-foreground/90 text-[15px] leading-relaxed">
+            <Markdown>{texto}</Markdown>
+          </div>
         </div>
         <MessageFooter
           className={cn(

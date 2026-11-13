@@ -201,10 +201,11 @@ export function Compositor({
   const podeEnviar = !desabilitado && !enviando && !subindo && (texto.trim() !== "" || (!comReferencia && prontos.length > 0))
 
   return (
-    <div className="border-t p-3">
+    <div className="px-4 pt-1 pb-4">
       <div
         className={cn(
-          "mx-auto flex max-w-3xl flex-col gap-2 rounded-lg transition-shadow",
+          "border-input bg-popover/90 mx-auto flex max-w-3xl flex-col gap-2 rounded-[22px] border p-3 shadow-[0_20px_50px_-24px_rgb(0_0_0/0.5)] backdrop-blur-xl transition-[box-shadow,border-color]",
+          "focus-within:border-primary/50 focus-within:ring-primary/15 focus-within:ring-4",
           arrastando && "ring-primary/50 ring-2 ring-offset-4 ring-offset-background",
         )}
         onDragOver={(e) => {
@@ -345,6 +346,8 @@ export function Compositor({
           disabled={desabilitado}
           rows={3}
           aria-label="Mensagem para o agente"
+          // Dentro da pílula do compositor: sem borda nem fundo próprios (o brilho do foco fica na pílula).
+          className="border-0 bg-transparent px-1 shadow-none focus-visible:ring-0 dark:bg-transparent"
         />
         </div>
         <div className="flex items-center gap-2">

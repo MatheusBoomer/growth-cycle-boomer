@@ -56,3 +56,16 @@ describe("aviso de turno de outro analista", () => {
     expect(campoDesabilitado(html)).toBe(false)
   })
 })
+
+describe("chat: bordas e compositor", () => {
+  it("desfoque nas bordas de cima e de baixo da rolagem", () => {
+    const h = desenhar(null, dadosDe(null, null))
+    expect(h.match(/data-slot="desfoque-chat"/g)).toHaveLength(2)
+  })
+
+  it("compositor em pílula flutuante com brilho laranja no foco", () => {
+    const h = desenhar(null, dadosDe(null, null))
+    expect(h).toContain("focus-within:ring-4")
+    expect(h).toContain("rounded-[22px]")
+  })
+})
