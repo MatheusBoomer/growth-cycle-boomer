@@ -186,7 +186,7 @@
     --veu: rgb(0 0 0 / 0.62);
 }
 
-/* Card de vidro: gradiente quase opaco (o fundo de ondas só aparece de leve), borda fina, luz de 1 px no topo e sombra longa. */
+/* Card de vidro: gradiente quase opaco (o fundo só aparece de leve), borda fina, luz de 1 px no topo e sombra longa. */
 @utility vidro {
     border: 1px solid var(--border);
     background-image: linear-gradient(to bottom, var(--vidro-1), var(--vidro-2));
@@ -324,3 +324,12 @@
 :root:not(.dark) .esqueleto::after { background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.7), transparent); }
 @keyframes esqueleto-brilho { to { transform: translateX(100%); } }
 @media (prefers-reduced-motion: reduce) { .esqueleto::after { animation: none; display: none; } }
+
+/* Conteúdo do admin ao trocar de aba (protótipo 6, Blur Fade): sobe 10 px e sai do desfoque. */
+.entrar-aba { animation: entrar-aba 0.5s cubic-bezier(.2,.7,.1,1); }
+@keyframes entrar-aba {
+  from { opacity: 0; transform: translateY(10px); filter: blur(6px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .entrar-aba { animation: none; }
+}
