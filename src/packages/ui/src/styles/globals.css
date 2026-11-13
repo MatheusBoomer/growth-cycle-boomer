@@ -70,25 +70,25 @@
     --radius-4xl: 24px;
 }
 
-/* Tema claro: laranja da marca + azul-marinho do logo */
+/* Tema claro pérola: branco quase neutro com um toque de calor */
 :root {
-    --background: #f5f6fa;
-    --foreground: #1e293b;
-    --card: rgb(255 255 255 / 0.92);
-    --card-foreground: #1e293b;
+    --background: #f7f6f3;
+    --foreground: #17150f;
+    --card: #ffffff;
+    --card-foreground: #17150f;
     --popover: #ffffff;
-    --popover-foreground: #1e293b;
+    --popover-foreground: #17150f;
     --primary: #eb610a;
     --primary-foreground: #ffffff;
-    --secondary: rgb(15 27 61 / 0.05);
-    --secondary-foreground: #1e293b;
-    --muted: rgb(15 27 61 / 0.04);
-    --muted-foreground: #5a6578;
-    --accent: rgb(15 27 61 / 0.06);
-    --accent-foreground: #0f1b3d;
+    --secondary: rgb(45 35 20 / 0.05);
+    --secondary-foreground: #17150f;
+    --muted: rgb(45 35 20 / 0.04);
+    --muted-foreground: #67635b;
+    --accent: rgb(45 35 20 / 0.06);
+    --accent-foreground: #17150f;
     --destructive: #be123c;
-    --border: rgb(15 27 61 / 0.08);
-    --input: rgb(15 27 61 / 0.12);
+    --border: rgb(45 35 20 / 0.085);
+    --input: rgb(45 35 20 / 0.14);
     --ring: rgb(235 97 10 / 0.45);
     --chart-1: #eb610a;
     --chart-2: #3987e5;
@@ -97,68 +97,64 @@
     --chart-5: #64748b;
     --radius: 0.5rem;
     --sidebar: #ffffff;
-    --sidebar-foreground: #1e293b;
+    --sidebar-foreground: #17150f;
     --sidebar-primary: #eb610a;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: rgb(15 27 61 / 0.06);
-    --sidebar-accent-foreground: #0f1b3d;
-    --sidebar-border: rgb(15 27 61 / 0.08);
+    --sidebar-accent: rgb(45 35 20 / 0.06);
+    --sidebar-accent-foreground: #17150f;
+    --sidebar-border: rgb(45 35 20 / 0.085);
     --sidebar-ring: rgb(235 97 10 / 0.45);
 
-    --texto-forte: #0f1b3d;
+    --texto-forte: #17150f;
     --primario-claro: #f47a2a;
-    --sucesso: #047857;
-    --sucesso-fundo: rgb(16 185 129 / 0.12);
+    --sucesso: #046c4e;
+    --sucesso-fundo: rgb(16 128 90 / 0.11);
     --aviso: #92400e;
     --aviso-fundo: rgb(245 158 11 / 0.12);
     --perigo-fundo: rgb(225 29 72 / 0.08);
     --selo-haiku: #047857;
-    --selo-haiku-fundo: rgb(16 185 129 / 0.14);
-    --selo-sonnet: #1d4ed8;
-    --selo-sonnet-fundo: rgb(59 130 246 / 0.14);
+    --selo-haiku-fundo: rgb(16 128 90 / 0.11);
+    --selo-sonnet: #2560c0;
+    --selo-sonnet-fundo: rgb(44 107 208 / 0.1);
     --selo-opus: #6d28d9;
-    --selo-opus-fundo: rgb(139 92 246 / 0.14);
+    --selo-opus-fundo: rgb(109 40 217 / 0.09);
     --volume: #2563eb;
-    --link-acao: #c2410c;
+    --link-acao: #b54404;
     --papel: #ffffff;
-    --vidro-1: rgb(255 255 255 / 0.97);
-    --vidro-2: rgb(255 255 255 / 0.94);
-    --vidro-interno: rgb(15 27 61 / 0.03);
-    --sombra-card: 0 1px 0 0 #ffffff inset, 0 18px 36px -26px rgb(15 27 61 / 0.28);
-    --orb-laranja: 0.1;
-    --orb-azul: 0.08;
-    --orb-verde: 0.05;
-    --pontos: 0.05;
-    --pontos-cor: rgb(15 27 61 / 0.55);
+    --vidro-1: rgb(255 255 255 / 0.98);
+    --vidro-2: rgb(253 252 250 / 0.97);
+    --vidro-interno: rgb(45 35 20 / 0.03);
+    --sombra-card: 0 1px 0 0 #ffffff inset, 0 1px 2px rgb(45 35 20 / 0.04), 0 12px 28px -18px rgb(60 45 25 / 0.22);
+    --brilho: rgb(235 97 10 / 0.1);
 }
 
-/* Tema escuro: padrão Boomer (Growth Cockpit) */
+/* Tema escuro: quase preto neutro */
 .dark {
-    --background: #070a12;
-    --foreground: #f1f5f9;
-    --card: rgb(255 255 255 / 0.035);
-    --card-foreground: #f1f5f9;
-    --popover: #0f1420;
-    --popover-foreground: #f1f5f9;
+    --background: #0a0a0b;
+    --foreground: #f4f4f5;
+    --card: rgb(255 255 255 / 0.045);
+    --card-foreground: #f4f4f5;
+    --popover: #141416;
+    --popover-foreground: #f4f4f5;
     --primary: #eb610a;
     --primary-foreground: #ffffff;
     --secondary: rgb(255 255 255 / 0.06);
-    --secondary-foreground: #f1f5f9;
+    --secondary-foreground: #f4f4f5;
     --muted: rgb(255 255 255 / 0.04);
-    --muted-foreground: #94a3b8;
+    --muted-foreground: #8b8b93;
     --accent: rgb(255 255 255 / 0.07);
     --accent-foreground: #ffffff;
     --destructive: #fb7185;
-    --border: rgb(255 255 255 / 0.07);
-    --input: rgb(255 255 255 / 0.1);
+    --border: rgb(255 255 255 / 0.08);
+    --input: rgb(255 255 255 / 0.14);
     --ring: rgb(235 97 10 / 0.5);
-    --sidebar: #0f1420;
-    --sidebar-foreground: #f1f5f9;
+    --sidebar: #141416;
+    --sidebar-foreground: #f4f4f5;
     --sidebar-primary: #eb610a;
     --sidebar-primary-foreground: #ffffff;
     --sidebar-accent: rgb(255 255 255 / 0.07);
     --sidebar-accent-foreground: #ffffff;
-    --sidebar-border: rgb(255 255 255 / 0.07);
+    --sidebar-border: rgb(255 255 255 / 0.08);
     --sidebar-ring: rgb(235 97 10 / 0.5);
     --chart-1: #f2762e;
     --chart-2: #5b9df0;
@@ -167,28 +163,24 @@
     --chart-5: #8696ad;
 
     --texto-forte: #ffffff;
-    --sucesso: #34d399;
-    --sucesso-fundo: rgb(16 185 129 / 0.1);
+    --sucesso: #2fbf8c;
+    --sucesso-fundo: rgb(47 191 140 / 0.14);
     --aviso: #fbbf24;
     --aviso-fundo: rgb(251 191 36 / 0.1);
     --perigo-fundo: rgb(244 63 94 / 0.1);
-    --selo-haiku: #34d399;
-    --selo-haiku-fundo: rgb(16 185 129 / 0.16);
+    --selo-haiku: #2fbf8c;
+    --selo-haiku-fundo: rgb(47 191 140 / 0.14);
     --selo-sonnet: #7db4f5;
     --selo-sonnet-fundo: rgb(59 130 246 / 0.18);
     --selo-opus: #b79af8;
     --selo-opus-fundo: rgb(139 92 246 / 0.2);
     --volume: #3987e5;
-    --link-acao: #f0894a;
-    --vidro-1: rgb(21 27 42 / 0.94);
-    --vidro-2: rgb(15 20 32 / 0.9);
+    --link-acao: #ff8a3d;
+    --vidro-1: rgb(22 22 24 / 0.94);
+    --vidro-2: rgb(15 15 17 / 0.9);
     --vidro-interno: rgb(0 0 0 / 0.25);
     --sombra-card: 0 1px 0 0 rgb(255 255 255 / 0.04) inset, 0 20px 40px -24px rgb(0 0 0 / 0.6);
-    --orb-laranja: 0.09;
-    --orb-azul: 0.07;
-    --orb-verde: 0.05;
-    --pontos: 0.025;
-    --pontos-cor: rgb(255 255 255 / 0.8);
+    --brilho: rgb(235 97 10 / 0.12);
 }
 
 /* Card de vidro: gradiente quase opaco (o fundo de ondas só aparece de leve), borda fina, luz de 1 px no topo e sombra longa. */
