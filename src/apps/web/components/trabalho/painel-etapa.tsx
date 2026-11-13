@@ -23,6 +23,7 @@ import { CardInsumo } from "@/components/cards/card-insumo"
 import { useAmbiente } from "@/components/marca/conta-contexto"
 import { api, mensagemDeErro, urlArquivo, type AcaoEtapa } from "@/lib/api"
 import { celebrarEtapaConcluida } from "@/lib/confete"
+import { estadoDoConcluir } from "@/lib/concluir"
 import { useVisualizador } from "./contexto-visualizador"
 
 const COR: Record<StatusEntregavel, string> = { pendente: "bg-aviso", aprovado: "bg-sucesso", substituido: "bg-muted-foreground/40" }
@@ -32,6 +33,9 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
   const estadoEtapa = dados.estado.etapas[etapa]
   const entregaveis = dados.estado.entregaveis.filter((e) => e.etapa === etapa && e.status !== "substituido")
   const condicoes = dados.condicoes[etapa]
+  const concluir = estadoDoConcluir({ condicoes, sinalizada: estadoEtapa.sinalizada === true, turnoAtivoAqui: dados.turnoAtivo === etapa })
+  const indice = dados.catalogo.etapas.findIndex((e) => e.id === etapa)
+  const rotuloProxima = dados.catalogo.etapas[indice + 1]?.rotuloStatus ?? null
   const [ocupado, setOcupado] = useState<AcaoEtapa | null>(null)
   const { nuvem } = useAmbiente()
   const { abrir, abrirArquivo } = useVisualizador()
@@ -87,7 +91,12 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
           </section>
         )}
         <section>
-          <h3 className="mb-2 text-sm font-semibold tracking-tight">Entregáveis da etapa</h3>
+          <h3 className="mb-2 flex items-center justify-between text-sm font-medium tracking-tight">
+            Entregáveis da etapa
+            <span className="text-muted-foreground font-mono text-[11px] font-normal">
+              {entregaveis.filter((x) => x.status === "aprovado").length}/{entregaveis.length}
+            </span>
+          </h3>
           {entregaveis.length === 0 ? (
             <p className="text-muted-foreground text-sm">Nada proposto ainda.</p>
           ) : (
@@ -132,7 +141,13 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
           </section>
         )}
         <section>
-          <h3 className="mb-2 text-sm font-semibold tracking-tight">Insumos</h3>
+          <h3 className="mb-2 flex items-center justify-between text-sm font-medium tracking-tight">
+            Insumos
+            <span className="text-muted-foreground font-mono text-[11px] font-normal">
+              {etapaCat.insumos.filter((ref) => dados.estado.insumos.some((i) => i.etapa === etapa && i.insumoId === ref.id && i.status === "valido")).length}/
+              {etapaCat.insumos.length}
+            </span>
+          </h3>
           {etapaCat.insumos.length === 0 ? (
             <p className="text-muted-foreground text-sm">Esta etapa não pede arquivos.</p>
           ) : (
@@ -155,24 +170,17 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
       </div>
 
       <div className="space-y-2 border-t p-4">
-        {(estadoEtapa.status === "em_andamento" || estadoEtapa.status === "pronta") && (
-          <>
-            <Button
-              className="w-full"
-              disabled={condicoes.length > 0 || dados.turnoAtivo === etapa || ocupado !== null}
-              onClick={() => executar("concluir", "")}
-            >
+        {(estadoEtapa.status === "em_andamento" || estadoEtapa.status === "pronta") && concluir === "esperando-agente" && (
+          <p className="text-muted-foreground text-xs">✓ Tudo aprovado · esperando o agente fechar a etapa</p>
+        )}
+        {(estadoEtapa.status === "em_andamento" || estadoEtapa.status === "pronta") && concluir === "pronto" && (
+          <div className="surgir space-y-2.5">
+            <p className="text-sucesso text-xs">✓ Tudo aprovado nesta etapa</p>
+            <Button className="w-full" disabled={ocupado !== null} onClick={() => executar("concluir", "")}>
               {ocupado === "concluir" && <Spinner />}
-              {condicoes.length > 0 ? `Concluir etapa (falta ${condicoes.length})` : "Concluir etapa"}
+              {rotuloProxima ? `Concluir etapa e ir para ${rotuloProxima} →` : "Concluir etapa"}
             </Button>
-            {condicoes.length > 0 && (
-              <ul className="text-muted-foreground list-disc space-y-0.5 pl-4 text-xs" aria-label="O que falta para concluir">
-                {condicoes.map((c) => (
-                  <li key={c}>{c}</li>
-                ))}
-              </ul>
-            )}
-          </>
+          </div>
         )}
         {estadoEtapa.status === "concluida" && (
           <AlertDialog>

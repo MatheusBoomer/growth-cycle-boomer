@@ -9,6 +9,7 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { useVisualizador } from "@/components/trabalho/contexto-visualizador"
 import { api, mensagemDeErro } from "@/lib/api"
 import { celebrarEtapaConcluida } from "@/lib/confete"
+import { estadoDoConcluir } from "@/lib/concluir"
 
 /**
  * Atalho no fim da conversa quando o agente encerra a etapa: concluir (a mesma ação e as mesmas
@@ -35,7 +36,8 @@ export function FimDaEtapa({ slug, etapa, dados }: { slug: string; etapa: EtapaI
   }
 
   const aberta = estadoEtapa.status === "em_andamento" || estadoEtapa.status === "pronta"
-  if (!aberta || !estadoEtapa.sinalizada || dados.turnoAtivo === etapa) return null
+  // Regra do usuário: o botão só aparece com tudo pronto; antes disso, nada (os contadores do painel mostram o que falta).
+  if (!aberta || estadoDoConcluir({ condicoes, sinalizada: estadoEtapa.sinalizada === true, turnoAtivoAqui: dados.turnoAtivo === etapa }) !== "pronto") return null
 
   async function concluirEIr() {
     setConcluindo(true)
@@ -52,18 +54,11 @@ export function FimDaEtapa({ slug, etapa, dados }: { slug: string; etapa: EtapaI
 
   return (
     <div className="flex flex-col items-start gap-2">
-      <Button onClick={() => void concluirEIr()} disabled={condicoes.length > 0 || concluindo}>
+      <Button className="surgir" onClick={() => void concluirEIr()} disabled={concluindo}>
         {concluindo && <Spinner />}
         {proxima && rotuloProxima ? `Concluir etapa e ir para ${rotuloProxima}` : "Concluir etapa"}
         {proxima && !concluindo && <ArrowRightIcon />}
       </Button>
-      {condicoes.length > 0 && (
-        <ul className="text-muted-foreground list-disc space-y-0.5 pl-4 text-xs" aria-label="O que falta para concluir">
-          {condicoes.map((c) => (
-            <li key={c}>{c}</li>
-          ))}
-        </ul>
-      )}
     </div>
   )
 }
