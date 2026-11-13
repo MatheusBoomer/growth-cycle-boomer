@@ -76,7 +76,7 @@ export function Entrada({ emAndamento }: { emAndamento: number }) {
       <FundoDithered intensidade={0.75} />
       <div
         className={cn(
-          "flex flex-1 flex-col justify-between px-6 py-7 transition-[opacity,filter,transform] duration-700 ease-[cubic-bezier(.4,0,.2,1)] sm:px-10 sm:py-8",
+          "flex flex-1 flex-col justify-between px-6 py-7 transition-[opacity,filter,translate] duration-900 ease-[cubic-bezier(.22,1,.36,1)] sm:px-10 sm:py-8",
           fase === "saindo" && "-translate-y-3 opacity-0 blur-sm"
         )}
       >

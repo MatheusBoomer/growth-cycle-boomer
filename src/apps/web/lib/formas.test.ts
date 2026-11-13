@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs"
+import { readFileSync, readdirSync, statSync } from "node:fs"
 import path from "node:path"
 import { describe, expect, it } from "vitest"
 import { badgeVariants } from "@workspace/ui/components/badge"
@@ -42,4 +42,17 @@ describe("formas do redesign", () => {
   })
 
   it("campo de texto é pílula", () => expect(ler("input.tsx")).toContain("rounded-full"))
+
+  it("transição com lista própria que anima posição inclui 'translate' (no Tailwind 4 -translate-* usa essa propriedade; sem ela o texto pula)", () => {
+    const raiz = path.resolve(import.meta.dirname, "../components")
+    const arquivos = (pasta: string): string[] =>
+      readdirSync(pasta).flatMap((n) => {
+        const c = path.join(pasta, n)
+        return statSync(c).isDirectory() ? arquivos(c) : c.endsWith(".tsx") ? [c] : []
+      })
+    const ruins = arquivos(raiz).flatMap((f) =>
+      [...readFileSync(f, "utf-8").matchAll(/transition-\[([^\]]*)\]/g)].filter((m) => m[1]!.includes("transform") && !m[1]!.includes("translate")).map(() => path.relative(raiz, f)),
+    )
+    expect(ruins).toEqual([])
+  })
 })
