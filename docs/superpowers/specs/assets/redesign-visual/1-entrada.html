@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Instrument+Serif:ital@0;1&family=Geist+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0b; --fg: #f4f4f5; --muted: #8b8b93; --line: rgb(255 255 255 / .08);
+    --laranja: #eb610a; --laranja-2: #ff8a3d; --azul: #5b9df0;
+    --sans: "Geist", system-ui, sans-serif; --serif: "Instrument Serif", Georgia, serif; --mono: "Geist Mono", monospace;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #050506; color: var(--fg); font-family: var(--sans); padding: 40px 48px 80px; }
+  .topo { display: flex; justify-content: space-between; align-items: end; gap: 24px; max-width: 1280px; margin: 0 auto 28px; }
+  .topo h1 { font-size: 28px; font-weight: 500; letter-spacing: -.02em; }
+  .topo h1 em { font-family: var(--serif); font-weight: 400; color: var(--laranja-2); font-size: 32px; }
+  .topo p { color: var(--muted); font-size: 14px; margin-top: 6px; max-width: 640px; line-height: 1.5; }
+  .controles { display: flex; gap: 8px; }
+  .pill { font: 500 13px var(--sans); color: var(--fg); background: rgb(255 255 255 / .06); border: 1px solid var(--line); padding: 8px 14px; border-radius: 999px; cursor: pointer; }
+  .pill:hover { background: rgb(255 255 255 / .1); }
+  .pill.on { background: var(--fg); color: #0a0a0b; }
+
+  .opcao { max-width: 1280px; margin: 0 auto 40px; }
+  .rotulo { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .rotulo .esq { display: flex; align-items: center; gap: 12px; }
+  .letra { width: 28px; height: 28px; border-radius: 999px; display: grid; place-items: center; background: rgb(255 255 255 / .08); font-weight: 600; font-size: 13px; }
+  .rotulo h3 { font-size: 16px; font-weight: 500; }
+  .rotulo span.d { color: var(--muted); font-size: 13px; }
+  .escolher { cursor: pointer; }
+  .opcao.selected .letra { background: var(--laranja); }
+  .opcao.selected .tela { outline: 2px solid var(--laranja); outline-offset: 4px; }
+
+  .tela { position: relative; aspect-ratio: 16 / 9; border-radius: 20px; overflow: hidden; background: var(--bg); border: 1px solid var(--line); isolation: isolate; }
+
+  /* ---------- Home que aparece depois da entrada ---------- */
+  .home { position: absolute; inset: 0; padding: 22px 34px; opacity: 0; transform: translateY(18px) scale(.985); filter: blur(10px); transition: all .9s cubic-bezier(.2,.7,.1,1); }
+  .tela.fim .home { opacity: 1; transform: none; filter: none; }
+  .nav { display: flex; justify-content: space-between; align-items: center; }
+  .logo { font-weight: 700; font-size: 19px; letter-spacing: -.04em; }
+  .logo b { color: var(--laranja); font-weight: 700; }
+  .navpill { display: flex; gap: 2px; padding: 4px; border: 1px solid var(--line); border-radius: 999px; background: rgb(255 255 255 / .03); font-size: 12px; }
+  .navpill span { padding: 5px 12px; border-radius: 999px; color: var(--muted); }
+  .navpill span.on { background: rgb(255 255 255 / .08); color: var(--fg); }
+  .navdir { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); }
+  .navdir .relogio { border: 1px solid var(--line); border-radius: 999px; padding: 5px 10px; font-family: var(--mono); font-size: 11px; }
+  .navdir .tema { width: 26px; height: 26px; border-radius: 999px; border: 1px solid var(--line); display: grid; place-items: center; }
+  .hh { margin-top: 30px; display: flex; justify-content: space-between; align-items: end; }
+  .tag { display: inline-block; font-size: 11px; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; color: var(--muted); margin-bottom: 10px; }
+  .hh h2 { font-size: 40px; font-weight: 500; letter-spacing: -.035em; line-height: 1; }
+  .hh h2 em { font-family: var(--serif); font-weight: 400; color: var(--laranja-2); }
+  .btn { font-size: 12px; font-weight: 500; padding: 8px 14px; border-radius: 999px; background: var(--fg); color: #0a0a0b; }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 22px; }
+  .card { border: 1px solid var(--line); border-radius: 16px; padding: 16px; background: linear-gradient(180deg, rgb(255 255 255 / .04), rgb(255 255 255 / .015)); }
+  .card .t { font-size: 15px; font-weight: 500; letter-spacing: -.01em; }
+  .card .s { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .card .s em { font-family: var(--serif); font-size: 14px; color: var(--fg); }
+  .barras { display: flex; gap: 4px; margin-top: 18px; }
+  .barras i { flex: 1; height: 4px; border-radius: 4px; background: rgb(255 255 255 / .1); }
+  .barras i.ok { background: #2fbf8c; } .barras i.at { background: var(--laranja); }
+  .card .r { display: flex; justify-content: space-between; margin-top: 14px; font-size: 11px; color: var(--muted); }
+
+  /* ---------- Camada de entrada ---------- */
+  .entrada { position: absolute; inset: 0; z-index: 2; transition: opacity .8s ease, filter .8s ease, transform .9s cubic-bezier(.7,0,.2,1); }
+  .tela.fim .entrada { opacity: 0; filter: blur(12px); transform: scale(1.04); pointer-events: none; }
+  .brilho { position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(46% 42% at 50% 46%, rgb(235 97 10 / .22), transparent 70%), radial-gradient(30% 30% at 62% 60%, rgb(91 157 240 / .08), transparent 70%); }
+
+  /* Dia Text Reveal: uma faixa de cor varre o texto e ele assenta na cor base */
+  .dia { background-image: linear-gradient(90deg, var(--cor-base, var(--fg)) 0%, var(--cor-base, var(--fg)) 42%, #ffd29a 45%, var(--laranja-2) 48%, var(--laranja) 51%, var(--azul) 55%, transparent 60%, transparent 100%);
+    background-size: 260% 100%; background-position: 100% 0; -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .tela.rodando .dia { animation: varre 1.6s cubic-bezier(.6,.1,.2,1) forwards; animation-delay: var(--atraso, 0s); }
+  @keyframes varre { to { background-position: 0% 0; } }
+
+  /* A — centrado, editorial */
+  .a .bloco { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+  .a .l1 { font-size: clamp(40px, 7.4vw, 104px); font-weight: 500; letter-spacing: -.055em; line-height: .95; }
+  .a .l2 { font-size: clamp(44px, 8.4vw, 118px); line-height: .95; letter-spacing: -.045em; font-weight: 500; }
+  .a .l2 em { font-family: var(--serif); font-weight: 400; letter-spacing: -.02em; --cor-base: var(--laranja-2); padding-right: .08em; }
+  .a .sub { margin-top: 26px; font-size: 15px; color: var(--muted); opacity: 0; transition: opacity .8s ease 1.5s; }
+  .tela.rodando .sub { opacity: 1; }
+
+  /* B — gigante, ocupa a largura */
+  .b .bloco { position: absolute; inset: 0; padding: 32px 40px; display: flex; flex-direction: column; justify-content: space-between; }
+  .b .cima { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+  .b .cima .relogio { font-family: var(--mono); font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; }
+  .b .bv { font-family: var(--serif); font-style: italic; font-size: clamp(28px, 3.6vw, 52px); color: var(--muted); margin-bottom: -.1em; }
+  .b .gigante { font-size: clamp(80px, 15.5vw, 222px); font-weight: 600; letter-spacing: -.07em; line-height: .82; white-space: nowrap; }
+  .b .gigante em { font-family: var(--serif); font-weight: 400; letter-spacing: -.03em; font-style: italic; --cor-base: var(--laranja); margin-left: .08em; }
+  .b .baixo { display: flex; justify-content: space-between; align-items: end; font-size: 13px; color: var(--muted); margin-top: 44px; }
+
+  /* C — palavras surgem do desfoque, uma a uma */
+  .c .bloco { position: absolute; inset: 0; display: grid; place-content: center; padding: 0 12%; }
+  .c .tit { font-size: clamp(40px, 6.6vw, 94px); font-weight: 500; letter-spacing: -.05em; line-height: 1.02; }
+  .c .tit em { font-family: var(--serif); font-weight: 400; letter-spacing: -.02em; color: var(--laranja-2); }
+  .c .w { display: inline-block; opacity: 0; filter: blur(14px); transform: translateY(14px); }
+  .tela.rodando .c .w, .c.rodando .w { animation: surge .9s cubic-bezier(.2,.7,.1,1) forwards; animation-delay: calc(var(--i) * 120ms); }
+  @keyframes surge { to { opacity: 1; filter: blur(0); transform: none; } }
+  .c .linha { margin-top: 28px; height: 1px; background: linear-gradient(90deg, var(--laranja), transparent); transform-origin: left; transform: scaleX(0); }
+  .tela.rodando .c .linha, .c.rodando .linha { animation: risca 1.2s cubic-bezier(.6,.1,.2,1) .9s forwards; }
+  @keyframes risca { to { transform: scaleX(1); } }
+  .c .meta { margin-top: 16px; display: flex; gap: 22px; font-size: 13px; color: var(--muted); opacity: 0; transition: opacity .6s ease 1.5s; }
+  .tela.rodando .meta { opacity: 1; }
+
+  /* Fundo ASCII (opcional) */
+  .ascii { position: absolute; inset: 0; z-index: -2; font: 11px/14px var(--mono); color: rgb(91 157 240 / .22); white-space: pre; overflow: hidden; display: none; letter-spacing: 2px; }
+  body.com-ascii .ascii { display: block; }
+  .ascii b { color: rgb(235 97 10 / .35); font-weight: 400; }
+
+  .nota { max-width: 1280px; margin: 8px auto 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+</style>
+</head>
+<body>
+  <div class="topo">
+    <div>
+      <h1>Entrada · <em>três composições</em></h1>
+      <p>Todas com fonte grande, sem serifa + serifada itálica no laranja da Boomer, e terminando na home. Clique no título de uma opção para marcar. A animação roda sozinha; use "Repetir" para ver de novo.</p>
+    </div>
+    <div class="controles">
+      <button class="pill" id="bt-ascii">Fundo ASCII: desligado</button>
+      <button class="pill on" id="bt-rep">Repetir todas</button>
+    </div>
+  </div>
+
+  <!-- A -->
+  <section class="opcao" data-choice="a">
+    <div class="rotulo">
+      <div class="esq escolher" onclick="marcar(this)"><div class="letra">A</div><h3>Centrado e calmo</h3><span class="d">· linha de Recto. Faixa de cor varre o texto (Dia Text Reveal)</span></div>
+      <button class="pill" onclick="rodar(this.closest('.opcao'))">Repetir</button>
+    </div>
+    <div class="tela a">
+      <div class="ascii"></div>
+      <div class="home"></div>
+      <div class="entrada"><div class="brilho"></div>
+        <div class="bloco">
+          <div class="l1"><span class="dia">Bem-vindo ao</span></div>
+          <div class="l2"><span class="dia" style="--atraso:.35s">Growth</span> <em class="dia" style="--atraso:.55s">Cycle</em></div>
+          <div class="sub">Planejamento estratégico de 12 meses · Boomer</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- B -->
+  <section class="opcao" data-choice="b">
+    <div class="rotulo">
+      <div class="esq escolher" onclick="marcar(this)"><div class="letra">B</div><h3>Gigante, de borda a borda</h3><span class="d">· o nome ocupa a tela inteira, tipo capa de revista</span></div>
+      <button class="pill" onclick="rodar(this.closest('.opcao'))">Repetir</button>
+    </div>
+    <div class="tela b">
+      <div class="ascii"></div>
+      <div class="home"></div>
+      <div class="entrada"><div class="brilho" style="background: radial-gradient(60% 50% at 30% 90%, rgb(235 97 10 / .22), transparent 70%)"></div>
+        <div class="bloco">
+          <div class="cima"><span class="logo" style="color:var(--fg)">bo<b>omer</b></span><span class="relogio" data-relogio>--:-- em São Paulo</span></div>
+          <div>
+            <div class="bv"><span class="dia" style="--cor-base: var(--muted)">Bem-vindo ao</span></div>
+            <div class="gigante"><span class="dia" style="--atraso:.25s">Growth</span><em class="dia" style="--atraso:.5s">Cycle</em></div>
+            <div class="baixo"><span>Diagnóstico · Metas · Mídia · Plano de ação</span><span>8 projetos em andamento</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- C -->
+  <section class="opcao" data-choice="c">
+    <div class="rotulo">
+      <div class="esq escolher" onclick="marcar(this)"><div class="letra">C</div><h3>Frase que surge do desfoque</h3><span class="d">· linha de Conversion. Palavra por palavra, com um traço laranja que se desenha</span></div>
+      <button class="pill" onclick="rodar(this.closest('.opcao'))">Repetir</button>
+    </div>
+    <div class="tela c">
+      <div class="ascii"></div>
+      <div class="home"></div>
+      <div class="entrada"><div class="brilho" style="background: radial-gradient(40% 40% at 50% 100%, rgb(235 97 10 / .28), transparent 70%)"></div>
+        <div class="bloco">
+          <div class="tit" data-palavras>Bem-vindo, Matheus. Vamos construir o próximo <em>Growth Cycle.</em></div>
+          <div class="linha"></div>
+          <div class="meta"><span>3 aprovações esperando você</span><span>Última atividade: Verdeluz, há 2 h</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <p class="nota">Em todas, a home aparece com a mesma cara nova: menu em pílula no topo, título com palavra serifada em laranja, cards mais respirados. Isso é só um esboço da home; ela ganha uma tela própria depois.</p>
+
+<script>
+  // Home de fundo (igual nas três)
+  const HOME = `
+    <div class="nav"><span class="logo">bo<b>omer</b></span>
+      <div class="navpill"><span class="on">Prospects</span><span>Biblioteca</span><span>Administração</span></div>
+      <div class="navdir"><span class="relogio" data-relogio>--:--</span><span class="tema">◐</span></div></div>
+    <div class="hh"><div><span class="tag">8 em andamento</span><h2>Seus <em>Growth Cycles</em></h2></div><span class="btn">+ Novo prospect</span></div>
+    <div class="cards">
+      ${[["Verdeluz nuvem","04","Unidade econômica",3],["Sottile Jalecos","02","Contextualização",1],["Adda","09","Apresentação final",8]].map(([n,num,et,ok]) => `
+      <div class="card"><div class="t">${n}</div><div class="s">${num} · <em>${et}</em></div>
+        <div class="barras">${Array.from({length:8},(_,i)=>`<i class="${i<ok?'ok':i===ok?'at':''}"></i>`).join("")}</div>
+        <div class="r"><span>${ok} de 8 etapas</span><span>há 2 h</span></div></div>`).join("")}
+    </div>`;
+  document.querySelectorAll(".home").forEach(h => h.innerHTML = HOME);
+
+  // Palavras da opção C
+  document.querySelectorAll("[data-palavras]").forEach(el => {
+    let i = 0;
+    const quebra = (node) => [...node.childNodes].map(n => {
+      if (n.nodeType === 3) return n.textContent.split(/(\s+)/).map(p => p.trim() ? `<span class="w" style="--i:${i++}">${p}</span>` : p).join("");
+      return `<${n.tagName.toLowerCase()}>${quebra(n)}</${n.tagName.toLowerCase()}>`;
+    }).join("");
+    el.innerHTML = quebra(el);
+  });
+
+  // ASCII
+  const chars = " .:-=+*#%@";
+  function preencherAscii() {
+    document.querySelectorAll(".ascii").forEach(a => {
+      let s = "";
+      for (let y = 0; y < 60; y++) { for (let x = 0; x < 160; x++) {
+        const v = (Math.sin(x * .12 + y * .05) + Math.sin(y * .18 - x * .03)) * .5 + .5;
+        const c = chars[Math.floor(v * v * (chars.length - 1))];
+        s += (x % 23 === 0 && y % 3 === 0 && c !== " ") ? `<b>${c}</b>` : c;
+      } s += "\n"; }
+      a.innerHTML = s;
+    });
+  }
+  preencherAscii();
+  document.getElementById("bt-ascii").onclick = (e) => {
+    document.body.classList.toggle("com-ascii");
+    e.target.textContent = "Fundo ASCII: " + (document.body.classList.contains("com-ascii") ? "ligado" : "desligado");
+    e.target.classList.toggle("on");
+  };
+
+  // Relógio
+  function relogio() { const t = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
+    document.querySelectorAll("[data-relogio]").forEach(r => r.textContent = r.closest(".bloco") ? `${t} em São Paulo` : t); }
+  relogio(); setInterval(relogio, 30000);
+
+  // Rodar animação
+  function rodar(op) {
+    const tela = op.querySelector(".tela");
+    tela.classList.remove("rodando", "fim"); void tela.offsetWidth;
+    tela.classList.add("rodando");
+    clearTimeout(tela._t); tela._t = setTimeout(() => tela.classList.add("fim"), 3600);
+  }
+  document.getElementById("bt-rep").onclick = () => document.querySelectorAll(".opcao").forEach(rodar);
+  document.querySelectorAll(".opcao").forEach((op, i) => setTimeout(() => rodar(op), 300 + i * 250));
+
+  function marcar(el) {
+    const op = el.closest(".opcao");
+    document.querySelectorAll(".opcao").forEach(o => o.classList.toggle("selected", o === op));
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Instrument+Serif:ital@0;1&family=Geist+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0b; --fg: #f4f4f5; --muted: #8b8b93; --muted-2: #5d5d66; --line: rgb(255 255 255 / .08); --line-2: rgb(255 255 255 / .14);
+    --laranja: #eb610a; --laranja-2: #ff8a3d; --azul: #5b9df0; --verde: #2fbf8c; --ambar: #fbbf24;
+    --sans: "Geist", system-ui, sans-serif; --serif: "Instrument Serif", Georgia, serif; --mono: "Geist Mono", monospace;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #050506; color: var(--fg); font-family: var(--sans); padding: 40px 48px 80px; -webkit-font-smoothing: antialiased; }
+  em { font-family: var(--serif); font-weight: 400; }
+  .topo { display: flex; justify-content: space-between; align-items: end; gap: 24px; max-width: 1320px; margin: 0 auto 28px; }
+  .topo h1 { font-size: 28px; font-weight: 500; letter-spacing: -.02em; }
+  .topo h1 em { color: var(--laranja-2); font-size: 32px; }
+  .topo p { color: var(--muted); font-size: 14px; margin-top: 6px; max-width: 700px; line-height: 1.5; }
+  .controles { display: flex; gap: 8px; flex-shrink: 0; }
+  .pill { font: 500 13px var(--sans); color: var(--fg); background: rgb(255 255 255 / .06); border: 1px solid var(--line); padding: 8px 14px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+  .pill:hover { background: rgb(255 255 255 / .1); }
+  .pill.on { background: var(--fg); color: #0a0a0b; }
+
+  .opcao { max-width: 1320px; margin: 0 auto 48px; }
+  .rotulo { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .rotulo .esq { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+  .letra { width: 28px; height: 28px; border-radius: 999px; display: grid; place-items: center; background: rgb(255 255 255 / .08); font-weight: 600; font-size: 13px; }
+  .rotulo h3 { font-size: 16px; font-weight: 500; }
+  .rotulo span.d { color: var(--muted); font-size: 13px; }
+  .opcao.selected .letra { background: var(--laranja); }
+  .opcao.selected .tela { outline: 2px solid var(--laranja); outline-offset: 4px; }
+
+  .tela { position: relative; border-radius: 20px; overflow: hidden; background: var(--bg); border: 1px solid var(--line); isolation: isolate; min-height: 820px; }
+  .tela::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(50% 40% at 18% 0%, rgb(235 97 10 / .13), transparent 70%), radial-gradient(40% 35% at 95% 10%, rgb(91 157 240 / .06), transparent 70%); }
+
+  /* ---------- Entrada B, 33% mais rápida ---------- */
+  .entrada { position: absolute; inset: 0; z-index: 5; background: var(--bg); transition: opacity .55s ease, filter .55s ease, transform .6s cubic-bezier(.7,0,.2,1); }
+  .tela.fim .entrada { opacity: 0; filter: blur(12px); transform: scale(1.04); pointer-events: none; }
+  .entrada .brilho { position: absolute; inset: 0; background: radial-gradient(60% 50% at 30% 90%, rgb(235 97 10 / .22), transparent 70%); }
+  .entrada .bloco { position: absolute; inset: 0; padding: 32px 40px; display: flex; flex-direction: column; justify-content: space-between; }
+  .entrada .cima { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+  .entrada .bv { font-family: var(--serif); font-style: italic; font-size: 52px; color: var(--muted); margin-bottom: -.1em; }
+  .entrada .gigante { font-size: 222px; font-weight: 600; letter-spacing: -.07em; line-height: .82; white-space: nowrap; }
+  .entrada .gigante em { letter-spacing: -.03em; font-style: italic; --cor-base: var(--laranja); margin-left: .08em; }
+  .entrada .baixo { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-top: 44px; }
+  .dia { background-image: linear-gradient(90deg, var(--cor-base, var(--fg)) 0%, var(--cor-base, var(--fg)) 42%, #ffd29a 45%, var(--laranja-2) 48%, var(--laranja) 51%, var(--azul) 55%, transparent 60%, transparent 100%);
+    background-size: 260% 100%; background-position: 100% 0; -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .tela.rodando .dia { animation: varre 1.07s cubic-bezier(.6,.1,.2,1) forwards; animation-delay: var(--atraso, 0s); }
+  @keyframes varre { to { background-position: 0% 0; } }
+
+  /* ---------- Home (comum) ---------- */
+  .home { padding: 22px 36px 40px; }
+  .tela .home > * { opacity: 0; transform: translateY(14px); filter: blur(8px); }
+  .tela.fim .home > * { animation: surge .7s cubic-bezier(.2,.7,.1,1) forwards; animation-delay: calc(var(--i, 0) * 70ms + .15s); }
+  @keyframes surge { to { opacity: 1; transform: none; filter: none; } }
+
+  .nav { display: flex; justify-content: space-between; align-items: center; }
+  .logo { font-weight: 700; font-size: 20px; letter-spacing: -.045em; }
+  .logo b { color: var(--laranja); font-weight: 700; }
+  .navpill { display: flex; gap: 2px; padding: 4px; border: 1px solid var(--line); border-radius: 999px; background: rgb(255 255 255 / .03); font-size: 13px; backdrop-filter: blur(8px); }
+  .navpill span { padding: 6px 14px; border-radius: 999px; color: var(--muted); }
+  .navpill span.on { background: rgb(255 255 255 / .09); color: var(--fg); }
+  .navdir { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); }
+  .relogio { border: 1px solid var(--line); border-radius: 999px; padding: 6px 11px; font-family: var(--mono); font-size: 11px; }
+  .icone { width: 30px; height: 30px; border-radius: 999px; border: 1px solid var(--line); display: grid; place-items: center; font-size: 13px; }
+  .avatar { width: 30px; height: 30px; border-radius: 999px; background: linear-gradient(135deg, #f0894a, #b4410a); display: grid; place-items: center; font-size: 11px; font-weight: 600; color: #fff; }
+
+  .cab { margin-top: 44px; display: flex; justify-content: space-between; align-items: end; }
+  .tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; color: var(--muted); margin-bottom: 14px; }
+  .tag .ponto { width: 6px; height: 6px; border-radius: 9px; background: var(--ambar); box-shadow: 0 0 10px var(--ambar); }
+  .cab h2 { font-size: 64px; font-weight: 500; letter-spacing: -.045em; line-height: .95; }
+  .cab h2 em { color: var(--laranja-2); letter-spacing: -.02em; }
+  .acoes { display: flex; gap: 8px; }
+  .bt { font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--fg); background: rgb(255 255 255 / .03); }
+  .bt.forte { background: var(--fg); color: #0a0a0b; border-color: transparent; }
+  .bt.laranja { background: var(--laranja); color: #fff; border-color: transparent; box-shadow: 0 0 0 1px rgb(255 255 255 / .12) inset, 0 8px 24px -8px rgb(235 97 10 / .7); }
+
+  .filtros { margin-top: 28px; display: flex; gap: 10px; align-items: center; }
+  .seg { display: flex; gap: 2px; padding: 4px; border: 1px solid var(--line); border-radius: 999px; font-size: 13px; }
+  .seg span { padding: 6px 13px; border-radius: 999px; color: var(--muted); }
+  .seg span.on { background: rgb(255 255 255 / .09); color: var(--fg); }
+  .busca { flex: 1; max-width: 320px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--line); border-radius: 999px; padding: 8px 8px 8px 16px; font-size: 13px; color: var(--muted-2); }
+  .busca kbd { font: 11px var(--mono); color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; }
+  .filtros .dir { margin-left: auto; font-size: 13px; color: var(--muted); }
+
+  .secao { margin-top: 30px; display: flex; align-items: baseline; gap: 10px; font-size: 13px; color: var(--muted); }
+  .secao b { color: var(--fg); font-weight: 500; font-size: 14px; }
+  .secao .linha { flex: 1; height: 1px; background: var(--line); }
+
+  /* Card com luz que segue o mouse (Magic Card) */
+  .card { position: relative; border: 1px solid var(--line); border-radius: 18px; padding: 18px; overflow: hidden;
+    background: linear-gradient(180deg, rgb(255 255 255 / .045), rgb(255 255 255 / .015)); transition: border-color .3s, transform .3s; }
+  .card::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s;
+    background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgb(235 97 10 / .14), transparent 70%); }
+  .card:hover { border-color: var(--line-2); transform: translateY(-2px); }
+  .card:hover::after { opacity: 1; }
+  .card .linha1 { display: flex; justify-content: space-between; align-items: center; }
+  .card .nome { font-size: 17px; font-weight: 500; letter-spacing: -.015em; }
+  .card .mais { color: var(--muted); letter-spacing: 1px; }
+  .pessoa { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .pessoa i { width: 18px; height: 18px; border-radius: 99px; background: rgb(255 255 255 / .1); display: grid; place-items: center; font-style: normal; font-size: 9px; color: var(--fg); }
+  .etapa { margin-top: 20px; font-size: 13px; color: var(--muted); }
+  .etapa em { display: block; font-size: 24px; color: var(--fg); line-height: 1.05; margin-top: 2px; letter-spacing: -.01em; }
+  .barras { display: flex; gap: 4px; margin-top: 16px; }
+  .barras i { flex: 1; height: 4px; border-radius: 4px; background: rgb(255 255 255 / .09); }
+  .barras i.ok { background: var(--verde); }
+  .barras i.at { background: var(--laranja); box-shadow: 0 0 10px rgb(235 97 10 / .8); animation: pulsa 1.8s ease-in-out infinite; }
+  @keyframes pulsa { 50% { opacity: .45; } }
+  .card .rodape { display: flex; justify-content: space-between; margin-top: 14px; font-size: 12px; color: var(--muted-2); }
+  .selo { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; color: var(--ambar); background: rgb(251 191 36 / .1); border-radius: 999px; padding: 3px 9px; }
+  .selo.teste { color: var(--muted); background: rgb(255 255 255 / .06); }
+
+  /* Borda que corre (Border Beam) só em quem tem aprovação pendente */
+  .card.pendente { border-color: transparent; }
+  .card.pendente::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: conic-gradient(from var(--ang), transparent 0 70%, var(--ambar) 80%, var(--laranja) 88%, transparent 96%), linear-gradient(var(--line), var(--line));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: gira 4s linear infinite; }
+  @property --ang { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+  @keyframes gira { to { --ang: 360deg; } }
+
+  .grade3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 14px; }
+  .grade4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 14px; }
+
+  /* ---------- B: bento ---------- */
+  .bento { display: grid; grid-template-columns: 7fr 5fr; gap: 14px; margin-top: 28px; }
+  .continuar { min-height: 300px; padding: 26px; display: flex; justify-content: space-between; gap: 20px; }
+  .continuar .k { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; }
+  .continuar .nm { font-size: 38px; font-weight: 500; letter-spacing: -.035em; margin-top: 10px; }
+  .continuar .et { font-size: 15px; color: var(--muted); margin-top: 18px; }
+  .continuar .et em { display: block; font-size: 40px; color: var(--laranja-2); line-height: 1; margin-top: 4px; }
+  .continuar .bt { display: inline-block; margin-top: 26px; }
+  .numeros { display: grid; grid-template-rows: 1fr 1fr; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .num { border: 1px solid var(--line); border-radius: 18px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; background: rgb(255 255 255 / .02); }
+  .num .v { font-family: var(--serif); font-size: 64px; line-height: .9; letter-spacing: -.02em; }
+  .num .l { font-size: 13px; color: var(--muted); }
+  .num.cheio { grid-column: span 2; background: linear-gradient(135deg, #ff8a3d, #eb610a 55%, #c94d05); border: 0; color: #1a0a00; flex-direction: row; align-items: center; }
+  .num.cheio .v { font-size: 72px; }
+  .num.cheio .l { color: #3a1500; font-size: 15px; max-width: 220px; }
+  .num.cheio .seta { width: 44px; height: 44px; border-radius: 99px; background: #1a0a00; color: #ff8a3d; display: grid; place-items: center; font-size: 18px; }
+  .mini { padding: 14px; border-radius: 16px; }
+  .mini .nome { font-size: 15px; }
+  .mini .etapa { margin-top: 12px; }
+  .mini .etapa em { font-size: 19px; }
+
+  /* ---------- C: lista com anel ---------- */
+  .lista { margin-top: 14px; border-top: 1px solid var(--line); }
+  .linha-p { display: grid; grid-template-columns: 64px 1.3fr 1.4fr 1fr 110px 28px; align-items: center; gap: 16px; padding: 16px 14px; border-bottom: 1px solid var(--line); position: relative; border-radius: 14px; transition: background .25s; }
+  .linha-p:hover { background: rgb(255 255 255 / .035); }
+  .linha-p .nome { font-size: 18px; font-weight: 500; letter-spacing: -.02em; }
+  .linha-p .pessoa { margin-top: 4px; }
+  .linha-p .et { font-size: 12px; color: var(--muted); }
+  .linha-p .et em { display: block; font-size: 22px; color: var(--fg); line-height: 1.05; }
+  .linha-p .quando { font-size: 12px; color: var(--muted-2); text-align: right; }
+  .linha-p .vai { color: var(--muted); transition: transform .25s, color .25s; }
+  .linha-p:hover .vai { transform: translateX(4px); color: var(--laranja-2); }
+  .anel { position: relative; width: 52px; height: 52px; }
+  .anel span { position: absolute; inset: 0; display: grid; place-items: center; font: 11px var(--mono); color: var(--muted); }
+
+  .rot { position: absolute; z-index: 4; font: 500 10.5px var(--mono); color: #0a0a0b; background: #c6f53d; padding: 3px 7px; border-radius: 6px; pointer-events: none; white-space: nowrap; display: none; box-shadow: 0 4px 14px rgb(0 0 0 / .5); }
+  body.nomes .rot { display: block; }
+  .nota { max-width: 1320px; margin: 8px auto 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+</style>
+</head>
+<body>
+  <div class="topo">
+    <div>
+      <h1>Home · <em>três arranjos</em></h1>
+      <p>Cada um abre com a entrada B (agora 33% mais rápida) e revela a home. Fundo só com brilho quente; o dithered entra depois. Passe o mouse nos cards. Clique no título de uma opção para marcar.</p>
+    </div>
+    <div class="controles">
+      <button class="pill" id="bt-nomes">Mostrar componentes</button>
+      <button class="pill on" id="bt-rep">Repetir entrada</button>
+    </div>
+  </div>
+
+  <section class="opcao" data-choice="a">
+    <div class="rotulo"><div class="esq" onclick="marcar(this)"><div class="letra">A</div><h3>Grade de cards, refinada</h3><span class="d">· mesma organização de hoje, com a cara nova</span></div></div>
+    <div class="tela"><div class="entrada"></div>
+      <div class="home">
+        <div class="nav" style="--i:0"></div>
+        <div class="cab" style="--i:1"></div>
+        <div class="filtros" style="--i:2"></div>
+        <div style="--i:3"><div class="secao"><b>Em andamento</b> 8 <span class="linha"></span></div>
+          <div class="grade3" data-cards="grande"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="opcao" data-choice="b">
+    <div class="rotulo"><div class="esq" onclick="marcar(this)"><div class="letra">B</div><h3>Bento: continue de onde parou</h3><span class="d">· o último projeto em destaque, números grandes e o resto compacto</span></div></div>
+    <div class="tela"><div class="entrada"></div>
+      <div class="home">
+        <div class="nav" style="--i:0"></div>
+        <div class="cab" style="--i:1"></div>
+        <div class="bento" style="--i:2">
+          <div class="card continuar">
+            <div>
+              <div class="k">Continue de onde parou</div>
+              <div class="nm">Verdeluz nuvem</div>
+              <div class="et">Etapa 04 <em>Unidade econômica</em></div>
+              <span class="bt forte">Abrir etapa →</span>
+            </div>
+            <div data-anel="3" data-tam="210"></div>
+          </div>
+          <div class="numeros">
+            <div class="num"><div class="v" data-conta="8">0</div><div class="l">em andamento</div></div>
+            <div class="num"><div class="v" data-conta="3">0</div><div class="l">concluídos no mês</div></div>
+            <div class="num cheio"><div><div class="v" data-conta="1">0</div><div class="l">aprovação esperando você · Adda (demonstração)</div></div><div class="seta">→</div></div>
+          </div>
+        </div>
+        <div style="--i:3"><div class="secao"><b>Todos os projetos</b> 8 <span class="linha"></span><span>Atividade recente ▾</span></div>
+          <div class="grade4" data-cards="mini"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="opcao" data-choice="c">
+    <div class="rotulo"><div class="esq" onclick="marcar(this)"><div class="letra">C</div><h3>Lista editorial com o anel do ciclo</h3><span class="d">· uma linha por projeto, as 8 etapas num anel</span></div></div>
+    <div class="tela"><div class="entrada"></div>
+      <div class="home">
+        <div class="nav" style="--i:0"></div>
+        <div class="cab" style="--i:1"></div>
+        <div class="filtros" style="--i:2"></div>
+        <div style="--i:3"><div class="secao"><b>Em andamento</b> 8 <span class="linha"></span></div>
+          <div class="lista" data-lista></div>
+          <div class="secao" style="margin-top:22px"><b>Concluídos</b> 2 <span class="linha"></span><span>mostrar ▸</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <p class="nota">As faixas verde-limão ("Mostrar componentes") dizem de qual biblioteca vem cada efeito. Os números do arranjo B contam de 0 até o valor quando a home aparece (Number Ticker).</p>
+
+<script>
+  const P = [
+    { n: "Verdeluz nuvem", d: "Ana", num: "04", et: "Unidade econômica", ok: 3, q: "há 2 h" },
+    { n: "Adda (demonstração)", d: "João", num: "09", et: "Apresentação final", ok: 8, q: "há 5 h", pend: 1 },
+    { n: "Sottile Jalecos", d: "Ana", num: "02", et: "Contextualização estratégica", ok: 1, q: "ontem" },
+    { n: "Sottile Teste", d: "Bia", num: "07", et: "Mídia paga", ok: 6, q: "há 3 dias" },
+    { n: "Sottile-teste-2", d: "João", num: "02", et: "Contextualização estratégica", ok: 1, q: "há 3 dias" },
+    { n: "Verdeluz Teste", d: "Bia", num: "01", et: "Preparação de contexto", ok: 0, q: "22/10", teste: 1 },
+  ];
+  const ini = (s) => s[0];
+  const barras = (ok) => `<div class="barras">${Array.from({ length: 8 }, (_, i) => `<i class="${i < ok ? "ok" : i === ok ? "at" : ""}"></i>`).join("")}</div>`;
+  const rot = (txt, css) => `<span class="rot" style="${css}">${txt}</span>`;
+
+  function anel(ok, tam) {
+    const r = tam / 2 - tam * .07, c = tam / 2, sw = Math.max(3, tam * .05), seg = 8, gap = 7;
+    let s = `<svg width="${tam}" height="${tam}" viewBox="0 0 ${tam} ${tam}">`;
+    for (let i = 0; i < seg; i++) {
+      const a0 = (i * 360 / seg + gap / 2 - 90) * Math.PI / 180, a1 = ((i + 1) * 360 / seg - gap / 2 - 90) * Math.PI / 180;
+      const x0 = c + r * Math.cos(a0), y0 = c + r * Math.sin(a0), x1 = c + r * Math.cos(a1), y1 = c + r * Math.sin(a1);
+      const cor = i < ok ? "#2fbf8c" : i === ok ? "#eb610a" : "rgba(255,255,255,.1)";
+      const glow = i === ok ? ` style="filter:drop-shadow(0 0 ${tam * .04}px #eb610a)"` : "";
+      s += `<path d="M${x0} ${y0} A${r} ${r} 0 0 1 ${x1} ${y1}" fill="none" stroke="${cor}" stroke-width="${sw}" stroke-linecap="round"${glow}/>`;
+    }
+    if (tam > 100) s += `<text x="50%" y="47%" text-anchor="middle" fill="#f4f4f5" font-family="Instrument Serif" font-size="${tam * .3}">${ok}<tspan fill="#5d5d66" font-size="${tam * .16}">/8</tspan></text><text x="50%" y="64%" text-anchor="middle" fill="#8b8b93" font-family="Geist" font-size="${tam * .06}">etapas concluídas</text>`;
+    return s + "</svg>";
+  }
+
+  const NAV = `<span class="logo">bo<b>omer</b></span>
+    <div class="navpill"><span class="on">Prospects</span><span>Biblioteca</span><span>Administração</span></div>
+    <div class="navdir" style="position:relative"><span class="relogio" data-relogio>--:--</span><span class="icone">◐</span><span class="avatar">MS</span>${rot("Magic UI · Animated Theme Toggler", "top:36px;right:30px")}</div>`;
+  const CAB = `<div><span class="tag"><span class="ponto"></span>8 em andamento · 1 aprovação pendente</span><h2>Seus Growth <em>Cycles</em></h2></div>
+    <div class="acoes"><span class="bt">Cliente de teste</span><span class="bt laranja">+ Novo prospect</span></div>`;
+  const FILTROS = `<div class="seg"><span class="on">Todos</span><span>Meus</span><span>Com aprovação pendente</span></div>
+    <div class="busca">Buscar prospect, etapa ou analista <kbd>⌘K</kbd></div><span class="dir">Todas as etapas ▾ &nbsp; Atividade recente ▾</span>`;
+
+  document.querySelectorAll(".nav").forEach((e) => (e.innerHTML = NAV));
+  document.querySelectorAll(".cab").forEach((e) => (e.innerHTML = CAB));
+  document.querySelectorAll(".filtros").forEach((e) => (e.innerHTML = FILTROS));
+
+  document.querySelectorAll("[data-cards]").forEach((g) => {
+    const mini = g.dataset.cards === "mini";
+    g.innerHTML = P.slice(0, mini ? 8 : 6).map((p, i) => `
+      <div class="card ${mini ? "mini" : ""} ${p.pend ? "pendente" : ""}">
+        ${i === 0 && !mini ? rot("Magic UI · Magic Card (luz segue o mouse)", "top:8px;right:8px") : ""}
+        ${p.pend && !mini ? rot("Magic UI · Border Beam", "bottom:8px;right:8px") : ""}
+        <div class="linha1"><span class="nome">${p.n}</span><span class="mais">···</span></div>
+        ${mini ? "" : `<div class="pessoa"><i>${ini(p.d)}</i>${p.d}</div>`}
+        <div class="etapa">${p.ok >= 8 ? "Concluído" : "Etapa " + p.num}<em>${p.et}</em></div>
+        ${barras(p.ok)}
+        ${p.pend ? `<div style="margin-top:12px"><span class="selo">● 1 aprovação pendente</span></div>` : p.teste ? `<div style="margin-top:12px"><span class="selo teste">Teste</span></div>` : ""}
+        <div class="rodape"><span>${Math.min(p.ok, 8)} de 8 etapas</span><span>${p.q}</span></div>
+      </div>`).join("");
+  });
+
+  document.querySelectorAll("[data-lista]").forEach((l) => {
+    l.innerHTML = P.map((p) => `
+      <div class="linha-p">
+        <div class="anel">${anel(p.ok, 52)}<span>${Math.min(p.ok, 8)}</span></div>
+        <div><div class="nome">${p.n}</div><div class="pessoa"><i>${ini(p.d)}</i>${p.d}${p.teste ? ` · <span class="selo teste">Teste</span>` : ""}</div></div>
+        <div class="et">Etapa ${p.num}<em>${p.et}</em></div>
+        <div>${p.pend ? `<span class="selo">● 1 aprovação pendente</span>` : ""}</div>
+        <div class="quando">${p.q}</div>
+        <div class="vai">→</div>
+      </div>`).join("") + `<div style="position:relative">${rot("Anel do ciclo · componente nosso (SVG)", "top:-34px;left:4px")}</div>`;
+  });
+
+  document.querySelectorAll("[data-anel]").forEach((e) => (e.innerHTML = anel(+e.dataset.anel, +e.dataset.tam) + `<div style="position:relative">${rot("Anel do ciclo · componente nosso", "top:-20px;right:0")}</div>`));
+  const nums = document.querySelector(".numeros"); nums.style.position = "relative";
+  nums.insertAdjacentHTML("beforeend", rot("Magic UI · Number Ticker", "top:8px;right:8px"));
+
+  // Luz que segue o mouse
+  document.addEventListener("pointermove", (ev) => {
+    const c = ev.target.closest(".card"); if (!c) return;
+    const r = c.getBoundingClientRect(); c.style.setProperty("--mx", ev.clientX - r.left + "px"); c.style.setProperty("--my", ev.clientY - r.top + "px");
+  });
+
+  // Entrada B
+  const ENTRADA = `<div class="brilho"></div><div class="bloco">
+      <div class="cima"><span class="logo" style="color:var(--fg)">bo<b>omer</b></span><span class="relogio" data-relogio>--:--</span></div>
+      <div><div class="bv"><span class="dia" style="--cor-base: var(--muted)">Bem-vindo ao</span></div>
+        <div class="gigante"><span class="dia" style="--atraso:.17s">Growth</span><em class="dia" style="--atraso:.33s">Cycle</em></div>
+        <div class="baixo"><span>Diagnóstico · Metas · Mídia · Plano de ação</span><span>8 projetos em andamento</span></div></div></div>`;
+  document.querySelectorAll(".entrada").forEach((e) => (e.innerHTML = ENTRADA));
+
+  function relogio() {
+    const t = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
+    document.querySelectorAll("[data-relogio]").forEach((r) => (r.textContent = r.closest(".entrada") ? `${t} em São Paulo` : t));
+  }
+  relogio(); setInterval(relogio, 30000);
+
+  function contar(tela) {
+    tela.querySelectorAll("[data-conta]").forEach((el) => {
+      const alvo = +el.dataset.conta, dur = 900; let t0 = null;
+      const passo = (t) => { if (t0 === null) t0 = t; const k = Math.max(0, Math.min(1, (t - t0) / dur)); el.textContent = Math.round(alvo * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(passo); };
+      requestAnimationFrame(passo);
+    });
+  }
+  function rodar(tela) {
+    tela.classList.remove("rodando", "fim"); void tela.offsetWidth; tela.classList.add("rodando");
+    clearTimeout(tela._t); tela._t = setTimeout(() => { tela.classList.add("fim"); setTimeout(() => contar(tela), 400); }, 2400);
+  }
+  document.querySelectorAll(".tela").forEach((t, i) => setTimeout(() => rodar(t), 250 + i * 200));
+  document.getElementById("bt-rep").onclick = () => document.querySelectorAll(".tela").forEach(rodar);
+  document.getElementById("bt-nomes").onclick = (e) => { document.body.classList.toggle("nomes"); e.target.classList.toggle("on"); };
+  function marcar(el) { const op = el.closest(".opcao"); document.querySelectorAll(".opcao").forEach((o) => o.classList.toggle("selected", o === op)); }
+</script>
+</body>
+</html>

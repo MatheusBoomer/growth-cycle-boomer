@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Instrument+Serif:ital@0;1&family=Geist+Mono&display=swap" rel="stylesheet">
+<style>
+  :root, .escuro { --pagina: #050506; --bg: #0a0a0b; --fg: #f4f4f5; --muted: #8b8b93; --muted-2: #5d5d66; --line: rgb(255 255 255 / .08); --line-2: rgb(255 255 255 / .14); --acento: #ff8a3d; --botao: #f4f4f5; --botao-txt: #0a0a0b; --card: rgb(18 18 20 / .7); }
+  .perola { --pagina: #e8e6e2; --bg: #f7f6f3; --fg: #17150f; --muted: #67635b; --muted-2: #9d988f; --line: rgb(45 35 20 / .085); --line-2: rgb(45 35 20 / .16); --acento: #c94d05; --botao: #17150f; --botao-txt: #fff; --card: rgb(255 255 255 / .75); }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--pagina); color: var(--fg); font-family: "Geist", system-ui, sans-serif; padding: 40px 48px 80px; -webkit-font-smoothing: antialiased; }
+  em { font-family: "Instrument Serif", Georgia, serif; font-weight: 400; }
+  .topo { display: flex; justify-content: space-between; align-items: end; max-width: 1320px; margin: 0 auto 26px; gap: 24px; }
+  .topo h1 { font-size: 28px; font-weight: 500; letter-spacing: -.02em; } .topo h1 em { color: var(--acento); font-size: 32px; }
+  .topo p { color: var(--muted); font-size: 14px; margin-top: 6px; max-width: 760px; line-height: 1.5; }
+  .temas { display: flex; gap: 2px; padding: 4px; border: 1px solid var(--line-2); border-radius: 999px; flex-shrink: 0; }
+  .temas button { font: 500 13px "Geist"; color: var(--muted); background: none; border: 0; padding: 7px 14px; border-radius: 999px; cursor: pointer; }
+  .temas button.on { background: var(--botao); color: var(--botao-txt); }
+  .opcao { max-width: 1320px; margin: 0 auto 12px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+  .letra { width: 28px; height: 28px; border-radius: 99px; display: grid; place-items: center; background: var(--line-2); font-weight: 600; font-size: 13px; }
+  .opcao h3 { font-size: 16px; font-weight: 500; } .opcao span.d { color: var(--muted); font-size: 13px; }
+  .opcao.sel .letra { background: #eb610a; color: #fff; }
+  .tela { position: relative; max-width: 1320px; aspect-ratio: 16/9; margin: 0 auto 44px; border-radius: 20px; overflow: hidden; background: var(--bg); border: 1px solid var(--line); isolation: isolate; }
+  .opcao.sel + .tela { outline: 2px solid #eb610a; outline-offset: 4px; }
+  .tela::before, .faixa::before { content: ""; position: absolute; inset: 0; z-index: -2; background: radial-gradient(45% 45% at 50% 60%, rgb(235 97 10 / .14), transparent 70%); }
+  body.sem canvas.fx { opacity: 0; }
+  canvas.fx { transition: opacity .6s ease; position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; display: block; }
+  .logo { font-weight: 700; font-size: 20px; letter-spacing: -.045em; } .logo b { color: #eb610a; }
+  .chip { border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font: 12px "Geist Mono"; color: var(--muted); background: var(--card); backdrop-filter: blur(8px); }
+  .cima { position: absolute; top: 32px; left: 40px; right: 40px; display: flex; justify-content: space-between; align-items: center; }
+  .meio { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; pointer-events: none; }
+  .meio > * { pointer-events: auto; }
+  .tag { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; font-size: 12.5px; color: var(--muted); background: var(--card); backdrop-filter: blur(8px); margin: 0 auto; }
+  .tag i { width: 6px; height: 6px; border-radius: 9px; background: #2fbf8c; }
+  h2 { font-size: 88px; font-weight: 500; letter-spacing: -.055em; line-height: .95; margin-top: 22px; } h2 em { color: var(--acento); letter-spacing: -.02em; }
+  .meio p { font-size: 16px; color: var(--muted); margin: 20px auto 28px; max-width: 480px; line-height: 1.5; }
+  .google { display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 300px; padding: 13px 18px; border-radius: 999px; background: var(--botao); color: var(--botao-txt); font: 500 15px "Geist"; border: 0; margin: 0 auto; }
+  .rodape { position: absolute; bottom: 22px; z-index: 1; width: max-content; margin: 0 auto; padding: 6px 14px; border-radius: 999px; background: var(--card); backdrop-filter: blur(8px); left: 0; right: 0; text-align: center; font-size: 12.5px; color: var(--muted-2); letter-spacing: .02em; }
+
+  .faixas { max-width: 1320px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .faixa { position: relative; height: 260px; border-radius: 18px; overflow: hidden; background: var(--bg); border: 1px solid var(--line); isolation: isolate; padding: 26px 30px; }
+  .faixa .k { font-size: 12px; color: var(--muted); } .faixa .t { font-size: 46px; font-weight: 500; letter-spacing: -.045em; margin-top: 10px; line-height: 1; } .faixa .t em { color: var(--acento); }
+  .faixa .gig { position: absolute; left: 26px; bottom: 18px; font-size: 104px; font-weight: 600; letter-spacing: -.07em; line-height: .85; } .faixa .gig em { color: #eb610a; font-style: italic; margin-left: .06em; }
+  .faixa .fade { position: absolute; inset: auto 0 0 0; height: 60%; background: linear-gradient(transparent, var(--bg)); z-index: -1; }
+  .controles { max-width: 1320px; margin: -30px auto 40px; display: flex; gap: 8px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); align-items: center; }
+  .controles button { font: 500 12px "Geist"; color: var(--fg); background: transparent; border: 1px solid var(--line-2); border-radius: 999px; padding: 5px 11px; cursor: pointer; }
+  .controles button.on { background: var(--botao); color: var(--botao-txt); }
+  .nota { max-width: 1320px; margin: 18px auto 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+  h4.sec { max-width: 1320px; margin: 10px auto 12px; font-size: 16px; font-weight: 500; }
+</style>
+</head>
+<body class="escuro">
+  <div class="topo">
+    <div>
+      <h1>Fundo <em>dithered</em></h1>
+      <p>O B, agora sutil, em primeiro; o A embaixo só para comparar. Use <b>Com efeito / Sem efeito</b> para ver a diferença (sem efeito fica o brilho quente simples). Os dois efeitos no login B, na paleta da Boomer. Passe o mouse por cima: o A acende os pontos perto do cursor, o B abre um rastro no padrão. Troque o tema no canto. Embaixo, como ficaria na entrada e na faixa de cima da home.</p>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center"><div class="temas" id="efeito"><button data-e="1" class="on">Com efeito</button><button data-e="0">Sem efeito</button></div><div class="temas" id="temas"><button data-t="escuro" class="on">Escuro</button><button data-t="perola">Claro pérola</button></div></div>
+  </div>
+
+  <div class="opcao" data-choice="b" onclick="marcar(this)"><div class="letra">B</div><h3>Ondas em retícula, sutil</h3><span class="d">· React Bits Dither · tom do B, mais escuro, pixel fino, movimento lento, centro limpo</span></div>
+  <div class="tela" data-fx="ondas" data-forca=".6" data-vel=".6" data-px="2">
+    <canvas class="fx"></canvas>
+    <div class="cima"><span class="logo">bo<b>omer</b></span><span class="chip" data-relogio>--:-- em São Paulo</span></div>
+    <div class="meio"><span class="tag"><i></i>Growth Cycle · acesso da equipe</span><h2>Do diagnóstico ao<br><em>contrato fechado.</em></h2><p>Entre com a sua conta Google da Boomer para continuar os planejamentos.</p><button class="google">Entrar com Google</button></div>
+    <div class="rodape">Contexto · Diagnóstico · Soluções e metas · Mídia e ação · Apresentação · Pós-apresentação</div>
+  </div>
+  <div class="controles" data-alvo="0">Intensidade: <button data-f=".4">bem leve</button><button data-f=".6" class="on">sutil</button><button data-f=".85">médio</button><button data-f="1.1">forte (o B de antes)</button> &nbsp; Pixel: <button data-s="2" class="on">fino</button><button data-s="3">médio</button> &nbsp; Tons: <button data-n="3">3</button><button data-n="4" class="on">4</button></div>
+
+  <div class="opcao" data-choice="a" onclick="marcar(this)"><div class="letra">A</div><h3>Gradiente de pontos (para comparar)</h3><span class="d">· Magic UI Dither Field · um brilho quente que nasce do horizonte, em retícula de pontos</span></div>
+  <div class="tela" data-fx="pontos">
+    <canvas class="fx"></canvas>
+    <div class="cima"><span class="logo">bo<b>omer</b></span><span class="chip" data-relogio>--:-- em São Paulo</span></div>
+    <div class="meio"><span class="tag"><i></i>Growth Cycle · acesso da equipe</span><h2>Do diagnóstico ao<br><em>contrato fechado.</em></h2><p>Entre com a sua conta Google da Boomer para continuar os planejamentos.</p><button class="google">Entrar com Google</button></div>
+    <div class="rodape">Contexto · Diagnóstico · Soluções e metas · Mídia e ação · Apresentação · Pós-apresentação</div>
+  </div>
+  <div class="controles" data-alvo="1">Padrão: <button data-p="0" class="on">Horizonte</button><button data-p="1">Brilho central</button><button data-p="2">Aurora</button> &nbsp; Tamanho do ponto: <button data-s="2">fino</button><button data-s="3" class="on">médio</button><button data-s="5">grosso</button></div>
+
+  <h4 class="sec">Onde mais entraria (com o B sutil)</h4>
+  <div class="faixas">
+    <div class="faixa" data-fx="ondas" data-forca=".75" data-vel=".6" data-px="2"><canvas class="fx"></canvas><div class="fade"></div><div class="k">Entrada, logo após o login</div><div class="gig">Growth<em>Cycle</em></div></div>
+    <div class="faixa" data-fx="ondas" data-forca=".45" data-vel=".6" data-px="2"><canvas class="fx"></canvas><div class="fade"></div><div class="k">Faixa de cima da home e do admin (fraquinha, some antes dos cards)</div><div class="t">Seus Growth <em>Cycles</em></div></div>
+  </div>
+  <p class="nota">Na tela de trabalho o fundo fica liso, sem dithered: é onde a equipe passa horas lendo. Os dois efeitos pausam fora da tela e com a aba escondida, e ficam parados para quem pede menos movimento.</p>
+
+<script>
+const VS = `#version 300 es
+in vec2 p; void main(){ gl_Position = vec4(p,0.,1.); }`;
+const FS = `#version 300 es
+precision highp float;
+uniform vec2 res; uniform float tt; uniform vec2 mouse; uniform float mAtivo; uniform int modo; uniform int padrao; uniform float px; uniform float niveis; uniform float forca; uniform float limpa; uniform float vel;
+uniform vec3 c0; uniform vec3 c1; uniform vec3 c2; uniform vec3 c3;
+out vec4 cor;
+float h(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453); }
+float ruido(vec2 p){ vec2 i=floor(p), f=fract(p); vec2 u=f*f*(3.-2.*f);
+  return mix(mix(h(i),h(i+vec2(1,0)),u.x), mix(h(i+vec2(0,1)),h(i+vec2(1,1)),u.x), u.y); }
+float fbm(vec2 p){ float v=0., a=.5; for(int i=0;i<4;i++){ v+=a*ruido(p); p*=2.02; a*=.5; } return v; }
+float bay(vec2 c){ ivec2 p = ivec2(mod(c, 8.)); int x = p.x, y = p.y, xy = x ^ y;
+  int v = ((xy & 1) << 5) | ((x & 1) << 4) | ((xy & 2) << 2) | ((x & 2) << 1) | ((xy & 4) >> 1) | ((x & 4) >> 2);
+  return (float(v) + .5) / 64.; }
+void main(){
+  float t = tt * vel;
+  vec2 celula = floor(gl_FragCoord.xy / px);
+  vec2 uv = (celula*px + px*.5) / res; float asp = res.x/res.y;
+  vec2 q = vec2(uv.x*asp, uv.y);
+  float v;
+  if (modo == 0) {
+    if (padrao == 0) { float d = length((uv - vec2(.5, -.3)) * vec2(.85, 1.6)); v = 1.1 - d*1.08; v += (fbm(q*2.2 + vec2(t*.05, t*.02)) - .5) * .35; }
+    else if (padrao == 1) { float d = length((uv - vec2(.5, .48)) * vec2(1.0, 1.35)); v = 1.0 - d*1.6; v += (fbm(q*2.5 - t*.04) - .5)*.3; }
+    else { float w = sin(q.x*2.2 + fbm(q*1.6 + t*.06)*3.5 + t*.15)*.5+.5; v = smoothstep(.25,.95, w) * (1.1-uv.y*.9) * .95; v += (fbm(q*3.+t*.05)-.5)*.2; }
+  } else {
+    vec2 w = q*2.4; vec2 o = vec2(fbm(w + t*.05), fbm(w + vec2(5.2,1.3) - t*.04));
+    v = fbm(w + 2.2*o + t*.03); v = smoothstep(.3, .85, v) * (0.25 + 0.6*(1.-uv.y));
+  }
+  vec2 m = mouse/res; float dm = length((uv - m) * vec2(asp, 1.)); float gm = exp(-dm*dm*28.) * mAtivo;
+  if (modo == 0) v += gm*.55; else v -= gm*.9;
+  float centro = length((uv - vec2(.5, .56)) * vec2(1., 1.5));
+  v *= mix(1., mix(.06, 1., smoothstep(.14, .62, centro)), limpa);
+  v = clamp(v * forca, 0., 1.);
+  float b = bay(celula);
+  if (modo == 0) {
+    float on = step(b, v);
+    vec2 dentro = fract(gl_FragCoord.xy / px);
+    float ponto = step(.5/px, dentro.x) * step(.5/px, dentro.y);
+    vec3 rampa = v < .5 ? mix(c1, c2, v*2.) : mix(c2, c3, (v-.5)*2.);
+    cor = vec4(mix(c0, rampa, on*ponto), 1.);
+  } else {
+    float n = niveis - 1.; float nivel = floor(v*n + b) / n;
+    vec3 rampa = nivel < .5 ? mix(c0, c2, nivel*2.) : mix(c2, c3, (nivel-.5)*2.);
+    cor = vec4(rampa, 1.);
+  }
+}`;
+const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+const PALETAS = {
+  escuro: { pontos: ["#0a0a0b", "#3a1a08", "#eb610a", "#ffc58a"], ondas: ["#0a0a0b", "#120b07", "#4a1f08", "#9a420e"] },
+  perola: { pontos: ["#f7f6f3", "#f3d2b8", "#eb610a", "#a63c00"], ondas: ["#f7f6f3", "#f2e9e0", "#ead2bd", "#dba57c"] },
+};
+const efeitos = [];
+function criar(el) {
+  const cv = el.querySelector("canvas.fx"), gl = cv.getContext("webgl2", { antialias: false }); if (!gl) return;
+  const sh = (tipo, src) => { const s = gl.createShader(tipo); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s)); return s; };
+  const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(pr); gl.useProgram(pr);
+  const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(pr, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  const U = (n) => gl.getUniformLocation(pr, n);
+  const fx = { el, cv, gl, U, modo: el.dataset.fx === "ondas" ? 1 : 0, padrao: +(el.dataset.padrao || 0), niveis: 4, forca: +(el.dataset.forca || 1), vel: +(el.dataset.vel || 1), px: +(el.dataset.px || 3), limpa: el.classList.contains('tela') ? 1 : 0, mouse: [-999, -999], alvo: 0, ativo: 0, visivel: true };
+  el.addEventListener("pointermove", (e) => { const r = cv.getBoundingClientRect(), d = Math.min(devicePixelRatio, 2); fx.mouse = [(e.clientX - r.left) * d, (r.bottom - e.clientY) * d]; fx.alvo = 1; });
+  el.addEventListener("pointerleave", () => (fx.alvo = 0));
+  new IntersectionObserver(([en]) => (fx.visivel = en.isIntersecting)).observe(el);
+  efeitos.push(fx);
+}
+document.querySelectorAll("[data-fx]").forEach(criar);
+const reduzido = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const t0 = performance.now();
+function quadro(agora) {
+  const tema = document.body.classList.contains('perola') ? 'perola' : 'escuro';
+  efeitos.forEach((fx) => {
+    if (!fx.visivel || document.hidden) return;
+    const { gl, cv, U } = fx, d = Math.min(devicePixelRatio, 2);
+    const w = Math.round(cv.clientWidth * d), h = Math.round(cv.clientHeight * d);
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+    gl.viewport(0, 0, w, h);
+    fx.ativo += (fx.alvo - fx.ativo) * .08;
+    const pal = PALETAS[tema][fx.modo ? "ondas" : "pontos"].map(hex);
+    gl.uniform2f(U("res"), w, h); gl.uniform1f(U("tt"), reduzido ? 0 : (agora - t0) / 1000); gl.uniform2f(U("mouse"), fx.mouse[0], fx.mouse[1]); gl.uniform1f(U("mAtivo"), fx.ativo);
+    gl.uniform1i(U("modo"), fx.modo); gl.uniform1i(U("padrao"), fx.padrao); gl.uniform1f(U("px"), fx.px * d); gl.uniform1f(U("niveis"), fx.niveis); gl.uniform1f(U("forca"), fx.forca); gl.uniform1f(U("limpa"), fx.limpa); gl.uniform1f(U("vel"), fx.vel);
+    ["c0", "c1", "c2", "c3"].forEach((n, i) => gl.uniform3f(U(n), ...pal[i]));
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  });
+  requestAnimationFrame(quadro);
+}
+requestAnimationFrame(quadro);
+
+document.querySelectorAll(".controles").forEach((c) => {
+  const fx = efeitos[+c.dataset.alvo];
+  c.querySelectorAll("button").forEach((b) => (b.onclick = () => {
+    const chave = b.dataset.p !== undefined ? "p" : b.dataset.s !== undefined ? "s" : b.dataset.f !== undefined ? "f" : "n";
+    c.querySelectorAll(`button[data-${chave}]`).forEach((x) => x.classList.toggle("on", x === b));
+    if (chave === "p") fx.padrao = +b.dataset.p; if (chave === "s") fx.px = +b.dataset.s; if (chave === "n") fx.niveis = +b.dataset.n; if (chave === "f") fx.forca = +b.dataset.f;
+  }));
+});
+document.querySelectorAll("#temas button").forEach((b) => (b.onclick = () => { const sem = document.body.classList.contains('sem'); document.body.className = b.dataset.t + (sem ? ' sem' : ''); document.querySelectorAll("#temas button").forEach((x) => x.classList.toggle("on", x === b)); }));
+document.querySelectorAll('#efeito button').forEach((b) => (b.onclick = () => { document.body.classList.toggle('sem', b.dataset.e === '0'); document.querySelectorAll('#efeito button').forEach((x) => x.classList.toggle('on', x === b)); }));
+function marcar(el) { document.querySelectorAll(".opcao").forEach((o) => o.classList.toggle("sel", o === el)); }
+function relogio() { const t = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }); document.querySelectorAll("[data-relogio]").forEach((r) => (r.textContent = `${t} em São Paulo`)); }
+relogio(); setInterval(relogio, 30000);
+</script>
+</body>
+</html>
