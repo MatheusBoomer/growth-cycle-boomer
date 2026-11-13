@@ -120,7 +120,7 @@ export function FundoDithered({
       pai?.removeEventListener("pointerleave", aoSair)
       gl.deleteBuffer(buffer)
       gl.deleteProgram(programa)
-      gl.getExtension("WEBGL_lose_context")?.loseContext()
+      // Sem loseContext(): o React remonta no mesmo canvas (modo estrito, troca de props) e receberia o contexto morto.
     }
   }, [intensidade, centroLimpo])
 
