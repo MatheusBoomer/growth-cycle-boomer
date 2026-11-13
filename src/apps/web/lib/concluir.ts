@@ -34,3 +34,20 @@ export function contagemInsumos(
     total: obrigatorios.length,
   }
 }
+
+const concluindo = new Set<string>()
+
+/**
+ * Roda `fazer` só se não houver outro pedido de concluir a mesma etapa em andamento (o painel e o fim da conversa têm,
+ * cada um, o seu botão). Devolve false quando ignorou; erro de `fazer` sobe e libera a etapa para tentar de novo.
+ */
+export async function concluirUmaVez(chave: string, fazer: () => Promise<unknown>): Promise<boolean> {
+  if (concluindo.has(chave)) return false
+  concluindo.add(chave)
+  try {
+    await fazer()
+    return true
+  } finally {
+    concluindo.delete(chave)
+  }
+}

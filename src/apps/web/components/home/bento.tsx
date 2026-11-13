@@ -44,7 +44,7 @@ function Aprovacoes({ prospects, aoFiltrarPendentes }: { prospects: ResumoProspe
   )
   const estilo = cn(
     "from-primario-claro via-primary to-link-acao col-span-2 flex items-center justify-between gap-4 rounded-[18px] bg-linear-135 p-[18px] text-black/85",
-    "shadow-[0_16px_36px_-18px_rgb(235_97_10/0.7)] transition-transform hover:-translate-y-0.5 focus-visible:ring-ring/50 outline-none focus-visible:ring-3",
+    "shadow-[0_16px_36px_-18px_rgb(235_97_10/0.7)] transition-transform hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 focus-visible:ring-ring/50 outline-none focus-visible:ring-3",
   )
   return comAprovacao.length === 1 ? (
     <Link data-slot="aprovacoes" href={`/prospects/${comAprovacao[0]!.slug}`} className={estilo}>
@@ -80,7 +80,7 @@ export function Bento({ prospects, aoFiltrarPendentes }: { prospects: ResumoPros
               </p>
               <Link
                 href={`/prospects/${continuar.slug}`}
-                className="bg-foreground text-background mt-6 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-medium transition-transform hover:-translate-y-px"
+                className="bg-foreground text-background mt-6 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-medium transition-transform hover:-translate-y-px motion-reduce:hover:translate-y-0"
               >
                 Abrir etapa <ArrowRightIcon className="size-3.5" />
               </Link>

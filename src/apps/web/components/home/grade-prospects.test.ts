@@ -256,7 +256,32 @@ describe("GradeProspects: home nova", () => {
   it("Ctrl+K (ou ⌘K) leva o cursor para a busca", async () => {
     const { raiz, desmontar } = await montar("usuario")
     await act(async () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true })))
-    expect(document.activeElement).toBe(raiz.querySelector('input[aria-label="Buscar prospect"]'))
+    const campo = raiz.querySelector('input[aria-label="Buscar prospect"]')!
+    expect(document.activeElement).toBe(campo)
+    expect(campo.getAttribute("aria-keyshortcuts")).toBe("Control+K Meta+K")
+    await desmontar()
+  })
+
+  it("com um diálogo aberto, Ctrl+K não tira o cursor de dentro dele", async () => {
+    const { raiz, desmontar } = await montar("usuario")
+    const dialogo = document.createElement("div")
+    dialogo.setAttribute("role", "dialog")
+    const campoDoDialogo = document.createElement("input")
+    dialogo.append(campoDoDialogo)
+    document.body.append(dialogo)
+    campoDoDialogo.focus()
+    await act(async () => campoDoDialogo.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true })))
+    expect(document.activeElement).toBe(campoDoDialogo)
+    expect(document.activeElement).not.toBe(raiz.querySelector('input[aria-label="Buscar prospect"]'))
+    dialogo.remove()
+    await desmontar()
+  })
+
+  it("fora do Mac o atalho aparece como Ctrl K", async () => {
+    const plataforma = vi.spyOn(navigator, "platform", "get").mockReturnValue("Win32")
+    const { raiz, desmontar } = await montar("usuario")
+    expect(raiz.querySelector('input[aria-label="Buscar prospect"]')!.getAttribute("placeholder")).toContain("Ctrl K")
+    plataforma.mockRestore()
     await desmontar()
   })
 

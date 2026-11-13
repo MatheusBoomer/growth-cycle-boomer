@@ -50,6 +50,17 @@ describe("NavegacaoPrincipal", () => {
     await desmontar()
   })
 
+  it("dentro de um prospect, Prospects fica marcado como seção, não como a página atual", async () => {
+    caminho = "/prospects/verdeluz"
+    const { raiz, desmontar } = await montar("admin")
+    expect(link(raiz, "Prospects").getAttribute("aria-current")).toBe("true")
+    await desmontar()
+    caminho = "/"
+    const home = await montar("admin")
+    expect(link(home.raiz, "Prospects").getAttribute("aria-current")).toBe("page")
+    await home.desmontar()
+  })
+
   it("abaixo de lg (celular, tablet, meia tela), os itens ficam só ícone e o nome vai para leitor de tela", async () => {
     const { raiz, desmontar } = await montar("admin")
     for (const nome of ["Prospects", "Administração"]) {

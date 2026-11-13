@@ -51,7 +51,7 @@ export function CartaoLogin({ href, mensagemDeErro, fases }: { href: string; men
         <a
           href={href}
           className={cn(
-            "brilho-passa bg-foreground text-background mt-7 inline-flex w-full max-w-[300px] items-center justify-center gap-2.5 rounded-full px-5 py-3 text-[15px] font-medium transition-transform hover:-translate-y-px",
+            "brilho-passa bg-foreground text-background mt-7 inline-flex w-full max-w-[300px] items-center justify-center gap-2.5 rounded-full px-5 py-3 text-[15px] font-medium transition-transform hover:-translate-y-px motion-reduce:hover:translate-y-0",
             "focus-visible:ring-ring/50 outline-none focus-visible:ring-3",
           )}
         >

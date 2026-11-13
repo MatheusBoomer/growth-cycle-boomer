@@ -32,3 +32,11 @@ export function aplicarTemaJa(novo: "dark" | "light", setTheme: (tema: string) =
   document.documentElement.classList.toggle("dark", novo === "dark")
   setTheme(novo)
 }
+
+/**
+ * Inverte o tema que está no `<html>` agora, lido na hora de aplicar. Ler o `resolvedTheme` no clique perdia o segundo
+ * de dois cliques rápidos: o next-themes ainda não tinha atualizado e os dois cliques pediam o mesmo tema.
+ */
+export function alternarTemaJa(setTheme: (tema: string) => void): void {
+  aplicarTemaJa(document.documentElement.classList.contains("dark") ? "light" : "dark", setTheme)
+}

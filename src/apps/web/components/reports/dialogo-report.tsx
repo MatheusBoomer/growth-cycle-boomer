@@ -133,7 +133,7 @@ export function DialogoReport({
         <div className="space-y-4">
           <div role="radiogroup" aria-label="Tipo" className="border-border flex w-fit gap-0.5 rounded-full border p-1">
             {TIPOS_REPORT.map((t) => (
-              <Button key={t} role="radio" aria-checked={tipo === t} variant="ghost" size="sm" className={tipo === t ? "bg-accent text-foreground shadow-(--sombra-card)" : "text-muted-foreground"} onClick={() => setTipo(t)}>
+              <Button key={t} role="radio" aria-checked={tipo === t} variant="ghost" size="sm" className={tipo === t ? "bg-accent text-foreground shadow-(--sombra-card)" : "text-muted-foreground hover:bg-transparent hover:text-foreground"} onClick={() => setTipo(t)}>
                 {ROTULO_TIPO[t]}
               </Button>
             ))}

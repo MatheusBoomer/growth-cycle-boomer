@@ -27,7 +27,8 @@ export function NavegacaoPrincipal() {
           <Link
             key={href}
             href={href}
-            aria-current={atual ? "page" : undefined}
+            // Dentro de um prospect, "Prospects" é a seção onde se está, não a página: leitor de tela não diz "página atual".
+            aria-current={atual ? (href === "/" && caminho !== "/" ? "true" : "page") : undefined}
             className={cn(
               "text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 inline-flex h-7 items-center gap-1.5 rounded-full px-3 transition-colors outline-none focus-visible:ring-3 max-lg:px-2",
               atual && "bg-accent text-foreground shadow-(--sombra-card)",

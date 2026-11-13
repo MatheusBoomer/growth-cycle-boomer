@@ -12,7 +12,16 @@ export function linhaDoProcesso(e: EventoProcesso, slug: string): string {
   return (e.texto.split("\n").find((l) => l.trim()) ?? "").replace(/[*_`#>]/g, "").trim()
 }
 
-const segundos = (s: number) => `${s.toFixed(1).replace(".", ",")} s`
+/** "4,3 s" até um minuto; depois "12 min 34 s" e, passando de uma hora, "1 h 2 min" (754,3 s não se lê de relance). */
+export function duracaoLegivel(s: number): string {
+  if (s < 59.95) return `${s.toFixed(1).replace(".", ",")} s`
+  const total = Math.round(s)
+  const h = Math.floor(total / 3600)
+  const min = Math.floor((total % 3600) / 60)
+  const seg = total % 60
+  if (h > 0) return min > 0 ? `${h} h ${min} min` : `${h} h`
+  return seg > 0 ? `${min} min ${seg} s` : `${min} min`
+}
 
 /**
  * Processo do agente como Thought Line (React Bits): enquanto trabalha, o ✦ respira, o rótulo mostra o passo atual
@@ -40,7 +49,7 @@ export function ThoughtLine({ itens, slug, aoVivo }: { itens: EventoProcesso[]; 
   const rotulo = aoVivo
     ? (itens[ultimo] ? linhaDoProcesso(itens[ultimo], slug) : "Pensando…")
     : duracao !== null
-      ? `Pensou por ${segundos(duracao)}`
+      ? `Pensou por ${duracaoLegivel(duracao)}`
       : passos === 0
         ? "Processo"
         : `Processo · ${passos === 1 ? "1 passo" : `${passos} passos`}`
@@ -55,7 +64,7 @@ export function ThoughtLine({ itens, slug, aoVivo }: { itens: EventoProcesso[]; 
       >
         <SparklesIcon aria-hidden="true" className={cn("text-link-acao size-3.5 shrink-0", aoVivo && "motion-safe:animate-pulse")} />
         <span className={cn("truncate", aoVivo && "shimmer")}>{rotulo}</span>
-        {aoVivo && duracao !== null && <span className="text-muted-foreground/70 shrink-0 font-mono text-xs tabular-nums">{segundos(duracao)}</span>}
+        {aoVivo && duracao !== null && <span className="text-muted-foreground/70 shrink-0 font-mono text-xs tabular-nums">{duracaoLegivel(duracao)}</span>}
         <ChevronRightIcon aria-hidden="true" className={cn("size-3 shrink-0 transition-transform", aberto && "rotate-90")} />
       </button>
       {aberto && (

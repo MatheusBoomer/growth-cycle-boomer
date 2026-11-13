@@ -9,7 +9,7 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { useVisualizador } from "@/components/trabalho/contexto-visualizador"
 import { api, mensagemDeErro } from "@/lib/api"
 import { celebrarEtapaConcluida } from "@/lib/confete"
-import { estadoDoConcluir } from "@/lib/concluir"
+import { concluirUmaVez, estadoDoConcluir } from "@/lib/concluir"
 
 /**
  * Atalho no fim da conversa quando o agente encerra a etapa: concluir (a mesma ação e as mesmas
@@ -47,7 +47,7 @@ export function FimDaEtapa({ slug, etapa, dados }: { slug: string; etapa: EtapaI
   async function concluirEIr() {
     setConcluindo(true)
     try {
-      await api.acaoEtapa(slug, etapa, "concluir")
+      if (!(await concluirUmaVez(`${slug}:${etapa}`, () => api.acaoEtapa(slug, etapa, "concluir")))) return
       celebrarEtapaConcluida(proxima !== null)
       if (proxima) irParaEtapa(proxima)
     } catch (e) {

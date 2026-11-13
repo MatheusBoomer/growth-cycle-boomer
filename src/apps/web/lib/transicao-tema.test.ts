@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { trocarTemaComCirculo } from "./transicao-tema"
+import { alternarTemaJa, trocarTemaComCirculo } from "./transicao-tema"
 
 type Transicao = ((cb: () => void) => { ready: Promise<void> }) | undefined
 
@@ -60,5 +60,16 @@ describe("trocarTemaComCirculo", () => {
     // Raio até o canto mais longe: hypot(900, 750) ≈ 1171,5
     expect(quadros.clipPath[1]).toMatch(/^circle\(1171\.\d+px at 100px 50px\)$/)
     expect(opcoes).toMatchObject({ duration: 650, pseudoElement: "::view-transition-new(root)" })
+  })
+})
+
+describe("alternarTemaJa", () => {
+  it("dois cliques seguidos voltam ao tema de partida, mesmo antes do next-themes atualizar", () => {
+    document.documentElement.classList.remove("dark")
+    const setTheme = vi.fn()
+    alternarTemaJa(setTheme)
+    alternarTemaJa(setTheme)
+    expect(setTheme.mock.calls).toEqual([["dark"], ["light"]])
+    expect(document.documentElement.classList.contains("dark")).toBe(false)
   })
 })

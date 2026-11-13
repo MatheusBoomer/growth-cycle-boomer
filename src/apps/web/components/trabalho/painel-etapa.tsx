@@ -23,7 +23,7 @@ import { CardInsumo } from "@/components/cards/card-insumo"
 import { useAmbiente } from "@/components/marca/conta-contexto"
 import { api, mensagemDeErro, urlArquivo, type AcaoEtapa } from "@/lib/api"
 import { celebrarEtapaConcluida } from "@/lib/confete"
-import { contagemInsumos, estadoDoConcluir } from "@/lib/concluir"
+import { concluirUmaVez, contagemInsumos, estadoDoConcluir } from "@/lib/concluir"
 import { useVisualizador } from "./contexto-visualizador"
 import { CaixaAviso, IconeModal } from "@/components/marca/icone-modal"
 
@@ -46,14 +46,17 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
   async function executar(acao: AcaoEtapa, sucesso: string) {
     setOcupado(acao)
     try {
-      await api.acaoEtapa(slug, etapa, acao)
       if (acao === "concluir") {
+        // O fim da conversa também tem "Concluir etapa": o segundo clique, num ou noutro, não dispara outro pedido.
+        if (!(await concluirUmaVez(`${slug}:${etapa}`, () => api.acaoEtapa(slug, etapa, acao)))) return
         celebrarEtapaConcluida(dados.catalogo.etapas.at(-1)?.id !== etapa)
         // O botão promete "e ir para <próxima>": abre a próxima etapa, como o fim de etapa do chat.
         const proxima = dados.catalogo.etapas[dados.catalogo.etapas.findIndex((e) => e.id === etapa) + 1]?.id
         if (proxima) irParaEtapa(proxima)
+      } else {
+        await api.acaoEtapa(slug, etapa, acao)
+        toast.success(sucesso)
       }
-      else toast.success(sucesso)
     } catch (e) {
       toast.error(mensagemDeErro(e))
     } finally {
@@ -150,9 +153,12 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
         <section>
           <h3 className="mb-2 flex items-center justify-between text-sm font-medium tracking-tight">
             Insumos
-            <span className="text-muted-foreground font-mono text-[11px] font-normal">
-              {insumos.recebidos}/{insumos.total}
-            </span>
+            {/* Só opcionais: "0/0" sugeriria que falta algo. */}
+            {insumos.total > 0 && (
+              <span className="text-muted-foreground font-mono text-[11px] font-normal">
+                {insumos.recebidos}/{insumos.total}
+              </span>
+            )}
           </h3>
           {etapaCat.insumos.length === 0 ? (
             <p className="text-muted-foreground text-sm">Esta etapa não pede arquivos.</p>

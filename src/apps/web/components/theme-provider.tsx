@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes"
-import { CONFIG_TEMA, proximoTema } from "@/lib/tema"
-import { aplicarTemaJa, trocarTemaComCirculo } from "@/lib/transicao-tema"
+import { CONFIG_TEMA } from "@/lib/tema"
+import { alternarTemaJa, trocarTemaComCirculo } from "@/lib/transicao-tema"
 
 function ThemeProvider({
   children,
@@ -39,7 +39,7 @@ function isTypingTarget(target: EventTarget | null) {
 }
 
 function ThemeHotkey() {
-  const { resolvedTheme, setTheme } = useTheme()
+  const { setTheme } = useTheme()
 
   React.useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -60,8 +60,7 @@ function ThemeHotkey() {
       }
 
       // Pelo teclado não há botão de origem: o círculo sai do centro da janela.
-      const novo = proximoTema(resolvedTheme)
-      trocarTemaComCirculo({ x: window.innerWidth / 2, y: window.innerHeight / 2 }, () => aplicarTemaJa(novo, setTheme))
+      trocarTemaComCirculo({ x: window.innerWidth / 2, y: window.innerHeight / 2 }, () => alternarTemaJa(setTheme))
     }
 
     window.addEventListener("keydown", onKeyDown)
@@ -69,7 +68,7 @@ function ThemeHotkey() {
     return () => {
       window.removeEventListener("keydown", onKeyDown)
     }
-  }, [resolvedTheme, setTheme])
+  }, [setTheme])
 
   return null
 }

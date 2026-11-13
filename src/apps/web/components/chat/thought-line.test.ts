@@ -3,7 +3,7 @@ import { act, createElement } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { EventoProcesso } from "@/lib/passos"
-import { ThoughtLine } from "./thought-line"
+import { duracaoLegivel, ThoughtLine } from "./thought-line"
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -51,5 +51,15 @@ describe("ThoughtLine", () => {
     await act(async () => (cabecalho() as HTMLElement).click())
     expect(cabecalho().getAttribute("aria-expanded")).toBe("true")
     expect(raiz.querySelectorAll("li")).toHaveLength(2)
+  })
+})
+
+describe("duracaoLegivel", () => {
+  it("segundos com uma casa até um minuto; depois minutos e segundos inteiros", () => {
+    expect(duracaoLegivel(4.25)).toBe("4,3 s")
+    expect(duracaoLegivel(59.94)).toBe("59,9 s")
+    expect(duracaoLegivel(60)).toBe("1 min")
+    expect(duracaoLegivel(754.3)).toBe("12 min 34 s")
+    expect(duracaoLegivel(3725)).toBe("1 h 2 min")
   })
 })

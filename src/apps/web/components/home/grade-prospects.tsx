@@ -160,10 +160,16 @@ export function GradeProspects({
     return separarPorSituacao(ordenarProspects(filtrados, ordem))
   }, [prospects, busca, analista, etapa, soPendentes, ordem, admin, email])
 
-  // Ctrl+K / ⌘K leva o cursor para a busca.
+  // Ctrl+K / ⌘K leva o cursor para a busca, menos com um diálogo aberto (o cursor sairia de dentro dele).
   const campoBusca = useRef<HTMLInputElement>(null)
+  // Mac mostra ⌘K; os outros, Ctrl K. Começa em ⌘K e só troca depois de hidratar, para o servidor e o cliente baterem.
+  const [atalho, setAtalho] = useState("⌘K")
+  useEffect(() => {
+    if (!/Mac|iPhone|iPad/.test(navigator.platform)) setAtalho("Ctrl K")
+  }, [])
   useEffect(() => {
     const aoTeclar = (e: KeyboardEvent) => {
+      if (document.querySelector('[role="dialog"], [role="alertdialog"]')) return
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault()
         campoBusca.current?.focus()
@@ -311,11 +317,8 @@ export function GradeProspects({
                   ref={campoBusca}
                   className="col-span-2 h-10 sm:h-8 sm:w-72"
                   aria-label="Buscar prospect"
-                  placeholder={
-                    admin
-                      ? "Buscar prospect, etapa ou analista  ⌘K"
-                      : "Buscar prospect ou etapa  ⌘K"
-                  }
+                  aria-keyshortcuts="Control+K Meta+K"
+                  placeholder={`${admin ? "Buscar prospect, etapa ou analista" : "Buscar prospect ou etapa"}  ${atalho}`}
                   value={busca}
                   onChange={(e) => setBusca(e.target.value)}
                 />

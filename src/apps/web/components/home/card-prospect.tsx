@@ -43,7 +43,7 @@ export function CardProspect({ prospect: p, fotoUrl }: { prospect: ResumoProspec
     // O link do nome se estica sobre o card inteiro (::after); só o menu ⋯ fica por cima dele.
     <Card
       className={cn(
-        "luz-mouse has-[a:focus-visible]:ring-ring relative h-full transition duration-300 hover:-translate-y-0.5 hover:border-foreground/15 has-[a:focus-visible]:ring-2",
+        "luz-mouse has-[a:focus-visible]:ring-ring relative h-full transition duration-300 hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 hover:border-foreground/15 has-[a:focus-visible]:ring-2",
         p.pendencias > 0 && "borda-correndo",
       )}
       onPointerMove={(e) => {
