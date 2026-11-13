@@ -43,9 +43,12 @@ export function BotaoReportar() {
 
   return (
     <>
+      {/* Pílula como as vizinhas, em violeta: a cor de "feedback" fica fora do laranja das ações (protótipo 12, opção A). */}
       <Button
-        variant="ghost"
+        variant="outline"
         size="sm"
+        data-reportar
+        className="border-selo-opus/35 bg-selo-opus-fundo text-selo-opus backdrop-blur-xl hover:bg-selo-opus/20 hover:text-selo-opus aria-expanded:bg-selo-opus/20"
         onClick={abrir}
         disabled={capturando}
         aria-label="Reportar bug ou melhoria"

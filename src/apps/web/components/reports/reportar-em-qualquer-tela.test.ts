@@ -21,3 +21,17 @@ describe("barra do topo na tela do projeto", () => {
     expect(ler("../trabalho/area-de-trabalho.tsx")).toMatch(/<div className="flex h-svh flex-col bg-background">/)
   })
 })
+
+describe("botão Reportar (protótipo 12, opção A)", () => {
+  it("pílula como as vizinhas, com a cor própria de feedback (violeta), sem laranja", () => {
+    const s = ler("botao-reportar.tsx")
+    expect(s).toContain('variant="outline"')
+    expect(s).toContain("bg-selo-opus-fundo")
+    expect(s).toContain("text-selo-opus")
+    expect(s).toContain("data-reportar")
+    expect(s).not.toMatch(/\b(bg|text|border)-primary\b/)
+  })
+  it("o vidro da barra não cobre a cor do Reportar", () => {
+    expect(ler("../marca/barra-topo.tsx")).toContain("[&_[data-slot=button]:not([data-reportar])]:bg-background/60")
+  })
+})

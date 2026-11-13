@@ -23,7 +23,7 @@ export function BarraTopo({ titulo, subtitulo, extra }: { titulo: string; subtit
         <NavegacaoPrincipal />
       </div>
       {/* A barra é transparente; o fundo de vidro fica só nos controles (e na navegação, no meio). */}
-      <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-2 [&_[data-slot=button]]:bg-background/60 [&_[data-slot=button]]:backdrop-blur-xl">
+      <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-2 [&_[data-slot=button]:not([data-reportar])]:bg-background/60 [&_[data-slot=button]]:backdrop-blur-xl">
         <BotaoReportar />
         {extra}
         <Relogio />
