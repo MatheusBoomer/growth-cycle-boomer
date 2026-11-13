@@ -1,23 +1,9 @@
 "use client"
 
-import {
-  BotIcon,
-  FileTextIcon,
-  GlobeIcon,
-  MessageSquareTextIcon,
-  PencilLineIcon,
-  SearchIcon,
-  SparklesIcon,
-  TerminalIcon,
-  WrenchIcon,
-  type LucideIcon,
-} from "lucide-react"
-import { useState } from "react"
 import { toast } from "sonner"
 import { nomeCurto } from "@workspace/core/autenticacao"
 import type { EtapaId, EventoConversa, RespostaEstado } from "@workspace/core/tipos"
 import { Bubble, BubbleContent } from "@workspace/ui/components/bubble"
-import { ChainOfThought, ChainOfThoughtContent, ChainOfThoughtHeader, ChainOfThoughtStep } from "@workspace/ui/components/chain-of-thought"
 import { Marker, MarkerContent } from "@workspace/ui/components/marker"
 import { Message, MessageContent } from "@workspace/ui/components/message"
 import {
@@ -31,10 +17,11 @@ import {
 import { Markdown } from "@/components/markdown"
 import { useEmailDaConta } from "@/components/marca/conta-contexto"
 import { api, mensagemDeErro } from "@/lib/api"
-import { agruparProcesso, cardsDepoisDaResposta, iconeDoPasso, separarProcessoAoVivo, statusDosPassos, type EventoProcesso, type IconePasso } from "@/lib/passos"
+import { agruparProcesso, cardsDepoisDaResposta, separarProcessoAoVivo } from "@/lib/passos"
 import { Compositor } from "./compositor"
 import { FimDaEtapa } from "./fim-da-etapa"
 import { ItemConversa } from "./item-conversa"
+import { ThoughtLine } from "./thought-line"
 
 export interface PropsChatEtapa {
   slug: string
@@ -42,77 +29,6 @@ export interface PropsChatEtapa {
   dados: RespostaEstado
   eventos: EventoConversa[]
   delta: string
-}
-
-/** Linha curta de um item do processo: passo sem o prefixo da pasta do prospect, ou a 1ª linha da fala. */
-function linhaDoProcesso(e: EventoProcesso, slug: string): string {
-  if (e.tipo === "atividade") return e.detalhe.replaceAll(`clientes/${slug}/`, "")
-  return (e.texto.split("\n").find((l) => l.trim()) ?? "").replace(/[*_`#>]/g, "").trim()
-}
-
-const ICONES: Record<IconePasso, LucideIcon> = {
-  ler: FileTextIcon,
-  escrever: PencilLineIcon,
-  script: TerminalIcon,
-  busca: SearchIcon,
-  web: GlobeIcon,
-  skill: SparklesIcon,
-  subagente: BotIcon,
-  fala: MessageSquareTextIcon,
-  outro: WrenchIcon,
-}
-
-/**
- * Processo de um trecho do turno (passos + falas intermediárias). Fechado, mostra o resumo e logo
- * abaixo só a última linha (o que está sendo feito agora, ou o último passo); o analista expande
- * para ver todos.
- */
-function ListaDeProcesso({ itens, slug, resumo, aoVivo = false }: { itens: EventoProcesso[]; slug: string; resumo: string; aoVivo?: boolean }) {
-  // Fechado por padrão, até ao vivo: o resumo e a última linha já mostram o que está acontecendo.
-  const [aberto, setAberto] = useState(false)
-  const status = statusDosPassos(itens.length, aoVivo)
-  // Compacto: a linha recolhida mostra até uma fala como uma linha só.
-  const passo = (e: EventoProcesso, i: number, compacto = false) => (
-    <ChainOfThoughtStep
-      key={`${e.em}-${i}`}
-      icon={ICONES[iconeDoPasso(e)]}
-      status={status[i]}
-      label={
-        e.tipo === "atividade" || compacto ? (
-          <span className="block truncate" title={e.tipo === "atividade" ? e.detalhe : undefined}>
-            {linhaDoProcesso(e, slug)}
-          </span>
-        ) : (
-          <div className="text-foreground/80 text-sm">
-            <Markdown>{e.texto}</Markdown>
-          </div>
-        )
-      }
-    />
-  )
-  const ultimo = itens.length - 1
-  return (
-    <ChainOfThought open={aberto} onOpenChange={setAberto}>
-      <ChainOfThoughtHeader icon={WrenchIcon}>{resumo}</ChainOfThoughtHeader>
-      {!aberto && ultimo >= 0 && (
-        <button
-          type="button"
-          className="mt-2 block w-full cursor-pointer pl-0.5 text-left [&_[data-slot=chain-of-thought-step]>div:last-child]:pb-0"
-          aria-label="Mostrar todos os passos"
-          onClick={() => setAberto(true)}
-        >
-          {passo(itens[ultimo]!, ultimo, true)}
-        </button>
-      )}
-      <ChainOfThoughtContent className="pl-0.5">{itens.map((e, i) => passo(e, i))}</ChainOfThoughtContent>
-    </ChainOfThought>
-  )
-}
-
-function resumoDoProcesso(itens: EventoProcesso[]): string {
-  const passos = itens.filter((e) => e.tipo === "atividade").length
-  if (passos === 0) return "Processo"
-  return `Processo · ${passos === 1 ? "1 passo" : `${passos} passos`}`
 }
 
 export function ChatEtapa({ slug, etapa, dados, eventos, delta }: PropsChatEtapa) {
@@ -166,7 +82,7 @@ export function ChatEtapa({ slug, etapa, dados, eventos, delta }: PropsChatEtapa
               {itens.map((item, posicao) =>
                 item.tipo === "processo" ? (
                   <MessageScrollerItem key={`passos-${item.indice}`} messageId={`evento-${item.indice}`}>
-                    <ListaDeProcesso itens={item.itens} slug={slug} resumo={resumoDoProcesso(item.itens)} />
+                    <ThoughtLine itens={item.itens} slug={slug} aoVivo={false} />
                   </MessageScrollerItem>
                 ) : (
                   <MessageScrollerItem
@@ -201,7 +117,7 @@ export function ChatEtapa({ slug, etapa, dados, eventos, delta }: PropsChatEtapa
                           </BubbleContent>
                         </Bubble>
                       )}
-                      {aoVivo.length > 0 && <ListaDeProcesso itens={aoVivo} slug={slug} resumo={resumoDoProcesso(aoVivo)} aoVivo />}
+                      {aoVivo.length > 0 && <ThoughtLine itens={aoVivo} slug={slug} aoVivo />}
                     </MessageContent>
                   </Message>
                 </MessageScrollerItem>

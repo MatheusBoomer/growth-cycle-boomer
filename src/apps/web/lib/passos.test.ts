@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import type { EventoConversa } from "@workspace/core/tipos"
 import { agruparProcesso, cardsDepoisDaResposta, iconeDoPasso, separarProcessoAoVivo, statusDosPassos, type ItemChat } from "./passos"
+import { duracaoDoProcesso } from "./passos"
 
 const em = "2026-10-01T00:00:00.000Z"
 const msg = (texto: string): EventoConversa => ({ tipo: "mensagem_analista", texto, automatica: false, em })
@@ -177,4 +178,14 @@ describe("card de aprovação depois da resposta do turno", () => {
       "turno_fim",
     ])
   })
+})
+
+describe("duracaoDoProcesso", () => {
+  const passo = (em: string) => ({ tipo: "atividade" as const, nome: "Read", detalhe: "x", em })
+  it("encerrado: do primeiro ao último passo, com uma casa", () =>
+    expect(duracaoDoProcesso([passo("2026-11-12T10:00:00.000Z"), passo("2026-11-12T10:00:04.400Z")], null)).toBe(4.4))
+  it("ao vivo: do primeiro passo até agora", () =>
+    expect(duracaoDoProcesso([passo("2026-11-12T10:00:00.000Z")], Date.parse("2026-11-12T10:00:02.250Z"))).toBe(2.3))
+  it("horário inválido: null", () => expect(duracaoDoProcesso([passo("lixo"), passo("2026-11-12T10:00:04Z")], null)).toBeNull())
+  it("encerrado com um passo só: null", () => expect(duracaoDoProcesso([passo("2026-11-12T10:00:00Z")], null)).toBeNull())
 })

@@ -123,3 +123,16 @@ export function iconeDoPasso(e: EventoProcesso): IconePasso {
 export function statusDosPassos(quantidade: number, aoVivo: boolean): ("complete" | "active")[] {
   return Array.from({ length: quantidade }, (_, i) => (aoVivo && i === quantidade - 1 ? "active" : "complete"))
 }
+
+/**
+ * Duração do processo em segundos, com uma casa (Thought Line). Ao vivo (`agora` em ms): do primeiro passo até agora.
+ * Encerrado (`agora` nulo): do primeiro ao último passo. Null se algum horário for inválido ou, encerrado, com menos
+ * de dois passos (não há intervalo a medir).
+ */
+export function duracaoDoProcesso(itens: EventoProcesso[], agora: number | null): number | null {
+  if (itens.length === 0) return null
+  const inicio = Date.parse(itens[0]!.em)
+  const fim = agora ?? (itens.length < 2 ? Number.NaN : Date.parse(itens[itens.length - 1]!.em))
+  if (Number.isNaN(inicio) || Number.isNaN(fim)) return null
+  return Math.round(Math.max(0, fim - inicio) / 100) / 10
+}
