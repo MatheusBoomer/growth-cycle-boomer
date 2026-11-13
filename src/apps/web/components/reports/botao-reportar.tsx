@@ -65,13 +65,14 @@ export function BotaoReportar() {
 
   return (
     <>
-      {/* Pílula como as vizinhas, em violeta: a cor de "feedback" fica fora do laranja das ações (protótipo 12, opção A). */}
+      {/* Violeta: a cor de "feedback" fica fora do laranja das ações (protótipo 12, opção A). */}
       <Button
-        variant="outline"
+        variant="ghost"
         size="sm"
         data-reportar
         className={cn(
-          "border-selo-opus/35 bg-selo-opus-fundo text-selo-opus backdrop-blur-xl transition-[translate,scale,background-color,box-shadow] hover:bg-selo-opus/20 hover:text-selo-opus active:scale-95 aria-expanded:bg-selo-opus/20",
+          // Item da ilha da barra do topo: sem borda nem fundo próprios, o violeta fica no texto e no hover.
+          "text-selo-opus h-7.5 rounded-full px-2.5 transition-[translate,scale,background-color,box-shadow] hover:bg-selo-opus-fundo hover:text-selo-opus active:scale-95 aria-expanded:bg-selo-opus-fundo",
           // Enquanto tira o print: anel violeta pulsando e cursor de espera, sem apagar o botão como se estivesse desligado.
           capturando && "animate-pulse cursor-wait bg-selo-opus/20 ring-3 ring-selo-opus/25 motion-reduce:animate-none",
         )}

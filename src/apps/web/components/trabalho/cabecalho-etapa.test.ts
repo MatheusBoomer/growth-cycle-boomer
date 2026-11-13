@@ -1,28 +1,52 @@
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
-import { CabecalhoEtapa } from "./cabecalho-etapa"
+import { CabecalhoEtapa, CapaEtapa, type InfoEtapa } from "./cabecalho-etapa"
 
-const html = (extra: Partial<Parameters<typeof CabecalhoEtapa>[0]> = {}) =>
-  renderToStaticMarkup(createElement(CabecalhoEtapa, { numero: "04", fase: "Diagnóstico", titulo: "Unidade econômica", trabalhando: false, ...extra }))
+const INFO: InfoEtapa = { numero: "04", fase: "Diagnóstico", titulo: "Unidade econômica", trabalhando: false }
 
-describe("CabecalhoEtapa", () => {
-  it("número e fase pequenos, título grande em serifada", () => {
-    const h = html()
-    expect(h).toContain("Etapa 04 · Diagnóstico")
-    expect(h).toMatch(/<h1 class="[^"]*font-serif[^"]*">Unidade econômica<\/h1>/)
+const barra = (compacto: boolean, extra: Partial<InfoEtapa> = {}) =>
+  renderToStaticMarkup(
+    createElement(CabecalhoEtapa, { ...INFO, ...extra, compacto, antes: createElement("button", null, "esq"), depois: createElement("button", null, "dir") }),
+  )
+const capa = (extra: Partial<InfoEtapa> = {}) => renderToStaticMarkup(createElement(CapaEtapa, { ...INFO, ...extra }))
+
+describe("CapaEtapa (topo da conversa)", () => {
+  it("número e fase pequenos, título grande em serifada que não corta o pé das letras", () => {
+    const h = capa()
+    expect(h).toContain(">04<")
+    expect(h).toContain("Diagnóstico")
+    expect(h).toMatch(/<h1 class="[^"]*font-serif[^"]*leading-\[1\.1\][^"]*">Unidade econômica<\/h1>/)
   })
 
   it("etapa sem número mostra só a fase", () => {
-    const h = html({ numero: null, fase: "Apresentação", titulo: "Apresentação final" })
-    expect(h).not.toContain("Etapa ")
-    expect(h).toContain(">Apresentação<")
+    const h = capa({ numero: null, fase: "Apresentação", titulo: "Apresentação final" })
+    expect(h).not.toContain(">04<")
+    expect(h).toContain("Apresentação")
   })
 
-  it("o título não corta o pé das letras (entrelinha 1.1, não leading-none)", () => expect(html()).toMatch(/<h1 class="[^"]*leading-\[1\.1\]/))
-
   it("selo 'Agente trabalhando' só com o agente rodando nesta etapa", () => {
-    expect(html({ trabalhando: true })).toContain("Agente trabalhando")
-    expect(html()).not.toContain("Agente trabalhando")
+    expect(capa({ trabalhando: true })).toContain("Agente trabalhando")
+    expect(capa()).not.toContain("Agente trabalhando")
+  })
+})
+
+describe("CabecalhoEtapa (barra sobre a conversa)", () => {
+  it("com a capa à vista: transparente, botões dos painéis nos cantos e o nome escondido", () => {
+    const h = barra(false, { trabalhando: true })
+    expect(h).toContain("border-transparent")
+    expect(h).toContain("esq")
+    expect(h).toContain("dir")
+    expect(h).toMatch(/aria-hidden="true" class="[^"]*invisible/)
+    expect(h).not.toContain("Agente trabalhando")
+  })
+
+  it("compacta: uma linha com número, nome e fase, e o selo do agente quando ele roda", () => {
+    const h = barra(true, { trabalhando: true })
+    expect(h).toContain("data-compacto")
+    expect(h).toContain("height:46px")
+    expect(h).toMatch(/<h2 class="[^"]*font-serif[^"]*truncate|<h2 class="[^"]*truncate[^"]*font-serif/)
+    expect(h).toContain("Unidade econômica")
+    expect(h).toContain("Agente trabalhando")
   })
 })

@@ -70,14 +70,4 @@ describe("NavegacaoPrincipal", () => {
     }
     await desmontar()
   })
-
-  it("o relógio só aparece de lg para cima, para a barra caber em meia tela", async () => {
-    const { Relogio } = await import("./relogio")
-    const raiz = document.createElement("div")
-    document.body.append(raiz)
-    const r = createRoot(raiz)
-    await act(async () => r.render(createElement(Relogio)))
-    expect(raiz.querySelector("span")?.className).toContain("max-lg:hidden")
-    await act(async () => r.unmount())
-  })
 })

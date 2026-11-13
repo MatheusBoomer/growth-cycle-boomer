@@ -26,6 +26,17 @@ export function layoutParaVisualizador(atual: Layout, salvo: Layout | null, aber
   return novo
 }
 
+/**
+ * Com o visualizador fechado, a divisória visível à esquerda do painel lateral fica entre ele e o visualizador: arrastar
+ * o painel para a direita dava a largura ao visualizador fechado, que aparecia como uma coluna em branco. Aqui essa
+ * largura volta para a área de trabalho. Devolve null quando não há o que corrigir.
+ */
+export function semVisualizadorFantasma(layout: Layout, visualizadorAberto: boolean): Layout | null {
+  const sobra = layout.visualizador ?? 0
+  if (visualizadorAberto || sobra <= 0) return null
+  return { ...layout, chat: (layout.chat ?? 0) + sobra, visualizador: 0 }
+}
+
 /** Largura mínima (%) que a área de trabalho mantém quando o painel lateral volta. */
 const CHAT_MINIMO = 25
 

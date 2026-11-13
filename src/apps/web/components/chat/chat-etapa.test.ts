@@ -63,10 +63,11 @@ describe("chat: bordas e compositor", () => {
     expect(h.match(/data-slot="desfoque-chat"/g)).toHaveLength(2)
   })
 
-  it("compositor em pílula flutuante com brilho laranja no foco", () => {
+  it("compositor em pílula flutuante de uma linha com brilho laranja no foco", () => {
     const h = desenhar(null, dadosDe(null, null))
     expect(h).toContain("focus-within:ring-4")
-    expect(h).toContain("rounded-[22px]")
+    expect(h).toContain("rounded-[18px]")
+    expect(h).toMatch(/<textarea[^>]*rows="1"/)
   })
 })
 

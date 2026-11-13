@@ -1,5 +1,6 @@
 "use client"
 
+import type { ReactNode } from "react"
 import { toast } from "sonner"
 import { nomeCurto } from "@workspace/core/autenticacao"
 import type {
@@ -36,6 +37,8 @@ export interface PropsChatEtapa {
   dados: RespostaEstado
   eventos: EventoConversa[]
   delta: string
+  /** Capa da etapa (título grande) no topo da conversa; rola junto com as mensagens. */
+  capa?: ReactNode
 }
 
 export function ChatEtapa({
@@ -44,6 +47,7 @@ export function ChatEtapa({
   dados,
   eventos,
   delta,
+  capa,
 }: PropsChatEtapa) {
   const meuEmail = useEmailDaConta()
   const estadoEtapa = dados.estado.etapas[etapa]
@@ -93,7 +97,7 @@ export function ChatEtapa({
       {turnoDeOutro && (
         <p
           role="status"
-          className="border-b bg-muted px-4 py-2 text-center text-sm text-muted-foreground"
+          className="mt-[46px] border-b bg-muted px-4 py-2 text-center text-sm text-muted-foreground"
         >
           {`${nomeCurto(turnoDeOutro)} está com o agente rodando nesta etapa.`}
         </p>
@@ -104,7 +108,7 @@ export function ChatEtapa({
           <div
             aria-hidden="true"
             data-slot="desfoque-chat"
-            className="pointer-events-none absolute inset-x-0 top-0 z-10 h-10 bg-linear-to-b from-(--vidro-1) to-transparent"
+            className="pointer-events-none absolute inset-x-0 top-0 z-10 h-4 bg-linear-to-b from-(--vidro-1) to-transparent"
           />
           <div
             aria-hidden="true"
@@ -114,6 +118,7 @@ export function ChatEtapa({
           <MessageScroller className="min-h-0 flex-1">
             <MessageScrollerViewport>
               <MessageScrollerContent className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
+                {capa}
                 {estadoEtapa.origem === "terminal" && eventos.length === 0 && (
                   <MessageScrollerItem messageId="terminal">
                     <Marker variant="separator">

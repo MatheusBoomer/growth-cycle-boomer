@@ -22,17 +22,3 @@ export function useHoraSaoPaulo(): string | null {
   }, [])
   return hora
 }
-
-/** Pílula com a hora de São Paulo na barra do topo. O `min-w` segura o espaço enquanto a hora não chega. */
-export function Relogio() {
-  const hora = useHoraSaoPaulo()
-  return (
-    <span
-      title="Horário de São Paulo"
-      aria-label={hora ? `Horário de São Paulo: ${hora}` : undefined}
-      className="text-muted-foreground border-border inline-flex h-7 min-w-14 items-center justify-center rounded-full border bg-background/60 px-2.5 backdrop-blur-xl font-mono text-[11px] tabular-nums max-lg:hidden"
-    >
-      {hora}
-    </span>
-  )
-}

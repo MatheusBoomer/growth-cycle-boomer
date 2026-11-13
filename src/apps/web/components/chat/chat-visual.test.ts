@@ -17,10 +17,11 @@ describe("chat como no protótipo", () => {
     expect(ler("resposta-agente.tsx")).toMatch(/<Markdown className="text-\[15px\]">/)
     expect(chat).toMatch(/<Markdown className="text-\[15px\]">\{delta\}<\/Markdown>/)
   })
-  it("compositor: sem alça de redimensionar, chips Anexar e Mencionar e enviar redondo escuro", () => {
+  it("compositor: sem alça de redimensionar, Anexar e Mencionar no menu do +, e enviar redondo escuro", () => {
     expect(compositor).toContain("resize-none")
-    expect(compositor).toMatch(/>\s*<PlusIcon[^>]*\/> Anexar/)
-    expect(compositor).toMatch(/>\s*<AtSignIcon[^>]*\/> Mencionar/)
+    expect(compositor).toContain('aria-label="Anexar ou mencionar"')
+    expect(compositor).toMatch(/<PaperclipIcon[^>]*\/> Anexar arquivo/)
+    expect(compositor).toMatch(/<AtSignIcon[^>]*\/> Mencionar arquivo do prospect/)
     const enviar = /aria-label="Enviar"[^>]*className="([^"]*)"/.exec(compositor)![1]!
     expect(enviar).toContain("rounded-full")
     expect(enviar).toContain("bg-foreground")

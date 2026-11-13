@@ -117,12 +117,13 @@ export function CardInsumo({ slug, etapa, insumo, obrigatorio, estadoInsumo, tem
   const tom = status === "valido" ? "text-sucesso" : status === "invalido" ? "text-destructive" : "text-muted-foreground"
 
   return (
-    <div className="grid gap-3 rounded-[18px] border border-border bg-card p-4 text-card-foreground">
-      <div className="flex items-center gap-3">
+    <div className="grid min-w-0 grid-cols-1 gap-3 rounded-[18px] border border-border bg-card p-4 text-card-foreground">
+      {/* Coluna estreita: o selo desce para a linha de baixo em vez de espremer o nome até "Hist…". */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <div className={cn("grid size-9 shrink-0 place-items-center rounded-xl border border-border bg-muted/50 [&_svg]:size-4", tom)}>
           <Icone />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1 basis-28">
           <h4 className="truncate text-sm font-medium">{insumo.nome}</h4>
           <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">{insumo.tipo === "link" ? "link" : insumo.formatos.join(" · ")}</p>
         </div>
@@ -138,10 +139,12 @@ export function CardInsumo({ slug, etapa, insumo, obrigatorio, estadoInsumo, tem
       )}
 
       {status === "valido" && (
-        <div className="grid gap-1.5 rounded-[14px] bg-sucesso-fundo px-3 py-2.5 text-[13px] text-sucesso">
+        <div className="grid min-w-0 grid-cols-1 gap-1.5 rounded-[14px] bg-sucesso-fundo px-3 py-2.5 text-[13px] text-sucesso">
           <div className="flex items-center gap-2.5">
             <CircleCheckIcon className="size-4 shrink-0" />
-            <span className="min-w-0">{estadoInsumo?.resumo ?? "Arquivo recebido"}</span>
+            <span className="min-w-0 truncate" title={estadoInsumo?.resumo ?? undefined}>
+              {estadoInsumo?.resumo ?? "Arquivo recebido"}
+            </span>
             {podeExcluir && <ExcluirEnvio nome={insumo.nome} aoExcluir={() => void excluir()} />}
           </div>
           {estadoInsumo && estadoInsumo.avisos.length > 0 && (

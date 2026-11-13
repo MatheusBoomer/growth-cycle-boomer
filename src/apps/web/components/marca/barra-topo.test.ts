@@ -11,11 +11,9 @@ describe("barra do topo", () => {
     expect(header).not.toContain("backdrop-blur")
     expect(header).not.toContain("sticky")
   })
-  it("o fundo fica só na navegação principal e nos controles da direita", () => {
+  it("o fundo fica só na navegação principal e na ilha da direita, no mesmo vidro", () => {
     expect(ler("navegacao-principal.tsx")).toMatch(/aria-label="Navegação principal" className="[^"]*bg-background\/60[^"]*backdrop-blur-xl/)
-    const barra = ler("barra-topo.tsx")
-    expect(barra).toContain("[&_[data-slot=button]:not([data-reportar])]:bg-background/60")
-    expect(ler("relogio.tsx")).toContain("bg-background/60")
+    expect(ler("barra-topo.tsx")).toMatch(/data-ilha-topo className="[^"]*bg-background\/60[^"]*backdrop-blur-xl/)
   })
 })
 

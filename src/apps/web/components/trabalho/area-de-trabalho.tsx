@@ -58,6 +58,7 @@ import {
   layoutParaVisualizador,
   lerLayout,
   salvarLayout,
+  semVisualizadorFantasma,
   type Layout,
 } from "@/lib/layout-colunas"
 import { AvisoPresenca } from "./aviso-presenca"
@@ -66,7 +67,7 @@ import { EtapaLiberada } from "./etapa-liberada"
 import { ROTULO_STATUS } from "./icone-status"
 import { PainelEtapa } from "./painel-etapa"
 import { SeloCusto } from "./selo-custo"
-import { CabecalhoEtapa } from "./cabecalho-etapa"
+import { CabecalhoEtapa, CapaEtapa, type InfoEtapa } from "./cabecalho-etapa"
 import { TrilhaEtapas } from "./trilha-etapas"
 import { VisualizadorArquivo } from "./visualizador-arquivo"
 import { VisualizadorApresentacao } from "./visualizador-apresentacao"
@@ -98,6 +99,8 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   const [trilhaRecolhida, setTrilhaRecolhida] = useState(false)
   const [painelRecolhido, setPainelRecolhido] = useState(false)
   const [arrastando, setArrastando] = useState(false)
+  // A capa da etapa (título grande no topo da conversa) está à vista: a barra da etapa fica só com os botões.
+  const [capaVisivel, setCapaVisivel] = useState(true)
   // `secao`: a coluna mostra a seção de texto do nome final (o benchmark tem HTML e seção com o mesmo nome).
   const [visualizador, setVisualizador] = useState<{
     etapa: EtapaId
@@ -330,13 +333,44 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   const indice = ORDEM_ETAPAS.indexOf(etapa)
   const mostrarChat =
     estadoEtapa.status !== "liberada" && estadoEtapa.status !== "bloqueada"
+  const infoEtapa: InfoEtapa = {
+    numero: etapaCat.numero || null,
+    fase: etapaCat.fase ?? null,
+    titulo: etapaCat.titulo,
+    trabalhando: dados.turnoAtivo === etapa,
+    selo:
+      estadoEtapa.status === "em_andamento" ? undefined : (
+        <Badge
+          variant={
+            estadoEtapa.status === "concluida"
+              ? "sucesso"
+              : estadoEtapa.status === "desatualizada"
+                ? "aviso"
+                : "secondary"
+          }
+        >
+          {ROTULO_STATUS[estadoEtapa.status]}
+        </Badge>
+      ),
+  }
   const salvoInicial = lerLayout(chaveColunas(false))
   const layoutInicial =
     salvoInicial &&
     Object.keys(salvoInicial).sort().join() === IDS_COLUNAS.join()
-      ? salvoInicial
+      ? (semVisualizadorFantasma(salvoInicial, false) ?? salvoInicial)
       : undefined
   function aoMudarLayout(layout: Layout) {
+    // Painel arrastado para a direita com o visualizador fechado: a largura iria para o visualizador (coluna em branco).
+    const corrigido = semVisualizadorFantasma(layout, visualizadorAberto)
+    if (corrigido) {
+      try {
+        grupoRef.current?.setLayout(corrigido)
+      } catch {
+        // grupo desmontando: vale o layout que ele tiver
+      }
+      salvarLayout(chaveColunas(false), corrigido)
+      return
+    }
     // Só grava quando o layout corresponde ao estado atual (não no meio de uma troca).
     if ((layout.visualizador ?? 0) > 0 === visualizadorAberto)
       salvarLayout(chaveColunas(visualizadorAberto), layout)
@@ -443,27 +477,10 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
               </ResizablePanel>
               <ResizableHandle withHandle />
               <ResizablePanel id="chat" minSize="360px">
-                <main className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl vidro">
+                <main className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl vidro">
                   <CabecalhoEtapa
-                    numero={etapaCat.numero || null}
-                    fase={etapaCat.fase ?? null}
-                    titulo={etapaCat.titulo}
-                    trabalhando={dados.turnoAtivo === etapa}
-                    selo={
-                      estadoEtapa.status === "em_andamento" ? undefined : (
-                        <Badge
-                          variant={
-                            estadoEtapa.status === "concluida"
-                              ? "sucesso"
-                              : estadoEtapa.status === "desatualizada"
-                                ? "aviso"
-                                : "secondary"
-                          }
-                        >
-                          {ROTULO_STATUS[estadoEtapa.status]}
-                        </Badge>
-                      )
-                    }
+                    {...infoEtapa}
+                    compacto={!mostrarChat || !capaVisivel}
                     antes={
                       <Button
                         variant="ghost"
@@ -508,9 +525,12 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
                       dados={dados}
                       eventos={conversas[etapa] ?? []}
                       delta={deltas[etapa] ?? ""}
+                      capa={<CapaEtapa key={etapa} {...infoEtapa} aoMudarVisivel={setCapaVisivel} />}
                     />
                   ) : (
-                    <EtapaLiberada slug={slug} etapa={etapa} dados={dados} />
+                    <div className="flex min-h-0 flex-1 flex-col pt-[46px]">
+                      <EtapaLiberada slug={slug} etapa={etapa} dados={dados} />
+                    </div>
                   )}
                 </main>
               </ResizablePanel>

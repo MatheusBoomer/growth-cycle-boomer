@@ -65,3 +65,15 @@ describe("painel lateral recolhido e mostrado pelo botão", () => {
     expect(r.visualizador).toBeCloseTo(40)
   })
 })
+
+describe("semVisualizadorFantasma", () => {
+  it("visualizador fechado com largura (o painel foi arrastado para a direita): a largura volta para o chat", async () => {
+    const { semVisualizadorFantasma } = await import("./layout-colunas")
+    expect(semVisualizadorFantasma({ trilha: 20, chat: 40, visualizador: 32, painel: 8 }, false)).toEqual({ trilha: 20, chat: 72, visualizador: 0, painel: 8 })
+  })
+  it("visualizador aberto ou já sem largura: nada a corrigir", async () => {
+    const { semVisualizadorFantasma } = await import("./layout-colunas")
+    expect(semVisualizadorFantasma({ trilha: 20, chat: 40, visualizador: 32, painel: 8 }, true)).toBeNull()
+    expect(semVisualizadorFantasma({ trilha: 20, chat: 60, visualizador: 0, painel: 20 }, false)).toBeNull()
+  })
+})

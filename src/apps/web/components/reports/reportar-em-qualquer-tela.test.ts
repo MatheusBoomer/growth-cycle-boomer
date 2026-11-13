@@ -22,16 +22,19 @@ describe("barra do topo na tela do projeto", () => {
   })
 })
 
-describe("botão Reportar (protótipo 12, opção A)", () => {
-  it("pílula como as vizinhas, com a cor própria de feedback (violeta), sem laranja", () => {
+describe("botão Reportar (item da ilha da barra do topo)", () => {
+  it("item sem borda dentro da ilha, com a cor própria de feedback (violeta), sem laranja", () => {
     const s = ler("botao-reportar.tsx")
-    expect(s).toContain('variant="outline"')
-    expect(s).toContain("bg-selo-opus-fundo")
+    expect(s).toContain('variant="ghost"')
+    expect(s).toContain("hover:bg-selo-opus-fundo")
     expect(s).toContain("text-selo-opus")
     expect(s).toContain("data-reportar")
     expect(s).not.toMatch(/\b(bg|text|border)-primary\b/)
   })
-  it("o vidro da barra não cobre a cor do Reportar", () => {
-    expect(ler("../marca/barra-topo.tsx")).toContain("[&_[data-slot=button]:not([data-reportar])]:bg-background/60")
+  it("fica dentro da ilha, antes do avatar", () => {
+    const barra = ler("../marca/barra-topo.tsx")
+    const ilha = barra.slice(barra.indexOf("data-ilha-topo"))
+    expect(ilha.indexOf("<BotaoReportar />")).toBeGreaterThan(0)
+    expect(ilha.indexOf("<BotaoReportar />")).toBeLessThan(ilha.indexOf("<MenuConta />"))
   })
 })

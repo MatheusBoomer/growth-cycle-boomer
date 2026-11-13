@@ -1,11 +1,18 @@
 "use client"
 
-import { ArrowUpIcon, AtSignIcon, FileIcon, PanelRightOpenIcon, PlusIcon, SquareIcon } from "lucide-react"
+import { ArrowUpIcon, AtSignIcon, FileIcon, PanelRightOpenIcon, PaperclipIcon, PlusIcon, SquareIcon } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import type { EtapaId } from "@workspace/core/tipos"
 import { AttachmentGroup } from "@workspace/ui/components/attachment"
 import { Button } from "@workspace/ui/components/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "@workspace/ui/components/dropdown-menu"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { cn } from "@workspace/ui/lib/utils"
@@ -197,14 +204,22 @@ export function Compositor({
     )
   }
 
+  /** Põe um "@" no fim e abre a lista de arquivos, como se a pessoa tivesse digitado. */
+  function abrirMencao() {
+    const novo = texto === "" || texto.endsWith(" ") || texto.endsWith("\n") ? `${texto}@` : `${texto} @`
+    setTexto(novo)
+    atualizarConsulta(novo, novo.length)
+    requestAnimationFrame(() => campo.current?.focus())
+  }
+
   // Com referência de ajuste, a mensagem em branco fica bloqueada: a conversa é o ponto.
   const podeEnviar = !desabilitado && !enviando && !subindo && (texto.trim() !== "" || (!comReferencia && prontos.length > 0))
 
   return (
-    <div className="px-4 pt-1 pb-4">
+    <div className="group/compositor px-4 pb-3">
       <div
         className={cn(
-          "border-input bg-popover/90 mx-auto flex max-w-3xl flex-col gap-2 rounded-[22px] border p-3 shadow-[0_20px_50px_-24px_rgb(0_0_0/0.5)] backdrop-blur-xl transition-[box-shadow,border-color]",
+          "border-input bg-popover/90 mx-auto flex max-w-3xl flex-col gap-1.5 rounded-[18px] border p-1.5 shadow-[0_12px_32px_-20px_rgb(0_0_0/0.45)] backdrop-blur-xl transition-[box-shadow,border-color]",
           "focus-within:border-primary/50 focus-within:ring-primary/15 focus-within:ring-4",
           arrastando && "ring-primary/50 ring-2 ring-offset-4 ring-offset-background",
         )}
@@ -223,7 +238,7 @@ export function Compositor({
           if (!desabilitado) void anexar(e.dataTransfer.files)
         }}
       >
-        {motivo && <p className="text-muted-foreground text-xs">{motivo}</p>}
+        {motivo && <p className="text-muted-foreground px-2 pt-1 text-xs">{motivo}</p>}
         {comReferencia && (
           <AttachmentGroup>
             {ref.referencias.map((r, i) => (
@@ -240,7 +255,7 @@ export function Compositor({
           </AttachmentGroup>
         )}
         {comReferencia && texto.trim() === "" && (
-          <p className="text-muted-foreground text-xs">Escreva o que mudar para enviar. Para marcações, cite o número: “1: eixo X em meses por extenso”.</p>
+          <p className="text-muted-foreground px-2 text-xs">Escreva o que mudar para enviar. Para marcações, cite o número: “1: eixo X em meses por extenso”.</p>
         )}
         {anexos.length > 0 && (
           <AttachmentGroup>
@@ -255,7 +270,7 @@ export function Compositor({
             ))}
           </AttachmentGroup>
         )}
-        <div className="relative">
+        <div className="relative flex items-end gap-1.5">
           {listaAberta && (
             <ul
               role="listbox"
@@ -299,91 +314,91 @@ export function Compositor({
               </li>
             </ul>
           )}
-        <Textarea
-          ref={campo}
-          value={texto}
-          onChange={(e) => {
-            setTexto(e.target.value)
-            atualizarConsulta(e.target.value, e.target.selectionStart)
-          }}
-          onBlur={() => setConsulta(null)}
-          onPaste={(e) => {
-            const arquivos = Array.from(e.clipboardData.files)
-            // Colar de planilha/Word traz texto e uma imagem: com texto, deixa a colagem normal acontecer.
-            if (arquivos.length === 0 || desabilitado || e.clipboardData.getData("text/plain") !== "") return
-            e.preventDefault()
-            void anexar(arquivos)
-          }}
-          onKeyDown={(e) => {
-            if (listaAberta) {
-              if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-                e.preventDefault()
-                const passo = e.key === "ArrowDown" ? 1 : -1
-                setDestaque((d) => (d + passo + sugestoes.length) % sugestoes.length)
-                return
-              }
-              if (e.key === "Enter" && e.shiftKey) {
-                e.preventDefault()
-                consultar(sugestoes[destaque]!)
-                return
-              }
-              if (e.key === "Enter" || e.key === "Tab") {
-                e.preventDefault()
-                escolher(sugestoes[destaque]!)
-                return
-              }
-              if (e.key === "Escape") {
-                e.preventDefault()
-                setConsulta(null)
-                return
-              }
-            }
-            if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-              e.preventDefault()
-              if (podeEnviar) void enviar()
-            }
-          }}
-          placeholder="Escreva para o agente… (@ menciona um arquivo, arraste ou cole para anexar, Enter envia)"
-          disabled={desabilitado}
-          rows={3}
-          aria-label="Mensagem para o agente"
-          // Dentro da pílula do compositor: sem borda nem fundo próprios (o brilho do foco fica na pílula).
-          className="resize-none border-0 bg-transparent px-1 shadow-none focus-visible:ring-0 dark:bg-transparent"
-        />
-        </div>
-        <div className="flex items-center gap-2">
           <input ref={entradaArquivo} type="file" multiple hidden onChange={(e) => void anexar(e.target.files)} />
-          <Button variant="outline" size="xs" aria-label="Anexar arquivo" disabled={desabilitado} onClick={() => entradaArquivo.current?.click()}>
-            <PlusIcon aria-hidden="true" /> Anexar
-          </Button>
-          <Button
-            variant="outline"
-            size="xs"
-            aria-label="Mencionar um arquivo"
-            disabled={desabilitado}
-            onClick={() => {
-              // Põe um "@" no fim e abre a lista de arquivos, como se a pessoa tivesse digitado.
-              const novo = texto === "" || texto.endsWith(" ") || texto.endsWith("\n") ? `${texto}@` : `${texto} @`
-              setTexto(novo)
-              atualizarConsulta(novo, novo.length)
-              campo.current?.focus()
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              aria-label="Anexar ou mencionar"
+              disabled={desabilitado}
+              className="text-muted-foreground hover:bg-accent hover:text-foreground aria-expanded:bg-accent aria-expanded:text-foreground grid size-8 shrink-0 place-items-center rounded-[10px] transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50"
+            >
+              <PlusIcon aria-hidden="true" className="size-4.5" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="start" sideOffset={8} className="w-72">
+              <DropdownMenuItem onClick={() => entradaArquivo.current?.click()}>
+                <PaperclipIcon aria-hidden="true" /> Anexar arquivo
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={abrirMencao}>
+                <AtSignIcon aria-hidden="true" /> Mencionar arquivo do prospect
+                <DropdownMenuShortcut>@</DropdownMenuShortcut>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Textarea
+            ref={campo}
+            value={texto}
+            onChange={(e) => {
+              setTexto(e.target.value)
+              atualizarConsulta(e.target.value, e.target.selectionStart)
             }}
-          >
-            <AtSignIcon aria-hidden="true" /> Mencionar
-          </Button>
+            onBlur={() => setConsulta(null)}
+            onPaste={(e) => {
+              const arquivos = Array.from(e.clipboardData.files)
+              // Colar de planilha/Word traz texto e uma imagem: com texto, deixa a colagem normal acontecer.
+              if (arquivos.length === 0 || desabilitado || e.clipboardData.getData("text/plain") !== "") return
+              e.preventDefault()
+              void anexar(arquivos)
+            }}
+            onKeyDown={(e) => {
+              if (listaAberta) {
+                if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                  e.preventDefault()
+                  const passo = e.key === "ArrowDown" ? 1 : -1
+                  setDestaque((d) => (d + passo + sugestoes.length) % sugestoes.length)
+                  return
+                }
+                if (e.key === "Enter" && e.shiftKey) {
+                  e.preventDefault()
+                  consultar(sugestoes[destaque]!)
+                  return
+                }
+                if (e.key === "Enter" || e.key === "Tab") {
+                  e.preventDefault()
+                  escolher(sugestoes[destaque]!)
+                  return
+                }
+                if (e.key === "Escape") {
+                  e.preventDefault()
+                  setConsulta(null)
+                  return
+                }
+              }
+              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                e.preventDefault()
+                if (podeEnviar) void enviar()
+              }
+            }}
+            placeholder="Responda ao agente…"
+            disabled={desabilitado}
+            rows={1}
+            aria-label="Mensagem para o agente"
+            // Dentro da pílula do compositor: sem borda nem fundo próprios (o brilho do foco fica na pílula).
+            className="max-h-50 min-h-8 flex-1 resize-none border-0 bg-transparent px-1 py-[5px] text-[15px] leading-[22px] shadow-none focus-visible:ring-0 md:text-[15px] dark:bg-transparent"
+          />
           {ativoAqui ? (
             <Button
               variant="outline"
-              className="ml-auto"
+              aria-label="Parar"
+              title="Parar o agente"
+              className="size-8 shrink-0 rounded-full p-0"
               onClick={() => api.acaoEtapa(slug, etapa, "parar").catch((e) => toast.error(mensagemDeErro(e)))}
             >
-              <SquareIcon /> Parar
+              <SquareIcon className="size-3.5" />
             </Button>
           ) : (
             <Button
               aria-label="Enviar"
               title="Enviar (Enter)"
-              className="bg-foreground text-background ml-auto size-9 rounded-full p-0 shadow-none ring-0 hover:brightness-100 hover:opacity-90"
+              className="bg-foreground text-background size-8 shrink-0 rounded-full p-0 shadow-none ring-0 hover:brightness-100 hover:opacity-90"
               onClick={() => void enviar()}
               disabled={!podeEnviar}
             >
@@ -392,6 +407,16 @@ export function Compositor({
           )}
         </div>
       </div>
+      {/* Dicas de teclado só com a caixa em foco: fora dela não ocupam o texto de exemplo. */}
+      <p
+        aria-hidden="true"
+        className="text-muted-foreground mx-auto mt-1 flex h-4 max-w-3xl gap-3 overflow-hidden px-2 text-[11px] opacity-0 transition-opacity group-focus-within/compositor:opacity-100 max-sm:hidden"
+      >
+        <span>Enter envia</span>
+        <span>Shift+Enter quebra linha</span>
+        <span>@ menciona arquivo</span>
+        <span>Arraste ou cole para anexar</span>
+      </p>
     </div>
   )
 }
