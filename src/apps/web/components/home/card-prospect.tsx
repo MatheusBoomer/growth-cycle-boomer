@@ -15,6 +15,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import { AvatarPessoa } from "@/components/marca/avatar-pessoa"
 import { useAmbiente, usePapel } from "@/components/marca/conta-contexto"
 import { api, mensagemDeErro } from "@/lib/api"
+import { partesDoRotulo } from "@/lib/home"
 import { BarraEtapas } from "./barra-etapas"
 import { DialogoExcluirProspect } from "./dialogo-excluir-prospect"
 import { DialogoTrocarDono } from "./dialogo-trocar-dono"
@@ -36,10 +37,21 @@ export function CardProspect({ prospect: p, fotoUrl }: { prospect: ResumoProspec
   const [trocandoDono, setTrocandoDono] = useState(false)
   const concluido = p.etapaAtual === null
   const nomeDono = p.dono ? nomeCurto(p.dono) : "Sem dono"
+  const etapa = partesDoRotulo(p.rotuloEtapaAtual)
 
   return (
     // O link do nome se estica sobre o card inteiro (::after); só o menu ⋯ fica por cima dele.
-    <Card className="has-[a:focus-visible]:ring-ring relative h-full transition duration-300 hover:border-foreground/15 has-[a:focus-visible]:ring-2">
+    <Card
+      className={cn(
+        "luz-mouse has-[a:focus-visible]:ring-ring relative h-full transition duration-300 hover:-translate-y-0.5 hover:border-foreground/15 has-[a:focus-visible]:ring-2",
+        p.pendencias > 0 && "borda-correndo",
+      )}
+      onPointerMove={(e) => {
+        const r = e.currentTarget.getBoundingClientRect()
+        e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`)
+        e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`)
+      }}
+    >
       <CardHeader>
         <CardTitle className="text-texto-forte truncate">
           <Link href={`/prospects/${p.slug}`} title={p.nome} className="after:absolute after:inset-0 after:rounded-[inherit] focus-visible:outline-none">
@@ -76,9 +88,16 @@ export function CardProspect({ prospect: p, fotoUrl }: { prospect: ResumoProspec
         </CardAction>
       </CardHeader>
       <CardContent className="space-y-2.5">
-        <p className={cn("truncate text-sm font-medium", concluido ? "text-sucesso" : "text-texto-forte")} title={concluido ? undefined : p.rotuloEtapaAtual}>
-          {concluido ? "Concluído" : p.rotuloEtapaAtual}
-        </p>
+        {concluido ? (
+          <p className="text-sucesso text-sm font-medium">Concluído</p>
+        ) : (
+          <p className="text-muted-foreground min-w-0 text-xs" title={p.rotuloEtapaAtual}>
+            {etapa.numero && `Etapa ${etapa.numero}`}
+            <em className="text-texto-forte mt-0.5 block truncate font-serif text-[19px] leading-[1.1] not-italic">
+              <span className="italic">{etapa.titulo}</span>
+            </em>
+          </p>
+        )}
         <BarraEtapas concluidas={p.concluidas} total={p.totalEtapas} atual={!concluido} aguardando={p.pendencias > 0} />
         {(p.teste || p.pendencias > 0) && (
           <div className="flex flex-wrap gap-1.5">

@@ -64,7 +64,8 @@ describe("CardProspect: analista e etapa", () => {
     const { raiz, desmontar } = await renderizar(comDono, "admin")
     expect(raiz.textContent).toContain("Ana Souza")
     expect(raiz.textContent).toContain("AS")
-    expect(raiz.textContent).toContain("03 · Diagnóstico de performance")
+    expect(raiz.textContent).toContain("Etapa 03")
+    expect(raiz.textContent).toContain("Diagnóstico de performance")
     await desmontar()
   })
 
@@ -78,8 +79,41 @@ describe("CardProspect: analista e etapa", () => {
     const { raiz, desmontar } = await renderizar(comDono, "usuario")
     expect(raiz.textContent).not.toContain("Ana Souza")
     expect(raiz.textContent).not.toContain("Sem dono")
-    expect(raiz.textContent).toContain("03 · Diagnóstico de performance")
+    expect(raiz.textContent).toContain("Etapa 03")
+    expect(raiz.textContent).toContain("Diagnóstico de performance")
     await desmontar()
+  })
+
+  it("o nome da etapa vem em serifada, separado do número", async () => {
+    const { raiz, desmontar } = await renderizar(comDono, "usuario")
+    expect(raiz.querySelector("em.font-serif")?.textContent).toBe("Diagnóstico de performance")
+    await desmontar()
+  })
+
+  it("etapa sem número (Apresentação final) não mostra 'Etapa'", async () => {
+    const { raiz, desmontar } = await renderizar({ ...comDono, etapaAtual: "final", rotuloEtapaAtual: "Apresentação final" } as unknown as ResumoProspect, "usuario")
+    expect(raiz.textContent).toContain("Apresentação final")
+    expect(raiz.textContent).not.toContain("Etapa")
+    await desmontar()
+  })
+
+  it("só o card com aprovação pendente ganha a borda sutil correndo; todo card tem a luz do mouse", async () => {
+    const com = await renderizar({ ...comDono, pendencias: 1 } as ResumoProspect, "usuario")
+    expect(com.raiz.querySelector('[data-slot="card"]')!.className).toContain("borda-correndo")
+    expect(com.raiz.querySelector('[data-slot="card"]')!.className).toContain("luz-mouse")
+    await com.desmontar()
+    const sem = await renderizar(comDono, "usuario")
+    expect(sem.raiz.querySelector('[data-slot="card"]')!.className).not.toContain("borda-correndo")
+    await sem.desmontar()
+  })
+
+  it("o CSS da borda e da luz existe e para com movimento reduzido", async () => {
+    const { readFileSync } = await import("node:fs")
+    const { resolve } = await import("node:path")
+    const css = readFileSync(resolve(import.meta.dirname, "../../../../packages/ui/src/styles/globals.css"), "utf-8")
+    expect(css).toMatch(/\.borda-correndo::before/)
+    expect(css).toMatch(/\.luz-mouse::after/)
+    expect(css).toMatch(/prefers-reduced-motion:\s*reduce\)\s*\{[^}]*\.borda-correndo::before\s*\{[^}]*animation:\s*none/)
   })
 
   it("concluído mostra 'Concluído' no lugar do rótulo da etapa", async () => {

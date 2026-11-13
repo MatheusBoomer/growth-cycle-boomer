@@ -250,6 +250,40 @@
     .surgir { animation: none; }
 }
 
+/* Luz laranja que segue o mouse num card (Magic Card). --mx/--my vêm do pointermove. */
+.luz-mouse::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .3s;
+    background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgb(235 97 10 / 0.12), transparent 70%);
+}
+.luz-mouse:hover::after { opacity: 1; }
+
+/* Borda sutil que corre em volta de quem espera aprovação (Border Beam / Shine Border, versão delicada). */
+@property --angulo-borda { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+.borda-correndo { border-color: transparent; }
+.borda-correndo::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    background: conic-gradient(from var(--angulo-borda), color-mix(in srgb, var(--foreground) 7%, transparent) 0 78%, rgb(251 191 36 / 0.28) 86%, rgb(255 138 61 / 0.38) 90%, color-mix(in srgb, var(--foreground) 7%, transparent) 96%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: girar-borda 9s linear infinite;
+}
+@keyframes girar-borda { to { --angulo-borda: 360deg; } }
+@media (prefers-reduced-motion: reduce) {
+    .borda-correndo::before { animation: none; }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
