@@ -77,5 +77,7 @@ describe("resposta ao vivo", () => {
     )
     expect(h).toContain("Calculando o LTV")
     expect(h).not.toContain('data-slot="bubble-content"')
+    // Mesmo tamanho da resposta final (15 px): a letra não muda quando o turno termina.
+    expect(h).toMatch(/<div class="[^"]*text-\[15px\][^"]*">.*Calculando o LTV/s)
   })
 })

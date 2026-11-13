@@ -50,9 +50,9 @@ function BarraCusto({ tipo, valor, maior }: { tipo: "custo-etapa" | "custo-pesso
 
 function Numero({ rotulo, children }: { rotulo: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-1 rounded-xl border p-4">
-      <dt className="text-muted-foreground text-xs font-medium">{rotulo}</dt>
-      <dd className="text-xl font-semibold tracking-tight tabular-nums">{children}</dd>
+    <div className="vidro flex flex-col gap-1 rounded-[18px] border p-[18px]">
+      <dt className="text-muted-foreground text-[12.5px] font-normal">{rotulo}</dt>
+      <dd className="mt-1 font-serif text-[34px] leading-none tracking-[-0.01em] tabular-nums">{children}</dd>
     </div>
   )
 }
@@ -113,7 +113,7 @@ export function DetalheProjeto({ slug, etapas }: { slug: string; etapas: EtapaRo
             <Link href="/admin/projetos" className="text-muted-foreground hover:text-foreground text-xs font-medium">
               Todos os projetos
             </Link>
-            <h2 className="mt-1 text-lg font-semibold tracking-tight">{projeto.nome}</h2>
+            <h2 className="mt-1 font-serif text-[34px] leading-[1.05] font-normal tracking-[-0.01em]">{projeto.nome}</h2>
             <p className="text-muted-foreground text-sm">
               {projeto.dono ? nomeCurto(projeto.dono) : "Sem dono"} · {projeto.rotuloEtapaAtual} · última atividade {formatarDataHora(metricas.ultimaAtividade).toLowerCase()}
             </p>

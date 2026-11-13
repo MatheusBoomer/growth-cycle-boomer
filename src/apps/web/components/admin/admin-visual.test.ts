@@ -15,4 +15,17 @@ describe("administração na linguagem nova", () => {
     expect(ler("catalogo-skills.tsx")).not.toContain("Fluxo e texto de cada etapa")
     expect(ler("tabela-modelos.tsx")).not.toContain("Vale a partir do próximo turno de cada etapa")
   })
+
+  it("detalhe do projeto: nome em serifada e números grandes em serifada", () => {
+    const d = ler("detalhe-projeto.tsx")
+    expect(d).toMatch(/<h2 className="[^"]*font-serif[^"]*">\{projeto\.nome\}/)
+    expect(d).toMatch(/<dd className="[^"]*font-serif/)
+  })
+  it("card de modelos: 'Etapa NN' pequeno acima do nome da etapa", () => expect(ler("cartao-etapa-modelos.tsx")).toMatch(/partesDoRotulo\(etapa\.rotulo\)/))
+  it("cabeçalho do admin não corta letras ao quebrar (entrelinha 1.05)", () => expect(ler("cabecalho-admin.tsx")).toMatch(/<h1 className="[^"]*leading-\[1\.05\]/))
+  it("detalhe do report: só o número em serifada, o selo do tipo fica na fonte normal", () => {
+    const d = ler("reports/detalhe-report.tsx")
+    expect(d).not.toMatch(/<SheetTitle className="[^"]*font-serif/)
+    expect(d).toMatch(/<span className="font-serif[^"]*">Report #\{report\.id\}<\/span>/)
+  })
 })

@@ -50,8 +50,8 @@ function Conteudo({ report, aoAtualizar }: { report: Report; aoAtualizar: (repor
   return (
     <div className="flex flex-col gap-5 px-4 pb-6">
       <SheetHeader className="px-0">
-        <SheetTitle className="font-serif text-[26px] font-normal flex items-center gap-2">
-          <SeloTipo tipo={report.tipo} /> Report #{report.id}
+        <SheetTitle className="flex items-center gap-2">
+          <SeloTipo tipo={report.tipo} /> <span className="font-serif text-[26px] leading-[1.1] font-normal">Report #{report.id}</span>
         </SheetTitle>
         <SheetDescription>
           {nomeCurto(report.autor)} · {dataHora(report.criadoEm)}

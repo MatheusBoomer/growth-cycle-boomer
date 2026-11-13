@@ -120,7 +120,7 @@ export function DialogoReport({
     <Dialog open={aberto} onOpenChange={mudarAberto}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl" onPaste={aoColar}>
         <DialogHeader>
-          <DialogTitle className="text-[26px] font-medium tracking-[-0.03em]">
+          <DialogTitle className="text-[26px] leading-[1.1] font-medium tracking-[-0.03em]">
             Reportar <em className="text-link-acao font-serif font-normal tracking-[-0.01em] italic">um bug ou ideia</em>
           </DialogTitle>
           <DialogDescription>Conte o que aconteceu ou o que poderia melhorar. O print da tela vai junto.</DialogDescription>

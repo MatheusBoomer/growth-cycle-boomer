@@ -167,7 +167,7 @@ export function ChatEtapa({
                       <MessageContent>
                         {(delta || aoVivo.length === 0) && (
                           // Sem bolha, como a resposta final: o texto não "pula" quando o turno termina.
-                          <div className="text-foreground/90 leading-relaxed">
+                          <div className="text-foreground/90 text-[15px] leading-relaxed">
                             {delta ? (
                               <Markdown>{delta}</Markdown>
                             ) : (

@@ -16,5 +16,6 @@ describe("reports na linguagem nova", () => {
     expect(painel).not.toContain("divide-y")
     expect(painel).toMatch(/rounded-\[14px\]/)
   })
-  it("detalhe: título em serifada", () => expect(detalhe).toMatch(/<SheetTitle className="[^"]*font-serif/))
+  it("detalhe: o número do report em serifada", () => expect(detalhe).toMatch(/<span className="font-serif[^"]*">Report #/))
+  it("diálogo: o título não encosta as linhas ao quebrar (entrelinha 1.1)", () => expect(dialogo).toMatch(/<DialogTitle className="[^"]*leading-\[1\.1\]/))
 })

@@ -5,6 +5,7 @@ import { Button } from "@workspace/ui/components/button"
 import type { ConfigModelos, EtapaConfiguravel } from "@/lib/api"
 import { ROTULOS_ALVO, escolhaSalva, sugestaoVisivel, textoRodape, textoSelo, textoSugestao } from "@/lib/celula-modelo"
 import { BarraEsforco } from "./barra-esforco"
+import { partesDoRotulo } from "@/lib/home"
 import { SeloModelo } from "./selo-modelo"
 
 interface Props {
@@ -30,7 +31,10 @@ export function CartaoEtapaModelos({ etapa, dados, emSalvamento, abrir, salvar }
       <h3 className="text-texto-forte font-serif text-[22px] leading-tight font-normal">
         {/* O botão cobre o cartão todo (after:absolute); a sugestão fica acima dele (z-10) para o Aplicar continuar clicável. */}
         <button type="button" onClick={abrir} className="cursor-pointer text-left outline-none after:absolute after:inset-0 after:rounded-xl" aria-label={`Editar modelos da etapa ${etapa.rotulo}`}>
-          {etapa.rotulo}
+          {partesDoRotulo(etapa.rotulo).numero && (
+            <span className="text-muted-foreground block font-sans text-xs">Etapa {partesDoRotulo(etapa.rotulo).numero}</span>
+          )}
+          {partesDoRotulo(etapa.rotulo).titulo}
         </button>
       </h3>
       <ul className="flex flex-col gap-2.5">
