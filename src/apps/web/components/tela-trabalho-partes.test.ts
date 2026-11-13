@@ -13,9 +13,15 @@ describe("1 · início da etapa", () => {
     expect(s).toContain("passosDoQueEsperar(")
     expect(s).toContain("Antes de começar")
   })
-  it("arquivos na coluna da direita e botão grande com ícone de play", () => {
-    expect(s).toContain("Arquivos desta etapa")
-    expect(s).toMatch(/grid-cols-\[minmax/)
+  it("uma coluna só: o que esperar, depois os arquivos (envio e kit) e por último o botão grande com play", () => {
+    const esperar = s.indexOf("O que esperar")
+    const arquivos = s.indexOf("Arquivos desta etapa")
+    const kit = s.indexOf("<PainelKit")
+    const botao = s.indexOf("Iniciar etapa")
+    expect(esperar).toBeLessThan(arquivos)
+    expect(arquivos).toBeLessThan(kit)
+    expect(kit).toBeLessThan(botao)
+    expect(s).not.toMatch(/grid-cols-\[minmax/)
     expect(s).toContain("PlayIcon")
   })
   it("bloqueada e agente ocupado no novo desenho", () => {

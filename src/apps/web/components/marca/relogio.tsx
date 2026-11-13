@@ -21,7 +21,7 @@ export function Relogio() {
   return (
     <span
       title="Horário de São Paulo"
-      className="text-muted-foreground border-border inline-flex h-7 min-w-14 items-center justify-center rounded-full border px-2.5 font-mono text-[11px] tabular-nums max-lg:hidden"
+      className="text-muted-foreground border-border inline-flex h-7 min-w-14 items-center justify-center rounded-full border bg-background/60 px-2.5 backdrop-blur-xl font-mono text-[11px] tabular-nums max-lg:hidden"
     >
       {hora}
     </span>

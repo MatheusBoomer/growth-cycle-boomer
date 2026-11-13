@@ -7,10 +7,10 @@ import { NavegacaoPrincipal } from "./navegacao-principal"
 import { Relogio } from "./relogio"
 import { BotaoReportar } from "@/components/reports/botao-reportar"
 
-/** Barra fixa no topo: logo (volta ao início) e nome da tela; no meio, o menu em pílula (só admin); à direita, Reportar, `extra` (como o selo de custo), relógio, a conta de quem entrou (só no modo google) e o botão de tema. Sem ações de etapa. */
+/** Barra transparente no topo (o fundo fica só na navegação e nos controles): logo (volta ao início) e nome da tela; no meio, o menu em pílula (só admin); à direita, Reportar, `extra` (como o selo de custo), relógio, a conta de quem entrou (só no modo google) e o botão de tema. Sem ações de etapa. */
 export function BarraTopo({ titulo, subtitulo, extra }: { titulo: string; subtitulo?: string; extra?: ReactNode }) {
   return (
-    <header className="bg-background/60 sticky top-0 z-40 flex h-14 shrink-0 items-center gap-1.5 px-2.5 backdrop-blur-xl sm:gap-3.5 sm:px-5">
+    <header className="relative z-40 flex h-14 shrink-0 items-center gap-1.5 px-2.5 sm:gap-3.5 sm:px-5">
       <Link href="/" aria-label="Boomer · voltar aos prospects" className="rounded-md focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
         <LogoBoomer />
       </Link>
@@ -22,7 +22,8 @@ export function BarraTopo({ titulo, subtitulo, extra }: { titulo: string; subtit
       <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-2">
         <NavegacaoPrincipal />
       </div>
-      <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-2">
+      {/* A barra é transparente; o fundo de vidro fica só nos controles (e na navegação, no meio). */}
+      <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-2 [&_[data-slot=button]]:bg-background/60 [&_[data-slot=button]]:backdrop-blur-xl">
         <BotaoReportar />
         {extra}
         <Relogio />

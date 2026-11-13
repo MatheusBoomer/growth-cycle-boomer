@@ -20,7 +20,7 @@ export function NavegacaoPrincipal() {
   const caminho = usePathname() ?? "/"
   if (papel !== "admin") return null
   return (
-    <nav aria-label="Navegação principal" className="border-border flex items-center gap-0.5 rounded-full border p-1 text-sm">
+    <nav aria-label="Navegação principal" className="border-border flex items-center gap-0.5 rounded-full border bg-background/60 p-1 text-sm backdrop-blur-xl">
       {ITENS.map(({ rotulo, href, icone: Icone, ativo }) => {
         const atual = ativo(caminho)
         return (

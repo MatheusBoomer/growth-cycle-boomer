@@ -49,7 +49,7 @@ describe("cliente de teste", () => {
     expect(s).toContain("border-l-2")
     expect(s).not.toContain("<Card>")
   })
-  it("início da etapa: a coluna da direita só ocupa espaço quando tem conteúdo", () => {
-    expect(ler("trabalho/etapa-liberada.tsx")).toContain("has-[>[data-lateral]>*]")
+  it("início da etapa: o bloco de arquivos some quando a etapa não tem arquivos nem kit", () => {
+    expect(ler("trabalho/etapa-liberada.tsx")).toMatch(/data-arquivos className="[^"]*empty:hidden/)
   })
 })

@@ -53,14 +53,13 @@ export function EtapaLiberada({
   }
 
   const passos = passosDoQueEsperar(etapaCat.oQueEsperar)
-  const temColunaLateral = etapaCat.insumos.length > 0 || Boolean(dados.estado.teste)
+  const temArquivos = etapaCat.insumos.length > 0 || Boolean(dados.estado.teste)
   const etapaOcupada = dados.turnoAtivo === null ? null : dados.catalogo.etapas.find((e) => e.id === dados.turnoAtivo)
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
-      {/* O nome da etapa já está no cabeçalho logo acima; aqui entra o "como vai ser" (protótipo 9). */}
-      {/* A coluna da direita só ocupa espaço com conteúdo (o kit do cliente de teste pode não existir na etapa). */}
-      <div className="mx-auto grid max-w-2xl gap-8 p-6 sm:p-8 has-[>[data-lateral]>*]:max-w-5xl lg:has-[>[data-lateral]>*]:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+      {/* O nome da etapa já está no cabeçalho logo acima. Uma coluna só: o que esperar, os arquivos e, por último, o botão. */}
+      <div className="mx-auto flex max-w-2xl flex-col gap-8 p-6 sm:p-8">
         <div className="min-w-0">
           <p className="text-[10.5px] tracking-[0.14em] text-muted-foreground uppercase">Antes de começar</p>
           <h2 className="mt-2 text-[26px] leading-[1.15] font-medium tracking-[-0.03em]">
@@ -76,23 +75,9 @@ export function EtapaLiberada({
               </li>
             ))}
           </ol>
-          <div className="mt-6 flex flex-wrap items-center gap-3.5">
-            <Button size="lg" className="h-11 px-5.5 text-sm" onClick={iniciar} disabled={iniciando || dados.turnoAtivo !== null}>
-              {iniciando ? <Spinner /> : <PlayIcon className="fill-current" />} Iniciar etapa
-            </Button>
-            {dados.turnoAtivo === null && (
-              <span className="text-[12.5px] text-muted-foreground">O agente começa já com o dossiê das etapas anteriores.</span>
-            )}
-          </div>
-          {etapaOcupada && (
-            <p className="mt-3 flex items-center gap-2 text-[13px] text-muted-foreground">
-              <Spinner className="text-link-acao" />
-              O agente está respondendo {etapaOcupada.numero ? `na Etapa ${etapaOcupada.numero}` : "em outra etapa"}. Assim que terminar, dá para iniciar.
-            </p>
-          )}
         </div>
-        {temColunaLateral && (
-          <div data-lateral className="grid min-w-0 content-start gap-2.5">
+        {temArquivos && (
+          <div data-arquivos className="grid min-w-0 content-start gap-2.5 empty:hidden">
             {etapaCat.insumos.length > 0 && (
               <>
                 <p className="text-[10.5px] tracking-[0.14em] text-muted-foreground uppercase">Arquivos desta etapa</p>
@@ -113,6 +98,22 @@ export function EtapaLiberada({
             {dados.estado.teste && <PainelKit slug={slug} etapa={etapa} />}
           </div>
         )}
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-3.5">
+            <Button size="lg" className="h-11 px-5.5 text-sm" onClick={iniciar} disabled={iniciando || dados.turnoAtivo !== null}>
+              {iniciando ? <Spinner /> : <PlayIcon className="fill-current" />} Iniciar etapa
+            </Button>
+            {dados.turnoAtivo === null && (
+              <span className="text-[12.5px] text-muted-foreground">O agente começa já com o dossiê das etapas anteriores.</span>
+            )}
+          </div>
+          {etapaOcupada && (
+            <p className="mt-3 flex items-center gap-2 text-[13px] text-muted-foreground">
+              <Spinner className="text-link-acao" />
+              O agente está respondendo {etapaOcupada.numero ? `na Etapa ${etapaOcupada.numero}` : "em outra etapa"}. Assim que terminar, dá para iniciar.
+            </p>
+          )}
+        </div>
       </div>
     </div>
   )
