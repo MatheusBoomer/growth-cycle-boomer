@@ -21,7 +21,11 @@ type Fase = "entrando" | "saindo" | "fim"
 export function Entrada({ emAndamento }: { emAndamento: number }) {
   // No servidor (primeira carga, logo após o login) começa entrando. No navegador, sem o cookie é porque a home veio do
   // cache do roteador (ex.: botão Voltar): não toca de novo.
-  const [fase, setFase] = useState<Fase>(() => (typeof document === "undefined" || temCookieBoasVindas() ? "entrando" : "fim"))
+  const [fase, setFase] = useState<Fase>(() =>
+    typeof document === "undefined" || temCookieBoasVindas()
+      ? "entrando"
+      : "fim"
+  )
   const hora = useHoraSaoPaulo()
 
   useEffect(() => {
@@ -30,8 +34,12 @@ export function Entrada({ emAndamento }: { emAndamento: number }) {
       setFase("fim")
       return
     }
-    const id = setTimeout(() => setFase((f) => (f === "entrando" ? "saindo" : f)), TEMPO_NA_TELA)
-    const aoTeclar = (e: KeyboardEvent) => e.key === "Escape" && setFase((f) => (f === "entrando" ? "saindo" : f))
+    const id = setTimeout(
+      () => setFase((f) => (f === "entrando" ? "saindo" : f)),
+      TEMPO_NA_TELA
+    )
+    const aoTeclar = (e: KeyboardEvent) =>
+      e.key === "Escape" && setFase((f) => (f === "entrando" ? "saindo" : f))
     window.addEventListener("keydown", aoTeclar)
     return () => {
       clearTimeout(id)
@@ -60,32 +68,50 @@ export function Entrada({ emAndamento }: { emAndamento: number }) {
       onClick={() => setFase((f) => (f === "entrando" ? "saindo" : f))}
       className={cn(
         // Saída em duas camadas: o texto sobe e se desfaz primeiro (conteúdo), o fundo esmaece depois, devagar.
-        "bg-background fixed inset-0 z-50 isolate flex motion-reduce:hidden cursor-pointer flex-col justify-between overflow-hidden px-6 py-7 transition-opacity delay-200 duration-1100 ease-[cubic-bezier(.65,0,.35,1)] sm:px-10 sm:py-8",
-        fase === "saindo" && "pointer-events-none opacity-0",
-        "*:transition-[opacity,filter,transform] *:duration-700 *:ease-[cubic-bezier(.4,0,.2,1)]",
-        fase === "saindo" && "*:-translate-y-3 *:opacity-0 *:blur-sm",
+        "fixed inset-0 isolate z-50 flex cursor-pointer flex-col overflow-hidden bg-background transition-opacity delay-200 duration-1100 ease-[cubic-bezier(.65,0,.35,1)] motion-reduce:hidden",
+        fase === "saindo" && "pointer-events-none opacity-0"
       )}
     >
+      {/* O fundo fica parado e só esmaece com a camada; quem sobe é o texto (senão abre uma faixa lisa embaixo). */}
       <FundoDithered intensidade={0.75} />
-      <div className="text-muted-foreground flex items-center justify-between text-sm">
-        <LogoBoomer className="h-6" />
-        <span className="border-border bg-background/60 rounded-full border px-3 py-1 font-mono text-xs backdrop-blur">
-          {hora ? `${hora} em São Paulo` : null}
-        </span>
-      </div>
-      <div>
-        <p className="font-serif text-[clamp(28px,3.6vw,52px)] italic">
-          <TextoRevelado corBase="var(--muted-foreground)">Bem-vindo ao</TextoRevelado>
-        </p>
-        <h1 className="text-[clamp(48px,15.5vw,222px)] leading-[.82] font-semibold tracking-[-0.07em] whitespace-nowrap">
-          <TextoRevelado atraso={0.17} corBase="var(--foreground)">Growth</TextoRevelado>
-          <TextoRevelado atraso={0.33} corBase="var(--primary)" className="ml-[0.08em] font-serif font-normal tracking-[-0.03em] italic">
-            Cycle
-          </TextoRevelado>
-        </h1>
-        <div className="text-muted-foreground mt-10 flex justify-between gap-4 text-sm">
-          <span>Diagnóstico · Metas · Mídia · Plano de ação</span>
-          <span>{emAndamento === 1 ? "1 projeto em andamento" : `${emAndamento} projetos em andamento`}</span>
+      <div
+        className={cn(
+          "flex flex-1 flex-col justify-between px-6 py-7 transition-[opacity,filter,transform] duration-700 ease-[cubic-bezier(.4,0,.2,1)] sm:px-10 sm:py-8",
+          fase === "saindo" && "-translate-y-3 opacity-0 blur-sm"
+        )}
+      >
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <LogoBoomer className="h-6" />
+          <span className="rounded-full border border-border bg-background/60 px-3 py-1 font-mono text-xs backdrop-blur">
+            {hora ? `${hora} em São Paulo` : null}
+          </span>
+        </div>
+        <div>
+          <p className="font-serif text-[clamp(28px,3.6vw,52px)] italic">
+            <TextoRevelado corBase="var(--muted-foreground)">
+              Bem-vindo ao
+            </TextoRevelado>
+          </p>
+          <h1 className="text-[clamp(48px,15.5vw,222px)] leading-[.82] font-semibold tracking-[-0.07em] whitespace-nowrap">
+            <TextoRevelado atraso={0.17} corBase="var(--foreground)">
+              Growth
+            </TextoRevelado>
+            <TextoRevelado
+              atraso={0.33}
+              corBase="var(--primary)"
+              className="ml-[0.08em] font-serif font-normal tracking-[-0.03em] italic"
+            >
+              Cycle
+            </TextoRevelado>
+          </h1>
+          <div className="mt-10 flex justify-between gap-4 text-sm text-muted-foreground">
+            <span>Diagnóstico · Metas · Mídia · Plano de ação</span>
+            <span>
+              {emAndamento === 1
+                ? "1 projeto em andamento"
+                : `${emAndamento} projetos em andamento`}
+            </span>
+          </div>
         </div>
       </div>
     </div>

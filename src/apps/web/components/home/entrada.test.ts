@@ -75,6 +75,16 @@ describe("Entrada", () => {
     expect(raiz.textContent).toContain("Growth")
   })
 
+  it("na saída só o texto sobe; o fundo pontilhado fica parado (não abre faixa lisa embaixo)", async () => {
+    await montar(3)
+    await act(async () => vi.advanceTimersByTime(2400))
+    const canvas = raiz.querySelector("canvas")!
+    // Nem o fundo nem a camada que o contém recebem o deslocamento da saída.
+    expect(canvas.closest(".-translate-y-3")).toBeNull()
+    expect(raiz.firstElementChild!.className).not.toMatch(/\*:-translate-y-3/)
+    expect(raiz.querySelector(".-translate-y-3")?.textContent).toContain("Growth")
+  })
+
   it("a home espera a entrada: segura a animação dos blocos enquanto ela está na tela e solta quando começa a sair", async () => {
     await montar(3)
     expect(document.documentElement.classList.contains("entrada-ativa")).toBe(true)
