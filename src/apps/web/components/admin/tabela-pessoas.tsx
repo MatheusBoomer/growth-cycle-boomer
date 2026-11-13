@@ -20,7 +20,9 @@ import { Button } from "@workspace/ui/components/button"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@workspace/ui/components/table"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip"
+import { CartaoNumero } from "@/components/admin/painel/numeros-grandes"
 import { useEmailDaConta } from "@/components/marca/conta-contexto"
+import { numerosDePessoas } from "@/lib/numeros-pessoas"
 import { api, mensagemDeErro, type PessoaComProjetos } from "@/lib/api"
 
 export interface RotuloAcao {
@@ -121,8 +123,15 @@ export function TabelaPessoas() {
 
   const rotulo = alvo ? rotuloAcao(alvo, { admins: lista.admins, euMesmo: euMesmo(alvo) }) : null
 
+  const numeros = numerosDePessoas(lista.pessoas, new Date())
+
   return (
     <>
+      <section aria-label="Números da equipe" className="grid gap-3 sm:grid-cols-3">
+        <CartaoNumero rotulo="Pessoas com acesso" valor={numeros.total} detalhe="quem já entrou no app" />
+        <CartaoNumero rotulo="Admins" valor={numeros.admins} detalhe="é preciso manter pelo menos um" />
+        <CartaoNumero rotulo="Ativas nos últimos 7 dias" valor={numeros.ativas7d} detalhe={`de ${numeros.total} ${numeros.total === 1 ? "pessoa" : "pessoas"}`} />
+      </section>
       <Table>
         <TableHeader>
           <TableRow>
