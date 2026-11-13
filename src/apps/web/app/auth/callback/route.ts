@@ -61,9 +61,12 @@ export async function GET(request: NextRequest) {
     }
     await guardarFoto(usuario.email, data.claims)
     // Revalidado aqui: o cookie volta pelo navegador e não é confiável só por /auth/entrar tê-lo gravado.
-    const resposta = redirecionar(caminhoProximoSeguro(proximo))
-    // Login de verdade: a home toca a entrada uma vez e apaga este cookie (por isso ele não é httpOnly).
-    resposta.cookies.set(COOKIE_BOAS_VINDAS, "1", { path: "/", maxAge: 120, sameSite: "lax", httpOnly: false, secure: seguro })
+    const destino = caminhoProximoSeguro(proximo)
+    const resposta = redirecionar(destino)
+    // Login de verdade que cai na home: ela toca a entrada uma vez e apaga este cookie (por isso ele não é httpOnly).
+    // Login que volta a outra página (sessão expirada no meio do trabalho) não grava: senão a entrada tocaria ao
+    // navegar para a home depois.
+    if (destino === "/") resposta.cookies.set(COOKIE_BOAS_VINDAS, "1", { path: "/", maxAge: 120, sameSite: "lax", httpOnly: false, secure: seguro })
     return resposta
   } catch (e) {
     console.error("[auth] falha no retorno do login", e)

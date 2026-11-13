@@ -125,6 +125,11 @@ describe("GET /auth/callback", () => {
       expect(r.cookies.get("gc-boas-vindas")).toMatchObject({ secure: true })
     })
 
+    it("login que volta para outra página (sessão expirada no meio do trabalho) não grava", async () => {
+      const r = (await GET(req("/auth/callback?code=abc", proximoCookie("/prospects/a")))) as ComCookies
+      expect(r.cookies.get("gc-boas-vindas")).toBeUndefined()
+    })
+
     it("em erro=dominio e erro=falha não grava", async () => {
       getClaims.mockResolvedValueOnce(claimsDe("ana@gmail.com"))
       expect(((await GET(req("/auth/callback?code=abc"))) as ComCookies).cookies.get("gc-boas-vindas")).toBeUndefined()

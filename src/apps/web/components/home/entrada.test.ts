@@ -68,6 +68,22 @@ describe("Entrada", () => {
     expect(raiz.textContent).toBe("")
   })
 
+  it("sem o cookie (ex.: Voltar do navegador restaurando a home do cache) não toca", async () => {
+    document.cookie = "gc-boas-vindas=; Max-Age=0; path=/"
+    await montar(3)
+    expect(raiz.textContent).toBe("")
+  })
+
+  it("some antes do JavaScript para quem pede menos movimento (classe motion-reduce:hidden no HTML do servidor)", async () => {
+    await montar(3)
+    expect(raiz.firstElementChild?.className).toContain("motion-reduce:hidden")
+  })
+
+  it("o nome cabe no celular: o tamanho mínimo do título é 48 px", async () => {
+    await montar(3)
+    expect(raiz.querySelector("h1")?.className).toContain("clamp(48px")
+  })
+
   it("com movimento reduzido não aparece, mas apaga o cookie", async () => {
     movimentoReduzido(true)
     await montar(3)

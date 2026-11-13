@@ -5,6 +5,11 @@
  */
 export const COOKIE_BOAS_VINDAS = "gc-boas-vindas"
 
+/** O cookie de boas-vindas está no navegador? (Voltar do navegador restaura a home do cache sem passar pelo servidor.) */
+export function temCookieBoasVindas(): boolean {
+  return document.cookie.split("; ").includes(`${COOKIE_BOAS_VINDAS}=1`)
+}
+
 /** Apaga o cookie de boas-vindas no navegador (ele não é httpOnly justamente para isto). */
 export function apagarCookieBoasVindas(): void {
   document.cookie = `${COOKIE_BOAS_VINDAS}=; Max-Age=0; Path=/`
