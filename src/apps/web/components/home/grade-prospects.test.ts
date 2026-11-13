@@ -245,6 +245,14 @@ describe("GradeProspects: home nova", () => {
     await desmontar()
   })
 
+  it("tem a faixa fraca do fundo dithered no topo, decorativa", async () => {
+    const { raiz, desmontar } = await montar("usuario")
+    const faixas = raiz.querySelectorAll('[data-slot="faixa-dithered"]')
+    expect(faixas).toHaveLength(1)
+    expect(faixas[0]!.getAttribute("aria-hidden")).toBe("true")
+    await desmontar()
+  })
+
   it("Ctrl+K (ou ⌘K) leva o cursor para a busca", async () => {
     const { raiz, desmontar } = await montar("usuario")
     await act(async () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true })))

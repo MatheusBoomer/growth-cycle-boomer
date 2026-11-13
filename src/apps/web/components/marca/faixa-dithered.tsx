@@ -1,0 +1,17 @@
+import { FundoDithered } from "./fundo-dithered"
+
+/**
+ * Faixa fraca do fundo dithered no topo da home e do admin (força ~45%), que some antes dos cards.
+ * O pai precisa ser `relative isolate`. Nunca na tela de trabalho.
+ */
+export function FaixaDithered() {
+  return (
+    <div
+      data-slot="faixa-dithered"
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-x-0 top-0 isolate -z-10 h-[360px] [mask-image:linear-gradient(to_bottom,black_30%,transparent)]"
+    >
+      <FundoDithered intensidade={0.45} />
+    </div>
+  )
+}
