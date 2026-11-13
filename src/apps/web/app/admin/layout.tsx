@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation"
 import { BarraTopo } from "@/components/marca/barra-topo"
 import { AbasAdmin } from "@/components/admin/abas-admin"
+import { CabecalhoAdmin } from "@/components/admin/cabecalho-admin"
+import { FaixaDithered } from "@/components/marca/faixa-dithered"
 import { usuarioDaRequisicao } from "@/lib/sessao"
 
 export const dynamic = "force-dynamic"
@@ -17,19 +19,15 @@ export default async function LayoutAdmin({
   return (
     <>
       <BarraTopo titulo="Administração" />
-      <div className="mx-auto w-full max-w-6xl p-6">
-        {/* Painel sólido: tabelas e listas da administração não têm fundo próprio e deixariam o fundo de ondas aparecer. */}
-        <div className="flex flex-col gap-6 rounded-2xl border bg-popover p-6 shadow-[var(--sombra-card)]">
-          <header>
-            <p className="text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
-              Administração
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-texto-forte">
-              Administração
-            </h1>
-          </header>
+      <div className="relative isolate">
+        <FaixaDithered />
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-5 pt-8 pb-10 sm:px-8">
+          <CabecalhoAdmin />
           <AbasAdmin />
-          {children}
+          {/* Painel sólido: tabelas e listas da administração não têm fundo próprio e deixariam o fundo dithered aparecer. */}
+          <div className="flex flex-col gap-6 rounded-[18px] border bg-popover p-5 shadow-[var(--sombra-card)] sm:p-6">
+            {children}
+          </div>
         </div>
       </div>
     </>
