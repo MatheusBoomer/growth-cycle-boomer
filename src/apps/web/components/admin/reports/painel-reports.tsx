@@ -66,9 +66,16 @@ export function PainelReports() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <div role="group" aria-label="Tipo" className="flex gap-1">
+        <div role="group" aria-label="Tipo" className="border-border flex gap-0.5 rounded-full border p-1">
           {[null, ...TIPOS_REPORT].map((t) => (
-            <Button key={t ?? "todos"} size="sm" variant={tipo === t ? "default" : "outline"} aria-pressed={tipo === t} onClick={() => setTipo(t)}>
+            <Button
+              key={t ?? "todos"}
+              size="sm"
+              variant="ghost"
+              className={tipo === t ? "bg-accent text-foreground shadow-(--sombra-card)" : "text-muted-foreground"}
+              aria-pressed={tipo === t}
+              onClick={() => setTipo(t)}
+            >
               {t ? ROTULO_TIPO[t] : "Todos"}
             </Button>
           ))}
@@ -100,13 +107,13 @@ export function PainelReports() {
       ) : reports.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center text-sm">Nenhum report com esses filtros.</p>
       ) : (
-        <ul className="divide-y rounded-lg border">
+        <ul className="flex flex-col gap-1">
           {reports.map((r) => (
             <li key={r.id}>
               <button
                 type="button"
                 onClick={() => setAberto(r.id)}
-                className="hover:bg-muted/50 focus-visible:ring-ring/50 flex w-full items-center gap-3 px-3 py-2.5 text-left focus-visible:ring-3 focus-visible:outline-none"
+                className="hover:bg-muted focus-visible:ring-ring/50 flex w-full items-center gap-3 rounded-[14px] border border-transparent px-3.5 py-3 text-left hover:border-border focus-visible:ring-3 focus-visible:outline-none"
               >
                 <SeloTipo tipo={r.tipo} />
                 <span className="min-w-0 flex-1">

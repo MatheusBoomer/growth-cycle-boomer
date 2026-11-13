@@ -120,14 +120,16 @@ export function DialogoReport({
     <Dialog open={aberto} onOpenChange={mudarAberto}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl" onPaste={aoColar}>
         <DialogHeader>
-          <DialogTitle>Reportar</DialogTitle>
+          <DialogTitle className="text-[26px] font-medium tracking-[-0.03em]">
+            Reportar <em className="text-link-acao font-serif font-normal tracking-[-0.01em] italic">um bug ou ideia</em>
+          </DialogTitle>
           <DialogDescription>Conte o que aconteceu ou o que poderia melhorar. O print da tela vai junto.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div role="radiogroup" aria-label="Tipo" className="flex gap-2">
+          <div role="radiogroup" aria-label="Tipo" className="border-border flex w-fit gap-0.5 rounded-full border p-1">
             {TIPOS_REPORT.map((t) => (
-              <Button key={t} role="radio" aria-checked={tipo === t} variant={tipo === t ? "default" : "outline"} size="sm" onClick={() => setTipo(t)}>
+              <Button key={t} role="radio" aria-checked={tipo === t} variant="ghost" size="sm" className={tipo === t ? "bg-accent text-foreground shadow-(--sombra-card)" : "text-muted-foreground"} onClick={() => setTipo(t)}>
                 {ROTULO_TIPO[t]}
               </Button>
             ))}

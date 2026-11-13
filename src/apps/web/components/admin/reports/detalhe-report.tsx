@@ -50,7 +50,7 @@ function Conteudo({ report, aoAtualizar }: { report: Report; aoAtualizar: (repor
   return (
     <div className="flex flex-col gap-5 px-4 pb-6">
       <SheetHeader className="px-0">
-        <SheetTitle className="flex items-center gap-2">
+        <SheetTitle className="font-serif text-[26px] font-normal flex items-center gap-2">
           <SeloTipo tipo={report.tipo} /> Report #{report.id}
         </SheetTitle>
         <SheetDescription>
