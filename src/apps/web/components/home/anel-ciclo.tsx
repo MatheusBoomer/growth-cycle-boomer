@@ -2,7 +2,7 @@
 const VAO = 7
 
 /**
- * O "ciclo" do Growth Cycle: um arco por etapa, começando no topo — concluídas em verde, a atual em laranja com
+ * O "ciclo" do Growth Cycle: um arco por etapa, começando no topo: concluídas em verde, a atual em laranja com
  * brilho, o resto apagado. Tamanho explícito em px (nunca esticado). Acima de 100 px mostra o placar no centro.
  */
 export function AnelCiclo({ concluidas, total, atual, tamanho }: { concluidas: number; total: number; atual: boolean; tamanho: number }) {
