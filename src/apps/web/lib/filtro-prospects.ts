@@ -1,3 +1,4 @@
+import { nomeCurto } from "@workspace/core/autenticacao"
 import type { EtapaId, ResumoProspect } from "@workspace/core/tipos"
 import { ORDEM_ETAPAS } from "@workspace/core/tipos"
 import { normalizarEmail } from "@workspace/core/papeis"
@@ -21,13 +22,15 @@ function simplificar(texto: string): string {
   return texto.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase()
 }
 
-/** Filtros da home: busca por nome, dono, etapa e pendência. Puro, para testar sem tela. */
+/** Filtros da home: busca por nome, etapa ou analista; dono, etapa e pendência. Puro, para testar sem tela. */
 export function filtrarProspects(lista: ResumoProspect[], { busca, donos, etapas, soPendentes }: FiltroProspects): ResumoProspect[] {
   const termo = simplificar(busca.trim())
   const donosAceitos = new Set(donos.map(normalizarEmail))
   const etapasAceitas = new Set<EtapaId>(etapas)
   return lista.filter((p) => {
-    if (!simplificar(p.nome).includes(termo)) return false
+    // Nome, etapa ou analista (quem não é admin só recebe os próprios prospects, então o dono é sempre ele mesmo).
+    const onde = [p.nome, p.rotuloEtapaAtual ?? "", p.dono ? nomeCurto(p.dono) : ""].map(simplificar)
+    if (termo !== "" && !onde.some((t) => t.includes(termo))) return false
     if (donosAceitos.size > 0 && (p.dono === null || !donosAceitos.has(normalizarEmail(p.dono)))) return false
     if (etapasAceitas.size > 0 && (p.etapaAtual === null || !etapasAceitas.has(p.etapaAtual))) return false
     if (soPendentes && p.pendencias <= 0) return false

@@ -28,6 +28,15 @@ describe("filtrarProspects", () => {
     expect(nomes(filtrarProspects(lista, { ...sem, busca: "IG" }))).toEqual(["Iguatemi"])
   })
 
+  it("a busca também acha pelo nome da etapa e pelo analista, como promete o campo", () => {
+    const comRotulo = [
+      p("Iszi", "ana.souza@boomer.com", { rotuloEtapaAtual: "03 · Diagnóstico de performance" }),
+      p("Verdeluz", "bia@boomer.com", { rotuloEtapaAtual: "01 · Preparação de contexto" }),
+    ]
+    expect(nomes(filtrarProspects(comRotulo, { ...sem, busca: "diagnostico" }))).toEqual(["Iszi"])
+    expect(nomes(filtrarProspects(comRotulo, { ...sem, busca: "Ana" }))).toEqual(["Iszi"])
+  })
+
   it("donos filtra sem diferença de maiúsculas e aceita mais de um", () => {
     expect(nomes(filtrarProspects(lista, { ...sem, donos: ["ANA@boomer.com"] }))).toEqual(["Iszi", "Ilha"])
     expect(nomes(filtrarProspects(lista, { ...sem, donos: ["ana@boomer.com", "bia@boomer.com"] }))).toEqual(["Iszi", "Verdeluz", "Ilha", "Água Clara"])

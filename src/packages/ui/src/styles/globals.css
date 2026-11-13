@@ -265,7 +265,7 @@
 
 /* Borda sutil que corre em volta de quem espera aprovação (Border Beam / Shine Border, versão delicada). */
 @property --angulo-borda { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
-.borda-correndo { border-color: transparent; }
+.borda-correndo { border-color: transparent; overflow: visible; } /* o anel fica na faixa da borda: o card não pode cortá-la */
 .borda-correndo::before {
     content: "";
     position: absolute;

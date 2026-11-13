@@ -107,6 +107,13 @@ describe("CardProspect: analista e etapa", () => {
     await sem.desmontar()
   })
 
+  it("a borda correndo não é cortada: o card libera o que passa da borda (overflow visível)", async () => {
+    const { readFileSync } = await import("node:fs")
+    const { resolve } = await import("node:path")
+    const css = readFileSync(resolve(import.meta.dirname, "../../../../packages/ui/src/styles/globals.css"), "utf-8")
+    expect(css).toMatch(/\.borda-correndo\s*\{[^}]*overflow:\s*visible/)
+  })
+
   it("o CSS da borda e da luz existe e para com movimento reduzido", async () => {
     const { readFileSync } = await import("node:fs")
     const { resolve } = await import("node:path")
