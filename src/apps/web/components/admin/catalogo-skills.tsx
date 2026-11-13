@@ -42,7 +42,7 @@ function ListaItens({ itens, selecionado, escolher }: { itens: ItemSkill[]; sele
             >
               <span className="min-w-0 truncate">{i.titulo}</span>
               {i.notasAbertas > 0 && (
-                <span aria-label={`${i.notasAbertas} notas abertas`} className="bg-aviso-fundo text-aviso shrink-0 rounded-md px-1.5 text-xs font-semibold tabular-nums">
+                <span aria-label={`${i.notasAbertas} notas abertas`} className="bg-aviso-fundo text-link-acao shrink-0 rounded-full px-1.5 font-mono text-[10.5px] tabular-nums">
                   {i.notasAbertas}
                 </span>
               )}
@@ -191,7 +191,7 @@ export function CatalogoSkills() {
           ) : (
             <>
               <header className="flex flex-col gap-1">
-                <h2 className="text-texto-forte font-heading text-lg font-semibold">{detalhe.titulo}</h2>
+                <h2 className="text-texto-forte font-serif text-[28px] leading-tight font-normal">{detalhe.titulo}</h2>
                 <p className="text-muted-foreground text-sm">{detalhe.resumo}</p>
               </header>
               {itemAtual?.temFluxo ? (

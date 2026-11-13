@@ -27,7 +27,7 @@ export function CartaoEtapaModelos({ etapa, dados, emSalvamento, abrir, salvar }
 
   return (
     <div className="bg-card text-card-foreground hover:border-foreground/30 focus-within:ring-ring/50 relative flex flex-col gap-3 rounded-xl border p-4 transition-colors focus-within:ring-3">
-      <h3 className="font-heading text-sm font-medium">
+      <h3 className="text-texto-forte font-serif text-[22px] leading-tight font-normal">
         {/* O botão cobre o cartão todo (after:absolute); a sugestão fica acima dele (z-10) para o Aplicar continuar clicável. */}
         <button type="button" onClick={abrir} className="cursor-pointer text-left outline-none after:absolute after:inset-0 after:rounded-xl" aria-label={`Editar modelos da etapa ${etapa.rotulo}`}>
           {etapa.rotulo}
