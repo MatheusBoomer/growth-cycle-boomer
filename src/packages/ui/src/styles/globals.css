@@ -213,6 +213,10 @@
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    /* Folga em volta das letras: background-clip só pinta dentro da caixa, e a itálica e o "G" passam dela. */
+    display: inline-block;
+    padding: 0.12em 0.14em 0.2em;
+    margin: -0.12em -0.14em -0.2em;
     animation: revelar 1.07s cubic-bezier(.6, .1, .2, 1) var(--atraso, 0s) forwards;
 }
 
@@ -249,6 +253,8 @@
 @media (prefers-reduced-motion: reduce) {
     .surgir { animation: none; }
 }
+/* Durante a entrada "Bem-vindo ao Growth Cycle" os blocos da home esperam; sobem quando ela começa a sair. */
+.entrada-ativa .surgir { animation-play-state: paused; }
 
 /* Luz laranja que segue o mouse num card (Magic Card). --mx/--my vêm do pointermove. */
 .luz-mouse::after {

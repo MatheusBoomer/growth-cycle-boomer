@@ -10,7 +10,7 @@ import { apagarCookieBoasVindas, temCookieBoasVindas } from "@/lib/boas-vindas"
 
 /** Tempo com o nome na tela antes de começar a sair, e duração da saída (protótipo 2-home.html). */
 const TEMPO_NA_TELA = 2400
-const TEMPO_SAINDO = 600
+const TEMPO_SAINDO = 1300
 
 type Fase = "entrando" | "saindo" | "fim"
 
@@ -39,6 +39,14 @@ export function Entrada({ emAndamento }: { emAndamento: number }) {
     }
   }, [])
 
+  // Enquanto a entrada está na tela, os blocos da home ficam parados (classe no <html> pausa o .surgir); quando ela
+  // começa a sair, eles sobem por baixo, e a passagem fica contínua em vez de revelar uma home já parada.
+  useEffect(() => {
+    const raiz = document.documentElement
+    raiz.classList.toggle("entrada-ativa", fase === "entrando")
+    return () => raiz.classList.remove("entrada-ativa")
+  }, [fase])
+
   useEffect(() => {
     if (fase !== "saindo") return
     const id = setTimeout(() => setFase("fim"), TEMPO_SAINDO)
@@ -51,8 +59,11 @@ export function Entrada({ emAndamento }: { emAndamento: number }) {
       role="presentation"
       onClick={() => setFase((f) => (f === "entrando" ? "saindo" : f))}
       className={cn(
-        "bg-background fixed inset-0 z-50 isolate flex motion-reduce:hidden cursor-pointer flex-col justify-between overflow-hidden px-6 py-7 transition-[opacity,filter,transform] duration-600 ease-[cubic-bezier(.7,0,.2,1)] sm:px-10 sm:py-8",
-        fase === "saindo" && "pointer-events-none scale-[1.04] opacity-0 blur-md",
+        // Saída em duas camadas: o texto sobe e se desfaz primeiro (conteúdo), o fundo esmaece depois, devagar.
+        "bg-background fixed inset-0 z-50 isolate flex motion-reduce:hidden cursor-pointer flex-col justify-between overflow-hidden px-6 py-7 transition-opacity delay-200 duration-1100 ease-[cubic-bezier(.65,0,.35,1)] sm:px-10 sm:py-8",
+        fase === "saindo" && "pointer-events-none opacity-0",
+        "*:transition-[opacity,filter,transform] *:duration-700 *:ease-[cubic-bezier(.4,0,.2,1)]",
+        fase === "saindo" && "*:-translate-y-3 *:opacity-0 *:blur-sm",
       )}
     >
       <FundoDithered intensidade={0.75} />

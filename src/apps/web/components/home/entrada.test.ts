@@ -57,15 +57,40 @@ describe("Entrada", () => {
   it("some sozinha depois de 3 s", async () => {
     await montar(3)
     await act(async () => vi.advanceTimersByTime(2400))
-    await act(async () => vi.advanceTimersByTime(600))
+    await act(async () => vi.advanceTimersByTime(1400))
     expect(raiz.textContent).toBe("")
   })
 
   it("Esc pula", async () => {
     await montar(3)
     await act(async () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })))
-    await act(async () => vi.advanceTimersByTime(600))
+    await act(async () => vi.advanceTimersByTime(1400))
     expect(raiz.textContent).toBe("")
+  })
+
+  it("saída suave: ainda está na tela no meio da saída (não some de uma vez)", async () => {
+    await montar(3)
+    await act(async () => vi.advanceTimersByTime(2400))
+    await act(async () => vi.advanceTimersByTime(700))
+    expect(raiz.textContent).toContain("Growth")
+  })
+
+  it("a home espera a entrada: segura a animação dos blocos enquanto ela está na tela e solta quando começa a sair", async () => {
+    await montar(3)
+    expect(document.documentElement.classList.contains("entrada-ativa")).toBe(true)
+    await act(async () => vi.advanceTimersByTime(2400))
+    expect(document.documentElement.classList.contains("entrada-ativa")).toBe(false)
+  })
+
+  it("o CSS pausa os blocos da home durante a entrada e dá folga às letras da faixa de cor (sem corte)", async () => {
+    const { readFileSync } = await import("node:fs")
+    const { resolve } = await import("node:path")
+    const css = readFileSync(resolve(import.meta.dirname, "../../../../packages/ui/src/styles/globals.css"), "utf-8")
+    expect(css).toMatch(/\.entrada-ativa \.surgir\s*\{[^}]*animation-play-state:\s*paused/)
+    const bloco = /\.texto-revelado\s*\{([^}]*)\}/.exec(css)![1]!
+    expect(bloco).toMatch(/display:\s*inline-block/)
+    expect(bloco).toMatch(/padding:/)
+    expect(bloco).toMatch(/margin:\s*-/)
   })
 
   it("sem o cookie (ex.: Voltar do navegador restaurando a home do cache) não toca", async () => {
