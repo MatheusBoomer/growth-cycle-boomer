@@ -60,9 +60,16 @@ export function CardEntregavel({ slug, entregavel: e, anterior = null }: { slug:
   }
 
   return (
-    <Card className={cn("max-w-2xl", e.status === "substituido" && "opacity-60")}>
+    <Card
+      className={cn(
+        "max-w-2xl",
+        e.status === "substituido" && "opacity-60",
+        e.status === "pendente" && "borda-correndo",
+        e.status === "aprovado" && "ring-1 ring-sucesso/30",
+      )}
+    >
       <CardHeader>
-        <CardTitle>{e.titulo}</CardTitle>
+        <CardTitle className="font-serif text-[22px] leading-tight font-normal">{e.titulo}</CardTitle>
         <CardDescription>
           {ROTULO_TIPO[e.tipo]} · vai para a apresentação como <code className="font-mono">{nomeNaApresentacao}</code>
         </CardDescription>
@@ -124,6 +131,7 @@ export function CardEntregavel({ slug, entregavel: e, anterior = null }: { slug:
       {e.status === "pendente" && !ajusteNaImagem && (
         <CardFooter className="gap-2">
           <Button
+            className="brilho-passa"
             onClick={aprovar}
             disabled={ocupado || aguardandoNovaVersao}
             title={aguardandoNovaVersao ? "Disponível quando o agente gerar a nova versão com o ajuste" : undefined}
