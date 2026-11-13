@@ -1,7 +1,7 @@
 "use client"
 
 import { ChevronRightIcon, FolderOpenIcon, SearchXIcon } from "lucide-react"
-import { useId, useMemo, useState } from "react"
+import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { nomeCurto } from "@workspace/core/autenticacao"
 import { normalizarEmail } from "@workspace/core/papeis"
 import type { EtapaId, ResumoProspect } from "@workspace/core/tipos"
@@ -13,6 +13,8 @@ import { cn } from "@workspace/ui/lib/utils"
 import { BarraTopo } from "@/components/marca/barra-topo"
 import { useEmailDaConta, usePapel } from "@/components/marca/conta-contexto"
 import { filtrarProspects, ordenarProspects, separarPorSituacao, type Ordem } from "@/lib/filtro-prospects"
+import { numerosDaHome } from "@/lib/home"
+import { Bento } from "./bento"
 import { CardProspect } from "./card-prospect"
 import { DialogoClienteTeste } from "./dialogo-cliente-teste"
 import { DialogoNovoProspect } from "./dialogo-novo-prospect"
@@ -57,6 +59,28 @@ function FiltroSelect({
   )
 }
 
+/** Segmentado em pílula; cada opção é um botão com aria-pressed (40 px de toque no celular). */
+function Segmentado({ opcoes }: { opcoes: { rotulo: string; ativo: boolean; aoClicar: () => void }[] }) {
+  return (
+    <div className="border-border col-span-2 flex items-center gap-0.5 rounded-full border p-1 sm:col-span-1">
+      {opcoes.map((o) => (
+        <button
+          key={o.rotulo}
+          type="button"
+          aria-pressed={o.ativo}
+          onClick={o.aoClicar}
+          className={cn(
+            "text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 h-10 flex-1 rounded-full px-3 text-sm whitespace-nowrap outline-none focus-visible:ring-3 sm:h-7 sm:flex-none",
+            o.ativo && "bg-accent text-foreground shadow-(--sombra-card)",
+          )}
+        >
+          {o.rotulo}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 function Contador({ n }: { n: number }) {
   return <span className="text-muted-foreground ml-1.5 text-sm font-normal tabular-nums">{n}</span>
 }
@@ -88,11 +112,25 @@ export function GradeProspects({
       busca,
       donos,
       etapas: etapa === TODOS ? [] : [etapa as EtapaId],
-      soPendentes: admin && soPendentes,
+      soPendentes,
       email,
     })
     return separarPorSituacao(ordenarProspects(filtrados, ordem))
   }, [prospects, busca, analista, etapa, soPendentes, ordem, admin, email])
+
+  // Ctrl+K / ⌘K leva o cursor para a busca.
+  const campoBusca = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    const aoTeclar = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault()
+        campoBusca.current?.focus()
+      }
+    }
+    window.addEventListener("keydown", aoTeclar)
+    return () => window.removeEventListener("keydown", aoTeclar)
+  }, [])
+  const numeros = numerosDaHome(prospects)
 
   const itensAnalista = useMemo(() => {
     const porEmail = new Map<string, string>()
@@ -115,7 +153,7 @@ export function GradeProspects({
 
   const fotoDe = (dono: string | null) => (dono === null ? undefined : avatares[normalizarEmail(dono)])
   const cartoes = (lista: ResumoProspect[]) => (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {lista.map((p) => (
         <CardProspect key={p.slug} prospect={p} fotoUrl={fotoDe(p.dono)} />
       ))}
@@ -125,11 +163,16 @@ export function GradeProspects({
   return (
     <>
       <BarraTopo titulo="Growth Cycle" />
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
-        <header className="flex flex-wrap items-end gap-3">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-7 px-5 pt-8 pb-10 sm:px-8">
+        <header className="surgir flex flex-wrap items-end gap-4" style={{ "--i": 0 } as React.CSSProperties}>
           <div>
-            <p className="text-muted-foreground text-[11px] font-medium tracking-[0.14em] uppercase">Prospects</p>
-            <h1 className="text-texto-forte mt-1 text-2xl font-semibold tracking-tight">Growth Cycles</h1>
+            <span className="border-border text-muted-foreground inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs">
+              {numeros.aprovacoes > 0 && <i className="bg-aviso size-1.5 rounded-full" />}
+              {numeros.emAndamento} em andamento · {numeros.aprovacoes === 1 ? "1 aprovação pendente" : `${numeros.aprovacoes} aprovações pendentes`}
+            </span>
+            <h1 className="mt-3.5 text-[44px] leading-[.95] font-medium tracking-[-0.045em] sm:text-[60px]">
+              Seus Growth <em className="text-link-acao font-serif font-normal tracking-[-0.02em] italic">Cycles</em>
+            </h1>
           </div>
           <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
             {admin && <DialogoClienteTeste etapas={etapas} />}
@@ -151,21 +194,28 @@ export function GradeProspects({
           </Empty>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center" role="search">
-              <Input className="col-span-2 h-10 sm:h-8 sm:w-64" aria-label="Buscar prospect" placeholder="Buscar prospect…" value={busca} onChange={(e) => setBusca(e.target.value)} />
+            <div className="surgir" style={{ "--i": 1 } as React.CSSProperties}>
+              <Bento prospects={prospects} aoFiltrarPendentes={() => setSoPendentes(true)} />
+            </div>
+            <div className="surgir grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center" style={{ "--i": 2 } as React.CSSProperties} role="search">
+              <Segmentado
+                opcoes={[
+                  { rotulo: "Todos", ativo: !soPendentes && analista === TODOS, aoClicar: () => (setSoPendentes(false), setAnalista(TODOS)) },
+                  ...(admin && email !== null ? [{ rotulo: "Meus", ativo: !soPendentes && analista === MEUS, aoClicar: () => (setSoPendentes(false), setAnalista(MEUS)) }] : []),
+                  { rotulo: "Com aprovação pendente", ativo: soPendentes, aoClicar: () => setSoPendentes((v) => !v) },
+                ]}
+              />
+              <Input
+                ref={campoBusca}
+                className="col-span-2 h-10 sm:h-8 sm:w-72"
+                aria-label="Buscar prospect"
+                placeholder={admin ? "Buscar prospect, etapa ou analista  ⌘K" : "Buscar prospect ou etapa  ⌘K"}
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+              />
               {admin && <FiltroSelect rotulo="Analista" valor={analista} itens={itensAnalista} aoMudar={setAnalista} />}
               <FiltroSelect rotulo="Etapa" valor={etapa} itens={itensEtapa} aoMudar={setEtapa} className="sm:w-52" />
-              {admin && (
-                <Button
-                  variant={soPendentes ? "secondary" : "outline"}
-                  className="col-span-2 h-10 sm:h-8"
-                  aria-pressed={soPendentes}
-                  onClick={() => setSoPendentes((v) => !v)}
-                >
-                  Com aprovação pendente
-                </Button>
-              )}
-              <div className={cn("sm:ml-auto", admin && "col-span-2 sm:col-span-1")}>
+              <div className="col-span-2 sm:col-span-1 sm:ml-auto">
                 <FiltroSelect rotulo="Ordenar" valor={ordem} itens={ITENS_ORDEM} aoMudar={(v) => setOrdem(v as Ordem)} />
               </div>
             </div>
@@ -190,10 +240,13 @@ export function GradeProspects({
               </Empty>
             ) : (
               <>
-                <section className="flex flex-col gap-3" aria-labelledby={`${id}-andamento`}>
-                  <h2 id={`${id}-andamento`} className="text-texto-forte text-base font-semibold">
-                    Em andamento
-                    <Contador n={emAndamento.length} />
+                <section className="surgir flex flex-col gap-3" style={{ "--i": 3 } as React.CSSProperties} aria-labelledby={`${id}-andamento`}>
+                  <h2 id={`${id}-andamento`} className="text-texto-forte flex items-baseline gap-2 text-sm font-medium">
+                    <span>
+                      Em andamento
+                      <Contador n={emAndamento.length} />
+                    </span>
+                    <span aria-hidden="true" className="bg-border h-px flex-1" />
                   </h2>
                   {emAndamento.length === 0 ? <p className="text-muted-foreground text-sm">Nenhum prospect em andamento.</p> : cartoes(emAndamento)}
                 </section>

@@ -141,7 +141,9 @@ describe("GradeProspects: filtros", () => {
     await admin.desmontar()
     const comum = await montar("usuario")
     expect(comum.raiz.querySelector('[aria-label="Analista"]')).toBeNull()
-    expect(comum.raiz.textContent).not.toContain("Com aprovação pendente")
+    // O filtro de pendência agora vale para todos (o card laranja do bento depende dele); "Meus" continua só do admin.
+    expect(botao(comum.raiz, "Com aprovação pendente")).toBeDefined()
+    expect(botao(comum.raiz, "Meus")).toBeUndefined()
     expect(comum.raiz.querySelector('[aria-label="Etapa"]')).not.toBeNull()
     expect(comum.raiz.querySelector('[aria-label="Ordenar"]')).not.toBeNull()
     await comum.desmontar()
@@ -202,6 +204,60 @@ describe("GradeProspects: filtros", () => {
     const { raiz, desmontar } = await montar("usuario")
     await escolher(raiz, "Ordenar", "Nome")
     expect(titulos(raiz)).toEqual(["Ilha", "Iszi", "Verdeluz"])
+    await desmontar()
+  })
+})
+
+describe("GradeProspects: home nova", () => {
+  it("título 'Seus Growth Cycles' e selo com as contagens", async () => {
+    const { raiz, desmontar } = await montar("admin")
+    expect(raiz.querySelector("h1")?.textContent).toBe("Seus Growth Cycles")
+    expect(raiz.textContent).toContain("3 em andamento · 1 aprovação pendente")
+    await desmontar()
+  })
+
+  it("quem não é admin filtra pelas pendentes no segmentado", async () => {
+    const { raiz, desmontar } = await montar("usuario")
+    await clicar(botao(raiz, "Com aprovação pendente")!)
+    expect(titulos(raiz)).toEqual(["Iszi"])
+    await clicar(botao(raiz, "Todos")!)
+    expect(titulos(raiz)).toEqual(["Verdeluz", "Ilha", "Iszi"])
+    await desmontar()
+  })
+
+  it("admin: 'Meus' no segmentado filtra como o select fazia", async () => {
+    const { raiz, desmontar } = await montar("admin")
+    await clicar(botao(raiz, "Meus")!)
+    expect(titulos(raiz)).toEqual(["Ilha", "Iszi"])
+    expect(botao(raiz, "Meus")!.getAttribute("aria-pressed")).toBe("true")
+    await desmontar()
+  })
+
+  it("as faixas entram em sequência (classe surgir com --i) e o CSS para com movimento reduzido", async () => {
+    const { raiz, desmontar } = await montar("admin")
+    const faixas = [...raiz.querySelectorAll(".surgir")].map((e) => (e as HTMLElement).style.getPropertyValue("--i"))
+    expect(faixas).toEqual(["0", "1", "2", "3"])
+    const { readFileSync } = await import("node:fs")
+    const { resolve } = await import("node:path")
+    const css = readFileSync(resolve(import.meta.dirname, "../../../../packages/ui/src/styles/globals.css"), "utf-8")
+    expect(css).toMatch(/@keyframes surgir/)
+    expect(css).toMatch(/prefers-reduced-motion:\s*reduce\)\s*\{[^}]*\.surgir\s*\{[^}]*animation:\s*none/)
+    await desmontar()
+  })
+
+  it("Ctrl+K (ou ⌘K) leva o cursor para a busca", async () => {
+    const { raiz, desmontar } = await montar("usuario")
+    await act(async () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true })))
+    expect(document.activeElement).toBe(raiz.querySelector('input[aria-label="Buscar prospect"]'))
+    await desmontar()
+  })
+
+  it("o card laranja com aprovações em vários projetos aplica o filtro de pendentes", async () => {
+    const lista = [...prospects, p("Outra", "bia@boomer.com", { pendencias: 2 })]
+    const { raiz, desmontar } = await montar("admin", lista)
+    await clicar(raiz.querySelector("[data-slot=aprovacoes]")!)
+    expect(titulos(raiz).sort()).toEqual(["Iszi", "Outra"])
+    expect(botao(raiz, "Com aprovação pendente")!.getAttribute("aria-pressed")).toBe("true")
     await desmontar()
   })
 })
