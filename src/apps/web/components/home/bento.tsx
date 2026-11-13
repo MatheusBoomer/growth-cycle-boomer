@@ -73,7 +73,7 @@ export function Bento({ prospects, aoFiltrarPendentes }: { prospects: ResumoPros
                 {continuar.nome}
               </p>
               <p className="text-muted-foreground mt-4 text-[15px]">
-                {etapa.numero ? `Etapa ${etapa.numero}` : "Etapa"}
+                {etapa.numero && `Etapa ${etapa.numero}`}
                 <em className="text-link-acao mt-1 block font-serif text-[34px] leading-none not-italic sm:text-[40px]">
                   <span className="italic">{etapa.titulo}</span>
                 </em>

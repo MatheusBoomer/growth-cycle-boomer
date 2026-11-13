@@ -50,6 +50,12 @@ describe("Bento", () => {
     expect([...raiz.querySelectorAll("a")].find((a) => a.textContent?.includes("Abrir etapa"))?.getAttribute("href")).toBe("/prospects/b")
   })
 
+  it("etapa sem número (Apresentação final) mostra só o nome, sem 'Etapa' solto", async () => {
+    await montar([p("a", { etapaAtual: "final", rotuloEtapaAtual: "Apresentação final" })])
+    expect(raiz.textContent).toContain("Apresentação final")
+    expect(raiz.textContent).not.toContain("Etapa")
+  })
+
   it("sem nenhum em andamento, mostra o vazio", async () => {
     await montar([p("a", { etapaAtual: null })])
     expect(raiz.textContent).toContain("Nenhum projeto em andamento")
