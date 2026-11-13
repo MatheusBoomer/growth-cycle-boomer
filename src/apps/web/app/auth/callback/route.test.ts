@@ -113,6 +113,27 @@ describe("GET /auth/callback", () => {
     expect(r.headers.get("location")).toBe("http://127.0.0.1:3000/")
   })
 
+  describe("cookie de boas-vindas (entrada só logo depois do login)", () => {
+    type ComCookies = Response & { cookies: { get: (n: string) => unknown } }
+    it("no sucesso grava o cookie de boas-vindas", async () => {
+      const r = (await GET(req("/auth/callback?code=abc"))) as ComCookies
+      expect(r.cookies.get("gc-boas-vindas")).toMatchObject({ value: "1", maxAge: 120, path: "/", sameSite: "lax", httpOnly: false })
+    })
+
+    it("atrás do proxy em https, o cookie de boas-vindas é secure como os da sessão", async () => {
+      const r = (await GET(req("/auth/callback?code=abc", { "x-forwarded-proto": "https" }))) as ComCookies
+      expect(r.cookies.get("gc-boas-vindas")).toMatchObject({ secure: true })
+    })
+
+    it("em erro=dominio e erro=falha não grava", async () => {
+      getClaims.mockResolvedValueOnce(claimsDe("ana@gmail.com"))
+      expect(((await GET(req("/auth/callback?code=abc"))) as ComCookies).cookies.get("gc-boas-vindas")).toBeUndefined()
+      expect(((await GET(req("/auth/callback"))) as ComCookies).cookies.get("gc-boas-vindas")).toBeUndefined()
+      exchangeCodeForSession.mockRejectedValueOnce(new Error("rede"))
+      expect(((await GET(req("/auth/callback?code=abc"))) as ComCookies).cookies.get("gc-boas-vindas")).toBeUndefined()
+    })
+  })
+
   describe("o cookie planejamento-proximo é apagado em toda saída", () => {
     const apagado = (r: Response & { cookies: { get: (n: string) => unknown } }) =>
       expect(r.cookies.get("planejamento-proximo")).toMatchObject({ value: "", maxAge: 0, path: "/auth", httpOnly: true, sameSite: "lax" })

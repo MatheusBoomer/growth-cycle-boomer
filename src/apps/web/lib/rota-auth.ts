@@ -71,7 +71,7 @@ export function contextoDeRota(request: NextRequest, env: Record<string, string 
     return valor
   }
 
-  return { supabase, origem, redirecionar, redirecionarParaFora, lembrarProximo, consumirProximo }
+  return { supabase, origem, seguro, redirecionar, redirecionarParaFora, lembrarProximo, consumirProximo }
 }
 
 /** O login existe (modo google)? No modo off as rotas /auth/* e /login mandam para /. Valor inválido lança, como no proxy. */
