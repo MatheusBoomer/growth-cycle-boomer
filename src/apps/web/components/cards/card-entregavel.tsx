@@ -69,7 +69,7 @@ export function CardEntregavel({ slug, entregavel: e, anterior = null }: { slug:
       )}
     >
       <CardHeader>
-        <CardTitle className="font-serif text-[22px] leading-tight font-normal">{e.titulo}</CardTitle>
+        <CardTitle className="font-serif text-[19px] leading-snug font-normal">{e.titulo}</CardTitle>
         <CardDescription>
           {ROTULO_TIPO[e.tipo]} · vai para a apresentação como <code className="font-mono">{nomeNaApresentacao}</code>
         </CardDescription>
