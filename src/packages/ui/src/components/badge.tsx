@@ -21,7 +21,7 @@ const badgeVariants = cva(
         sucesso: "bg-sucesso-fundo text-sucesso",
         aviso: "bg-aviso-fundo text-aviso",
         perigo: "bg-perigo-fundo text-destructive",
-        midia: "border-border bg-popover/90 text-popover-foreground shadow-sm backdrop-blur-sm",
+        midia: "border-white/15 bg-black/70 font-mono text-white backdrop-blur-md",
       },
     },
     defaultVariants: {

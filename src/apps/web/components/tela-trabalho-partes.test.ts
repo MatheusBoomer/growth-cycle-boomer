@@ -15,7 +15,7 @@ describe("1 · início da etapa", () => {
   })
   it("arquivos na coluna da direita e botão grande com ícone de play", () => {
     expect(s).toContain("Arquivos desta etapa")
-    expect(s).toMatch(/lg:grid-cols-\[/)
+    expect(s).toMatch(/grid-cols-\[minmax/)
     expect(s).toContain("PlayIcon")
   })
   it("bloqueada e agente ocupado no novo desenho", () => {
@@ -67,7 +67,7 @@ describe("4 · dentro do chat", () => {
   it("imagem com o botão 'Ampliar' em vidro escuro", () => {
     const s = ler("cards/previa-arquivo.tsx")
     expect(s).toContain("Ampliar")
-    expect(s).toContain("backdrop-blur")
+    expect(s).toContain(`variant="midia"`)
   })
   it("anexos com ícone em quadrado colorido", () => expect(ler("cards/previa-arquivo.tsx")).toContain("bg-aviso-fundo"))
   it("etiqueta de referência em pílula com o número em laranja", () => {

@@ -51,7 +51,7 @@ export function PreviaArquivo({
           <img src={url} alt={titulo} className="w-full rounded-2xl border border-border bg-papel" />
         </button>
         {aoAbrir && (
-          <Button size="sm" variant="midia" className="absolute top-2.5 right-2.5 h-[30px] border-white/15 bg-black/70 px-3 text-xs text-white backdrop-blur-md hover:bg-black/80 hover:text-white" onClick={aoAbrir}>
+          <Button size="sm" variant="midia" className="absolute top-2.5 right-2.5 h-[30px] px-3 text-xs" onClick={aoAbrir}>
             <ZoomInIcon /> Ampliar
           </Button>
         )}
@@ -67,7 +67,7 @@ export function PreviaArquivo({
           <Markdown>{texto}</Markdown>
         </div>
         {aoAbrir && (
-          <Button size="sm" variant="midia" className="absolute top-2.5 right-2.5 h-[30px] border-white/15 bg-black/70 px-3 text-xs text-white backdrop-blur-md hover:bg-black/80 hover:text-white" onClick={aoAbrir}>
+          <Button size="sm" variant="midia" className="absolute top-2.5 right-2.5 h-[30px] px-3 text-xs" onClick={aoAbrir}>
             <PanelRightOpenIcon /> Expandir
           </Button>
         )}

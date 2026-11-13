@@ -6,7 +6,6 @@ import { toast } from "sonner"
 import type { EtapaId, RespostaEstado } from "@workspace/core/tipos"
 import { Button } from "@workspace/ui/components/button"
 import { Spinner } from "@workspace/ui/components/spinner"
-import { cn } from "@workspace/ui/lib/utils"
 import { CardInsumo } from "@/components/cards/card-insumo"
 import { PainelKit } from "@/components/teste/painel-kit"
 import { api, mensagemDeErro } from "@/lib/api"
@@ -60,12 +59,8 @@ export function EtapaLiberada({
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
       {/* O nome da etapa já está no cabeçalho logo acima; aqui entra o "como vai ser" (protótipo 9). */}
-      <div
-        className={cn(
-          "mx-auto grid gap-8 p-6 sm:p-8",
-          temColunaLateral ? "max-w-5xl lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]" : "max-w-2xl",
-        )}
-      >
+      {/* A coluna da direita só ocupa espaço com conteúdo (o kit do cliente de teste pode não existir na etapa). */}
+      <div className="mx-auto grid max-w-2xl gap-8 p-6 sm:p-8 has-[>[data-lateral]>*]:max-w-5xl lg:has-[>[data-lateral]>*]:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <div className="min-w-0">
           <p className="text-[10.5px] tracking-[0.14em] text-muted-foreground uppercase">Antes de começar</p>
           <h2 className="mt-2 text-[26px] leading-[1.15] font-medium tracking-[-0.03em]">
@@ -97,7 +92,7 @@ export function EtapaLiberada({
           )}
         </div>
         {temColunaLateral && (
-          <div className="grid min-w-0 content-start gap-2.5">
+          <div data-lateral className="grid min-w-0 content-start gap-2.5">
             {etapaCat.insumos.length > 0 && (
               <>
                 <p className="text-[10.5px] tracking-[0.14em] text-muted-foreground uppercase">Arquivos desta etapa</p>

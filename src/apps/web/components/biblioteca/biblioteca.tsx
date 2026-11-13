@@ -1,6 +1,6 @@
 "use client"
 
-import { HistoryIcon, ListFilterIcon, SearchIcon, XIcon } from "lucide-react"
+import { HistoryIcon, ImageIcon, ImageOffIcon, ListFilterIcon, SearchIcon, XIcon } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { ORDEM_BIBLIOTECA, type AjusteBiblioteca, type ItemBiblioteca } from "@workspace/core/biblioteca"
 import type { Catalogo } from "@workspace/core/tipos"
@@ -11,9 +11,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu"
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@workspace/ui/components/empty"
 import { Input } from "@workspace/ui/components/input"
-import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
 import {
   agruparPorEtapa,
@@ -24,10 +22,12 @@ import {
   ORIGENS_FILTRO,
   ROTULO_FILTRO_ORIGEM,
   rotuloEtapa,
+  totalVisivel,
   type FiltroEtapa,
   type FiltrosBiblioteca,
 } from "@/lib/biblioteca"
 import { alvoDeDigitacao } from "@/lib/layout-colunas"
+import { CarregandoVisualizador, EstadoVisualizador, TituloDestacado } from "@/components/trabalho/barra-visualizador"
 import { CardImagem } from "./card-imagem"
 import { ImagemAmpliada } from "./imagem-ampliada"
 
@@ -90,66 +90,88 @@ export function Biblioteca({
 
   const mudar = (parcial: Partial<FiltrosBiblioteca>) => setFiltros((f) => ({ ...f, ...parcial }))
 
+  const filtrosMudados =
+    filtros.etapa !== FILTROS_INICIAIS.etapa || filtros.busca.trim() !== "" || filtros.versoesAntigas !== FILTROS_INICIAIS.versoesAntigas || filtros.origens.size !== FILTROS_INICIAIS.origens.size
+
   let corpo: React.ReactNode
   if (itens === null) {
     corpo = erro ? (
-      <Empty>
-        <EmptyHeader>
-          <EmptyTitle>Não consegui carregar a biblioteca</EmptyTitle>
-          <EmptyDescription>{erro}</EmptyDescription>
-        </EmptyHeader>
-      </Empty>
+      <EstadoVisualizador icone={<ImageOffIcon />} titulo="Não consegui carregar" destaque="a biblioteca">
+        {erro}
+      </EstadoVisualizador>
     ) : (
-      <div className="flex h-full items-center justify-center">
-        <Spinner />
-      </div>
+      <CarregandoVisualizador className="h-full" texto="Carregando as imagens…" />
     )
   } else if (itens.length === 0) {
     corpo = (
-      <Empty>
-        <EmptyHeader>
-          <EmptyTitle>Nenhuma imagem ainda</EmptyTitle>
-          <EmptyDescription>Gráficos aprovados e anexos aparecem aqui.</EmptyDescription>
-        </EmptyHeader>
-      </Empty>
+      <EstadoVisualizador icone={<ImageIcon />} titulo="Nenhuma" destaque="imagem ainda">
+        Gráficos aprovados e anexos aparecem aqui conforme a conversa avança.
+      </EstadoVisualizador>
     )
   } else if (visiveis.length === 0) {
     corpo = (
-      <Empty>
-        <EmptyHeader>
-          <EmptyTitle>{filtros.busca.trim() ? "Nenhuma imagem para esta busca" : "Nenhuma imagem nesta etapa"}</EmptyTitle>
-        </EmptyHeader>
-      </Empty>
+      <EstadoVisualizador
+        icone={<SearchIcon />}
+        titulo={filtros.busca.trim() ? "Nada para" : "Nenhuma imagem"}
+        destaque={filtros.busca.trim() ? `"${filtros.busca.trim()}"` : "com estes filtros"}
+        acao={
+          filtrosMudados && (
+            <Button size="sm" variant="outline" onClick={() => setFiltros(FILTROS_INICIAIS)}>
+              Limpar filtros
+            </Button>
+          )
+        }
+      >
+        Tente outro nome ou limpe os filtros.
+      </EstadoVisualizador>
     )
   } else {
     corpo = (
-      <div className="flex flex-col gap-6">
-        {agruparPorEtapa(visiveis).map((g) => (
-          <section key={g.etapa} className="flex flex-col gap-3">
-            <h3 className="text-sm font-semibold">{rotuloEtapa(catalogo, g.etapa)}</h3>
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3">
-              {g.itens.map((i) => (
-                <CardImagem key={i.id} slug={slug} item={i} aoAbrir={() => setAberto({ id: i.id, indice: indicePorId.get(i.id) ?? 0 })} />
-              ))}
-            </div>
-          </section>
-        ))}
+      <div className="flex flex-col gap-6.5">
+        {agruparPorEtapa(visiveis).map((g) => {
+          const e = catalogo.etapas.find((x) => x.id === g.etapa)
+          return (
+            <section key={g.etapa} className="flex flex-col gap-3">
+              <h3 className="flex items-baseline gap-2.5 text-[13px] font-medium">
+                {e?.numero && <span className="font-mono text-[11px] text-muted-foreground">{e.numero}</span>}
+                <span>
+                  <TituloDestacado texto={g.etapa === "sem-etapa" ? "Sem etapa" : (e?.titulo ?? rotuloEtapa(catalogo, g.etapa))} />
+                </span>
+                <span className="ml-auto font-mono text-[11px] text-muted-foreground">{g.itens.length}</span>
+              </h3>
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3.5">
+                {g.itens.map((i) => (
+                  <CardImagem key={i.id} slug={slug} item={i} aoAbrir={() => setAberto({ id: i.id, indice: indicePorId.get(i.id) ?? 0 })} />
+                ))}
+              </div>
+            </section>
+          )
+        })}
       </div>
     )
   }
 
+  const total = itens ? totalVisivel(itens) : null
+
   return (
     <section className="flex h-full min-h-0 flex-col" aria-label="Biblioteca">
-      <header className="flex flex-col gap-3 border-b px-4 py-3">
-        <div className="flex items-center gap-2">
-          <h1 className="font-semibold">Biblioteca</h1>
-          <div className="relative ml-auto w-full max-w-xs">
-            <SearchIcon className="text-muted-foreground pointer-events-none absolute top-1/2 left-2 size-4 -translate-y-1/2" aria-hidden />
-            <Input className="pl-8" placeholder="Buscar por nome" aria-label="Buscar por nome" value={filtros.busca} onChange={(ev) => mudar({ busca: ev.target.value })} />
+      <header className="flex flex-col gap-3.5 border-b border-border py-4 pr-4 pl-5.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="mr-1.5 text-[22px] font-medium tracking-[-0.03em]">
+            Biblioteca <em className="font-serif text-[25px] font-normal text-link-acao italic">do prospect</em>
+          </h1>
+          {total !== null && (
+            <span className="mr-auto font-mono text-xs text-muted-foreground">
+              {total} {total === 1 ? "imagem" : "imagens"}
+            </span>
+          )}
+          <div className="relative ml-auto w-full max-w-60">
+            <SearchIcon className="pointer-events-none absolute top-1/2 left-3.5 size-[15px] -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <Input className="pl-9" placeholder="Buscar por nome" aria-label="Buscar por nome" value={filtros.busca} onChange={(ev) => mudar({ busca: ev.target.value })} />
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger render={<Button variant="outline" size="sm" />}>
-              <ListFilterIcon /> Origem
+              <ListFilterIcon /> Origem <span className="font-mono text-[11px] text-muted-foreground">{filtros.origens.size}</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {ORIGENS_FILTRO.map((o) => (
@@ -169,9 +191,10 @@ export function Biblioteca({
             </DropdownMenuContent>
           </DropdownMenu>
           <Button
-            variant={filtros.versoesAntigas ? "secondary" : "outline"}
+            variant="outline"
             size="sm"
             aria-pressed={filtros.versoesAntigas}
+            className={cn(filtros.versoesAntigas && "bg-muted text-foreground")}
             onClick={() => mudar({ versoesAntigas: !filtros.versoesAntigas })}
           >
             <HistoryIcon /> Versões antigas
@@ -180,23 +203,29 @@ export function Biblioteca({
             <XIcon />
           </Button>
         </div>
-        <nav aria-label="Filtrar por etapa" className="flex flex-wrap gap-1">
-          {PILULAS.map((e) => (
-            <Button
-              key={e}
-              size="sm"
-              variant={filtros.etapa === e ? "secondary" : "ghost"}
-              aria-pressed={filtros.etapa === e}
-              className={cn("gap-1.5", contagem[e] === 0 && filtros.etapa !== e && "text-muted-foreground/60")}
-              onClick={() => mudar({ etapa: e })}
-            >
-              {e === "todas" ? "Todas" : rotuloEtapa(catalogo, e, true)}
-              <span className="text-muted-foreground text-xs tabular-nums">{contagem[e]}</span>
-            </Button>
-          ))}
+        <nav aria-label="Filtrar por etapa" className="flex w-fit max-w-full flex-wrap gap-0.5 rounded-full border border-border bg-muted/30 p-[3px]">
+          {PILULAS.map((e) => {
+            const marcada = filtros.etapa === e
+            return (
+              <button
+                key={e}
+                type="button"
+                aria-pressed={marcada}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50",
+                  marcada && "bg-foreground text-background hover:text-background",
+                  contagem[e] === 0 && !marcada && "opacity-45",
+                )}
+                onClick={() => mudar({ etapa: e })}
+              >
+                {e === "todas" ? "Todas" : rotuloEtapa(catalogo, e, true)}
+                <span className={cn("font-mono text-[11px] tabular-nums", marcada ? "opacity-60" : "text-muted-foreground")}>{contagem[e]}</span>
+              </button>
+            )
+          })}
         </nav>
       </header>
-      <div className="min-h-0 flex-1 overflow-y-auto p-4">{corpo}</div>
+      <div className="min-h-0 flex-1 overflow-y-auto px-5.5 pt-5 pb-6">{corpo}</div>
       <ImagemAmpliada
         slug={slug}
         catalogo={catalogo}
