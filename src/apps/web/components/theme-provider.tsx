@@ -3,6 +3,7 @@
 import * as React from "react"
 import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes"
 import { CONFIG_TEMA, proximoTema } from "@/lib/tema"
+import { aplicarTemaJa, trocarTemaComCirculo } from "@/lib/transicao-tema"
 
 function ThemeProvider({
   children,
@@ -58,7 +59,9 @@ function ThemeHotkey() {
         return
       }
 
-      setTheme(proximoTema(resolvedTheme))
+      // Pelo teclado não há botão de origem: o círculo sai do centro da janela.
+      const novo = proximoTema(resolvedTheme)
+      trocarTemaComCirculo({ x: window.innerWidth / 2, y: window.innerHeight / 2 }, () => aplicarTemaJa(novo, setTheme))
     }
 
     window.addEventListener("keydown", onKeyDown)

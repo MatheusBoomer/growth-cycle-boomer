@@ -198,6 +198,13 @@
     background-color: var(--vidro-interno);
 }
 
+/* Troca de tema em círculo: a animação é feita no JS (lib/transicao-tema.ts); aqui só desliga a padrão. */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
