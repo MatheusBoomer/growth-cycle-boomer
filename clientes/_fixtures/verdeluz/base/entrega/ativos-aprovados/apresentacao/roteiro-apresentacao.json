@@ -693,7 +693,13 @@
           "quando": "02/11 a 13/11",
           "quem": "Gestor de tráfego",
           "frente": "Mídia Paga / Canal Principal"
-        },
+        }
+      ],
+      "link": "https://docs.google.com/document/d/verdeluz-plano-de-acao-exemplo/edit"
+    },
+    {
+      "tipo": "tabela_plano",
+      "linhas": [
         {
           "num": "9",
           "acao": "Ativar a recuperação de carrinho em 3 toques",
@@ -725,13 +731,7 @@
           "quando": "02/11 a 20/11",
           "quem": "Operação do e-commerce",
           "frente": "Eficiência Operacional"
-        }
-      ],
-      "link": "https://docs.google.com/document/d/verdeluz-plano-de-acao-exemplo/edit"
-    },
-    {
-      "tipo": "tabela_plano",
-      "linhas": [
+        },
         {
           "num": "13",
           "acao": "Qualificar o segundo fornecedor de embalagem do sérum",
@@ -749,14 +749,6 @@
           "frente": "Redução de Dependências"
         },
         {
-          "num": "16",
-          "acao": "Configurar os eventos de funil no GA4",
-          "horizonte": "Curto prazo",
-          "quando": "02/11 a 13/11",
-          "quem": "Gestor de tráfego",
-          "frente": "Monitoramento e Governança"
-        },
-        {
           "num": "15",
           "acao": "Lançar a régua de reposição por produto",
           "horizonte": "Curto prazo",
@@ -764,6 +756,20 @@
           "quem": "Estrategista de CRM",
           "frente": "Redução de Dependências"
         },
+        {
+          "num": "16",
+          "acao": "Configurar os eventos de funil no GA4",
+          "horizonte": "Curto prazo",
+          "quando": "02/11 a 13/11",
+          "quem": "Gestor de tráfego",
+          "frente": "Monitoramento e Governança"
+        }
+      ],
+      "link": "https://docs.google.com/document/d/verdeluz-plano-de-acao-exemplo/edit"
+    },
+    {
+      "tipo": "tabela_plano",
+      "linhas": [
         {
           "num": "17",
           "acao": "Instituir a reunião mensal de resultados com os gatilhos de escala e contenção",
@@ -787,6 +793,14 @@
           "quando": "01/12 a 11/12",
           "quem": "Operação do e-commerce",
           "frente": "Eficiência Operacional"
+        },
+        {
+          "num": "20",
+          "acao": "Lançar dois novos kits a partir da Curva A",
+          "horizonte": "Médio prazo",
+          "quando": "04/01/27 a 31/03/27",
+          "quem": "Gestão de produto",
+          "frente": "Produto / Mix / Portfólio"
         },
         {
           "num": "23",
@@ -813,27 +827,13 @@
           "frente": "Redução de Dependências"
         },
         {
-          "num": "20",
-          "acao": "Lançar dois novos kits a partir da Curva A",
-          "horizonte": "Médio prazo",
-          "quando": "04/01/27 a 31/03/27",
-          "quem": "Gestão de produto",
-          "frente": "Produto / Mix / Portfólio"
-        },
-        {
           "num": "21",
           "acao": "Revisar os 38 SKUs da Curva C e definir o destino de cada um",
           "horizonte": "Médio prazo",
           "quando": "01/02/27 a 31/03/27",
           "quem": "Gestão de produto",
           "frente": "Produto / Mix / Portfólio"
-        }
-      ],
-      "link": "https://docs.google.com/document/d/verdeluz-plano-de-acao-exemplo/edit"
-    },
-    {
-      "tipo": "tabela_plano",
-      "linhas": [
+        },
         {
           "num": "22",
           "acao": "Oferecer um item adicional no carrinho dos três líderes",

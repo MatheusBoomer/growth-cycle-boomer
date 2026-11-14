@@ -428,3 +428,32 @@ def test_aviso_de_acao_do_plano_aprovado_fora_dos_slides(prospect, tmp_path):
     assert any("1 ações do plano de ação aprovado" in a and "Ação que ficou de fora" in a for a in r["avisos"])
     r = ga.gerar(_roteiro_tabela(linhas=[_linha(1), _linha(2, "Ação que ficou de fora")]), prospect, tmp_path / "deck2.pptx")
     assert not any("plano de ação aprovado" in a for a in r["avisos"])
+
+
+def test_sem_plano_aprovado_e_com_slide_de_tabela_avisa_que_a_cobertura_nao_foi_conferida(prospect, tmp_path):
+    r = ga.gerar(_roteiro_tabela(), prospect, tmp_path / "deck.pptx")
+    assert any("conferência de cobertura do plano de ação não feita" in a and "nenhum plano aprovado" in a for a in r["avisos"])
+
+
+def test_sem_plano_aprovado_e_sem_slide_de_tabela_nao_avisa(prospect, tmp_path):
+    r = ga.gerar(roteiro_basico(), prospect, tmp_path / "deck.pptx")
+    assert not any("cobertura do plano" in a for a in r["avisos"])
+
+
+def test_prospect_antigo_so_com_docx_confere_a_cobertura_pela_tabela_do_docx(prospect, tmp_path):
+    from docx import Document
+
+    caminho = prospect / "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.docx"
+    caminho.parent.mkdir(parents=True)
+    doc = Document()
+    tabela = doc.add_table(rows=1, cols=6)
+    for celula, titulo in zip(tabela.rows[0].cells, ["#", "Ação", "Frente", "Horizonte", "Quando", "Por Quem"]):
+        celula.text = titulo
+    for l in (["1", "Auditar o pixel", "Mídia Paga", "Imediato", "Semana 1", "Agência"],
+              ["2", "Ação que ficou de fora", "Mídia Paga", "Imediato", "Semana 2", "Agência"]):
+        for celula, valor in zip(tabela.add_row().cells, l):
+            celula.text = valor
+    doc.save(str(caminho))
+    r = ga.gerar(_roteiro_tabela(linhas=[_linha(1)]), prospect, tmp_path / "deck.pptx")
+    assert any("1 ações do plano de ação aprovado" in a and "Ação que ficou de fora" in a for a in r["avisos"])
+    assert not any("não feita" in a for a in r["avisos"])

@@ -107,15 +107,21 @@ Regras:
 
   O script lê o `plano-de-acao-estrategico.json` que a Skill 08 salva ao lado do
   `.docx` e da `.xlsx` (em `entrega/ativos-aprovados/plano-de-acao/`), põe as
-  ações em ordem cronológica de início (Quando como "dd/mm a dd/mm", Quem sem a
-  empresa) e divide em slides pelo tamanho do texto (ação longa ocupa mais). Peça
+  ações na ordem do documento (plano em ondas: onda e, dentro dela, número da
+  ação; plano só com horizontes: cronológica de início; Quando como "dd/mm a
+  dd/mm", Quem sem a empresa) e divide em slides pelo tamanho do texto (ação
+  longa ocupa mais), com o mesmo número de ações por slide sempre que possível.
+  Prospect antigo, só com o `.docx` aprovado, tem a tabela-resumo do `.docx`
+  lida no lugar do JSON (o script avisa "plano lido do .docx (formato antigo)").
+  Peça
   ao analista, antes de montar o roteiro, o **link do documento detalhado** (o
   `.docx` do plano subido no Google Drive, com compartilhamento aberto a quem
   recebe a apresentação). O link vai em todo slide de tabela e vira a frase
   "Clique aqui para acessar o documento detalhado de cada ação". Sem link, a
   frase sai do slide e o gerador avisa: diga ao analista que o link falta. O
   gerador também avisa quando alguma ação do plano aprovado ficou de fora das
-  tabelas: trate o aviso antes de propor o deck.
+  tabelas, ou quando não achou plano aprovado nenhum para conferir (com slide de
+  tabela no roteiro): trate o aviso antes de propor o deck.
 - **Escala esperada:** 40 a 60 slides (o deck de referência tinha 61 com a
   seção de benchmark, que não se aplica mais). Um deck
   muito menor indica que faltou material ou cobertura; diga ao analista o que

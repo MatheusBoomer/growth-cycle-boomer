@@ -251,14 +251,20 @@ def _problemas_fora_do_roteiro(roteiro: dict, pasta: Path, avisos: List[str]) ->
 
 def _acoes_fora_do_roteiro(roteiro: dict, pasta: Path, avisos: List[str]) -> None:
     """Toda ação do plano de ação aprovado deve entrar nos slides tabela_plano."""
-    caminho = pasta / plano.CAMINHO_PLANO
-    if not caminho.is_file():
-        return
+    if not any(s.get("tipo") == "tabela_plano" and not s.get("pendencia") for s in roteiro["slides"]):
+        return  # deck sem tabela do plano: nada a conferir
     try:
-        aprovadas = [l["acao"] for l in plano.ler_plano(caminho)]
-    except (plano.ErroPlano, OSError, ValueError, KeyError) as e:
+        linhas, _ = plano.ler_linhas(pasta)
+    except plano.ErroPlano as e:
+        if not (pasta / plano.CAMINHO_PLANO).is_file() and not (pasta / plano.CAMINHO_DOCX).is_file():
+            avisos.append("conferência de cobertura do plano de ação não feita: nenhum plano aprovado encontrado.")
+        else:
+            avisos.append(f"O plano de ação aprovado não pôde ser lido para a conferência de cobertura: {e}")
+        return
+    except (OSError, ValueError, KeyError) as e:
         avisos.append(f"O plano de ação aprovado não pôde ser lido para a conferência de cobertura: {e}")
         return
+    aprovadas = [l["acao"] for l in linhas]
     no_deck = {" ".join(str(l["acao"]).split()) for s in roteiro["slides"] if s.get("tipo") == "tabela_plano" and not s.get("pendencia") for l in s["linhas"]}
     fora = [a for a in aprovadas if a not in no_deck]
     if fora:
