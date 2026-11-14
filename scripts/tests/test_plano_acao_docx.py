@@ -196,7 +196,7 @@ def test_docx_remove_caracteres_de_controle_ilegais(tmp_path):
 TITULOS_ONDAS = [
     "Como este plano funciona",
     "Visão geral",
-    "Metas dos 3 primeiros meses",
+    "Metas dos 2 primeiros meses",
     "Sessões não pagas",
     "Metas do plano",
     "Como mudamos minimizando riscos",
@@ -337,7 +337,7 @@ def test_docx_ondas_sem_decisoes_omite_a_secao(tmp_path):
 def test_docx_ondas_blocos_opcionais_ausentes_sao_omitidos(tmp_path):
     saida, _ = _gerar(ex.plano_com_ondas(), tmp_path)
     texto = _texto(saida)
-    for titulo in ("Como este plano funciona", "Metas dos 3 primeiros meses", "Sessões não pagas",
+    for titulo in ("Como este plano funciona", "primeiros meses", "Sessões não pagas",
                    "Como mudamos minimizando riscos", "KPIs de acompanhamento e limites"):
         assert titulo not in texto
     assert "Visão geral" in texto
@@ -360,7 +360,7 @@ def test_docx_ondas_blocos_opcionais_renderizados(tmp_path):
     ps = _paragrafos(saida)
     assert "Horizontes. O plano tem 3 ondas." in ps
     assert "Dono. Todas as ações têm um responsável." in ps  # ponto final não duplica
-    i = ps.index("Metas dos 3 primeiros meses")
+    i = ps.index("Metas dos 2 primeiros meses")  # 2 linhas de mês, fora a de total
     assert ps[i + 1] == "Cenário: Realista"
     assert ps[i + 2:i + 5] == ["Mês", "Receita", "Investimento"]
     assert "2 meses" in ps and "Valores de receita aprovada." in ps
@@ -409,3 +409,43 @@ def test_docx_ondas_total_de_acoes_e_modelo_preservado(tmp_path):
     with zipfile.ZipFile(MODELO_DOCX_PADRAO) as m, zipfile.ZipFile(saida) as s:
         assert s.namelist() == m.namelist()
         assert s.read("word/header1.xml") == m.read("word/header1.xml")
+
+
+def _paragrafo_xml_com(xml: str, trecho: str) -> str:
+    """O <w:p> (sem tabela) que contém o trecho de texto."""
+    for p in re.findall(r"<w:p [^>]*>.*?</w:p>", xml, flags=re.S):
+        if trecho in p:
+            return p
+    raise AssertionError(f"parágrafo com {trecho!r} não encontrado")
+
+
+def test_docx_ondas_keep_with_next_nos_titulos_e_metadados(tmp_path):
+    plano = _plano_completo()
+    saida, _ = _gerar(plano, tmp_path)
+    xml = _xml(saida)
+    parseString(xml)
+    alvos = [
+        "AÇÃO 1", "Início e entrega:", "Onda 1 · Contenção", "Objetivo:", "Calendário de mídia:", "Checkpoint 1:",
+    ]
+    for alvo in alvos:
+        p = _paragrafo_xml_com(xml, alvo)
+        assert p.split("<w:pPr>", 1)[1].startswith("<w:keepNext/><w:spacing"), alvo  # primeiro filho do pPr
+    # parágrafos comuns não ganham keepNext
+    assert "<w:keepNext/>" not in _paragrafo_xml_com(xml, "Pauta.")
+
+
+def test_docx_ondas_metas_mensais_com_10_colunas_tem_larguras_fixas(tmp_path):
+    plano = _plano_completo()
+    cabecalhos = ["Mês", "Check em", "Receita (R$)", "Invest. (R$)", "Ticket (R$)", "Conv.", "CPS (R$)", "% pagas", "Sessões", "Vendas"]
+    plano["metas_mensais"] = {
+        "cenario": "Realista", "colunas": cabecalhos,
+        "linhas": [["Nov/26", "11/12/2026"] + ["1"] * 8, ["3 meses", ""] + ["1"] * 8], "observacao": None,
+    }
+    saida, _ = _gerar(plano, tmp_path)
+    xml = _xml(saida)
+    parseString(xml)
+    esperado = [1000, 1100, 950, 900, 850, 750, 700, 850, 1000, 929]
+    assert sum(esperado) == 9029
+    grade = f'<w:tblGrid>{"".join(f"<w:gridCol w:w={chr(34)}{w}{chr(34)}/>" for w in esperado)}</w:tblGrid>'
+    assert grade in xml
+    assert "Metas dos 1 primeiros meses" in _paragrafos(saida)

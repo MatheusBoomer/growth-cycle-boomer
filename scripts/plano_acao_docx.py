@@ -81,13 +81,14 @@ def _next_pid() -> str:
     return f"{_pid_counter:08X}"
 
 
-def _p_open(after=240, before=None) -> str:
+def _p_open(after=240, before=None, keep_next=False) -> str:
+    """Abre um parágrafo; `keep_next` o mantém na mesma página que o parágrafo ou a tabela seguinte."""
     pid = _next_pid()
     spacing = f'w:after="{after}"' + (f' w:before="{before}"' if before is not None else "")
     return (
         f'<w:p w:rsidR="00000000" w:rsidDel="00000000" w:rsidP="00000000" '
         f'w:rsidRDefault="00000000" w:rsidRPr="00000000" w14:paraId="{pid}">'
-        f'<w:pPr><w:spacing {spacing} w:lineRule="auto"/><w:rPr/></w:pPr>'
+        f'<w:pPr>{"<w:keepNext/>" if keep_next else ""}<w:spacing {spacing} w:lineRule="auto"/><w:rPr/></w:pPr>'
     )
 
 
@@ -157,8 +158,8 @@ def _p_rotulo(rotulo: str, valor: str, highlight=None, before=240) -> str:
     )
 
 
-def subtitulo_paragrafo(texto: str) -> str:
-    return _p_open(after=80, before=240) + _run(texto, bold=True, sz="24") + _EMPTY_TRAIL + "</w:p>"
+def subtitulo_paragrafo(texto: str, keep_next=False) -> str:
+    return _p_open(after=80, before=240, keep_next=keep_next) + _run(texto, bold=True, sz="24") + _EMPTY_TRAIL + "</w:p>"
 
 
 def texto_paragrafo(texto: str, after=80) -> str:
@@ -317,6 +318,7 @@ LARGURAS_VISAO_GERAL = [1800, 1500, 1400, 3529, 800]  # soma 9029
 LARGURAS_DECISOES = [2700, 1300, 5029]  # soma 9029
 LARGURAS_KPIS = [3300, 5729]  # soma 9029
 LARGURAS_ACAO = [1300, 7729]  # soma 9029
+LARGURAS_METAS_MENSAIS = [1000, 1100, 950, 900, 850, 750, 700, 850, 1000, 929]  # 10 colunas, soma 9029
 CINZA_ZEBRA = "eef2f8"
 AMARELO_GATILHO = "fff2cc"
 
@@ -341,10 +343,10 @@ def tabela_generica(cabecalhos: list[str], linhas: list[list[str]], larguras: li
     return _tbl_abre(larguras) + "".join(rows) + "</w:tbl>"
 
 
-def _p_lead(lead: str, texto: str = "", after=120, before=None) -> str:
+def _p_lead(lead: str, texto: str = "", after=120, before=None, keep_next=False) -> str:
     """Parágrafo com um começo em negrito (`lead`) seguido do `texto` normal."""
     return (
-        _p_open(after=after, before=before)
+        _p_open(after=after, before=before, keep_next=keep_next)
         + _run(lead, bold=True)
         + (_run(f" {texto}") if texto else "")
         + _EMPTY_TRAIL
@@ -362,13 +364,13 @@ def acao_bloco_tabela(titulo: str, cabecalho: str, campos: list[tuple[str, str]]
     tabela de 2 colunas (rótulo em negrito | texto). O GATILHO leva fundo amarelo claro."""
     rotulo, sep, resto = titulo.partition(" · ")
     destaque = (
-        _p_open(after=40, before=240)
+        _p_open(after=40, before=240, keep_next=True)
         + _run(rotulo, bold=True, highlight="yellow")
         + (_run(f"{sep}{resto}", highlight="yellow") if sep else "")
         + _EMPTY_TRAIL
         + "</w:p>"
     )
-    info = _p_open(after=80) + _run(cabecalho, sz="18", color="444444") + _EMPTY_TRAIL + "</w:p>"
+    info = _p_open(after=80, keep_next=True) + _run(cabecalho, sz="18", color="444444") + _EMPTY_TRAIL + "</w:p>"
     rows = []
     for rot, valor in campos:
         shade = AMARELO_GATILHO if rot == "GATILHO" else "ffffff"
@@ -398,14 +400,14 @@ def campos_da_acao_em_tabela(acao: dict) -> list[tuple[str, str]]:
 def onda_titulo(onda: dict) -> str:
     """Título da onda (com a janela) seguido de 'Objetivo' e 'Calendário de mídia'."""
     partes = [
-        _p_open(after=80, before=360)
+        _p_open(after=80, before=360, keep_next=True)
         + _run(f"Onda {onda['numero']} · {onda['nome']} ({onda['inicio']} a {onda['fim']})", bold=True, sz="30")
         + _EMPTY_TRAIL
         + "</w:p>",
-        _p_lead("Objetivo:", onda.get("objetivo", ""), after=80),
+        _p_lead("Objetivo:", onda.get("objetivo", ""), after=80, keep_next=True),
     ]
     if onda.get("calendario_midia"):
-        partes.append(_p_lead("Calendário de mídia:", onda["calendario_midia"], after=120))
+        partes.append(_p_lead("Calendário de mídia:", onda["calendario_midia"], after=120, keep_next=True))
     return "".join(partes)
 
 
@@ -417,7 +419,7 @@ def checkpoint_bloco(onda: dict, ha_proxima: bool = True) -> str:
     quando = f"{cp['data']} ({cp['duracao']})" if cp.get("duracao") else cp["data"]
     liberar = f"Para liberar a Onda {onda['numero'] + 1}." if ha_proxima else "Para fechar o ciclo."
     return (
-        subtitulo_paragrafo(f"Checkpoint {onda['numero']}: {quando}")
+        subtitulo_paragrafo(f"Checkpoint {onda['numero']}: {quando}", keep_next=True)
         + _p_lead("• Pauta.", cp["pauta"], after=80)
         + _p_lead(f"• {liberar}", cp["para_liberar"], after=80)
         + _p_lead("• Quem decide.", cp["quem_decide"], after=240)
@@ -448,10 +450,12 @@ def _metas_mensais(plano: dict) -> list[str]:
     metas = plano.get("metas_mensais")
     if not metas:
         return []
-    partes = [horizonte_titulo("Metas dos 3 primeiros meses")]
+    meses = max(len(metas.get("linhas") or []) - 1, 0)  # a última linha é o total
+    partes = [horizonte_titulo(f"Metas dos {meses} primeiros meses")]
     if metas.get("cenario"):
         partes.append(texto_paragrafo(f"Cenário: {metas['cenario']}", after=120))
-    partes.append(tabela_generica(metas["colunas"], metas["linhas"], _larguras_iguais(len(metas["colunas"]))))
+    larguras = LARGURAS_METAS_MENSAIS if len(metas["colunas"]) == len(LARGURAS_METAS_MENSAIS) else _larguras_iguais(len(metas["colunas"]))
+    partes.append(tabela_generica(metas["colunas"], metas["linhas"], larguras))
     if metas.get("observacao"):
         partes.append(texto_paragrafo(metas["observacao"], after=120))
     partes.append(spacer_paragrafo())
