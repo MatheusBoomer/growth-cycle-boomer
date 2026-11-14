@@ -84,8 +84,9 @@ Exatamente três, nesta ordem, sempre com data real em cada ação:
 
 - **Imediato:** primeira semana após a apresentação. Ações que desbloqueiam
   as outras (rastreamento, acessos, reestruturação). Cada uma cabe em até 7
-  dias entre início e entrega (o validador avisa quando passa). É também a
-  onda 1.
+  dias entre início e entrega (o validador avisa quando passa). O Imediato
+  abre a onda 1; a onda agrupa as ações pela data de início, então pode
+  conter ações de Curto prazo também.
 - **Curto prazo:** até o primeiro grande marco do calendário (primeiro mês
   de Pico ou Escala).
 - **Médio prazo:** até o fim do ciclo de 12 meses do cenário (`fim_ciclo`).
@@ -265,7 +266,8 @@ derivados pelo gerador e não entram no JSON.
 
 **Chaves do plano em ondas.** Para o gerador e o validador elas são opcionais
 (um plano antigo, só com horizontes, continua válido, com aviso). **Para esta
-skill são obrigatórias**: o plano que ela entrega é sempre em ondas.
+skill são obrigatórias**, exceto `sessoes_nao_pagas`, que é condicional (ver
+abaixo): o plano que ela entrega é sempre em ondas.
 
 - `ondas`: lista numerada de 1 a N, na ordem. Cada onda tem `numero`, `nome`,
   `inicio` e `fim` (dd/mm/aaaa), `calendario_midia`, `objetivo`, `acoes` (os
@@ -275,11 +277,14 @@ skill são obrigatórias**: o plano que ela entrega é sempre em ondas.
 - `metas_mensais`: `{cenario, colunas, linhas, observacao}`, **gerada pelo
   `scripts/metas_mensais.py`** a partir da projeção aprovada (Fase 3). Nunca
   digite as linhas.
-- `sessoes_nao_pagas`: `{colunas, linhas, premissas, risco}`, o volume de
-  sessões não pagas que cada ação entrega e o risco de a meta depender só da
-  mídia. É livre e específica de cada prospect: monte a tabela com a lógica da
-  projeção aprovada (06), sem número novo. `premissas` e `risco` são texto
-  (ou lista de textos).
+- `sessoes_nao_pagas` (**condicional**): `{colunas, linhas, premissas, risco}`.
+  Só entra quando o cenário aprovado (06) ou o plano de mídia (07) reduz a
+  dependência da mídia paga, ou quando o % de sessões pagas pesa na meta.
+  Fora desses casos, **omita a chave**; o gerador omite o bloco sem erro. Monte
+  a tabela na Fase 2, só com `sessoes` e `pct_pagas` da projeção aprovada e com
+  as decisões de Redução de Dependências. Todo volume de sessão não paga vem de
+  uma ação com volume definido; nunca invente volume. `premissas` e `risco` são
+  texto (ou lista de textos).
 - `protocolo_mudanca`: `{intro, regras}` (lista de textos), o protocolo de
   mudanças (ver a Fase 1).
 - `kpis_acompanhamento`: lista de `{kpi, meta_limite}`, os KPIs vigiados entre
@@ -338,7 +343,8 @@ mídia (07) e dos horizontes:
    números em `acoes` na Fase 2, quando as ações existirem.
 4. **Checkpoint.** Toda onda, menos a última, termina em um `checkpoint`; a
    última pode ter `null`. Ele tem `data`, `duracao` (ex.: "30 minutos"),
-   `pauta` (o que se confere, com os números das ações), `para_liberar` (o que
+   `pauta` (o que se confere; os números das ações entram na Fase 2, quando
+   elas existirem), `para_liberar` (o que
    precisa estar pronto para a próxima onda começar) e `quem_decide`. A `data`
    cai entre o início da onda e o início da seguinte (na última, até o
    `fim_ciclo`), de preferência nos últimos dias úteis da onda.
@@ -361,21 +367,19 @@ mídia (07) e dos horizontes:
    meta_limite}`): os KPIs vigiados em cada checkpoint, cada um com a meta ou
    o limite que dispara a decisão, **com o número do cenário aprovado** (06),
    nunca um número novo.
-8. **Sessões não pagas** (`sessoes_nao_pagas`): a tabela de quanto tráfego não
-   pago cada ação entrega, com as premissas de volume e o risco quando o
-   cenário aprovado depende quase só da mídia. Parta da projeção (06) e do que
-   foi decidido; ação sem volume definido não entra na conta.
-
 Checkpoint: o analista aprova a abertura e a estrutura em ondas, ou seja, as
-janelas, os checkpoints, o texto "Como este plano funciona" e a tabela de
-sessões não pagas (Regra 1; na interface, pergunte no chat).
+janelas, os checkpoints, o texto "Como este plano funciona", o protocolo de
+mudança e os KPIs de acompanhamento (Regra 1; na interface, pergunte no chat).
 
 ## Fase 2 · Ações
 
 Monte a lista completa, por horizonte e, dentro dele, por frente, com os 10
 campos. Distribua as ações pelas ondas (preencha `acoes` de cada onda pela
 data de início de cada ação) e coloque `decisao_cliente`, com a recomendação
-da Boomer, em toda ação que depende de escolha do cliente. O achado de origem
+da Boomer, em toda ação que depende de escolha do cliente. Complete a `pauta`
+dos checkpoints com os números das ações. Se o plano reduz a dependência da
+mídia paga (ver `sessoes_nao_pagas`), monte agora essa tabela, só com volumes
+de ações que tenham volume definido. O achado de origem
 cita a seção do diagnóstico e o número, nunca "slide N". O que exige
 julgamento do analista sai marcado [VALIDAR]; dado ausente, [PREENCHER]. Antes
 de mostrar, grave o JSON e rode:
@@ -398,7 +402,8 @@ plano sem ondas, onda sem ação, onda sem checkpoint (exceto a última) e plano
 sem `kpis_acompanhamento`. Aviso de ondas ou de KPIs não se deixa passar: esta
 skill sempre os resolve.
 
-Checkpoint: o analista resolve cada [VALIDAR] e [PREENCHER] e aprova a lista.
+Checkpoint: o analista resolve cada [VALIDAR] e [PREENCHER] e aprova a lista
+(e, quando houver, a tabela de sessões não pagas).
 
 ## Fase 3 · Arquivos
 
@@ -419,7 +424,8 @@ python3 scripts/metas_mensais.py \
 e `--checks` (a data do check de cada mês, dd/mm/aaaa, coerente com os
 checkpoints das ondas) têm de ter a mesma quantidade que `--meses`. O script
 recalcula a cadeia de KPIs da projeção e grava o bloco `metas_mensais` no
-JSON; diz `OK` ou `ERRO:`. Nunca digite essas linhas na mão, e rode de novo se
+JSON; diz `OK` ou `ERRO:`. Com `ERRO:`, corrija rótulos, checks, cenário
+ou projeção e rode de novo. Nunca digite essas linhas na mão, e rode de novo se
 o cenário ou as datas mudarem. Onde os mesmos KPIs aparecem, os números
 dos meses têm de bater com as metas da abertura (mesmo cenário, mesma fonte).
 
@@ -506,7 +512,8 @@ Pergunte ao analista a resposta dele à pergunta-guia. A etapa só fecha com
 - Plano em ondas: toda ação em exatamente uma onda, começando dentro dela;
   toda onda, menos a última, com checkpoint; `como_funciona`,
   `protocolo_mudanca`, `kpis_acompanhamento` e `metas_mensais` preenchidos, com
-  as metas mensais geradas pelo `scripts/metas_mensais.py`.
+  as metas mensais geradas pelo `scripts/metas_mensais.py`;
+  `sessoes_nao_pagas` presente só quando se aplica (ver o Formato do plano).
 - Todo achado crítico do diagnóstico e toda solução do registro com pelo
   menos uma ação.
 - Ações que são alavanca da meta dentro da janela de prova.

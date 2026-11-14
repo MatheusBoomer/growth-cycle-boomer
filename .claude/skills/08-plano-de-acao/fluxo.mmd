@@ -4,13 +4,15 @@ flowchart TD
   P2["Fase 1 · Abertura do plano: cenário, metas, o que cabe nos 3 meses, premissas e pisos de ROAS"]
   P8["Montar ondas e checkpoints: janelas pelo calendário de mídia, Como este plano funciona, protocolo de mudança e KPIs de acompanhamento"]
   C1{"Analista aprova?"}
-  P3["Fase 2 · Ações com os 10 campos, por horizonte e frente"]
+  P3["Fase 2 · Ações com os 10 campos, por horizonte e frente, distribuídas nas ondas, com decisao_cliente"]
   V1["validar_plano_acao.py --rascunho"]
   D1{"Saiu ERRO?"}
   P4["Corrigir o plano"]
   P7["Analista resolve as marcações VALIDAR e PREENCHER"]
   C2{"Analista aprova?"}
   P9["Gerar metas mensais da projeção (metas_mensais.py)"]
+  D2{"Saiu ERRO?"}
+  P11["Corrigir rótulos, checks, cenário ou projeção"]
   P5["Fase 3 · gerar_plano_acao.py (.docx + .xlsx + JSON validado)"]
   C3{"Analista aprova?"}
   P6["Fase 4 · Relatório de verificação"]
@@ -32,7 +34,10 @@ flowchart TD
   D1 -->|"não"| P7
   P7 --> C2
   C2 -->|"sim"| P9
-  P9 --> P5
+  P9 --> D2
+  D2 -->|"sim"| P11
+  P11 --> P9
+  D2 -->|"não"| P5
   C2 -->|"não, ajustar"| P3
   P5 --> C3
   C3 -->|"sim"| P6
