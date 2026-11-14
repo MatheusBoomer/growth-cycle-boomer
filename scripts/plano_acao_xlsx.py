@@ -188,7 +188,7 @@ def _valores_da_acao_ondas(horizonte: str, a: dict, plano: dict) -> list:
     return [
         a.get("numero"), a.get("acao"), a.get("achado_origem"), a.get("alavanca"), a.get("frente"), horizonte,
         a.get("dono"), ler_data(a["inicio"], f"{onde}, início"), ler_data(a["entrega"], f"{onde}, entrega"),
-        texto_depende(a, plano), a.get("como"), a.get("evidencia"), a.get("kpi_meta"), a.get("gatilho"), None,
+        texto_depende(a, plano), a.get("como"), a.get("evidencia"), a.get("kpi_meta"), a.get("gatilho"), STATUS_ONDAS[0],
     ]
 
 

@@ -283,7 +283,7 @@ def test_ondas_faixa_cabecalho_e_acoes_de_cada_onda(tmp_path):
             assert ws.cell(linha, 12).value == a["evidencia"]
             assert ws.cell(linha, 13).value == a["kpi_meta"]
             assert ws.cell(linha, 14).value == a["gatilho"]
-            assert ws.cell(linha, 15).value is None
+            assert ws.cell(linha, 15).value == STATUS_ONDAS[0]  # "A iniciar"
     assert ws.cell(faixas[0] + 1, 1).fill.fgColor.rgb.endswith("1C2F5F")
 
 
@@ -381,6 +381,18 @@ def test_ondas_resumo_recalculado_bate_com_o_json(tmp_path):
         assert resumo.cell(linhas[status], 2).value == contagem_status.get(status, 0), status
     l_conf = linhas[f"Conferência (total de ações = {total})"]
     assert resumo.cell(l_conf, 2).value == total  # todas as ações têm status
+
+
+def test_ondas_resumo_recalculado_com_o_status_inicial_das_acoes(tmp_path):
+    plano = ex.plano_com_ondas()
+    saida, _, _ = _gerar(plano, tmp_path)
+    resumo = _recalcular(saida, tmp_path)[ABA_RESUMO]
+    total = len(c.acoes(plano))
+    linhas = {resumo.cell(l, 1).value: l for l in range(1, resumo.max_row + 1)}
+    assert resumo.cell(linhas["A iniciar"], 2).value == total
+    for status in STATUS_ONDAS[1:]:
+        assert resumo.cell(linhas[status], 2).value == 0, status
+    assert resumo.cell(linhas[f"Conferência (total de ações = {total})"], 2).value == total
 
 
 def test_ondas_resumo_usa_formulas_sobre_a_aba_do_plano(tmp_path):
