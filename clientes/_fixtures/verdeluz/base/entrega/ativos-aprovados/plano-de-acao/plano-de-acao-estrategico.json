@@ -9,6 +9,32 @@
   "fim_ciclo": "30/09/2027",
   "empresa_agencia": "Boomer",
   "agencia_parceira": null,
+  "como_funciona": [
+    {
+      "titulo": "Lógica do plano",
+      "texto": "Este plano organiza os 12 meses do ciclo (outubro de 2026 a setembro de 2027) em 4 ondas, seguindo o calendário estratégico de mídia da 07. A lógica é simples: primeiro destravam-se a regra de verba, o estoque, a medição e a margem; depois a mídia é reestruturada para a Black Friday; só então se escala. Cada onda termina em um checkpoint, exceto a última, e todo mês os resultados são comparados com a planilha de metas."
+    },
+    {
+      "titulo": "Data-base",
+      "texto": "A data-base é 22/10/2026 e a primeira ação começa em 26/10, na segunda-feira seguinte. A Black Friday de 2026 é em 27/11. A janela de prova vai de 26/10/2026 a 25/01/2027 e o ciclo termina em 30/09/2027."
+    },
+    {
+      "titulo": "Horizontes",
+      "texto": "Imediato (26/10 a 30/10) é a primeira semana de execução. Curto prazo (02/11 a 30/11) vai até a Black Friday. Médio prazo (DEZ/2026 a SET/2027) é o restante do ciclo. As ações que movem os KPIs da meta começam e terminam dentro da janela de prova, até 25/01/2027."
+    },
+    {
+      "titulo": "Dono",
+      "texto": "Cada ação tem uma disciplina e uma empresa responsável, Boomer ou Verdeluz. A mídia é da Boomer, com o Rafael (gestor de tráfego freelancer) executando sob a coordenação da Boomer. Do lado da Verdeluz, a Marina e a Luiza decidem, a Bruna cuida do e-commerce e do atendimento e o Caio, do conteúdo."
+    },
+    {
+      "titulo": "Frentes",
+      "texto": "Mídia Paga / Canal Principal, Eficiência Operacional, Produto / Mix / Portfólio, Redução de Dependências e Monitoramento e Governança."
+    },
+    {
+      "titulo": "Como ler cada ação",
+      "texto": "O título diz o que fazer; o ACHADO mostra de onde nasce; o COMO traz passos e valores; a EVIDÊNCIA prova que foi feito; o KPI E META diz de quanto para quanto; o GATILHO diz o que acontece se a meta não vier. Toda decisão que cabe à Verdeluz vem com a recomendação do plano e a data-limite, reunidas no fim do documento."
+    }
+  ],
   "abertura": {
     "cenario": "Realista",
     "metas": [
@@ -89,6 +115,206 @@
     "margem_contribuicao": 0.35,
     "taxa_quebra": 0.055
   },
+  "metas_mensais": {
+    "cenario": "Realista",
+    "colunas": [
+      "Mês",
+      "Check em",
+      "Receita (R$)",
+      "Invest. (R$)",
+      "Ticket (R$)",
+      "Conv.",
+      "CPS (R$)",
+      "% pagas",
+      "Sessões",
+      "Vendas"
+    ],
+    "linhas": [
+      [
+        "Out/26",
+        "11/11/2026",
+        "101.959",
+        "27.576",
+        "204,95",
+        "1,56%",
+        "1,60",
+        "54%",
+        "31.917",
+        "497"
+      ],
+      [
+        "Nov/26",
+        "11/12/2026",
+        "213.244",
+        "49.304",
+        "171,56",
+        "2,25%",
+        "1,68",
+        "53,2%",
+        "55.291",
+        "1.243"
+      ],
+      [
+        "Dez/26",
+        "11/01/2027",
+        "145.365",
+        "30.710",
+        "216,70",
+        "1,79%",
+        "1,56",
+        "52,4%",
+        "37.507",
+        "671"
+      ],
+      [
+        "3 meses",
+        "",
+        "460.568",
+        "107.590",
+        "",
+        "",
+        "",
+        "",
+        "124.715",
+        "2.411"
+      ]
+    ],
+    "observacao": null
+  },
+  "ondas": [
+    {
+      "numero": 1,
+      "nome": "Destravar verba, estoque, medição e margem",
+      "inicio": "26/10/2026",
+      "fim": "30/10/2026",
+      "calendario_midia": "Manutenção (OUT/26)",
+      "objetivo": "Fixar o teto de CAC e a regra de escala, calcular o estoque de segurança e pedir a reposição do sérum, ligar o estoque à mídia, montar o painel único de KPIs e fechar a margem por SKU e o rastreio por influenciadora.",
+      "acoes": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "checkpoint": {
+        "data": "30/10/2026",
+        "duracao": "30 minutos",
+        "pauta": "Teto de CAC e regra de escala aprovados, estoque de segurança calculado e reposição do sérum pedida, painel de KPIs no ar, margem por SKU recebida e cupom e UTM de cada influenciadora criados.",
+        "para_liberar": "Regra de verba aprovada pela Luiza, alerta de cobertura de 7 dias ativo e margem por SKU da Curva A e dos kits em mãos.",
+        "quem_decide": "Luiza e Marina (Verdeluz), com o gestor de tráfego e o analista de dados da Boomer"
+      }
+    },
+    {
+      "numero": 2,
+      "nome": "Reestruturar a mídia e rodar a Black Friday",
+      "inicio": "02/11/2026",
+      "fim": "30/11/2026",
+      "calendario_midia": "Pico (NOV/26)",
+      "objetivo": "Separar as campanhas de aquisição e de recompra, realocar 15% da prospecção ampla do Meta, ativar recuperação de carrinho, frete por CEP, antifraude e lembrete de PIX, e rodar a Black Friday com brinde, até 20% de desconto e lista de espera.",
+      "acoes": [
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "checkpoint": {
+        "data": "30/11/2026",
+        "duracao": "45 minutos",
+        "pauta": "Resultado da Black Friday (receita captada de NOV/26 contra a meta de R$ 213.244), CAC por plataforma, cobertura do sérum e primeira leitura do funil.",
+        "para_liberar": "CAC abaixo do teto de R$ 80 e cobertura do sérum acima de 7 dias, para liberar a verba de DEZ/26 (R$ 30.710) e o Natal.",
+        "quem_decide": "Luiza e Marina (Verdeluz), com o gestor de tráfego e a estrategista de marketing da Boomer"
+      }
+    },
+    {
+      "numero": 3,
+      "nome": "Natal, vale de janeiro e fechamento da janela de prova",
+      "inicio": "01/12/2026",
+      "fim": "31/01/2027",
+      "calendario_midia": "Escala (DEZ/26) e Contenção (JAN/27)",
+      "objetivo": "Sustentar o Natal, reativar os 7.176 clientes de compra única, reduzir o vencimento do boleto, atualizar as fotos dos kits e fechar a janela de prova com a leitura dos 3 primeiros meses.",
+      "acoes": [
+        18,
+        19,
+        20,
+        23,
+        24,
+        25
+      ],
+      "checkpoint": {
+        "data": "25/01/2027",
+        "duracao": "60 minutos",
+        "pauta": "Fechamento da janela de prova: metas de JAN/27 (receita captada de R$ 90.568, conversão de 1,42%, ROAS de 3,60x e dependência de mídia paga de 51,5%) contra o realizado e resultado do primeiro disparo da reativação.",
+        "para_liberar": "Leitura dos 3 primeiros meses fechada e o gatilho de cada KPI revisto, para liberar o preparo do Dia das Mães da Onda 4.",
+        "quem_decide": "Luiza e Marina (Verdeluz), com a equipe da Boomer"
+      }
+    },
+    {
+      "numero": 4,
+      "nome": "Preparar o Dia das Mães e as datas do ano",
+      "inicio": "01/02/2027",
+      "fim": "30/09/2027",
+      "calendario_midia": "Contenção (FEV/27), Manutenção, Escala e Pico (MAI/27) até SET/27",
+      "objetivo": "Revisar os 38 SKUs da Curva C e oferecer o item adicional no carrinho dos três líderes, para chegar ao Dia das Mães (MAI/27) com o mix e o estoque prontos.",
+      "acoes": [
+        21,
+        22
+      ],
+      "checkpoint": null
+    }
+  ],
+  "protocolo_mudanca": {
+    "intro": "Mudança de verba, de oferta ou de estrutura de campanha só entra com regra escrita e depois de um checkpoint. A ideia é errar pequeno, medir cedo e poder voltar atrás.",
+    "regras": [
+      "Verba acima do plano de mídia da 07 sobe em degraus de até 15% por quinzena, e só se o CAC do período ficar abaixo de R$ 80 e o ROAS global acima de 3,5x.",
+      "Se o CAC passar de R$ 80 por 2 semanas seguidas, o último degrau de verba é revertido e só volta a subir depois de uma quinzena fechada abaixo do teto.",
+      "A realocação de 15% da prospecção ampla do Meta é avaliada por 2 semanas, por plataforma, antes de qualquer novo ajuste.",
+      "A Black Friday só abre com o brinde, a margem por SKU e a cobertura do sérum conferidos; se a cobertura estiver abaixo de 7 dias em 20/11/2026, o sérum sai da campanha.",
+      "O desconto da Black Friday fica em até 20% (era 35% em NOV/25), com o sérum em no máximo 10%.",
+      "Toda mudança é registrada na ata da reunião mensal de resultados, com responsável, data e gatilho de reversão; mudança sem registro não vale."
+    ]
+  },
+  "kpis_acompanhamento": [
+    {
+      "kpi": "Receita captada do mês",
+      "meta_limite": "Meta de R$ 90.568 em JAN/27 (Realista). Abaixo da meta do mês em 2 checks seguidos, replanejar a verba na reunião mensal."
+    },
+    {
+      "kpi": "CAC",
+      "meta_limite": "Teto de R$ 80 (era R$ 112,68 em SET/26). Acima do teto por 2 semanas seguidas, reverter o último degrau de verba."
+    },
+    {
+      "kpi": "ROAS global",
+      "meta_limite": "Meta de 3,60x em JAN/27 (era 3,06x em SET/26). Piso de 2,86 sobre a receita aprovada e de 3,02 sobre a captada."
+    },
+    {
+      "kpi": "Taxa de conversão global",
+      "meta_limite": "Meta de 1,42% em JAN/27 (era 1,25% em JAN/26). Sem avanço em 2 checks seguidos, revisar o funil com a Bruna."
+    },
+    {
+      "kpi": "Ticket médio",
+      "meta_limite": "Meta de R$ 201,69 em JAN/27 (era R$ 199,51 em JAN/26)."
+    },
+    {
+      "kpi": "Custo por sessão paga",
+      "meta_limite": "Meta de R$ 1,55 em JAN/27 (era R$ 1,67 em SET/26)."
+    },
+    {
+      "kpi": "Dependência de mídia paga",
+      "meta_limite": "Meta de 51,5% em JAN/27 e de 45% em SET/27 (era 54,8% em SET/26)."
+    },
+    {
+      "kpi": "Taxa de quebra",
+      "meta_limite": "Meta de 5,5% na média do ciclo (era 7,1% em SET/26). Acima de 7,1% em um mês, revisar o antifraude e o lembrete de PIX."
+    }
+  ],
   "horizontes": [
     {
       "nome": "Imediato",
@@ -112,7 +338,11 @@
           "gatilho": "Se o CAC passar de R$ 80 por 2 semanas seguidas, então reverter o último degrau de verba e só voltar a subir quando o CAC fechar uma quinzena abaixo do teto",
           "solucoes": [
             "P1.S1"
-          ]
+          ],
+          "decisao_cliente": {
+            "ate": "27/10/2026",
+            "recomendacao": "Aprovar o teto de CAC de R$ 80 e a regra de escala em degraus de até 15% por quinzena, como está no COMO da ação."
+          }
         },
         {
           "numero": 2,
@@ -374,7 +604,11 @@
           "solucoes": [
             "P6.S1",
             "P6.S2"
-          ]
+          ],
+          "decisao_cliente": {
+            "ate": "06/11/2026",
+            "recomendacao": "Aprovar o brinde da Black Friday, com a margem da Curva A, e o desconto de até 20%, com o sérum em no máximo 10%."
+          }
         },
         {
           "numero": 15,
@@ -500,7 +734,11 @@
           "gatilho": "Se os kits não estiverem no ar até 31/03/2027, então o pré-aquecimento do Dia das Mães usa só o Kit Rotina Essencial e os novos kits entram depois de MAI/2027",
           "solucoes": [
             "P8.S1"
-          ]
+          ],
+          "decisao_cliente": {
+            "ate": "18/12/2026",
+            "recomendacao": "Aprovar a composição e o preço dos dois novos kits (sérum com protetor, e hidratante com limpeza), com a margem por SKU."
+          }
         },
         {
           "numero": 21,
