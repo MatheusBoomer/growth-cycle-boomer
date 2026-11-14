@@ -10,10 +10,12 @@ cadeia de KPIs do `projecao.py`, sem usar os valores em cache das fórmulas:
 
 O resultado vira o bloco `metas_mensais` do JSON do plano (os outros campos ficam como estão).
 Os números saem em pt-BR (1.234,56): conversão com duas casas, % pagas com uma.
-Os meses da planilha são relativos ("Mês m-12"), então quem chama passa os rótulos reais.
+Os meses da planilha são relativos ("Mês m-12"): o mês 1 da projeção é o mês de `fim_ciclo` do plano
+menos 11 meses (os 12 meses do ciclo terminam em `fim_ciclo`) e os rótulos saem sozinhos, em pt-BR
+curto ("Out/26"). `--rotulos` é opcional e, quando vem, precisa ser igual aos gerados.
 
     python3 scripts/metas_mensais.py --plano <json> --projecao <xlsx> --cenario Realista --meses 3 \\
-        --rotulos "Nov/26,Dez/26,Jan/27" --checks "02/12/2026,30/12/2026,05/02/2027"
+        --checks "11/11/2026,11/12/2026,11/01/2027"
 """
 from __future__ import annotations
 
@@ -28,12 +30,13 @@ from pathlib import Path
 import openpyxl
 from openpyxl.utils.exceptions import InvalidFileException
 
-from plano_acao_comum import ErroPlano, formatar_percentual
+from plano_acao_comum import ErroPlano, formatar_percentual, ler_data
 
 # Cenário do plano -> aba da planilha (o Realista é a aba "Meta").
 ABA_DO_CENARIO = {"Realista": "Meta", "Pessimista": "Pessimista", "Otimista": "Otimista"}
 PRIMEIRA_LINHA = 2
 MESES_DA_PROJECAO = 12
+MESES_ABREVIADOS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
 COLUNAS = [
     "Mês", "Check em", "Receita (R$)", "Invest. (R$)", "Ticket (R$)",
     "Conv.", "CPS (R$)", "% pagas", "Sessões", "Vendas",
@@ -88,6 +91,13 @@ def calcular_meses(projecao: Path, cenario: str, meses: int) -> list[dict]:
             "receita": vendas * ticket,
         })
     return resultado
+
+
+def rotulos_dos_meses(fim_ciclo: str, meses: int) -> list[str]:
+    """Rótulos ("Out/26") dos `meses` primeiros meses; o mês 1 é o de `fim_ciclo` menos 11 meses."""
+    fim = ler_data(fim_ciclo, "fim_ciclo")
+    indice = fim.year * 12 + (fim.month - 1) - (MESES_DA_PROJECAO - 1)
+    return [f"{MESES_ABREVIADOS[(indice + i) % 12]}/{(indice + i) // 12 % 100:02d}" for i in range(meses)]
 
 
 def _br(valor: float, casas: int) -> str:
@@ -151,7 +161,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--projecao", required=True, type=Path)
     p.add_argument("--cenario", default="Realista")
     p.add_argument("--meses", default="3")
-    p.add_argument("--rotulos", required=True, help='rótulos dos meses separados por vírgula, ex.: "Nov/26,Dez/26,Jan/27"')
+    p.add_argument(
+        "--rotulos",
+        help='opcional: rótulos dos meses separados por vírgula; precisam ser iguais aos gerados a partir de fim_ciclo (ex.: "Nov/26,Dez/26,Jan/27")',
+    )
     p.add_argument("--checks", required=True, help='datas dos checks separadas por vírgula, ex.: "02/12/2026,30/12/2026"')
     a = p.parse_args(argv)
     try:
@@ -170,7 +183,15 @@ def main(argv: list[str] | None = None) -> int:
         if not isinstance(plano, dict):
             raise ErroPlano("O plano precisa ser um objeto JSON.")
         linhas = calcular_meses(a.projecao, a.cenario, meses)
-        plano["metas_mensais"] = montar_bloco(linhas, _lista(a.rotulos), _lista(a.checks), a.cenario)
+        if not plano.get("fim_ciclo"):
+            raise ErroPlano("O plano não tem fim_ciclo; sem ele não dá para saber o mês 1 da projeção.")
+        rotulos = rotulos_dos_meses(plano["fim_ciclo"], meses)
+        if a.rotulos is not None and _lista(a.rotulos) != rotulos:
+            raise ErroPlano(
+                f"Os rótulos informados ({', '.join(_lista(a.rotulos)) or 'vazio'}) não batem com os do ciclo "
+                f"({', '.join(rotulos)}); o mês 1 é o de fim_ciclo menos 11 meses. Tire --rotulos ou corrija."
+            )
+        plano["metas_mensais"] = montar_bloco(linhas, rotulos, _lista(a.checks), a.cenario)
         try:
             _gravar_json(a.plano, plano)
         except OSError as e:

@@ -144,7 +144,10 @@ def test_montar_bloco_exige_um_rotulo_e_um_check_por_mes():
 
 def _plano(tmp_path) -> Path:
     p = tmp_path / "plano.json"
-    p.write_text(json.dumps({"abertura": {"titulo": "x"}, "outra": [1, 2]}, ensure_ascii=False), encoding="utf-8")
+    p.write_text(
+        json.dumps({"abertura": {"titulo": "x"}, "outra": [1, 2], "fim_ciclo": "31/10/2027"}, ensure_ascii=False),
+        encoding="utf-8",
+    )
     return p
 
 
@@ -154,7 +157,7 @@ def _args(plano, **extra):
         "--rotulos": ",".join(ROTULOS), "--checks": ",".join(CHECKS),
     }
     a.update(extra)
-    return [x for par in a.items() for x in par]
+    return [x for par in a.items() if par[1] is not None for x in par]
 
 
 def test_cli_grava_o_bloco_e_preserva_as_outras_chaves(tmp_path, capsys):
@@ -166,6 +169,31 @@ def test_cli_grava_o_bloco_e_preserva_as_outras_chaves(tmp_path, capsys):
     assert dados["metas_mensais"]["cenario"] == "Realista"
     assert len(dados["metas_mensais"]["linhas"]) == 4
     assert list(tmp_path.iterdir()) == [plano]  # sem temporário sobrando
+
+
+def test_rotulos_saem_do_fim_do_ciclo_menos_onze_meses():
+    assert m.rotulos_dos_meses("31/10/2027", 3) == ["Nov/26", "Dez/26", "Jan/27"]
+    assert m.rotulos_dos_meses("30/09/2027", 3) == ["Out/26", "Nov/26", "Dez/26"]
+    assert m.rotulos_dos_meses("31/12/2027", 12)[0] == "Jan/27"
+    assert m.rotulos_dos_meses("15/01/2028", 2) == ["Fev/27", "Mar/27"]
+    with pytest.raises(ErroPlano, match="fim_ciclo"):
+        m.rotulos_dos_meses("2027-10-31", 3)
+
+
+def test_cli_sem_rotulos_gera_os_rotulos_automaticos(tmp_path):
+    plano = _plano(tmp_path)
+    assert m.main(_args(plano, **{"--rotulos": None})) == 0
+    linhas = json.loads(plano.read_text(encoding="utf-8"))["metas_mensais"]["linhas"]
+    assert [l[0] for l in linhas[:3]] == ROTULOS
+
+
+def test_cli_sem_fim_ciclo_falha_sem_gravar(tmp_path, capsys):
+    plano = tmp_path / "plano.json"
+    plano.write_text(json.dumps({"outra": 1}), encoding="utf-8")
+    antes = plano.read_bytes()
+    assert m.main(_args(plano, **{"--rotulos": None})) == 1
+    assert "fim_ciclo" in capsys.readouterr().err
+    assert plano.read_bytes() == antes
 
 
 def test_cli_passa_no_validador_do_plano(tmp_path):
@@ -183,6 +211,7 @@ def test_cli_passa_no_validador_do_plano(tmp_path):
     ({"--meses": "13"}, "A projeção tem 12 meses"),
     ({"--cenario": "Catastrófico"}, "Cenário"),
     ({"--rotulos": "Nov/26,Dez/26"}, "rótulos"),
+    ({"--rotulos": "Out/26,Nov/26,Dez/26"}, "não bate"),
     ({"--meses": "tres"}, "meses"),
 ])
 def test_cli_falha_com_erro_em_portugues_e_nao_altera_o_json(tmp_path, capsys, extra, trecho):
