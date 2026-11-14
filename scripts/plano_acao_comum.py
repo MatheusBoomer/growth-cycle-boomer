@@ -108,14 +108,88 @@ def tabela_resumo(plano: dict) -> list[dict]:
     ]
 
 
-def texto_depende(acao: dict) -> str:
-    """'Nenhuma', 'Ação 2' ou 'Ações 2, 5'."""
+def ondas(plano: dict) -> list[dict]:
+    """Ondas do plano na ordem do JSON; lista vazia quando o plano não tem `ondas`."""
+    return list(plano.get("ondas") or [])
+
+
+def onda_da_acao(plano: dict, numero: int) -> dict | None:
+    """A onda que lista a ação `numero`, ou None."""
+    for onda in ondas(plano):
+        if numero in (onda.get("acoes") or []):
+            return onda
+    return None
+
+
+def nome_da_acao(plano: dict, numero: int) -> str:
+    """Nome da ação `numero`; texto vazio quando ela não existe."""
+    for _, acao in acoes(plano):
+        if acao.get("numero") == numero:
+            return acao.get("acao", "")
+    return ""
+
+
+def texto_depende(acao: dict, plano: dict | None = None) -> str:
+    """'Nenhuma', 'Ação 2' ou 'Ações 2, 5'; com `plano`, cada ação leva o nome:
+    'Ação 2 (Nome); Ação 5 (Nome)'."""
     deps = acao.get("depende_de") or []
     if not deps:
         return "Nenhuma"
+    if plano is not None:
+        partes = []
+        for d in deps:
+            nome = nome_da_acao(plano, d)
+            partes.append(f"Ação {d} ({nome})" if nome else f"Ação {d}")
+        return "; ".join(partes)
     if len(deps) == 1:
         return f"Ação {deps[0]}"
     return "Ações " + ", ".join(str(d) for d in deps)
+
+
+def visao_geral(plano: dict) -> list[dict]:
+    """Uma linha por onda para a tabela de visão geral."""
+    return [
+        {
+            "numero": o.get("numero"),
+            "nome": o.get("nome"),
+            "janela": f"{o.get('inicio')} a {o.get('fim')}",
+            "calendario_midia": o.get("calendario_midia"),
+            "foco": o.get("objetivo"),
+            "total_acoes": len(o.get("acoes") or []),
+        }
+        for o in ondas(plano)
+    ]
+
+
+def decisoes_do_cliente(plano: dict) -> list[dict]:
+    """Ações com `decisao_cliente`, ordenadas pela data limite e, no empate, pelo número."""
+    linhas = []
+    for _, a in acoes(plano):
+        decisao = a.get("decisao_cliente")
+        if not decisao:
+            continue
+        linhas.append(
+            {
+                "numero": a.get("numero"),
+                "acao": a.get("acao"),
+                "ate": decisao.get("ate"),
+                "recomendacao": decisao.get("recomendacao"),
+            }
+        )
+    return sorted(
+        linhas,
+        key=lambda d: (ler_data(d["ate"], f"Ação {d['numero']}, decisão do cliente"), d["numero"]),
+    )
+
+
+def quando_curto(acao: dict, ano_base: int) -> str:
+    """'12/11 a 13/11': dia/mês; a data de ano diferente de `ano_base` leva '/aa' ('29/01/27')."""
+
+    def curta(texto: str, onde: str) -> str:
+        d = ler_data(texto, f"Ação {acao.get('numero')}, {onde}")
+        return d.strftime("%d/%m") if d.year == ano_base else d.strftime("%d/%m/%y")
+
+    return f"{curta(acao['inicio'], 'início')} a {curta(acao['entrega'], 'entrega')}"
 
 
 def formatar_decimal(valor: float, casas: int = 2) -> str:

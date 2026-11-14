@@ -181,3 +181,66 @@ def plano_valido() -> dict:
             },
         ],
     }
+
+
+def plano_com_ondas() -> dict:
+    """plano_valido() com 3 ondas (janelas em ordem, cada ação começa dentro da onda que a lista),
+    checkpoints nas ondas 1 e 2 (a última não tem) e decisões do cliente nas ações 3 e 5."""
+    plano = plano_valido()
+    acoes_por_numero = {a["numero"]: a for _, a in ((h["nome"], a) for h in plano["horizontes"] for a in h["acoes"])}
+    acoes_por_numero[1]["acao"] = "Liberar os acessos"
+    acoes_por_numero[3]["depende_de"] = [1]
+    acoes_por_numero[5]["depende_de"] = [2, 3]
+    acoes_por_numero[3]["decisao_cliente"] = {
+        "ate": "30/10/2026",
+        "recomendacao": "Aprovar a redistribuição da verba por classe da Curva ABC.",
+    }
+    acoes_por_numero[5]["decisao_cliente"] = {
+        "ate": "27/11/2026",
+        "recomendacao": "Autorizar o e-mail e o CRM como canais de recompra.",
+    }
+    plano["ondas"] = [
+        {
+            "numero": 1,
+            "nome": "Contenção",
+            "inicio": "26/10/2026",
+            "fim": "01/11/2026",
+            "calendario_midia": "Contenção",
+            "objetivo": "Destravar acessos e a medição do funil antes de mexer na verba.",
+            "acoes": [1, 2],
+            "checkpoint": {
+                "data": "30/10/2026",
+                "duracao": "30 minutos",
+                "pauta": "Acessos liberados e eventos de funil no GA4.",
+                "para_liberar": "Acessos entregues e eventos de carrinho visíveis no GA4.",
+                "quem_decide": "Gestor de projetos · Boomer e responsável pela operação do cliente",
+            },
+        },
+        {
+            "numero": 2,
+            "nome": "Escala",
+            "inicio": "02/11/2026",
+            "fim": "30/11/2026",
+            "calendario_midia": "Escala",
+            "objetivo": "Reestruturar as campanhas por Curva ABC e proteger o estoque anunciado.",
+            "acoes": [3, 4],
+            "checkpoint": {
+                "data": "27/11/2026",
+                "duracao": "45 minutos",
+                "pauta": "ROAS por classe e ruptura de estoque.",
+                "para_liberar": "ROAS acima do piso aprovado nas classes A e B.",
+                "quem_decide": "Gestor de tráfego · Boomer e diretoria do cliente",
+            },
+        },
+        {
+            "numero": 3,
+            "nome": "Manutenção",
+            "inicio": "01/12/2026",
+            "fim": "30/06/2027",
+            "calendario_midia": "Pico e Manutenção",
+            "objetivo": "Diversificar os canais e manter a rotina de revisão do plano.",
+            "acoes": [5, 6],
+            "checkpoint": None,
+        },
+    ]
+    return plano
