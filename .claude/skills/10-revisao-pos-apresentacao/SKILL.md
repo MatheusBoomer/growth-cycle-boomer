@@ -284,7 +284,7 @@ resposta, pergunte no chat, uma por vez.
    visão geral acompanha); decisão do cliente resolvida na apresentação sai da
    ação (`decisao_cliente: null`) ou é atualizada, e a revisão a cita pelo
    número da ação; mudança de onda e de decisão aparecem em "campos" do
-   relatório. Plano da 08 sem ondas não ganha ondas na etapa 10: o AVISO
+   relatório (a comparação delas só vale quando os dois planos têm ondas). Plano da 08 sem ondas não ganha ondas na etapa 10: o AVISO
    "sem ondas" do validador é esperado.
 3. **Mudança de meta, verba ou número do cenário** só com decisão explícita
    do analista num conflito. Ela vale só no plano final, com rastro: registre

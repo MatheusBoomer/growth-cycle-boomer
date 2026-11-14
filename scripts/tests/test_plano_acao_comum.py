@@ -191,6 +191,13 @@ def test_diferencas_pega_mudanca_de_onda_e_de_decisao_do_cliente():
     assert alteradas == {3: ["decisao_cliente"], 4: ["onda"], 5: ["decisao_cliente"]}
 
 
+def test_diferencas_plano_antigo_contra_plano_em_ondas_ignora_onda_e_decisao():
+    a = ex.plano_com_ondas()
+    b = ex.plano_valido()  # mesmas ações, sem ondas e sem decisões do cliente
+    assert c.diferencas(a, b)["alteradas"].keys() <= {1, 2, 3, 4, 5, 6}
+    assert all("onda" not in v and "decisao_cliente" not in v for v in c.diferencas(a, b)["alteradas"].values())
+
+
 def test_diferencas_plano_sem_ondas_nao_ganha_diferenca_de_onda():
     import copy
     a = ex.plano_valido()

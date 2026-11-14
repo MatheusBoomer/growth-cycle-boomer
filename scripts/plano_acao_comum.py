@@ -232,6 +232,9 @@ _CAMPOS_COMPARADOS = CAMPOS_ACAO + (
 )
 
 
+_CAMPOS_DAS_ONDAS = ("onda", "decisao_cliente")
+
+
 def _numero_da_onda(plano: dict, numero) -> int | None:
     """Número da onda que lista a ação, ou None (plano sem ondas ou ação fora de todas)."""
     ondas_plano = plano.get("ondas")
@@ -260,13 +263,18 @@ def diferencas(plano_a: dict, plano_b: dict) -> dict:
 
     Devolve {"incluidas": [números só em b], "removidas": [números só em a],
     "alteradas": {número: [campos que mudaram]}, "metas_alteradas": [kpis]}.
+    `onda` (número da onda que lista a ação) e `decisao_cliente` só entram na comparação quando os
+    dois planos têm ondas; plano antigo contra plano em ondas não gera diferença por esses campos.
     Ações são pareadas por `numero`; metas, por `kpi` (meta incluída, removida ou com
     `de`/`para`/`ate` diferente conta como alterada).
     """
     a, b = _acoes_por_numero(plano_a), _acoes_por_numero(plano_b)
+    # `onda` e `decisao_cliente` só existem no formato em ondas: só se comparam quando os dois planos o têm.
+    nos_dois_com_ondas = bool(plano_a.get("ondas")) and bool(plano_b.get("ondas"))
+    comparados = [c for c in _CAMPOS_COMPARADOS if nos_dois_com_ondas or c not in _CAMPOS_DAS_ONDAS]
     alteradas = {}
     for numero in sorted(set(a) & set(b)):
-        campos = [campo for campo in _CAMPOS_COMPARADOS if a[numero].get(campo) != b[numero].get(campo)]
+        campos = [campo for campo in comparados if a[numero].get(campo) != b[numero].get(campo)]
         if campos:
             alteradas[numero] = campos
     ma, mb = _metas_por_kpi(plano_a), _metas_por_kpi(plano_b)
