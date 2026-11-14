@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 import { ID_VISAO_GERAL } from "@workspace/core/catalogo-skills-tipos"
 import type { NotaSkill } from "@workspace/core/notas-skills"
-import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Button } from "@workspace/ui/components/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@workspace/ui/components/select"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@workspace/ui/components/sheet"
@@ -15,6 +14,7 @@ import { api, mensagemDeErro, type CatalogoSkills as DadosCatalogo, type Detalhe
 import { agruparPorGrupo, semFrontmatter } from "@/lib/catalogo-skills-tela"
 import { Fluxograma } from "./fluxograma"
 import { NotasSkill } from "./notas-skill"
+import { AvisoAdmin } from "@/components/admin/aviso-admin"
 
 const LEGENDA = "Laranja: aprovação do analista · Azul: subagente · Verde: entrega"
 
@@ -42,7 +42,7 @@ function ListaItens({ itens, selecionado, escolher }: { itens: ItemSkill[]; sele
             >
               <span className="min-w-0 truncate">{i.titulo}</span>
               {i.notasAbertas > 0 && (
-                <span aria-label={`${i.notasAbertas} notas abertas`} className="bg-aviso-fundo text-aviso shrink-0 rounded-md px-1.5 text-xs font-semibold tabular-nums">
+                <span aria-label={`${i.notasAbertas} notas abertas`} className="bg-aviso-fundo text-link-acao shrink-0 rounded-full px-1.5 font-mono text-[10.5px] tabular-nums">
                   {i.notasAbertas}
                 </span>
               )}
@@ -128,9 +128,7 @@ export function CatalogoSkills() {
 
   if (erro && !catalogo) {
     return (
-      <Alert>
-        <AlertDescription>{erro}</AlertDescription>
-      </Alert>
+      <AvisoAdmin mensagem={erro} aba="skills" />
     )
   }
   if (!catalogo) return <Skeleton className="h-96 w-full" />
@@ -140,16 +138,14 @@ export function CatalogoSkills() {
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-muted-foreground text-sm">Fluxo e texto de cada etapa, subagente e regra. As notas anotam o que melhorar.</p>
+      {/* A frase que explica a aba fica no cabeçalho da administração. */}
+      <div className="flex flex-wrap items-center justify-end gap-2">
         <Button variant="outline" size="sm" onClick={copiarNotas}>
           Copiar notas abertas
         </Button>
       </div>
       {erro && (
-        <Alert>
-          <AlertDescription>{erro}</AlertDescription>
-        </Alert>
+        <AvisoAdmin mensagem={erro} aba="skills" />
       )}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[14rem_minmax(0,1fr)_18rem]">
         <aside>
@@ -183,15 +179,13 @@ export function CatalogoSkills() {
 
         <div className="flex min-w-0 flex-col gap-4">
           {erroDetalhe ? (
-            <Alert>
-              <AlertDescription>{erroDetalhe}</AlertDescription>
-            </Alert>
+            <AvisoAdmin mensagem={erroDetalhe} aba="skills" />
           ) : detalhe === null ? (
             <Skeleton className="h-72 w-full" />
           ) : (
             <>
               <header className="flex flex-col gap-1">
-                <h2 className="text-texto-forte font-heading text-lg font-semibold">{detalhe.titulo}</h2>
+                <h2 className="text-texto-forte font-serif text-[28px] leading-tight font-normal">{detalhe.titulo}</h2>
                 <p className="text-muted-foreground text-sm">{detalhe.resumo}</p>
               </header>
               {itemAtual?.temFluxo ? (

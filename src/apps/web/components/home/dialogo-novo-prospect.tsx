@@ -10,6 +10,7 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@wo
 import { Input } from "@workspace/ui/components/input"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { api, ErroApi, mensagemDeErro } from "@/lib/api"
+import { IconeModal } from "@/components/marca/icone-modal"
 
 export function DialogoNovoProspect() {
   const router = useRouter()
@@ -45,7 +46,12 @@ export function DialogoNovoProspect() {
       <DialogContent>
         <form onSubmit={criar} className="contents">
           <DialogHeader>
-            <DialogTitle>Novo prospect</DialogTitle>
+            <IconeModal tom="acao">
+              <PlusIcon />
+            </IconeModal>
+            <DialogTitle>
+              Novo <em>prospect</em>
+            </DialogTitle>
             <DialogDescription>Cria a pasta do prospect a partir do modelo e libera a Etapa 01.</DialogDescription>
           </DialogHeader>
           <FieldGroup>

@@ -64,11 +64,11 @@ describe("POST /auth/sair", () => {
     expect(r.headers.get("location")).toBe("https://planejamento.exemplo.com.br/login")
   })
 
-  it("modo off: redireciona para / sem tocar no Supabase", async () => {
+  it("modo off (local): volta para a tela de login sem tocar no Supabase", async () => {
     vi.stubEnv("PLANEJAMENTO_AUTH", "")
     const r = await POST(req())
     expect(r.status).toBe(303)
-    expect(r.headers.get("location")).toBe("http://127.0.0.1:3000/")
+    expect(r.headers.get("location")).toBe("http://127.0.0.1:3000/login")
     expect(createServerClient).not.toHaveBeenCalled()
   })
 })

@@ -230,3 +230,43 @@ describe("guarda da numeração antiga", () => {
     expect((await arm.lerEstado("velho"))?.versaoEtapas).toBe(2)
   })
 })
+
+describe("normalização do estado lido (etapa 10)", () => {
+  async function lerSemA10(slug: string, statusFinal: "concluida" | "liberada") {
+    await arm.criarPasta(slug)
+    const e = estadoInicial({ slug, nome: slug, site: null }, "2026-11-01T10:00:00.000Z")
+    for (const id of ["01", "02", "03", "04", "05", "06", "07", "08"] as const) e.etapas[id] = etapaVazia("concluida")
+    e.etapas.final = etapaVazia(statusFinal)
+    const cru = { ...e, etapas: { ...e.etapas } } as { etapas: Record<string, unknown> }
+    delete cru.etapas["10"]
+    await gravarCru(slug, cru)
+    return arm.lerEstado(slug)
+  }
+
+  it("prospect antigo com a final concluída e sem a chave 10 abre com a 10 liberada", async () => {
+    expect((await lerSemA10("antigo-concluido", "concluida"))?.etapas["10"]?.status).toBe("liberada")
+  })
+
+  it("com a final só liberada, a 10 ausente entra bloqueada", async () => {
+    const lido = await lerSemA10("antigo-aberto", "liberada")
+    expect(lido?.etapas["10"]?.status).toBe("bloqueada")
+    expect(lido?.etapas.final?.status).toBe("liberada")
+  })
+
+  it("a etapa 10 gravada como null é completada como a ausente", async () => {
+    await arm.criarPasta("com-null")
+    const e = estadoInicial({ slug: "com-null", nome: "Com null", site: null }, "2026-11-01T10:00:00.000Z")
+    for (const id of ["01", "02", "03", "04", "05", "06", "07", "08", "final"] as const) e.etapas[id] = etapaVazia("concluida")
+    await gravarCru("com-null", { ...e, etapas: { ...e.etapas, "10": null } })
+    expect((await arm.lerEstado("com-null"))?.etapas["10"]?.status).toBe("liberada")
+  })
+
+  it("estado com a chave 10 não é alterado na leitura", async () => {
+    await arm.criarPasta("completo")
+    const e = estadoInicial({ slug: "completo", nome: "Completo", site: null }, "2026-11-01T10:00:00.000Z")
+    for (const id of ["01", "02", "03", "04", "05", "06", "07", "08", "final"] as const) e.etapas[id] = etapaVazia("concluida")
+    e.etapas["10"] = etapaVazia("liberada")
+    await gravarCru("completo", e)
+    expect(await arm.lerEstado("completo")).toEqual(e)
+  })
+})

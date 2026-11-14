@@ -20,3 +20,12 @@ describe("caixaDoNumero", () => {
     expect(caixaDoNumero({ x: 33.333, y: 120 })).toEqual({ x: 33.33, y: 100, w: 0, h: 0 })
   })
 })
+
+describe("numerosDaEtiqueta", () => {
+  it("um número, uma faixa ou nada", async () => {
+    const { numerosDaEtiqueta } = await import("./anotacoes")
+    expect(numerosDaEtiqueta(3, 1)).toBe("3")
+    expect(numerosDaEtiqueta(1, 2)).toBe("1-2")
+    expect(numerosDaEtiqueta(1, 0)).toBeUndefined()
+  })
+})

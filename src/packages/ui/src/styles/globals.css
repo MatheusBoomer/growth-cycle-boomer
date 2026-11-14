@@ -11,6 +11,7 @@
     --font-heading: var(--font-sans);
     --font-sans: var(--font-sans);
     --font-mono: var(--font-mono);
+    --font-serif: var(--font-serif);
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -70,128 +71,122 @@
     --radius-4xl: 24px;
 }
 
-/* Tema claro: laranja da marca + azul-marinho do logo */
+/* Tema claro pérola: branco quase neutro com um toque de calor */
 :root {
-    --background: #f5f6fa;
-    --foreground: #1e293b;
-    --card: rgb(255 255 255 / 0.92);
-    --card-foreground: #1e293b;
+    --background: #f7f6f3;
+    --foreground: #17150f;
+    --card: #ffffff;
+    --card-foreground: #17150f;
     --popover: #ffffff;
-    --popover-foreground: #1e293b;
+    --popover-foreground: #17150f;
     --primary: #eb610a;
     --primary-foreground: #ffffff;
-    --secondary: rgb(15 27 61 / 0.05);
-    --secondary-foreground: #1e293b;
-    --muted: rgb(15 27 61 / 0.04);
-    --muted-foreground: #5a6578;
-    --accent: rgb(15 27 61 / 0.06);
-    --accent-foreground: #0f1b3d;
+    --secondary: rgb(45 35 20 / 0.05);
+    --secondary-foreground: #17150f;
+    --muted: rgb(45 35 20 / 0.04);
+    --muted-foreground: #67635b;
+    --accent: rgb(45 35 20 / 0.06);
+    --accent-foreground: #17150f;
     --destructive: #be123c;
-    --border: rgb(15 27 61 / 0.08);
-    --input: rgb(15 27 61 / 0.12);
+    --border: rgb(45 35 20 / 0.085);
+    --input: rgb(45 35 20 / 0.14);
     --ring: rgb(235 97 10 / 0.45);
     --chart-1: #eb610a;
     --chart-2: #3987e5;
     --chart-3: #199e70;
-    --chart-4: #94a3b8;
-    --chart-5: #64748b;
+    --chart-4: #8b4fd1;
+    --chart-5: #b86e00;
     --radius: 0.5rem;
     --sidebar: #ffffff;
-    --sidebar-foreground: #1e293b;
+    --sidebar-foreground: #17150f;
     --sidebar-primary: #eb610a;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: rgb(15 27 61 / 0.06);
-    --sidebar-accent-foreground: #0f1b3d;
-    --sidebar-border: rgb(15 27 61 / 0.08);
+    --sidebar-accent: rgb(45 35 20 / 0.06);
+    --sidebar-accent-foreground: #17150f;
+    --sidebar-border: rgb(45 35 20 / 0.085);
     --sidebar-ring: rgb(235 97 10 / 0.45);
 
-    --texto-forte: #0f1b3d;
+    --texto-forte: #17150f;
     --primario-claro: #f47a2a;
-    --sucesso: #047857;
-    --sucesso-fundo: rgb(16 185 129 / 0.12);
+    --sucesso: #046c4e;
+    --sucesso-fundo: rgb(16 128 90 / 0.11);
     --aviso: #92400e;
     --aviso-fundo: rgb(245 158 11 / 0.12);
     --perigo-fundo: rgb(225 29 72 / 0.08);
     --selo-haiku: #047857;
-    --selo-haiku-fundo: rgb(16 185 129 / 0.14);
-    --selo-sonnet: #1d4ed8;
-    --selo-sonnet-fundo: rgb(59 130 246 / 0.14);
+    --selo-haiku-fundo: rgb(16 128 90 / 0.11);
+    --selo-sonnet: #2560c0;
+    --selo-sonnet-fundo: rgb(44 107 208 / 0.1);
     --selo-opus: #6d28d9;
-    --selo-opus-fundo: rgb(139 92 246 / 0.14);
+    --selo-opus-fundo: rgb(109 40 217 / 0.09);
     --volume: #2563eb;
-    --link-acao: #c2410c;
+    --link-acao: #b54404;
     --papel: #ffffff;
-    --vidro-1: rgb(255 255 255 / 0.97);
-    --vidro-2: rgb(255 255 255 / 0.94);
-    --vidro-interno: rgb(15 27 61 / 0.03);
-    --sombra-card: 0 1px 0 0 #ffffff inset, 0 18px 36px -26px rgb(15 27 61 / 0.28);
-    --orb-laranja: 0.1;
-    --orb-azul: 0.08;
-    --orb-verde: 0.05;
-    --pontos: 0.05;
-    --pontos-cor: rgb(15 27 61 / 0.55);
+    --vidro-1: rgb(255 255 255 / 0.98);
+    --vidro-2: rgb(253 252 250 / 0.97);
+    --vidro-interno: rgb(45 35 20 / 0.03);
+    --sombra-card: 0 1px 0 0 #ffffff inset, 0 1px 2px rgb(45 35 20 / 0.04), 0 12px 28px -18px rgb(60 45 25 / 0.22);
+    --brilho: rgb(235 97 10 / 0.1);
+    --veu: rgb(30 25 15 / 0.32);
 }
 
-/* Tema escuro: padrão Boomer (Growth Cockpit) */
+/* Tema escuro: quase preto neutro */
 .dark {
-    --background: #070a12;
-    --foreground: #f1f5f9;
-    --card: rgb(255 255 255 / 0.035);
-    --card-foreground: #f1f5f9;
-    --popover: #0f1420;
-    --popover-foreground: #f1f5f9;
+    --background: #0a0a0b;
+    --foreground: #f4f4f5;
+    --card: rgb(255 255 255 / 0.045);
+    --card-foreground: #f4f4f5;
+    --popover: #141416;
+    --popover-foreground: #f4f4f5;
     --primary: #eb610a;
     --primary-foreground: #ffffff;
     --secondary: rgb(255 255 255 / 0.06);
-    --secondary-foreground: #f1f5f9;
+    --secondary-foreground: #f4f4f5;
     --muted: rgb(255 255 255 / 0.04);
-    --muted-foreground: #94a3b8;
+    --muted-foreground: #8b8b93;
     --accent: rgb(255 255 255 / 0.07);
     --accent-foreground: #ffffff;
     --destructive: #fb7185;
-    --border: rgb(255 255 255 / 0.07);
-    --input: rgb(255 255 255 / 0.1);
+    --border: rgb(255 255 255 / 0.08);
+    --input: rgb(255 255 255 / 0.14);
     --ring: rgb(235 97 10 / 0.5);
-    --sidebar: #0f1420;
-    --sidebar-foreground: #f1f5f9;
+    --sidebar: #141416;
+    --sidebar-foreground: #f4f4f5;
     --sidebar-primary: #eb610a;
     --sidebar-primary-foreground: #ffffff;
     --sidebar-accent: rgb(255 255 255 / 0.07);
     --sidebar-accent-foreground: #ffffff;
-    --sidebar-border: rgb(255 255 255 / 0.07);
+    --sidebar-border: rgb(255 255 255 / 0.08);
     --sidebar-ring: rgb(235 97 10 / 0.5);
     --chart-1: #f2762e;
     --chart-2: #5b9df0;
     --chart-3: #2fbf8c;
-    --chart-4: #cbd5e1;
-    --chart-5: #8696ad;
+    --chart-4: #c084fc;
+    --chart-5: #fbbf24;
 
     --texto-forte: #ffffff;
-    --sucesso: #34d399;
-    --sucesso-fundo: rgb(16 185 129 / 0.1);
+    --sucesso: #2fbf8c;
+    --sucesso-fundo: rgb(47 191 140 / 0.14);
     --aviso: #fbbf24;
     --aviso-fundo: rgb(251 191 36 / 0.1);
     --perigo-fundo: rgb(244 63 94 / 0.1);
-    --selo-haiku: #34d399;
-    --selo-haiku-fundo: rgb(16 185 129 / 0.16);
+    --selo-haiku: #2fbf8c;
+    --selo-haiku-fundo: rgb(47 191 140 / 0.14);
     --selo-sonnet: #7db4f5;
     --selo-sonnet-fundo: rgb(59 130 246 / 0.18);
     --selo-opus: #b79af8;
     --selo-opus-fundo: rgb(139 92 246 / 0.2);
     --volume: #3987e5;
-    --link-acao: #f0894a;
-    --vidro-1: rgb(21 27 42 / 0.94);
-    --vidro-2: rgb(15 20 32 / 0.9);
+    --link-acao: #ff8a3d;
+    --vidro-1: rgb(22 22 24 / 0.94);
+    --vidro-2: rgb(15 15 17 / 0.9);
     --vidro-interno: rgb(0 0 0 / 0.25);
     --sombra-card: 0 1px 0 0 rgb(255 255 255 / 0.04) inset, 0 20px 40px -24px rgb(0 0 0 / 0.6);
-    --orb-laranja: 0.09;
-    --orb-azul: 0.07;
-    --orb-verde: 0.05;
-    --pontos: 0.025;
-    --pontos-cor: rgb(255 255 255 / 0.8);
+    --brilho: rgb(235 97 10 / 0.12);
+    --veu: rgb(0 0 0 / 0.62);
 }
 
-/* Card de vidro: gradiente quase opaco (o fundo de ondas só aparece de leve), borda fina, luz de 1 px no topo e sombra longa. */
+/* Card de vidro: gradiente quase opaco (o fundo só aparece de leve), borda fina, luz de 1 px no topo e sombra longa. */
 @utility vidro {
     border: 1px solid var(--border);
     background-image: linear-gradient(to bottom, var(--vidro-1), var(--vidro-2));
@@ -205,11 +200,136 @@
     background-color: var(--vidro-interno);
 }
 
+/* Troca de tema em círculo: a animação é feita no JS (lib/transicao-tema.ts); aqui só desliga a padrão. */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+/* Faixa de cor que varre o texto e assenta na cor base (Dia Text Reveal, entrada). Ver components/marca/texto-revelado.tsx. */
+.texto-revelado {
+    background-image: linear-gradient(90deg, var(--cor-base, currentColor) 0%, var(--cor-base, currentColor) 42%, #ffd29a 45%, #ff8a3d 48%, #eb610a 51%, #5b9df0 55%, transparent 60%, transparent 100%);
+    background-size: 260% 100%;
+    background-position: 100% 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    /* Folga em volta das letras: background-clip só pinta dentro da caixa, e a itálica e o "G" passam dela. */
+    display: inline-block;
+    padding: 0.12em 0.14em 0.2em;
+    margin: -0.12em -0.14em -0.2em;
+    animation: revelar 1.07s cubic-bezier(.6, .1, .2, 1) var(--atraso, 0s) forwards;
+}
+
+@keyframes revelar {
+    to { background-position: 0% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .texto-revelado { animation: none; background-image: none; color: var(--cor-base, currentColor); }
+}
+
+/* Brilho que passa de tempos em tempos sobre um botão (login). Parado com movimento reduzido. */
+.brilho-passa { position: relative; overflow: hidden; }
+.brilho-passa::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 35%, rgb(255 255 255 / 0.22) 50%, transparent 65%);
+    transform: translateX(-100%);
+    animation: brilho-passa 3.2s ease-in-out infinite;
+    pointer-events: none;
+}
+@keyframes brilho-passa { 55%, 100% { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .brilho-passa::after { animation: none; display: none; } }
+
+/* Blocos que chegam com desfoque e uma subida curta, um depois do outro (--i = posição). Parado com movimento reduzido. */
+.surgir {
+    animation: surgir 0.7s cubic-bezier(.2, .7, .1, 1) both;
+    animation-delay: calc(var(--i, 0) * 70ms);
+}
+@keyframes surgir {
+    from { opacity: 0; transform: translateY(14px); filter: blur(8px); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .surgir { animation: none; }
+}
+/* Durante a entrada "Bem-vindo ao Growth Cycle" os blocos da home esperam; sobem quando ela começa a sair. */
+.entrada-ativa .surgir { animation-play-state: paused; }
+
+/* Luz laranja que segue o mouse num card (Magic Card). --mx/--my vêm do pointermove. */
+.luz-mouse::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .3s;
+    background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgb(235 97 10 / 0.12), transparent 70%);
+}
+.luz-mouse:hover::after { opacity: 1; }
+
+/* Borda sutil que corre em volta de quem espera aprovação (Border Beam / Shine Border, versão delicada). */
+@property --angulo-borda { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+.borda-correndo { border-color: transparent; overflow: visible; } /* o anel fica na faixa da borda: o card não pode cortá-la */
+.borda-correndo::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    background: conic-gradient(from var(--angulo-borda), color-mix(in srgb, var(--foreground) 7%, transparent) 0 78%, rgb(251 191 36 / 0.28) 86%, rgb(255 138 61 / 0.38) 90%, color-mix(in srgb, var(--foreground) 7%, transparent) 96%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: girar-borda 9s linear infinite;
+}
+@keyframes girar-borda { to { --angulo-borda: 360deg; } }
+@media (prefers-reduced-motion: reduce) {
+    .borda-correndo::before { animation: none; }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
     }
   body {
     @apply bg-background text-foreground;
+    /* Brilho quente difuso no topo, no lugar do antigo fundo ASCII. */
+    background-image: radial-gradient(50% 40% at 18% 0%, var(--brilho), transparent 70%);
+    background-attachment: fixed;
     }
+}
+
+/* Modais (protótipo 8-modais.html): a janela sobe 14 px, cresce de 98% e sai do desfoque. */
+@keyframes entrar-modal {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); filter: blur(4px); }
+}
+.entrar-modal[data-open] { animation: entrar-modal 0.45s cubic-bezier(.2,.7,.1,1); }
+.entrar-modal[data-closed] { animation: entrar-modal 0.2s ease-in reverse forwards; }
+@media (prefers-reduced-motion: reduce) {
+  [data-slot$="-content"] { animation: none !important; }
+}
+
+/* Esqueleto de carregamento: um brilho passa por cima, em vez de pulsar (protótipo 11). */
+.esqueleto { position: relative; overflow: hidden; }
+.esqueleto::after {
+  content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.06), transparent);
+  animation: esqueleto-brilho 1.6s ease-in-out infinite;
+}
+:root:not(.dark) .esqueleto::after { background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.7), transparent); }
+@keyframes esqueleto-brilho { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .esqueleto::after { animation: none; display: none; } }
+
+/* Conteúdo do admin ao trocar de aba (protótipo 6, Blur Fade): sobe 10 px e sai do desfoque. */
+.entrar-aba { animation: entrar-aba 0.5s cubic-bezier(.2,.7,.1,1); }
+@keyframes entrar-aba {
+  from { opacity: 0; transform: translateY(10px); filter: blur(6px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .entrar-aba { animation: none; }
 }

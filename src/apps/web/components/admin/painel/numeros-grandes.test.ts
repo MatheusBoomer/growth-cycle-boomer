@@ -107,3 +107,17 @@ describe("NumerosGrandes", () => {
     await um.desmontar()
   })
 })
+
+describe("NumerosGrandes: visual", () => {
+  it("valor em serifada e variação numa pílula com o tom (custo subindo é aviso)", async () => {
+    const raiz = document.createElement("div")
+    document.body.append(raiz)
+    const r = createRoot(raiz)
+    await act(async () => r.render(createElement(NumerosGrandes, { painel: painel() })))
+    const pilulas = [...raiz.querySelectorAll("[data-tom]")].map((e) => e.getAttribute("data-tom"))
+    expect(pilulas.slice(0, 2)).toEqual(["ruim", "bom"])
+    expect(raiz.querySelector("p.font-serif")).not.toBeNull()
+    await act(async () => r.unmount())
+    document.body.innerHTML = ""
+  })
+})

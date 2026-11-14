@@ -5,7 +5,7 @@ description: Define a meta do projeto, quebra ela mês a mês respeitando sazona
 
 # Skill 06 — Metas e Cenários
 
-Skill 6 de 9. Corresponde aos Prompts 5 (Metas do Projeto) e 6
+Skill 6 de 10. Corresponde aos Prompts 5 (Metas do Projeto) e 6
 (Cenários/Impactos Esperados) do processo original. O Diagnóstico Atual está
 concluído — esta skill define o alvo e a engenharia matemática que sustenta
 os cenários.

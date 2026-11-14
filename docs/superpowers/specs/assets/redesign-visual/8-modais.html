@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Modais · redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Instrument+Serif:ital@0;1&family=Geist+Mono&display=swap" rel="stylesheet">
+<style>
+  .escuro {
+    --pagina: #050506; --bg: #0a0a0b; --fg: #f4f4f5; --muted: #8b8b93; --muted-2: #5d5d66; --line: rgb(255 255 255 / .08); --line-2: rgb(255 255 255 / .14);
+    --modal: #141416; --campo: rgb(255 255 255 / .03); --acento: #ff8a3d; --acento-forte: #eb610a; --verde: #2fbf8c; --verde-f: rgb(47 191 140 / .14);
+    --perigo: #fb7185; --perigo-f: rgb(244 63 94 / .12); --aviso: #fbbf24; --aviso-f: rgb(251 191 36 / .12);
+    --botao: #f4f4f5; --botao-txt: #0a0a0b; --veu: rgb(0 0 0 / .62); --sombra: 0 40px 80px -30px rgb(0 0 0 / .8); --seg-on: rgb(255 255 255 / .09); --brilho: rgb(235 97 10 / .12);
+  }
+  .perola {
+    --pagina: #e8e6e2; --bg: #f7f6f3; --fg: #17150f; --muted: #67635b; --muted-2: #9d988f; --line: rgb(45 35 20 / .085); --line-2: rgb(45 35 20 / .16);
+    --modal: #ffffff; --campo: #fdfcfa; --acento: #b54404; --acento-forte: #e85e09; --verde: #046c4e; --verde-f: rgb(16 128 90 / .11);
+    --perigo: #be123c; --perigo-f: rgb(225 29 72 / .08); --aviso: #92400e; --aviso-f: rgb(245 158 11 / .12);
+    --botao: #17150f; --botao-txt: #fff; --veu: rgb(30 25 15 / .32); --sombra: 0 40px 80px -36px rgb(60 45 25 / .45); --seg-on: #fff; --brilho: rgb(235 97 10 / .1);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--pagina); color: var(--fg); font-family: "Geist", system-ui, sans-serif; padding: 40px 48px 80px; -webkit-font-smoothing: antialiased; }
+  em { font-family: "Instrument Serif", Georgia, serif; font-weight: 400; font-style: italic; }
+  button, input { font-family: inherit; color: inherit; }
+  .topo { display: flex; justify-content: space-between; align-items: end; gap: 24px; max-width: 1360px; margin: 0 auto 28px; }
+  .topo h1 { font-size: 30px; font-weight: 500; letter-spacing: -.02em; } .topo h1 em { color: var(--acento); font-size: 34px; }
+  .topo p { color: var(--muted); font-size: 14px; margin-top: 8px; max-width: 780px; line-height: 1.55; }
+  .temas { display: flex; gap: 2px; padding: 4px; border: 1px solid var(--line-2); border-radius: 999px; flex-shrink: 0; }
+  .temas button { font-size: 13px; font-weight: 500; color: var(--muted); background: none; border: 0; padding: 7px 14px; border-radius: 999px; cursor: pointer; }
+  .temas button.on { background: var(--botao); color: var(--botao-txt); }
+
+  .regras { max-width: 1360px; margin: 0 auto 28px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .regra { border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; font-size: 13px; color: var(--muted); line-height: 1.5; background: var(--modal); }
+  .regra b { display: block; color: var(--fg); font-weight: 500; margin-bottom: 4px; }
+
+  .grade { max-width: 1360px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 18px; }
+  .palco { position: relative; border-radius: 22px; overflow: hidden; background: var(--bg); border: 1px solid var(--line); padding: 34px 26px; display: grid; place-items: center; isolation: isolate; min-height: 420px; }
+  .palco::before { content: ""; position: absolute; inset: 0; z-index: -2; background: radial-gradient(60% 50% at 20% 0%, var(--brilho), transparent 70%); }
+  .palco::after { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--veu); backdrop-filter: blur(6px); }
+  .rotulo { position: absolute; top: 12px; left: 16px; font: 500 11px "Geist Mono", monospace; color: #fff; background: rgb(0 0 0 / .35); padding: 3px 9px; border-radius: 999px; }
+  .perola .rotulo { background: rgb(23 21 15 / .55); }
+
+  .modal { width: 100%; max-width: 460px; background: var(--modal); border: 1px solid var(--line-2); border-radius: 24px; padding: 24px; box-shadow: var(--sombra); animation: sobe .45s cubic-bezier(.2,.7,.1,1) both; }
+  @keyframes sobe { from { opacity: 0; transform: translateY(14px) scale(.98); filter: blur(4px); } }
+  .cab { display: flex; gap: 14px; align-items: flex-start; }
+  .icone { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex-shrink: 0; background: var(--seg-on); border: 1px solid var(--line); color: var(--acento); }
+  .icone.perigo { background: var(--perigo-f); border-color: transparent; color: var(--perigo); }
+  .icone.aviso { background: var(--aviso-f); border-color: transparent; color: var(--aviso); }
+  .icone svg { width: 19px; height: 19px; }
+  .fechar { margin-left: auto; width: 30px; height: 30px; border-radius: 999px; border: 1px solid var(--line); background: none; display: grid; place-items: center; color: var(--muted); cursor: pointer; flex-shrink: 0; }
+  .modal h3 { font-size: 24px; font-weight: 500; letter-spacing: -.03em; line-height: 1.1; }
+  .modal h3 em { color: var(--acento); }
+  .modal .desc { color: var(--muted); font-size: 14px; line-height: 1.55; margin-top: 8px; }
+  .corpo { margin-top: 20px; display: grid; gap: 14px; }
+  label.campo { display: grid; gap: 7px; font-size: 13px; font-weight: 500; }
+  label.campo small { font-weight: 400; color: var(--muted-2); font-size: 12px; }
+  .entrada { height: 42px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--campo); padding: 0 16px; font-size: 14px; outline: none; transition: border-color .2s, box-shadow .2s; }
+  .entrada:focus { border-color: color-mix(in srgb, var(--acento-forte) 55%, transparent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--acento-forte) 14%, transparent); }
+  .entrada::placeholder { color: var(--muted-2); }
+  .erro-campo { color: var(--perigo); font-size: 12px; font-weight: 400; }
+  .select { height: 42px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--campo); padding: 0 16px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; color: var(--fg); }
+  .select span { color: var(--muted-2); }
+  .pessoa { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 12px; font-size: 13.5px; cursor: pointer; }
+  .pessoa:hover, .pessoa.on { background: var(--seg-on); }
+  .pessoa i { width: 26px; height: 26px; border-radius: 99px; display: grid; place-items: center; font-style: normal; font-size: 11px; font-weight: 600; color: #fff; }
+  .pessoa small { color: var(--muted-2); margin-left: auto; font-size: 12px; }
+  .lista-pessoas { border: 1px solid var(--line); border-radius: 16px; padding: 4px; max-height: 168px; overflow: auto; }
+
+  /* Escolha de etapa: em fases, como a trilha */
+  .etapas { display: grid; gap: 4px; max-height: 260px; overflow: auto; padding-right: 2px; }
+  .fase { font-size: 10.5px; text-transform: uppercase; letter-spacing: .14em; color: var(--muted-2); padding: 10px 4px 4px; }
+  .op { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; font-size: 13.5px; cursor: pointer; background: var(--campo); transition: border-color .2s, background .2s; text-align: left; width: 100%; }
+  .op .n { font: 11px "Geist Mono", monospace; color: var(--muted-2); width: 18px; }
+  .op .marca { margin-left: auto; width: 16px; height: 16px; border-radius: 99px; border: 1.5px solid var(--line-2); display: grid; place-items: center; }
+  .op.on { border-color: color-mix(in srgb, var(--acento-forte) 55%, transparent); background: color-mix(in srgb, var(--acento-forte) 7%, var(--modal)); }
+  .op.on .marca { border-color: var(--acento-forte); }
+  .op.on .marca::after { content: ""; width: 8px; height: 8px; border-radius: 99px; background: var(--acento-forte); }
+
+  .caixa-aviso { border-radius: 14px; padding: 12px 14px; font-size: 13px; line-height: 1.5; display: flex; gap: 10px; }
+  .caixa-aviso.perigo { background: var(--perigo-f); color: var(--perigo); }
+  .caixa-aviso.aviso { background: var(--aviso-f); color: var(--aviso); }
+  code { font-family: "Geist Mono", monospace; font-size: 12.5px; background: var(--seg-on); border: 1px solid var(--line); padding: 1px 6px; border-radius: 6px; color: var(--fg); }
+  .itens { display: grid; gap: 8px; }
+  .item { display: flex; gap: 12px; align-items: flex-start; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; font-size: 13.5px; line-height: 1.5; }
+  .item .ponto { width: 8px; height: 8px; border-radius: 99px; background: var(--aviso); margin-top: 7px; flex-shrink: 0; box-shadow: 0 0 0 4px var(--aviso-f); }
+  .item p { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+
+  .rodape { display: flex; justify-content: flex-end; gap: 8px; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .bt { height: 38px; padding: 0 18px; border-radius: 999px; border: 1px solid var(--line-2); background: transparent; font-size: 13.5px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: opacity .2s, filter .2s; }
+  .bt.principal { background: var(--acento-forte); color: #fff; border-color: transparent; box-shadow: 0 0 0 1px rgb(255 255 255 / .12) inset, 0 8px 22px -10px rgb(235 97 10 / .8); }
+  .bt.perigo { background: var(--perigo); color: #fff; border-color: transparent; }
+  .perola .bt.perigo { background: #be123c; }
+  .bt:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
+  .nota { max-width: 1360px; margin: 26px auto 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+</style>
+</head>
+<body class="escuro">
+  <div class="topo">
+    <div>
+      <h1>Modais · <em>o redesign</em></h1>
+      <p>Os nove diálogos do app com o conteúdo real. São interativos: escolha etapas, digite a confirmação para liberar "Excluir", escolha um novo dono. Troque o tema no canto. Painéis laterais (Modelos, detalhe do report, texto da skill) e visualizadores (imagem, fluxograma, roteiro) seguem as mesmas regras.</p>
+    </div>
+    <div class="temas" id="temas"><button data-t="escuro" class="on">Escuro</button><button data-t="perola">Claro pérola</button></div>
+  </div>
+
+  <div class="regras">
+    <div class="regra"><b>Fundo</b>Véu escuro com desfoque leve; a tela atrás some sem sumir de vez.</div>
+    <div class="regra"><b>Janela</b>Cantos de 24 px, borda fina e sombra longa; entra subindo com desfoque (0,45 s).</div>
+    <div class="regra"><b>Título</b>Pergunta direta com a palavra-chave em serifada itálica; ícone colorido pelo tipo (ação, aviso, perigo).</div>
+    <div class="regra"><b>Ações</b>Pílulas de 38 px no rodapé, separado por linha fina: Cancelar à esquerda, a ação à direita (laranja, ou vermelho se destrói algo).</div>
+  </div>
+
+  <div class="grade">
+
+    <!-- 1 Novo prospect -->
+    <div class="palco"><span class="rotulo">1 · Novo prospect</span>
+      <div class="modal">
+        <div class="cab"><div class="icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></div>
+          <div><h3>Novo <em>prospect</em></h3><p class="desc">Cria a pasta do prospect a partir do modelo e libera a Etapa 01.</p></div><button class="fechar">✕</button></div>
+        <div class="corpo">
+          <label class="campo">Nome do prospect<input class="entrada" id="np-nome" placeholder="Ex.: Iszi Cosméticos"></label>
+          <label class="campo">Site / e-commerce <input class="entrada" placeholder="https://"><small>Opcional agora; a Etapa 01 pede se faltar.</small></label>
+        </div>
+        <div class="rodape"><button class="bt">Cancelar</button><button class="bt principal" id="np-criar" disabled>Criar prospect</button></div>
+      </div>
+    </div>
+
+    <!-- 2 Cliente de teste -->
+    <div class="palco"><span class="rotulo">2 · Cliente de teste</span>
+      <div class="modal">
+        <div class="cab"><div class="icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6M10 3v6L4.5 18.5A2 2 0 0 0 6.3 21h11.4a2 2 0 0 0 1.8-2.5L14 9V3"/></svg></div>
+          <div><h3>Criar cliente <em>de teste</em></h3><p class="desc">Monta um prospect com dados fictícios, como se o planejamento já tivesse passado pelas etapas anteriores. Ao abrir, o kit da etapa aparece com as planilhas e o roteiro de respostas.</p></div><button class="fechar">✕</button></div>
+        <div class="corpo"><div class="etapas" data-escolha="ct"></div></div>
+        <div class="rodape"><button class="bt">Cancelar</button><button class="bt principal">Criar e abrir</button></div>
+      </div>
+    </div>
+
+    <!-- 3 Trocar dono -->
+    <div class="palco"><span class="rotulo">3 · Trocar dono (admin)</span>
+      <div class="modal">
+        <div class="cab"><div class="icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M21 3l-7 7M8 21H3v-5M3 21l7-7"/></svg></div>
+          <div><h3>Trocar dono de <em>Verdeluz nuvem</em></h3><p class="desc">Hoje é de Ana. Quem recebe passa a ver este prospect.</p></div><button class="fechar">✕</button></div>
+        <div class="corpo"><label class="campo">Novo dono</label>
+          <div class="lista-pessoas" id="pessoas"></div></div>
+        <div class="rodape"><button class="bt">Cancelar</button><button class="bt principal" id="td-ok" disabled>Trocar dono</button></div>
+      </div>
+    </div>
+
+    <!-- 4 Excluir prospect -->
+    <div class="palco"><span class="rotulo">4 · Excluir prospect</span>
+      <div class="modal">
+        <div class="cab"><div class="icone perigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></div>
+          <div><h3>Excluir <em>Verdeluz nuvem?</em></h3><p class="desc">A pasta do prospect, com insumos, conversas e entregáveis aprovados, vai para a Lixeira do macOS. Dá para recuperar por lá.</p></div><button class="fechar">✕</button></div>
+        <div class="corpo"><label class="campo">Digite <span><code>verdeluz-nuvem</code> para confirmar</span><input class="entrada" id="ex-campo" autocomplete="off"></label></div>
+        <div class="rodape"><button class="bt">Cancelar</button><button class="bt perigo" id="ex-ok" disabled>Excluir prospect</button></div>
+      </div>
+    </div>
+
+    <!-- 5 Reposicionar -->
+    <div class="palco"><span class="rotulo">5 · Reposicionar cliente de teste</span>
+      <div class="modal">
+        <div class="cab"><div class="icone aviso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg></div>
+          <div><h3>Em qual etapa o <em>teste</em> começa<em>?</em></h3></div><button class="fechar">✕</button></div>
+        <div class="corpo">
+          <div class="caixa-aviso aviso">⚠︎ <span>Isto apaga o que você fez neste cliente e volta ao início da etapa escolhida. As etapas anteriores ficam concluídas.</span></div>
+          <div class="etapas" data-escolha="rp"></div></div>
+        <div class="rodape"><button class="bt">Cancelar</button><button class="bt perigo">Reposicionar</button></div>
+      </div>
+    </div>
+
+    <!-- 6 Reabrir etapa -->
+    <div class="palco"><span class="rotulo">6 · Reabrir etapa</span>
+      <div class="modal">
+        <div class="cab"><div class="icone aviso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 11V7a5 5 0 0 1 9.9-1M5 11h14v10H5z"/></svg></div>
+          <div><h3>Reabrir <em>Unidade econômica?</em></h3><p class="desc">O chat desta etapa volta a aceitar mensagens.</p></div><button class="fechar">✕</button></div>
+        <div class="corpo"><div class="caixa-aviso aviso">⚠︎ <span>As etapas 05 e 06 ficam desatualizadas até você revisar ou confirmar cada uma.</span></div></div>
+        <div class="rodape"><button class="bt">Cancelar</button><button class="bt principal">Reabrir</button></div>
+      </div>
+    </div>
+
+    <!-- 7 Tornar admin -->
+    <div class="palco"><span class="rotulo">7 · Tornar / retirar admin</span>
+      <div class="modal">
+        <div class="cab"><div class="icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg></div>
+          <div><h3>Tornar admin: <em>Bia?</em></h3><p class="desc">Bia vai ver todos os prospects e poder administrar as pessoas.</p></div><button class="fechar">✕</button></div>
+        <div class="rodape"><button class="bt">Cancelar</button><button class="bt principal">Confirmar</button></div>
+      </div>
+    </div>
+
+    <!-- 8 Excluir arquivo -->
+    <div class="palco"><span class="rotulo">8 · Excluir arquivo enviado</span>
+      <div class="modal">
+        <div class="cab"><div class="icone perigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H6v18h12V7zM14 3v4h4M9 13h6"/></svg></div>
+          <div><h3>Excluir este <em>arquivo?</em></h3><p class="desc">O arquivo de Cliente histórico vai para a Lixeira do computador e sai desta etapa. Depois é só enviar o arquivo certo.</p></div><button class="fechar">✕</button></div>
+        <div class="rodape"><button class="bt">Cancelar</button><button class="bt perigo">Excluir</button></div>
+      </div>
+    </div>
+
+    <!-- 9 Verificação do sistema -->
+    <div class="palco"><span class="rotulo">9 · Falta configurar esta máquina</span>
+      <div class="modal">
+        <div class="cab"><div class="icone aviso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 16H3zM12 10v4M12 17h.01"/></svg></div>
+          <div><h3>Falta configurar <em>esta máquina</em></h3><p class="desc">O agente roda pelo Claude Code instalado aqui. Resolva os itens abaixo e verifique de novo.</p></div></div>
+        <div class="corpo itens">
+          <div class="item"><span class="ponto"></span><div>O Claude Code não está conectado.<p>Rode <code>claude auth login</code> no terminal.</p></div></div>
+          <div class="item"><span class="ponto"></span><div>Faltam bibliotecas do Python.<p><code>pip3 install openpyxl pandas matplotlib</code></p></div></div>
+        </div>
+        <div class="rodape"><button class="bt principal">Verificar de novo</button></div>
+      </div>
+    </div>
+
+  </div>
+  <p class="nota">Ao aprovar, aplico isso nos componentes de base (Dialog, AlertDialog e Sheet), então todos os modais e painéis mudam de uma vez, e ajusto o conteúdo de cada um como aqui (ícone, destaque no título, etapas agrupadas por fase, confirmação digitada).</p>
+
+<script>
+  const ETAPAS = [["Contexto", [["01", "Preparação de contexto"], ["02", "Contextualização estratégica"]]], ["Diagnóstico", [["03", "Diagnóstico de performance"], ["04", "Unidade econômica"]]], ["Soluções e metas", [["05", "Soluções"], ["06", "Metas e cenários"]]], ["Mídia e ação", [["07", "Mídia paga"], ["08", "Plano de ação"]]], ["Apresentação", [["", "Apresentação final"]]]]
+  document.querySelectorAll("[data-escolha]").forEach((caixa) => {
+    caixa.innerHTML = ETAPAS.map(([f, es]) => `<div class="fase">${f}</div>` + es.map(([n, t]) => `<button class="op ${n === "03" ? "on" : ""}"><span class="n">${n}</span>${t}<span class="marca"></span></button>`).join("")).join("")
+    caixa.addEventListener("click", (e) => { const b = e.target.closest(".op"); if (!b) return; caixa.querySelectorAll(".op").forEach((o) => o.classList.toggle("on", o === b)) })
+  })
+  const P = [["Ana", "#c2410c", "atual"], ["João", "#2563eb", ""], ["Bia", "#0f766e", ""], ["Caio", "#7c3aed", ""], ["Matheus", "#b45309", ""]]
+  const lp = document.getElementById("pessoas")
+  lp.innerHTML = P.map(([n, c, s]) => `<div class="pessoa ${s ? "on" : ""}" data-n="${n}"><i style="background:${c}">${n[0]}</i>${n}<small>${s ? "dono atual" : ""}</small></div>`).join("")
+  lp.addEventListener("click", (e) => { const p = e.target.closest(".pessoa"); if (!p) return; lp.querySelectorAll(".pessoa").forEach((o) => o.classList.toggle("on", o === p)); document.getElementById("td-ok").disabled = p.dataset.n === "Ana" })
+  document.getElementById("ex-campo").addEventListener("input", (e) => (document.getElementById("ex-ok").disabled = e.target.value.trim() !== "verdeluz-nuvem"))
+  document.getElementById("np-nome").addEventListener("input", (e) => (document.getElementById("np-criar").disabled = !/[\p{L}\p{N}]/u.test(e.target.value)))
+  document.querySelectorAll("#temas button").forEach((b) => (b.onclick = () => { document.body.className = b.dataset.t; document.querySelectorAll("#temas button").forEach((x) => x.classList.toggle("on", x === b)) }))
+</script>
+</body>
+</html>

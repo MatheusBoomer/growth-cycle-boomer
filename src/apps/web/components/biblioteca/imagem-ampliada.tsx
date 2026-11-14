@@ -12,6 +12,8 @@ import { Input } from "@workspace/ui/components/input"
 import { useAmbiente } from "@/components/marca/conta-contexto"
 import { api, mensagemDeErro, urlArquivo } from "@/lib/api"
 import { ROTULO_ORIGEM, rotuloEtapa } from "@/lib/biblioteca"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@workspace/ui/components/select"
+import { TituloDestacado } from "@/components/trabalho/barra-visualizador"
 
 interface Props {
   slug: string
@@ -27,7 +29,7 @@ export function ImagemAmpliada(props: Props) {
   const item = props.indice === null ? null : (props.itens[props.indice] ?? null)
   return (
     <Dialog open={item !== null} onOpenChange={(aberto) => !aberto && props.aoMudarIndice(null)}>
-      <DialogContent className="h-[90vh] gap-0 p-0 sm:max-w-[min(1200px,95vw)]">
+      <DialogContent className="h-[90vh] gap-0 overflow-hidden p-0 sm:max-w-[min(1200px,95vw)]">
         {/* key: outro item zera a imagem do grupo e a edição do título. */}
         {item && props.indice !== null && <Conteudo key={item.id} {...props} item={item} indice={props.indice} />}
       </DialogContent>
@@ -81,32 +83,34 @@ function Conteudo({ slug, catalogo, itens, indice, item, aoMudarIndice, aoAjusta
 
   return (
     <div className="grid h-full min-h-0 grid-rows-[1fr_auto] md:grid-cols-[1fr_300px] md:grid-rows-1">
-      <div className="bg-muted relative flex min-h-0 items-center justify-center overflow-hidden rounded-l-xl p-4">
+      <div className="relative flex min-h-0 items-center justify-center overflow-hidden bg-muted/60 px-[70px] py-7 dark:bg-black/40">
         {quebrada === atual ? (
-          <div className="text-muted-foreground flex flex-col items-center gap-2 text-sm">
+          <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
             <ImageOffIcon className="size-8" aria-hidden /> Não consegui abrir esta imagem.
           </div>
         ) : (
           // eslint-disable-next-line @next/next/no-img-element -- arquivo local servido pela rota do app
-          <img key={atual} src={urlArquivo(slug, atual)} alt={item.titulo} onError={() => setQuebrada(atual)} className="max-h-full max-w-full rounded-md bg-papel object-contain" />
+          <img key={atual} src={urlArquivo(slug, atual)} alt={item.titulo} onError={() => setQuebrada(atual)} className="max-h-full max-w-full rounded-xl bg-papel object-contain shadow-[0_20px_50px_-30px_rgb(0_0_0/0.6)]" />
         )}
-        <Button variant="midia" size="icon" className="absolute top-1/2 left-3 -translate-y-1/2" aria-label="Anterior" disabled={!temAnterior} onClick={() => ir(-1)}>
+        <Button variant="midia" size="icon-lg" className="absolute top-1/2 left-4 -translate-y-1/2 disabled:opacity-30" aria-label="Anterior" disabled={!temAnterior} onClick={() => ir(-1)}>
           <ChevronLeftIcon />
         </Button>
-        <Button variant="midia" size="icon" className="absolute top-1/2 right-3 -translate-y-1/2" aria-label="Próxima" disabled={!temProxima} onClick={() => ir(1)}>
+        <Button variant="midia" size="icon-lg" className="absolute top-1/2 right-4 -translate-y-1/2 disabled:opacity-30" aria-label="Próxima" disabled={!temProxima} onClick={() => ir(1)}>
           <ChevronRightIcon />
         </Button>
         {item.imagens.length > 1 && (
-          <Badge variant="midia" className="absolute bottom-3 left-1/2 -translate-x-1/2 tabular-nums">
+          <Badge variant="midia" className="absolute bottom-4.5 left-1/2 h-6 -translate-x-1/2 px-2.5 text-[11.5px] tabular-nums">
             {sub + 1} de {item.imagens.length}
           </Badge>
         )}
       </div>
 
-      <aside className="flex min-h-0 flex-col gap-4 overflow-y-auto border-t p-4 md:border-t-0 md:border-l">
+      <aside className="flex min-h-0 flex-col gap-4.5 overflow-y-auto border-t border-border px-5 pt-5.5 pb-5 md:border-t-0 md:border-l">
         {titulo === null ? (
-          <div className="flex items-start gap-1 pr-8">
-            <DialogTitle className="min-w-0 flex-1 text-base break-words">{item.titulo}</DialogTitle>
+          <div className="flex items-start gap-1.5 pr-9">
+            <DialogTitle className="min-w-0 text-[21px] tracking-[-0.02em] break-words">
+              <TituloDestacado texto={item.titulo} />
+            </DialogTitle>
             <Button variant="ghost" size="icon-sm" aria-label="Editar título" title="Editar título" onClick={() => {
                 encerrada.current = false
                 setTitulo(item.titulo)
@@ -116,7 +120,7 @@ function Conteudo({ slug, catalogo, itens, indice, item, aoMudarIndice, aoAjusta
           </div>
         ) : (
           <form
-            className="flex flex-col gap-1 pr-8"
+            className="flex flex-col gap-1 pr-9"
             onSubmit={(ev) => {
               ev.preventDefault()
               salvarTitulo()
@@ -139,40 +143,45 @@ function Conteudo({ slug, catalogo, itens, indice, item, aoMudarIndice, aoAjusta
                 }
               }}
             />
-            <p className="text-muted-foreground text-xs">Enter salva. Vazio volta ao título automático.</p>
+            <p className="text-xs text-muted-foreground">Enter salva. Vazio volta ao título automático.</p>
           </form>
         )}
         <DialogDescription className="sr-only">Imagem ampliada da biblioteca do prospect.</DialogDescription>
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-muted-foreground text-xs font-medium">Etapa</span>
-          <select
+        <label className="flex flex-col gap-1.5 text-sm">
+          <span className="text-xs text-muted-foreground">Etapa</span>
+          <Select
             value={item.etapa}
-            onChange={(ev) => aoAjustar(item.caminho, { etapa: ev.target.value as EtapaBiblioteca })}
-            className="border-input bg-background h-8 rounded-md border px-2 text-sm"
+            onValueChange={(v) => v && aoAjustar(item.caminho, { etapa: v as EtapaBiblioteca })}
+            items={ORDEM_BIBLIOTECA.map((e) => ({ value: e, label: rotuloEtapa(catalogo, e) }))}
           >
-            {ORDEM_BIBLIOTECA.map((e) => (
-              <option key={e} value={e}>
-                {rotuloEtapa(catalogo, e)}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="w-full min-w-0" aria-label="Etapa">
+              <SelectValue className="min-w-0 truncate" />
+            </SelectTrigger>
+            <SelectContent alignItemWithTrigger={false}>
+              {ORDEM_BIBLIOTECA.map((e) => (
+                <SelectItem key={e} value={e}>
+                  {rotuloEtapa(catalogo, e)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </label>
 
-        <dl className="flex flex-col gap-2 text-sm">
-          <div>
-            <dt className="text-muted-foreground text-xs font-medium">Origem</dt>
+        <dl className="flex flex-col gap-4.5 text-sm">
+          <div className="grid gap-1.5">
+            <dt className="text-xs text-muted-foreground">Origem</dt>
             <dd>
-              <Badge variant="outline">{ROTULO_ORIGEM[item.origem]}</Badge>
+              <Badge variant={item.origem === "aprovado" ? "sucesso" : item.origem === "proposta" ? "aviso" : "outline"}>{ROTULO_ORIGEM[item.origem]}</Badge>
             </dd>
           </div>
-          <div>
-            <dt className="text-muted-foreground text-xs font-medium">Arquivo</dt>
-            <dd className="font-mono text-xs break-all">{atual}</dd>
+          <div className="grid gap-1.5">
+            <dt className="text-xs text-muted-foreground">Arquivo</dt>
+            <dd className="rounded-xl border border-border bg-muted/30 px-3 py-2.5 font-mono text-[11.5px] leading-normal break-all">{atual}</dd>
           </div>
         </dl>
 
-        <div className="mt-auto flex flex-col gap-2">
+        <div className="mt-auto flex flex-col gap-2 [&>*]:h-10">
           <Button onClick={() => aoMencionar(atual)}>
             <AtSignIcon /> Mencionar no chat
           </Button>
@@ -180,7 +189,7 @@ function Conteudo({ slug, catalogo, itens, indice, item, aoMudarIndice, aoAjusta
             <DownloadIcon /> Baixar
           </Button>
           {!nuvem && (
-            <Button variant="outline" onClick={() => void api.mostrarNoFinder(slug, atual).catch((e) => toast.error(mensagemDeErro(e)))}>
+            <Button variant="ghost" className="text-muted-foreground" onClick={() => void api.mostrarNoFinder(slug, atual).catch((e) => toast.error(mensagemDeErro(e)))}>
               <FolderOpenIcon /> Mostrar no Finder
             </Button>
           )}

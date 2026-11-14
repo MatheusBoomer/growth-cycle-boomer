@@ -1,6 +1,8 @@
 import type { ReactNode } from "react"
 import { formatarDuracao, formatarUsd } from "@workspace/core/metricas/formato"
 import type { PainelMetricas } from "@workspace/core/metricas/painel"
+import { cn } from "@workspace/ui/lib/utils"
+import { tomDaVariacao } from "@/lib/numeros-pessoas"
 import { MarcaEstimado } from "./comuns"
 
 /**
@@ -13,15 +15,31 @@ export function textoVariacao(atual: number, anterior: number): string {
   return `${pct > 0 ? "+" : ""}${pct}% vs. período anterior`
 }
 
-function Numero({ rotulo, valor, detalhe }: { rotulo: string; valor: ReactNode; detalhe: ReactNode }) {
+/** Cartão de número grande da administração: rótulo, valor em serifada e um detalhe. */
+export function CartaoNumero({ rotulo, valor, detalhe }: { rotulo: string; valor: ReactNode; detalhe: ReactNode }) {
   return (
-    <div className="bg-card flex min-w-0 flex-col gap-1 rounded-xl border p-4">
-      <h3 className="text-muted-foreground text-sm font-medium">{rotulo}</h3>
-      <p className="truncate text-2xl font-semibold tracking-tight tabular-nums">{valor}</p>
-      <p className="text-muted-foreground text-xs">{detalhe}</p>
+    <div className="vidro flex min-w-0 flex-col gap-1 rounded-[18px] border p-[18px]">
+      <h3 className="text-muted-foreground text-[12.5px] font-normal">{rotulo}</h3>
+      <p className="mt-1.5 truncate font-serif text-[40px] leading-none tracking-[-0.01em] tabular-nums sm:text-[46px]">{valor}</p>
+      <div className="text-muted-foreground mt-2 text-xs">{detalhe}</div>
     </div>
   )
 }
+
+/** Variação contra o período anterior numa pílula com a cor do tom (âmbar quando piora, verde quando melhora). */
+function Variacao({ atual, anterior }: { atual: number; anterior: number }) {
+  const tom = tomDaVariacao(atual, anterior, true)
+  return (
+    <span
+      data-tom={tom}
+      className={cn("rounded-full", tom === "ruim" && "bg-aviso-fundo text-aviso px-2 py-0.5", tom === "bom" && "bg-sucesso-fundo text-sucesso px-2 py-0.5")}
+    >
+      {textoVariacao(atual, anterior)}
+    </span>
+  )
+}
+
+const Numero = CartaoNumero
 
 /** Quatro números do período: custo, tempo útil, custo médio por projeto concluído e situação dos projetos. */
 export function NumerosGrandes({ painel }: { painel: PainelMetricas }) {
@@ -36,14 +54,14 @@ export function NumerosGrandes({ painel }: { painel: PainelMetricas }) {
             {totais.estimado && <MarcaEstimado />}
           </>
         }
-        detalhe={textoVariacao(totais.custoUsd, totais.custoAnteriorUsd)}
+        detalhe={<Variacao atual={totais.custoUsd} anterior={totais.custoAnteriorUsd} />}
       />
       <Numero
         rotulo="Tempo útil"
         valor={formatarDuracao(totais.tempoUtilSeg)}
         detalhe={
           <>
-            {textoVariacao(totais.tempoUtilSeg, totais.tempoUtilAnteriorSeg)}
+            <Variacao atual={totais.tempoUtilSeg} anterior={totais.tempoUtilAnteriorSeg} />
             {painel.tempoIgnoraModelo && <span className="text-aviso block">tempo não filtra por modelo</span>}
           </>
         }

@@ -35,6 +35,23 @@ describe("página /login", () => {
     expect(html).toMatch(/<a [^>]*href="\/auth\/entrar"/)
   })
 
+  it("mostra o título do login B", async () => {
+    const html = await renderizar()
+    expect(html).toContain("Do diagnóstico ao")
+    expect(html).toContain("contrato fechado.")
+    expect(html).toContain("Growth Cycle · acesso da equipe")
+  })
+
+  it("com erro, a mensagem aparece abaixo do botão", async () => {
+    const html = await renderizar({ erro: "dominio" })
+    expect(html.indexOf("Use a conta Google da Boomer")).toBeGreaterThan(html.indexOf("Entrar com Google"))
+  })
+
+  it("o rodapé lista as fases do catálogo, inclusive Pós-apresentação", async () => {
+    const html = await renderizar()
+    expect(html).toContain("Contexto · Diagnóstico · Soluções e metas · Mídia e ação · Apresentação · Pós-apresentação")
+  })
+
   it("sem erro, não mostra mensagem de erro", async () => {
     const html = await renderizar()
     expect(html).not.toContain("Use a conta Google da Boomer")
@@ -76,8 +93,11 @@ describe("página /login", () => {
     expect(fetchFalso).not.toHaveBeenCalled()
   })
 
-  it("modo off: não há login, vai para /", async () => {
+  it("modo off (local): mostra a tela de login para conferir, e o botão entra direto por /auth/entrar", async () => {
     vi.stubEnv("PLANEJAMENTO_AUTH", "")
-    await expect(renderizar()).rejects.toThrow("NEXT_REDIRECT:/")
+    const html = await renderizar()
+    expect(html).toContain("Entrar com Google")
+    expect(html).toMatch(/<a [^>]*href="\/auth\/entrar"/)
+    expect(redirect).not.toHaveBeenCalled()
   })
 })

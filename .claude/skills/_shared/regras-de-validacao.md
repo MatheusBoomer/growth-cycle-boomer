@@ -118,12 +118,22 @@ está rodando dentro da interface web, e estas regras substituem o jeito
   Chame `sinalizar_etapa_pronta` com o resumo de decisões (markdown) e o
   mesmo texto de handoff do "Encerramento e handoff" da skill.
 - A pasta `.app/` pertence ao app: fora de `.app/rascunhos/`, não escreva nela.
-- Scripts que geram arquivo (ex.: `preencher_projecao_xlsx.py`,
-  `preencher_plano_acao_docx.py`) recebem `--output` apontando para
-  `.app/rascunhos/`, e o resultado é proposto com `propor_entregavel`
-  (tipo `planilha` ou `documento`). Na etapa final, o roteiro da apresentação é
+- Scripts que geram arquivo recebem a saída apontando para
+  `.app/rascunhos/` (`preencher_projecao_xlsx.py` com `--output`;
+  `gerar_plano_acao.py` com `--saida-docx`, `--saida-xlsx` e `--saida-json`), e o resultado é
+  proposto com `propor_entregavel` (tipo `planilha` ou `documento`). O JSON
+  do plano não é proposto: com o nome estável na mesma pasta, o app o copia
+  junto com o documento aprovado. Na apresentação final (09), o roteiro da apresentação é
   proposto como tipo `roteiro` (`.json`) e `gerar_apresentacao.py` gera o tipo
   `apresentacao` (`.pptx`).
+- Na etapa 10 (revisão pós-apresentação), `validar_revisao.py` confere o
+  `revisao-plano.json` (com `--rascunho` antes das decisões, sem ele
+  depois), `validar_plano_acao.py` e `gerar_plano_acao.py` produzem o plano
+  final (`plano-de-acao-final`, tipos `documento` e `planilha`) e
+  `relatorio_revisao.py` dá a base do relatório final. `revisao-plano.json`
+  e `plano-de-acao-final.json` ficam em `.app/rascunhos/` com esses nomes, e
+  o app os copia junto com o documento aprovado; a análise da reunião é
+  proposta como `secao`.
 
 ## 8. Checklist de qualidade do diagnóstico
 
@@ -140,4 +150,4 @@ com o que falta:
    cliente. Garantido pelo validador (`nao_quantificavel` só com
    justificativa, e vira aviso).
 4. **Cada solução vira item do plano**, com dono, prazo e frente. Garantido
-   por `scripts/validar_solucoes.py --modo plano` na Skill 08.
+   por `scripts/validar_plano_acao.py` na Skill 08.

@@ -173,6 +173,7 @@ describe("fases pelo catálogo", () => {
     expect(ordemDasFases(CATALOGO)).toEqual(["Contexto", "Diagnóstico", "Soluções e metas", "Apresentação", FASE_ARQUIVADA])
     expect(ordemDasFases([{ id: "01", rotulo: "x", fase: "Nova" }, { id: "02", rotulo: "y", fase: "Contexto" }] as never)).toEqual(["Nova", "Contexto", FASE_ARQUIVADA])
     expect(ordemDasFases([])).toEqual(ORDEM_FASES)
+    expect(ORDEM_FASES).toEqual(["Contexto", "Diagnóstico", "Soluções e metas", "Mídia e ação", "Apresentação", "Pós-apresentação", FASE_ARQUIVADA])
     expect(ordemDasFases([{ id: "01", rotulo: "x" }] as never)).toEqual(ORDEM_FASES)
   })
 
@@ -203,6 +204,7 @@ describe("rotuloEtapa", () => {
   it("número e fase; final e arquivada com nome próprio", () => {
     expect(rotuloEtapa("03", "Diagnóstico")).toBe("03 · Diagnóstico")
     expect(rotuloEtapa("final", "Apresentação")).toBe("Final · Apresentação")
+    expect(rotuloEtapa("10", "Pós-apresentação")).toBe("10 · Pós-apresentação")
     expect(rotuloEtapa("briefing-benchmark", "Arquivada")).toBe("Briefing e benchmark (arquivada)")
   })
 })

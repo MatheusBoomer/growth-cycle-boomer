@@ -1,5 +1,6 @@
 import { readdir, readFile, stat } from "node:fs/promises"
 import path from "node:path"
+import { normalizarEstado } from "./armazenamento"
 import { ErroFixture } from "./erros"
 import { ORDEM_ETAPAS, type Estado, type EtapaId } from "./tipos"
 
@@ -101,7 +102,9 @@ export async function carregarFixture(raiz: string, id: string): Promise<Fixture
   if (!id || id !== path.basename(id) || id.startsWith(".")) throw new ErroFixture(`Fixture inválido: ${JSON.stringify(id)}.`)
   const pasta = pastaDoFixture(raiz, id)
   const manifesto = await lerJson<Manifesto>(path.join(pasta, "manifesto.json"), `clientes/_fixtures/${id}/manifesto.json`)
-  const estadoCompleto = await lerJson<Estado>(path.join(pasta, "estado-completo.json"), `clientes/_fixtures/${id}/estado-completo.json`)
+  const lido = await lerJson<Estado>(path.join(pasta, "estado-completo.json"), `clientes/_fixtures/${id}/estado-completo.json`)
+  // Fixture montado ou migrado antes de uma etapa nova (ex.: 10) não tem a chave dela: completa como o estado de um prospect.
+  const estadoCompleto = typeof lido?.etapas === "object" && lido.etapas !== null ? normalizarEstado(lido) : lido
   validarForma(id, manifesto, estadoCompleto)
   const fixture: Fixture = { id, pasta, manifesto, estadoCompleto }
 

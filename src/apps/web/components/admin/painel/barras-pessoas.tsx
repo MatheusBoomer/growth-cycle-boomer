@@ -20,7 +20,8 @@ const EIXO_X = 24
 const TERMOS = [
   { chave: "agente", rotulo: "Agente", cor: "var(--chart-1)" },
   { chave: "ativo", rotulo: "Analista ativo", cor: "var(--chart-2)" },
-  { chave: "ocioso", rotulo: "Ocioso", cor: "var(--chart-5)" },
+  // Ocioso é tempo parado: fica cinza, fora da paleta das séries.
+  { chave: "ocioso", rotulo: "Ocioso", cor: "color-mix(in srgb, var(--muted-foreground) 55%, transparent)" },
 ] as const
 
 const CONFIG = Object.fromEntries(TERMOS.map((t) => [t.chave, { label: t.rotulo, color: t.cor }])) satisfies ChartConfig

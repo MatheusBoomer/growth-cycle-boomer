@@ -36,3 +36,9 @@ export function caixaDoArrasto(inicio: Ponto, fim: Ponto): Pick<Marca, "x" | "y"
 export function caixaDoNumero(ponto: Ponto): Pick<Marca, "x" | "y" | "w" | "h"> {
   return { x: arredondar(limitar(ponto.x)), y: arredondar(limitar(ponto.y)), w: 0, h: 0 }
 }
+
+/** Números das marcações no círculo da etiqueta: "3", "1-2" ou nada sem marcação. */
+export function numerosDaEtiqueta(primeiro: number, quantidade: number): string | undefined {
+  if (quantidade <= 0) return undefined
+  return quantidade === 1 ? String(primeiro) : `${primeiro}-${primeiro + quantidade - 1}`
+}

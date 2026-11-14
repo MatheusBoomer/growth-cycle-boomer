@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  acompanhantes,
   apresentacaoFinal,
   aprovarEntregavel,
   destinoAprovado,
@@ -38,6 +39,12 @@ describe("destino do entregável aprovado", () => {
     expect(destinoAprovado({ tipo: "planilha", nomeFinal: "projecao-de-cenarios", etapa: "06" })).toBe(
       "entrega/ativos-aprovados/projecao/projecao-de-cenarios.xlsx",
     )
+    expect(destinoAprovado({ tipo: "planilha", nomeFinal: "plano-de-acao-estrategico", etapa: "08" })).toBe(
+      "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.xlsx",
+    )
+    expect(destinoAprovado({ tipo: "planilha", nomeFinal: "plano-de-acao-final", etapa: "10" })).toBe(
+      "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-final.xlsx",
+    )
     expect(destinoAprovado({ tipo: "documento", nomeFinal: "plano-de-acao-estrategico", etapa: "08" })).toBe(
       "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.docx",
     )
@@ -54,6 +61,13 @@ describe("normalizarNomeFinal", () => {
   })
   it.each(["Investimento Mensal", "grafico_1", "roas-v2", "analise-final", ""])("recusa %s", (nome) => {
     expect(() => normalizarNomeFinal("grafico", nome, "03")).toThrow(ErroEntrada)
+  })
+  it("aceita plano-de-acao-final na etapa 10, nome estável do plano revisado (documento e planilha)", () => {
+    expect(normalizarNomeFinal("documento", "plano-de-acao-final", "10")).toBe("plano-de-acao-final")
+    expect(normalizarNomeFinal("planilha", "plano-de-acao-final.xlsx", "10")).toBe("plano-de-acao-final")
+  })
+  it("plano-de-acao-final fora da etapa 10 continua parecendo versionado", () => {
+    expect(() => normalizarNomeFinal("documento", "plano-de-acao-final", "08")).toThrow(ErroEntrada)
   })
 })
 
@@ -230,5 +244,40 @@ describe("versaoAnterior", () => {
   it("primeira versão não tem anterior, e outro nome final não conta", () => {
     const lista = [e("a", "2026-09-28T10:00:00Z", "outro"), e("b", "2026-09-28T11:00:00Z")]
     expect(versaoAnterior(lista, lista[1]!)).toBeNull()
+  })
+})
+
+describe("acompanhantes do documento aprovado", () => {
+  const doc = (etapa: "08" | "10" | "07", nomeFinal: string, tipo: "documento" | "planilha" = "documento") => ({
+    tipo,
+    etapa,
+    nomeFinal,
+    arquivoRascunho: `.app/propostas/id1${tipo === "documento" ? ".docx" : ".xlsx"}`,
+  })
+  it("08: o JSON do plano estratégico", () => {
+    expect(acompanhantes(doc("08", "plano-de-acao-estrategico"))).toEqual([
+      {
+        origem: ".app/propostas/plano-de-acao-estrategico.json",
+        destino: "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.json",
+      },
+    ])
+  })
+  it("10: o JSON do plano final e a revisão", () => {
+    expect(acompanhantes(doc("10", "plano-de-acao-final"))).toEqual([
+      {
+        origem: ".app/propostas/plano-de-acao-final.json",
+        destino: "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-final.json",
+      },
+      {
+        origem: ".app/propostas/revisao-plano.json",
+        destino: "entrega/ativos-aprovados/plano-de-acao/revisao-plano.json",
+      },
+    ])
+  })
+  it("documento de outra etapa ou nome, e planilha, não têm acompanhantes", () => {
+    expect(acompanhantes(doc("07", "plano-de-acao-estrategico"))).toEqual([])
+    expect(acompanhantes(doc("08", "outro-documento"))).toEqual([])
+    expect(acompanhantes(doc("08", "plano-de-acao-estrategico", "planilha"))).toEqual([])
+    expect(acompanhantes(doc("10", "plano-de-acao-final", "planilha"))).toEqual([])
   })
 })

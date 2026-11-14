@@ -5,7 +5,7 @@ description: Constrói o entendimento estratégico do negócio do prospect — m
 
 # Skill 02 — Contextualização Estratégica
 
-Skill 2 de 9. Corresponde ao Prompt 1 do processo original.
+Skill 2 de 10. Corresponde ao Prompt 1 do processo original.
 
 ## Antes de começar (checklist do analista)
 

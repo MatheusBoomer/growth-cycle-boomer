@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import type { EventoConversa } from "@workspace/core/tipos"
-import { agruparProcesso, cardsDepoisDaResposta, iconeDoPasso, separarProcessoAoVivo, statusDosPassos, type ItemChat } from "./passos"
+import { agruparProcesso, cardsDepoisDaResposta, separarProcessoAoVivo, type ItemChat } from "./passos"
+import { duracaoDoProcesso } from "./passos"
 
 const em = "2026-10-01T00:00:00.000Z"
 const msg = (texto: string): EventoConversa => ({ tipo: "mensagem_analista", texto, automatica: false, em })
@@ -113,39 +114,6 @@ describe("processo ao vivo durante o turno", () => {
   })
 })
 
-describe("passos no ChainOfThought", () => {
-  const atividade = (nome: string): EventoConversa => ({ tipo: "atividade", nome, detalhe: "x", em })
-
-  it.each([
-    ["Read", "ler"],
-    ["Write", "escrever"],
-    ["Edit", "escrever"],
-    ["MultiEdit", "escrever"],
-    ["Bash", "script"],
-    ["Glob", "busca"],
-    ["Grep", "busca"],
-    ["WebSearch", "web"],
-    ["WebFetch", "web"],
-    ["mcp__firecrawl__firecrawl_scrape", "web"],
-    ["Skill", "skill"],
-    ["Agent", "subagente"],
-    ["Task", "subagente"],
-    ["mcp__claude_ai_Canva__export-design", "outro"],
-  ])("%s usa o ícone %s", (nome, icone) => {
-    expect(iconeDoPasso(atividade(nome) as Extract<EventoConversa, { tipo: "atividade" }>)).toBe(icone)
-  })
-
-  it("fala intermediária usa o ícone de fala", () => {
-    expect(iconeDoPasso({ tipo: "texto_agente", texto: "vou ler", em })).toBe("fala")
-  })
-
-  it("ao vivo, só o último passo está ativo; encerrado, todos concluídos", () => {
-    expect(statusDosPassos(3, true)).toEqual(["complete", "complete", "active"])
-    expect(statusDosPassos(3, false)).toEqual(["complete", "complete", "complete"])
-    expect(statusDosPassos(0, true)).toEqual([])
-  })
-})
-
 describe("card de aprovação depois da resposta do turno", () => {
   it("o card proposto no meio do turno aparece depois da resposta final, na ordem de leitura", () => {
     const eventos = [msg("oi"), inicio, passo("a.md"), card, passo("b.md"), fala("Montei a versão limpa."), fim()]
@@ -177,4 +145,14 @@ describe("card de aprovação depois da resposta do turno", () => {
       "turno_fim",
     ])
   })
+})
+
+describe("duracaoDoProcesso", () => {
+  const passo = (em: string) => ({ tipo: "atividade" as const, nome: "Read", detalhe: "x", em })
+  it("encerrado: do primeiro ao último passo, com uma casa", () =>
+    expect(duracaoDoProcesso([passo("2026-11-12T10:00:00.000Z"), passo("2026-11-12T10:00:04.400Z")], null)).toBe(4.4))
+  it("ao vivo: do primeiro passo até agora", () =>
+    expect(duracaoDoProcesso([passo("2026-11-12T10:00:00.000Z")], Date.parse("2026-11-12T10:00:02.250Z"))).toBe(2.3))
+  it("horário inválido: null", () => expect(duracaoDoProcesso([passo("lixo"), passo("2026-11-12T10:00:04Z")], null)).toBeNull())
+  it("encerrado com um passo só: null", () => expect(duracaoDoProcesso([passo("2026-11-12T10:00:00Z")], null)).toBeNull())
 })

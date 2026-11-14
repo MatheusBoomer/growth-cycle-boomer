@@ -4,14 +4,14 @@ import { ChevronDownIcon } from "lucide-react"
 import { useEffect, useId, useState } from "react"
 import { formatarDuracao, formatarUsd } from "@workspace/core/metricas/formato"
 import type { Estatistica, MediaEtapa } from "@workspace/core/metricas/resumo"
-import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Skeleton } from "@workspace/ui/components/skeleton"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@workspace/ui/components/table"
 import { cn } from "@workspace/ui/lib/utils"
 import { api, mensagemDeErro, type MediasPorEtapa } from "@/lib/api"
 import type { EtapaRotulada } from "./comuns"
+import { AvisoAdmin, NotaAdmin } from "@/components/admin/aviso-admin"
+import { partesDoRotulo } from "@/lib/home"
 
 /** Selo da média de uma etapa com poucos projetos na base. */
 export const ROTULO_BASE_PEQUENA = "base pequena, menos de 5 projetos"
@@ -20,8 +20,8 @@ function Estat({ e, formatar }: { e: Estatistica | null; formatar: (v: number) =
   if (!e) return <span className="text-muted-foreground">Sem dados</span>
   return (
     <div className="tabular-nums">
-      <div className="font-medium">{formatar(e.media)}</div>
-      <div className="text-muted-foreground text-xs">
+      <div className="font-mono text-[15px] font-medium">{formatar(e.media)}</div>
+      <div className="text-[11px] text-muted-foreground">
         mediana {formatar(e.mediana)} · {formatar(e.min)} a {formatar(e.max)} · {e.n} {e.n === 1 ? "projeto" : "projetos"}
       </div>
     </div>
@@ -37,39 +37,36 @@ function TabelaMedias({ medias, etapas }: { medias: MediasPorEtapa; etapas: Etap
   return (
     <>
       {linhas.some((l) => l.media.basePequena) && (
-        <Alert>
-          <AlertDescription>Base pequena: as etapas marcadas têm menos de 5 projetos em alguma das médias, então vale pouco como referência.</AlertDescription>
-        </Alert>
+        <NotaAdmin>Base pequena: as etapas marcadas têm menos de 5 projetos em alguma das médias, então vale pouco como referência.</NotaAdmin>
       )}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Etapa</TableHead>
-            <TableHead>Custo</TableHead>
-            <TableHead>Tempo útil</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {linhas.map(({ etapa, media }) => (
-            <TableRow key={etapa.id}>
-              <TableCell className="font-medium">
-                {etapa.rotulo}
+      <ul className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-2.5">
+        {linhas.map(({ etapa, media }) => {
+          const { numero, titulo } = partesDoRotulo(etapa.rotulo)
+          return (
+            <li key={etapa.id} data-media={etapa.id} className="grid gap-2.5 rounded-[14px] border border-border px-3.5 py-3 text-xs">
+              <div className="flex items-center gap-1.5 text-[12.5px] font-medium">
+                {numero && <span className="font-mono text-[11px] font-normal text-muted-foreground">{numero}</span>}
+                <span className="min-w-0 truncate" title={etapa.rotulo}>
+                  {titulo}
+                </span>
                 {media.basePequena && (
-                  <Badge variant="secondary" className="ml-2">
+                  <Badge variant="aviso" className="ml-auto shrink-0">
                     {ROTULO_BASE_PEQUENA}
                   </Badge>
                 )}
-              </TableCell>
-              <TableCell>
+              </div>
+              <div className="grid gap-0.5">
+                <span className="text-[10.5px] tracking-[0.12em] text-muted-foreground uppercase">Custo</span>
                 <Estat e={media.custo} formatar={formatarUsd} />
-              </TableCell>
-              <TableCell>
+              </div>
+              <div className="grid gap-0.5">
+                <span className="text-[10.5px] tracking-[0.12em] text-muted-foreground uppercase">Tempo útil</span>
                 <Estat e={media.tempoUtil} formatar={formatarDuracao} />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+              </div>
+            </li>
+          )
+        })}
+      </ul>
     </>
   )
 }
@@ -106,14 +103,7 @@ export function SecaoMediasPorEtapa({ etapas }: { etapas: EtapaRotulada[] }) {
   let conteudo
   if (erro !== null) {
     conteudo = (
-      <Alert>
-        <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
-          <span>{erro}</span>
-          <Button type="button" variant="outline" size="sm" onClick={() => setTentativa((n) => n + 1)}>
-            Tentar de novo
-          </Button>
-        </AlertDescription>
-      </Alert>
+      <AvisoAdmin mensagem={erro} aba="projetos" aoTentarDeNovo={() => setTentativa((n) => n + 1)} />
     )
   } else if (medias === null) {
     conteudo = <Skeleton className="h-32 w-full" />
@@ -124,9 +114,9 @@ export function SecaoMediasPorEtapa({ etapas }: { etapas: EtapaRotulada[] }) {
   return (
     <section aria-label="Médias por etapa" className="flex flex-col gap-3">
       <div>
-        <Button type="button" variant="ghost" size="sm" aria-expanded={aberto} aria-controls={idConteudo} onClick={() => setAberto((a) => !a)} className="-ml-2.5">
+        <Button type="button" variant="ghost" size="sm" aria-expanded={aberto} aria-controls={idConteudo} onClick={() => setAberto((a) => !a)} className="-ml-2.5 text-[13px]">
           <ChevronDownIcon data-icon="inline-start" aria-hidden="true" className={cn("transition-transform", !aberto && "-rotate-90")} />
-          Médias por etapa
+          Médias <em className="font-serif text-[15px] font-normal text-link-acao italic">por etapa</em>
         </Button>
         <p className="text-muted-foreground text-sm">Etapas concluídas de projetos ativos, sem os clientes de teste. Não segue os filtros acima.</p>
       </div>

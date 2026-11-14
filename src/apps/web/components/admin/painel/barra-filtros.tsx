@@ -7,7 +7,7 @@ import type { FiltroPainel } from "@workspace/core/metricas/painel"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@workspace/ui/components/select"
-import { ToggleGroup, ToggleGroupItem } from "@workspace/ui/components/toggle-group"
+import { cn } from "@workspace/ui/lib/utils"
 import { parametrosDeFiltro, type PeriodoRapido } from "@/lib/painel-filtro"
 import type { RespostaPainel } from "@/lib/api"
 import { rotuloModelo, type EtapaRotulada } from "./comuns"
@@ -135,20 +135,22 @@ export function BarraFiltros({ filtro, periodo, opcoes, etapas, aoMudar, aoAtual
   return (
     <section aria-label="Filtros do painel" className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <ToggleGroup
-          aria-label="Período"
-          variant="outline"
-          size="sm"
-          spacing={0}
-          value={[periodo]}
-          onValueChange={(v: string[]) => trocarPeriodo(v)}
-        >
+        <div role="group" aria-label="Período" className="inline-flex flex-wrap gap-0.5 rounded-full border border-border bg-muted/30 p-[3px]">
           {PERIODOS.map((p) => (
-            <ToggleGroupItem key={p.valor} value={p.valor}>
+            <button
+              key={p.valor}
+              type="button"
+              aria-pressed={periodo === p.valor}
+              onClick={() => trocarPeriodo([p.valor])}
+              className={cn(
+                "rounded-full px-3 py-1.5 text-[12.5px] text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50",
+                periodo === p.valor && "bg-foreground text-background hover:text-background",
+              )}
+            >
               {p.rotulo}
-            </ToggleGroupItem>
+            </button>
           ))}
-        </ToggleGroup>
+        </div>
         {mostrarDatas && (
           <div className="flex items-center gap-2">
             <Input type="date" value={de} onChange={(ev) => mudarData("de", ev.target.value)} aria-label="Data inicial" aria-invalid={datasInvalidas} className="w-36" />
@@ -173,8 +175,13 @@ export function BarraFiltros({ filtro, periodo, opcoes, etapas, aoMudar, aoAtual
             value={NEUTRO}
             onValueChange={(v) => adicionar(lista, v)}
           >
-            <SelectTrigger size="sm" aria-label={rotulo} className="max-w-44">
+            <SelectTrigger
+              size="sm"
+              aria-label={rotulo}
+              className={cn("max-w-44", filtro[lista].length > 0 && "border-primary/55 bg-primary/8")}
+            >
               <SelectValue />
+              {filtro[lista].length > 0 && <span className="font-mono text-[11px] text-link-acao">{filtro[lista].length}</span>}
             </SelectTrigger>
             <SelectContent alignItemWithTrigger={false} className={larguraMenu}>
               {itens
@@ -187,12 +194,18 @@ export function BarraFiltros({ filtro, periodo, opcoes, etapas, aoMudar, aoAtual
             </SelectContent>
           </Select>
         ))}
-        <label className="flex items-center gap-1.5 px-1 text-sm">
+        <label className="flex cursor-pointer items-center gap-2 px-1 text-[12.5px] text-muted-foreground">
           <input
             type="checkbox"
+            role="switch"
             checked={filtro.incluirTestes}
             onChange={(ev) => emitir({ ...filtro, incluirTestes: ev.target.checked })}
-            className="accent-primary size-4 rounded"
+            className="peer sr-only"
+          />
+          {/* Chave desenhada: o input fica para teclado e leitor de tela; o anel aparece no foco do input. */}
+          <span
+            aria-hidden
+            className="relative h-[18px] w-[30px] shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50 after:absolute after:top-0.5 after:left-0.5 after:size-3.5 after:rounded-full after:bg-papel after:transition-transform peer-checked:after:translate-x-3"
           />
           Incluir testes
         </label>

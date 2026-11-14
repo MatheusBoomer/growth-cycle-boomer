@@ -1,4 +1,5 @@
-"""Textos dos documentos brutos da Verdeluz (marca 100% FICTÍCIA): kickoff, formulário pré-kickoff e site simulado."""
+"""Textos dos documentos brutos da Verdeluz (marca 100% FICTÍCIA): kickoff, formulário pré-kickoff, site simulado e
+reunião de apresentação do Growth Cycle (insumo da etapa 10)."""
 
 from __future__ import annotations
 
@@ -221,3 +222,53 @@ Envio pelos Correios e por transportadora parceira. Prazo médio: 2 a 5 dias út
 
 (Esta página fica no rodapé do site, sem destaque na vitrine.)
 """
+
+FALANTES_APRESENTACAO = {
+    "C": "Camila (Estrategista, Boomer)",
+    "R": "Rafael (Gestor de tráfego, Boomer)",
+    "M": "Marina (Sócia, Verdeluz)",
+    "L": "Luiza (Sócia, Verdeluz)",
+}
+
+# Reunião de apresentação do Growth Cycle em 22/11/2026 (FICTÍCIA), insumo da etapa 10.
+# (falante, fala, segundos de slides sem fala transcrita depois dela). Contém de propósito: 3 complementos (reunião
+# mensal depois do dia 10, sessão de fotos dos kits, consentimento do WhatsApp), 2 conflitos (cupom de primeira compra
+# "já testado" e a Curva C antes do Dia das Mães), 2 pontos em aberto (assinatura do sérum, "vou pensar"; TikTok,
+# "vamos ver") e 2 compromissos da Boomer (pauta da reunião mensal, no plano; texto do rótulo do sérum, fora do escopo).
+APRESENTACAO: list[tuple[str, str, int]] = [
+    ("C", "Boa tarde, gente. Estão me ouvindo bem? Hoje a ideia é passar pelo Growth Cycle inteiro: o diagnóstico, as metas, a mídia e, no fim, o plano de ação. Quem quiser pode interromper a qualquer momento.", 0),
+    ("M", "Te ouvimos, Camila. A Luiza está aqui comigo. A Bruna não conseguiu entrar, ela está fechando a expedição de um pedido grande.", 0),
+    ("L", "Oi, pessoal. Pode começar, estamos com o café na mão. [risos]", 0),
+    ("C", "Então vou começar pelo diagnóstico dos últimos 12 meses e pela unidade econômica. Vou passar rápido pelos gráficos e paro onde vocês quiserem.", 780),
+    ("L", "O gráfico do CAC dói de ver, mas é exatamente o que eu sentia no caixa. De uns R$ 50 para mais de R$ 100.", 0),
+    ("R", "E é por isso que a regra de escala da verba vem logo no começo do plano. Sem o teto de CAC a gente volta para aquela roda de subir verba para segurar volume.", 0),
+    ("C", "Agora as metas e os cenários, e depois a mídia paga.", 600),
+    ("M", "O Realista, com os 30%, eu compro. O Otimista fica como sonho, mas é bom ver o caminho até ele.", 0),
+    ("C", "Perfeito. Agora o plano de ação, que é o que vocês vão tocar com a gente no dia a dia. Na primeira semana entra o cupom e a UTM própria de cada influenciadora, para saber quanto cada parceira vende de verdade.", 0),
+    ("M", "Isso de cupom a gente já fez. Já testamos cupom de primeira compra com duas parceiras e não funcionou, quase ninguém usou.", 0),
+    ("C", "Me conta como foi esse teste. Quanto tempo ficou no ar, qual era o desconto e se tinha link junto?", 0),
+    ("M", "Foi em março, umas três semanas, 10% na primeira compra, só com duas meninas. Não tinha link, era o código falado no story.", 0),
+    ("L", "E eu não quero dar mais desconto para quem já ia comprar. O PRIMEIRA10 do site já faz isso.", 0),
+    ("C", "Entendi. Então o teste mediu se o desconto convencia, com duas parceiras, três semanas e sem link. O que o plano propõe é outra coisa: o cupom serve para saber quanto cada parceira vende. Dá para fazer sem desconto extra, com um brinde no lugar.", 0),
+    ("L", "Com brinde eu até topo. Desconto não.", 0),
+    ("R", "E dá para pôr o link com UTM na bio de cada uma. O que vier pelo link a gente mede mesmo quando a pessoa esquece o código.", 0),
+    ("L", "Outra coisa, da reunião mensal de resultados. Ela tem que ser depois do dia 10, quando a contabilidade fecha o mês. No primeiro dia útil a gente ia discutir número que ainda vai mudar.", 0),
+    ("C", "Faz todo sentido, a gente passa para o primeiro dia útil depois do dia 10. E a pauta fixa da reunião a gente manda até sexta, dia 27, para vocês aprovarem.", 0),
+    ("M", "Sobre as fotos dos kits: o Caio já tem uma sessão de fotos marcada para a primeira semana de dezembro. Dá para aproveitar e fazer todos os kits de uma vez.", 0),
+    ("C", "Ótimo, isso adianta a ação da prova social e das fotos novas.", 0),
+    ("L", "E na reativação, cuidado com o WhatsApp. O consentimento a gente só tem de quem comprou a partir de abril, quando entrou o aviso no checkout. Os mais antigos é só e-mail.", 0),
+    ("R", "Boa. Então a régua separa os dois grupos desde o começo.", 0),
+    ("C", "No médio prazo tem a revisão dos 38 SKUs da Curva C, com a descontinuação dos que vendem menos de R$ 5 mil por ano.", 0),
+    ("M", "Aí eu travo. Tirar produto de linha eu não faço antes do Dia das Mães. Tem cliente fiel de alguns desses e tem fórmula que eu quero relançar.", 0),
+    ("C", "A revisão pode acontecer em fevereiro e março do mesmo jeito, para escolher os brindes e o item adicional do carrinho. O que mudaria é só a data de descontinuar.", 0),
+    ("M", "Revisar tudo bem. Descontinuar, só depois de maio.", 0),
+    ("M", "Uma ideia que me veio vendo a parte da recompra: uma assinatura do sérum, com entrega a cada 60 dias. Vou pensar se faz sentido para a gente.", 0),
+    ("C", "Vale pensar. A régua de reposição vai mostrar quantas clientes recompram o sérum perto dos 45 dias, e esse número ajuda a decidir.", 0),
+    ("L", "E o TikTok? A gente está crescendo lá, e o plano quase não fala dele.", 0),
+    ("R", "No plano o TikTok fica como orgânico por enquanto. A verba de mídia não tem linha para ele nestes primeiros meses.", 0),
+    ("L", "Pode ser. Vamos ver como ele anda até o começo do ano.", 0),
+    ("M", "Camila, uma coisa à parte: a gente está mudando o rótulo do sérum. Você consegue dar uma olhada no texto?", 0),
+    ("C", "Consigo dar uma olhada no texto do rótulo novo e te mando um retorno até sexta.", 0),
+    ("C", "Então, recapitulando: eu ajusto o plano com o que vocês trouxeram hoje e mando a versão final. Obrigada pelo tempo, foi uma conversa muito boa.", 0),
+    ("L", "Obrigada, gente. Até a próxima.", 0),
+]

@@ -19,8 +19,8 @@ export function BarraEtapas({ concluidas, total, atual, aguardando = false }: { 
             data-estado={estado}
             className={cn(
               "h-1.5 min-w-0 flex-1 rounded-full",
-              estado === "concluida" && "bg-sucesso",
-              estado === "atual" && "bg-primary",
+              estado === "concluida" && "bg-chart-3",
+              estado === "atual" && "bg-primary motion-safe:animate-pulse",
               estado === "aguardando" && "bg-aviso",
               estado === "pendente" && "bg-foreground/25",
             )}

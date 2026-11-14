@@ -5,11 +5,11 @@ import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 import type { EscolhaModelo } from "@workspace/core/modelos"
 import type { EtapaId } from "@workspace/core/tipos"
-import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { api, mensagemDeErro, type ConfigModelos } from "@/lib/api"
 import { CartaoEtapaModelos } from "./cartao-etapa-modelos"
 import { PainelEtapaModelos } from "./painel-etapa-modelos"
+import { AvisoAdmin, NotaAdmin } from "@/components/admin/aviso-admin"
 
 /** Aba "Modelos": modelo e esforço do agente principal e dos subagentes de cada etapa, salvos na hora. */
 export function TabelaModelos() {
@@ -48,25 +48,18 @@ export function TabelaModelos() {
 
   if (erro && !dados) {
     return (
-      <Alert>
-        <AlertDescription>{erro}</AlertDescription>
-      </Alert>
+      <AvisoAdmin mensagem={erro} aba="modelos" />
     )
   }
   if (!dados) return <Skeleton className="h-64 w-full" />
 
   return (
     <section className="flex flex-col gap-4">
-      <p className="text-muted-foreground text-sm">Vale a partir do próximo turno de cada etapa. Padrão deixa a escolha com o Claude Code.</p>
       {!dados.lista.completa && (
-        <Alert>
-          <AlertDescription>lista completa indisponível agora: só Haiku, Sonnet e Opus (mais recentes) aparecem.</AlertDescription>
-        </Alert>
+        <NotaAdmin>Lista completa indisponível agora: só Haiku, Sonnet e Opus (mais recentes) aparecem.</NotaAdmin>
       )}
       {erro && (
-        <Alert>
-          <AlertDescription>{erro}</AlertDescription>
-        </Alert>
+        <AvisoAdmin mensagem={erro} aba="modelos" />
       )}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {dados.etapas.map((e) => (

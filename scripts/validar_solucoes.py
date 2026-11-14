@@ -8,7 +8,10 @@ scripts/validar_solucoes.py: garante em código a regra de ouro do treinamento
 
 registro: confere hipóteses, 1 a 3 soluções, impacto e frente de cada problema
 e, com --markdown, gera a seção aprovável a partir do registro.
-plano: confere que toda solução do registro virou ação do plano de ação.
+plano: confere que toda solução do registro virou ação do plano de ação. É um atalho:
+`--modo plano` delega ao `validar_plano_acao.py` (em modo rascunho) e mostra só os erros de
+cobertura das soluções. Para validar o plano inteiro (datas, donos, dependências, janela de
+prova, marcações), prefira rodar `scripts/validar_plano_acao.py` direto.
 ERRO: (código 1) bloqueia; AVISO: não bloqueia.
 """
 
@@ -21,13 +24,8 @@ import sys
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-FRENTES = (
-    "Mídia Paga / Canal Principal",
-    "Eficiência Operacional",
-    "Produto / Mix / Portfólio",
-    "Redução de Dependências",
-    "Monitoramento e Governança",
-)
+from plano_acao_comum import FRENTES
+
 TIPOS_IMPACTO = ("R$", "%", "nao_quantificavel")
 MIN_SOLUCOES, MAX_SOLUCOES = 1, 3
 RE_PROBLEMA = re.compile(r"^P\d+$")
@@ -184,56 +182,18 @@ def _ler_json(caminho: Path, nome: str):
 
 
 def validar_plano(registro: dict, plano) -> Tuple[List[str], List[str]]:
-    erros: List[str] = []
+    """Cobertura das soluções no plano de ação v2.
+
+    Delega ao validador do plano (em modo rascunho, para as marcações e a margem não
+    bloquearem aqui) e mantém só os erros que falam de solução: o resto do plano é
+    conferido por `validar_plano_acao.py`.
+    """
     if not isinstance(plano, dict) or not isinstance(plano.get("horizontes"), list):
         return ["o plano não tem a lista \"horizontes\"."], []
-    ids = [s["id"] for p in registro["problemas"] for s in p["solucoes"]]
-    conhecidos = set(ids)
-    cobertos = set()
-    linhas_tabela = plano.get("tabela") or []
-    if not isinstance(linhas_tabela, list):
-        return ["\"tabela\" precisa ser uma lista."], []
-    tabela = {linha["acao"]: linha for linha in linhas_tabela if isinstance(linha, dict) and _texto(linha.get("acao"))}
-    for i, horizonte in enumerate(plano["horizontes"], start=1):
-        if not isinstance(horizonte, dict):
-            erros.append(f"Horizonte #{i}: formato inválido.")
-            continue
-        acoes = horizonte.get("acoes") or []
-        if not isinstance(acoes, list):
-            erros.append(f"Horizonte #{i}: \"acoes\" precisa ser uma lista.")
-            continue
-        for j, acao in enumerate(acoes, start=1):
-            if not isinstance(acao, dict):
-                erros.append(f"Horizonte #{i}, ação #{j}: formato inválido.")
-                continue
-            if _texto(acao.get("acao")):
-                nome = acao["acao"]
-                linha = tabela.get(nome)
-                if linha is None:
-                    erros.append(f"Ação \"{nome}\": não aparece na tabela-resumo (mesmo nome em \"acao\").")
-                elif not _texto(linha.get("frente")):
-                    erros.append(f"Ação \"{nome}\": frente vazia na tabela-resumo.")
-            else:
-                nome = "(sem nome)"
-                erros.append(f"Horizonte #{i}, ação #{j}: campo acao obrigatório (texto não vazio).")
-            for campo in ("quando", "por_quem"):
-                if not _texto(acao.get(campo)):
-                    erros.append(f"Ação \"{nome}\": campo {campo} obrigatório.")
-            solucoes = acao.get("solucoes", [])
-            if not isinstance(solucoes, list):
-                erros.append(f"Ação \"{nome}\": \"solucoes\" precisa ser uma lista de ids (ex.: [\"P1.S1\"]).")
-                continue
-            for sid in solucoes:
-                if not isinstance(sid, str):
-                    erros.append(f"Ação \"{nome}\": cada solução precisa ser um id em texto (ex.: \"P1.S1\").")
-                elif sid in conhecidos:
-                    cobertos.add(sid)
-                else:
-                    erros.append(f"Ação \"{nome}\": cita a solução {sid}, que não existe no registro.")
-    for sid in ids:
-        if sid not in cobertos:
-            erros.append(f"Solução {sid} do registro não virou nenhuma ação do plano.")
-    return erros, []
+    import validar_plano_acao
+
+    erros, _ = validar_plano_acao.validar(plano, registro, rascunho=True)
+    return [e for e in erros if "olução" in e], []
 
 
 def main(argv: Optional[List[str]] = None) -> int:

@@ -1,5 +1,6 @@
 "use client"
 
+import { ShieldIcon } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 import { nomeCurto } from "@workspace/core/autenticacao"
@@ -14,14 +15,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@workspace/ui/components/alert-dialog"
-import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@workspace/ui/components/table"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@workspace/ui/components/tooltip"
+import { CartaoNumero } from "@/components/admin/painel/numeros-grandes"
 import { useEmailDaConta } from "@/components/marca/conta-contexto"
+import { numerosDePessoas } from "@/lib/numeros-pessoas"
 import { api, mensagemDeErro, type PessoaComProjetos } from "@/lib/api"
+import { IconeModal } from "@/components/marca/icone-modal"
+import { AvisoAdmin } from "@/components/admin/aviso-admin"
 
 export interface RotuloAcao {
   texto: "Tornar admin" | "Retirar admin"
@@ -111,9 +115,7 @@ export function TabelaPessoas() {
 
   if (erro) {
     return (
-      <Alert>
-        <AlertDescription>{erro}</AlertDescription>
-      </Alert>
+      <AvisoAdmin mensagem={erro} aba="pessoas" />
     )
   }
   if (!lista) return <Skeleton className="h-40 w-full" />
@@ -121,8 +123,15 @@ export function TabelaPessoas() {
 
   const rotulo = alvo ? rotuloAcao(alvo, { admins: lista.admins, euMesmo: euMesmo(alvo) }) : null
 
+  const numeros = numerosDePessoas(lista.pessoas, new Date())
+
   return (
     <>
+      <section aria-label="Números da equipe" className="grid gap-3 sm:grid-cols-3">
+        <CartaoNumero rotulo="Pessoas com acesso" valor={numeros.total} detalhe="quem já entrou no app" />
+        <CartaoNumero rotulo="Admins" valor={numeros.admins} detalhe="é preciso manter pelo menos um" />
+        <CartaoNumero rotulo="Ativas nos últimos 7 dias" valor={numeros.ativas7d} detalhe={`de ${numeros.total} ${numeros.total === 1 ? "pessoa" : "pessoas"}`} />
+      </section>
       <Table>
         <TableHeader>
           <TableRow>
@@ -172,7 +181,12 @@ export function TabelaPessoas() {
       <AlertDialog open={alvo !== null} onOpenChange={(v) => !v && !salvando && setAlvo(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{rotulo ? `${rotulo.texto}: ${alvo ? nomeCurto(alvo.email) : ""}?` : ""}</AlertDialogTitle>
+            <IconeModal tom="acao">
+              <ShieldIcon />
+            </IconeModal>
+            <AlertDialogTitle>
+              {rotulo?.texto}: <em>{alvo ? nomeCurto(alvo.email) : ""}?</em>
+            </AlertDialogTitle>
             <AlertDialogDescription>{rotulo?.confirmacao}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

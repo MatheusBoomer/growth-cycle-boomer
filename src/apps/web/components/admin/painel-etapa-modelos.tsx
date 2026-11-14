@@ -7,6 +7,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import type { ConfigModelos, EtapaConfiguravel } from "@/lib/api"
 import { ROTULOS_ALVO, escolhaAoTrocarModelo, escolhaSalva, esforcosDoModelo, foraDaLista, sugestaoVisivel, textoAlteracao, textoSugestao } from "@/lib/celula-modelo"
 import { SeloModelo } from "./selo-modelo"
+import { cn } from "@workspace/ui/lib/utils"
+import { TituloDestacado } from "@/components/trabalho/barra-visualizador"
 
 const PADRAO = "__padrao__"
 type Salvar = (etapa: EtapaConfiguravel["id"], alvo: string, escolha: EscolhaModelo) => void
@@ -43,28 +45,30 @@ function AgenteNoPainel({ etapa, alvo, dados, salvando, salvar }: PropsAgente) {
   ]
 
   return (
-    <section className="flex flex-col gap-2.5" aria-label={rotulo}>
-      <h3 className="text-sm font-medium">{rotulo}</h3>
-      <Select
-        items={itensModelo}
-        value={atual.modelo ?? PADRAO}
-        disabled={salvando}
-        onValueChange={(v) => salvar(etapa.id, alvo, escolhaAoTrocarModelo(atual, v === null || v === PADRAO ? null : v, lista))}
-      >
-        <SelectTrigger className="w-full" aria-label={`Modelo da ${nomeAgente}`}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent alignItemWithTrigger={false} className="min-w-72">
-          {itensModelo.map((i) => (
-            <SelectItem key={i.value} value={i.value} className="items-start py-1.5">
-              <span className="flex flex-col items-start gap-1 whitespace-normal">
-                {i.label}
-                {i.descricao && <span className="text-muted-foreground text-xs">{i.descricao}</span>}
-              </span>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+    <section className="flex flex-col gap-2.5 rounded-2xl border border-border px-3.5 py-3" aria-label={rotulo}>
+      <h3 className="text-[13px] font-medium">{rotulo}</h3>
+      <div role="radiogroup" aria-label={`Modelo da ${nomeAgente}`} className="flex flex-wrap gap-1 rounded-[18px] border border-border p-[3px]">
+        {itensModelo.map((i) => {
+          const marcado = (atual.modelo ?? PADRAO) === i.value
+          return (
+            <button
+              key={i.value}
+              type="button"
+              role="radio"
+              aria-checked={marcado}
+              disabled={salvando}
+              title={i.descricao || undefined}
+              onClick={() => !marcado && salvar(etapa.id, alvo, escolhaAoTrocarModelo(atual, i.value === PADRAO ? null : i.value, lista))}
+              className={cn(
+                "rounded-full px-2.5 py-1 text-xs text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50",
+                marcado && "bg-foreground text-background hover:text-background",
+              )}
+            >
+              {i.value === PADRAO ? "Padrão" : <SeloModelo modelo={i.modelo} lista={lista} />}
+            </button>
+          )
+        })}
+      </div>
       <Select
         items={itensEsforco}
         value={atual.esforco ?? PADRAO}
@@ -87,7 +91,7 @@ function AgenteNoPainel({ etapa, alvo, dados, salvando, salvar }: PropsAgente) {
       </p>
       {fora && <p className="text-destructive text-xs">modelo não está mais na lista</p>}
       {sugestao && sugestaoVisivel(sugestao, atual) && (
-        <div className="bg-muted/60 flex flex-col gap-1.5 rounded-lg px-2.5 py-2 text-xs">
+        <div className="flex flex-col gap-1.5 rounded-xl bg-primary/7 px-3 py-2.5 text-xs">
           <span>{textoSugestao(sugestao, lista)}</span>
           <Button variant="outline" size="xs" className="self-start" disabled={salvando} onClick={() => salvar(etapa.id, alvo, { modelo: sugestao.modelo, esforco: sugestao.esforco })}>
             Aplicar
@@ -121,10 +125,12 @@ export function PainelEtapaModelos({ etapa, aberto, aoMudarAberto, dados, emSalv
         {etapa && (
           <>
             <SheetHeader>
-              <SheetTitle>{etapa.rotulo}</SheetTitle>
+              <SheetTitle>
+                <TituloDestacado texto={etapa.rotulo} />
+              </SheetTitle>
               <SheetDescription>Vale a partir do próximo turno desta etapa. Padrão deixa a escolha com o Claude Code.</SheetDescription>
             </SheetHeader>
-            <div className="flex flex-col gap-6 px-4 pb-4">
+            <div className="flex flex-col gap-3 px-6 pb-6">
               {etapa.alvos.map((alvo) => (
                 <AgenteNoPainel key={alvo} etapa={etapa} alvo={alvo} dados={dados} salvando={emSalvamento === `${etapa.id}/${alvo}`} salvar={salvar} />
               ))}

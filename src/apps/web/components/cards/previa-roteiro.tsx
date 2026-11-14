@@ -1,10 +1,9 @@
 "use client"
 
-import { MessageSquareIcon, PanelRightOpenIcon, SendIcon } from "lucide-react"
+import { MessageSquareIcon, SendIcon } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import type { Comentario } from "@workspace/core/comentarios"
-import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { Textarea } from "@workspace/ui/components/textarea"
@@ -139,7 +138,7 @@ export function PreviaRoteiro({
         {pendentes
           .filter((c) => c.slide === numero)
           .map((c) => (
-            <p key={c.id} className="text-link-acao flex items-center gap-1 text-xs">
+            <p key={c.id} className="flex items-center gap-1.5 text-xs text-link-acao">
               <MessageSquareIcon className="size-3 shrink-0" /> {c.texto}
               <button type="button" className="text-muted-foreground ml-1 hover:underline" onClick={() => apagar(c.id)} disabled={ocupado}>
                 apagar
@@ -159,25 +158,26 @@ export function PreviaRoteiro({
             </div>
           </div>
         ) : (
-          <button
-            type="button"
-            className="text-muted-foreground text-xs hover:underline"
+          <Button
+            size="xs"
+            variant="ghost"
+            className="-ml-2 text-muted-foreground"
             onClick={() => {
               setAbertoEm(numero)
               setTexto("")
             }}
           >
-            Comentar
-          </button>
+            <MessageSquareIcon /> Comentar
+          </Button>
         )}
       </div>
     ) : null
 
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-center gap-2">
+    <div className="grid gap-2">
+      <div className="mb-1 flex flex-wrap items-center gap-2">
         {comparacao && (
-          <p className="text-muted-foreground mr-auto text-xs">
+          <p className="mr-auto text-[12.5px] text-muted-foreground">
             {comparacao.resumo.alterados + comparacao.resumo.novos + comparacao.resumo.removidos + comparacao.resumo.movidos === 0
               ? "Nenhum slide mudou em relação à versão anterior."
               : [
@@ -192,51 +192,60 @@ export function PreviaRoteiro({
           </p>
         )}
         {comparacao && (
-          <Button size="sm" variant="ghost" onClick={() => setVerTudo(!verTudo)}>
+          <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={() => setVerTudo(!verTudo)}>
             {verTudo ? "Ver só o que mudou" : "Ver roteiro completo"}
           </Button>
         )}
         <Button size="sm" variant="outline" className={comparacao ? "" : "ml-auto"} onClick={() => setModal(primeiroDoModal)}>
-          <PanelRightOpenIcon /> Ver slide a slide
+          Ver slide a slide
         </Button>
       </div>
-      <ol className="max-h-[32rem] space-y-2 overflow-y-auto pr-1">
+      <ol className="grid max-h-[32rem] gap-2 overflow-y-auto pr-1">
         {itens.map((item) => {
           if (item.tipo === "removido") {
             const r = resumoDoSlide(item.r.slide)
             return (
-              <li key={`r-${item.r.numeroAnterior}`} className="rounded-md border border-dashed p-2 text-sm opacity-80">
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground w-6 shrink-0 text-right font-mono text-xs">{item.r.numeroAnterior}</span>
-                  <EtiquetaMudanca status="removido" />
-                  <span className="text-muted-foreground truncate line-through">{r.titulo}</span>
+              <li key={`r-${item.r.numeroAnterior}`} className="rounded-2xl border border-dashed border-border bg-card px-3.5 py-3 text-sm opacity-70">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-5 shrink-0 text-right font-mono text-[11px] text-muted-foreground">{String(item.r.numeroAnterior).padStart(2, "0")}</span>
+                  <span className="min-w-0 truncate text-[13.5px] font-medium">{r.titulo}</span>
+                  <span className="ml-auto">
+                    <EtiquetaMudanca status="removido" />
+                  </span>
                 </div>
-                <p className="text-muted-foreground mt-1 ml-8 text-xs">Estava no slide {item.r.numeroAnterior} da versão anterior e saiu do roteiro.</p>
+                <p className="mt-1 ml-[30px] text-xs text-muted-foreground">Estava no slide {item.r.numeroAnterior} da versão anterior e saiu do roteiro.</p>
               </li>
             )
           }
           const { slide: s, numero, status, diferencas } = item.s
           const r = resumoDoSlide(s)
           return (
-            <li key={numero} className={`rounded-md border p-2 text-sm ${s.pendencia ? "border-aviso/60 bg-aviso-fundo" : ""}`}>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground w-6 shrink-0 text-right font-mono text-xs">{numero}</span>
-                <Badge variant="outline" className="shrink-0 font-mono text-[10px]">
-                  {s.tipo}
-                </Badge>
-                {status !== "igual" && <EtiquetaMudanca status={status} />}
-                <button type="button" className="truncate text-left font-medium hover:underline" onClick={() => setModal(numero - 1)} title="Abrir este slide em tamanho grande">
-                  {r.titulo}
-                </button>
+            <li key={numero} className={`grid gap-2 rounded-2xl border px-3.5 py-3 text-sm ${s.pendencia ? "border-aviso/60 bg-aviso-fundo" : "border-border bg-card"}`}>
+              <div className="flex items-center gap-2.5">
+                <span className="w-5 shrink-0 text-right font-mono text-[11px] text-muted-foreground">{String(numero).padStart(2, "0")}</span>
+                <div className="min-w-0">
+                  <button type="button" className="block max-w-full truncate text-left text-[13.5px] font-medium hover:underline" onClick={() => setModal(numero - 1)} title="Abrir este slide em tamanho grande">
+                    {r.titulo}
+                  </button>
+                  <span className="text-[11.5px] text-muted-foreground">
+                    {s.tipo}
+                    {r.imagens.length > 0 && ` · ${r.imagens.length} ${r.imagens.length === 1 ? "imagem" : "imagens"}`}
+                  </span>
+                </div>
+                {status !== "igual" && (
+                  <span className="ml-auto">
+                    <EtiquetaMudanca status={status} />
+                  </span>
+                )}
               </div>
               {s.pendencia ? (
-                <p className="mt-1 ml-8 text-xs text-aviso">Pendência: {s.pendencia}</p>
+                <p className="ml-[30px] text-xs text-aviso">Pendência: {s.pendencia}</p>
               ) : (
-                <div className="mt-1 ml-8 flex gap-2">
+                <div className="ml-[30px] flex gap-2.5">
                   {r.imagens.map((img) => (
                     <button key={img} type="button" onClick={() => setModal(numero - 1)} className="shrink-0" title="Abrir em tamanho grande">
                       {/* eslint-disable-next-line @next/next/no-img-element -- arquivo local servido pela rota do app */}
-                      <img src={urlArquivo(slug, img)} alt="" className="h-14 w-auto rounded border bg-papel" />
+                      <img src={urlArquivo(slug, img)} alt="" className="h-14 w-auto rounded-lg border border-border bg-papel" />
                     </button>
                   ))}
                   {status === "alterado" ? (
@@ -245,7 +254,7 @@ export function PreviaRoteiro({
                     </div>
                   ) : (
                     r.linhas.length > 0 && (
-                      <ul className="text-muted-foreground list-disc space-y-0.5 pl-4 text-xs">
+                      <ul className="list-disc space-y-0.5 pl-4 text-xs text-muted-foreground">
                         {r.linhas.map((l, j) => (
                           <li key={j}>{l}</li>
                         ))}
@@ -254,14 +263,14 @@ export function PreviaRoteiro({
                   )}
                 </div>
               )}
-              {typeof s.fonte === "string" && <p className="text-muted-foreground mt-1 ml-8 font-mono text-[10px]">fonte: {s.fonte}</p>}
-              {modal === null && <div className="ml-8">{blocoComentarios(numero)}</div>}
+              {typeof s.fonte === "string" && <p className="ml-[30px] font-mono text-[10px] text-muted-foreground">fonte: {s.fonte}</p>}
+              {modal === null && <div className="ml-[30px]">{blocoComentarios(numero)}</div>}
             </li>
           )
         })}
       </ol>
       {comentaveis && pendentes.length > 0 && (
-        <Button size="sm" onClick={enviar} disabled={ocupado}>
+        <Button size="sm" className="w-fit" onClick={enviar} disabled={ocupado}>
           <SendIcon /> Enviar {pendentes.length} {pendentes.length === 1 ? "ajuste" : "ajustes"} ao agente
         </Button>
       )}

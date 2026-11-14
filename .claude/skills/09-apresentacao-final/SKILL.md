@@ -5,10 +5,11 @@ description: Monta a apresentação final do planejamento para o prospect, no pa
 
 # Skill 09 — Apresentação final
 
-Última etapa. Transforma o que foi aprovado em `entrega/ativos-aprovados/` na
-apresentação que vai para o prospect, no molde da agência
-(`.claude/skills/_shared/modelos-apresentacao/`). Não cria análise nova nem
-gráfico novo: organiza, condensa e monta.
+Penúltima etapa: depois dela vem a revisão do plano de ação com o que o
+cliente disser na reunião de apresentação (Skill 10). Transforma o que foi
+aprovado em `entrega/ativos-aprovados/` na apresentação que vai para o
+prospect, no molde da agência (`.claude/skills/_shared/modelos-apresentacao/`).
+Não cria análise nova nem gráfico novo: organiza, condensa e monta.
 
 ## Antes de começar
 
@@ -20,7 +21,7 @@ Confira que existe material das 5 seções do deck em `entrega/ativos-aprovados/
 | 02. Desafios | `contexto/solucoes.json`, `secoes/05-solucoes.md` | 05 |
 | 03. Metas | `graficos/cenarios-*`, `graficos/tabela-cenarios-*`, `secoes/06-*.md` | 06 |
 | 04. Cenários e impactos | `secoes/06-*.md`, `secoes/07-midia-paga.md`, `graficos/tabela-*` | 06 e 07 |
-| 05. Plano de ação | `plano-de-acao/*.docx`, `secoes/08-*.md` | 08 |
+| 05. Plano de ação | `plano-de-acao/plano-de-acao-estrategico.docx` (documento) e `plano-de-acao/plano-de-acao-estrategico.xlsx` (planilha), `secoes/08-*.md` | 08 |
 
 Faltando material de uma seção, diga ao analista o que falta e de qual etapa
 vem; não monte um deck incompleto em silêncio.
@@ -168,8 +169,30 @@ estruturada que o app monta a partir dos comentários do analista, no formato:
 
 ## Encerramento e handoff
 
-Ao concluir, marque "Apresentação final" como ✅ em
-`contexto/status-planejamento.md` e diga ao analista, em linguagem natural,
-que a apresentação está em `entrega/apresentacao-final.pptx` e que abre no
-Google Slides (Arquivo → Importar slides) ou no PowerPoint. Este é o fim do
-processo.
+Ao concluir, converse com o analista em linguagem natural, sem citar caminho
+de arquivo:
+
+"Nesta sessão, a apresentação final ficou pronta, em .pptx editável no molde
+da agência; ela abre no Google Slides (Arquivo → Importar slides) ou no
+PowerPoint. Falta uma etapa: depois da reunião em que você apresentar o
+Growth Cycle ao cliente, eu reviso o plano de ação com o que ele trouxer e
+gero o plano final, que é o que vai para a entrega formal. Para isso,
+preciso da transcrição completa dessa reunião: espere o Google Drive
+disponibilizar, exporte em Word, texto ou Markdown e confira
+se ela cobre a reunião do início ao fim.
+
+Quando estiver com a transcrição, [CHAMADA]"
+
+Troque `[CHAMADA]` conforme o modo: no **terminal**, "rode
+`/10-revisao-pos-apresentacao`."; na **interface** (onde comando de barra não
+existe), "abra a etapa 10 · Revisão pós-apresentação."
+
+Depois, conforme o modo (Regras 6 e 7):
+
+- **Terminal:** marque "Apresentação final" como ✅ em
+  `contexto/status-planejamento.md`, reescreva o bloco "Próximo passo" desse
+  arquivo com o mesmo pedido e grave
+  `contexto/decisoes/09-apresentacao-final.md`.
+- **Interface:** não edite `contexto/status-planejamento.md` nem
+  `contexto/decisoes/`. Chame `sinalizar_etapa_pronta` com o
+  `resumo_decisoes` e o mesmo texto de handoff; o app grava os dois.

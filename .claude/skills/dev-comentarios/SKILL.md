@@ -1,6 +1,6 @@
 ---
 name: dev-comentarios
-description: Executa os ajustes de interface que o desenvolvedor marcou na tela com o modo dev de comentários (pinos numerados no app web em src/apps/web) e apaga os resolvidos. Use quando o desenvolvedor pedir para ler ou resolver os comentários do modo dev, fazer os ajustes marcados na tela, ou citar .dev-comentarios. Ferramenta de desenvolvimento da interface; não é etapa do planejamento (01→09).
+description: Executa os ajustes de interface que o desenvolvedor marcou na tela com o modo dev de comentários (pinos numerados no app web em src/apps/web) e apaga os resolvidos. Use quando o desenvolvedor pedir para ler ou resolver os comentários do modo dev, fazer os ajustes marcados na tela, ou citar .dev-comentarios. Ferramenta de desenvolvimento da interface; não é etapa do planejamento (01→10).
 ---
 
 # Comentários do modo dev

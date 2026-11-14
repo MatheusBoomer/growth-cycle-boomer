@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs"
 import { AvatarPessoa } from "@/components/marca/avatar-pessoa"
 import { formatarDataHora, MarcaEstimado, type EtapaRotulada } from "./comuns"
+import { partesDoRotulo } from "@/lib/home"
 
 type Linha = PainelMetricas["porProjeto"][number]
 type Aba = "andamento" | "concluidos" | "todos"
@@ -168,13 +169,13 @@ export function ListaProjetos({ projetos, etapas, avatares, filtrado = false }: 
                     <span className="max-w-40 truncate">{nomeDono}</span>
                   </div>
                 </TableCell>
-                <TableCell>{p.etapaAtual === null ? <span className="text-muted-foreground">Concluído</span> : rotuloDaEtapa(p.etapaAtual)}</TableCell>
-                <TableCell className="text-right tabular-nums whitespace-nowrap">
+                <TableCell>{p.etapaAtual === null ? <span className="text-muted-foreground">Concluído</span> : <EtapaComNumero rotulo={rotuloDaEtapa(p.etapaAtual)} />}</TableCell>
+                <TableCell className="text-right font-mono text-[12.5px] tabular-nums whitespace-nowrap">
                   {formatarUsd(p.usd)}
                   {p.estimado && <MarcaEstimado />}
                 </TableCell>
-                <TableCell className="text-right tabular-nums">{formatarDuracao(p.tempoUtilSeg)}</TableCell>
-                <TableCell className="text-muted-foreground whitespace-nowrap">{formatarDataHora(p.ultimaAtividade)}</TableCell>
+                <TableCell className="text-right font-mono text-[12.5px] tabular-nums">{formatarDuracao(p.tempoUtilSeg)}</TableCell>
+                <TableCell className="text-[12.5px] whitespace-nowrap text-muted-foreground">{formatarDataHora(p.ultimaAtividade)}</TableCell>
               </TableRow>
             )
           })}
@@ -204,5 +205,16 @@ export function ListaProjetos({ projetos, etapas, avatares, filtrado = false }: 
         ))}
       </Tabs>
     </section>
+  )
+}
+
+/** "04 · Unidade econômica" com o número em mono e apagado, como na trilha. */
+function EtapaComNumero({ rotulo }: { rotulo: string }) {
+  const { numero, titulo } = partesDoRotulo(rotulo)
+  return (
+    <span className="whitespace-nowrap">
+      {numero && <span className="mr-1.5 font-mono text-[11px] text-muted-foreground">{numero}</span>}
+      {titulo}
+    </span>
   )
 }

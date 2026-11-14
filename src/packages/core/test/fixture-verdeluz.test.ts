@@ -13,7 +13,8 @@ import { ServicoPlanejamento } from "../src/servico-planejamento"
 import { ORDEM_ETAPAS, type EtapaId } from "../src/tipos"
 import { catalogoReal, raizTemporaria, RAIZ } from "./ajuda"
 
-const KIT_ESPERADO: Partial<Record<EtapaId, number>> = { "01": 2, "03": 2, "04": 1, "07": 4 }
+const KIT_ESPERADO: Partial<Record<EtapaId, number>> = { "01": 2, "03": 2, "04": 1, "07": 4, "10": 1 }
+const PLANO = "entrega/ativos-aprovados/plano-de-acao"
 let fixture: Fixture
 
 beforeAll(async () => {
@@ -108,7 +109,7 @@ describe("fixture real da Verdeluz", () => {
       const r = JSON.parse(saida) as { ok: boolean; problemas: string[] }
       expect(r.ok, `${id}: ${r.problemas.join("; ")}`).toBe(true)
     }
-  })
+  }, 60_000) // três processos Python sobre planilhas grandes: com a suíte inteira em paralelo passa dos 20 s padrão
 
   it("nenhum texto do fixture contém CPF, e-mail, telefone ou cartão", async () => {
     const padroes: [string, RegExp][] = [
@@ -132,7 +133,7 @@ describe("fixture real da Verdeluz", () => {
     }
   })
 
-  it("todo kit tem roteiro, e todas as 9 etapas têm roteiro", async () => {
+  it("todo kit tem roteiro, e todas as etapas têm roteiro", async () => {
     for (const id of ORDEM_ETAPAS) {
       const texto = await readFile(path.join(fixture.pasta, "roteiros", `${id}.md`), "utf8")
       expect(texto).toContain("## O que enviar")
@@ -152,13 +153,79 @@ describe("fixture real da Verdeluz", () => {
     expect(total / 1024 / 1024).toBeLessThan(25)
   })
 
+  it("o plano de ação da 08 sai em documento e planilha, ambos aprovados", () => {
+    const xlsx = "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.xlsx"
+    expect(fixture.manifesto.arquivos).toContainEqual({ caminho: xlsx, etapa: "08" })
+    const planilhas = fixture.estadoCompleto.entregaveis.filter((e) => e.tipo === "planilha" && e.etapa === "08")
+    expect(planilhas).toHaveLength(1)
+    expect(planilhas[0]).toMatchObject({ status: "aprovado", nomeFinal: "plano-de-acao-estrategico", titulo: "Plano de ação estratégico (planilha)" })
+    expect(destinoAprovado(planilhas[0]!)).toBe(xlsx)
+    expect(fixture.estadoCompleto.entregaveis.filter((e) => e.tipo === "documento" && e.etapa === "08")).toHaveLength(1)
+  })
+
+  it("a etapa 10 traz a transcrição da apresentação, o plano final e a revisão no manifesto", () => {
+    for (const caminho of [
+      "contexto/brutos/apresentacao-transcricao-bruta.docx",
+      "contexto/decisoes/10-revisao-pos-apresentacao.md",
+      "entrega/ativos-aprovados/secoes/10-revisao-pos-apresentacao.md",
+      `${PLANO}/plano-de-acao-final.docx`,
+      `${PLANO}/plano-de-acao-final.xlsx`,
+      `${PLANO}/plano-de-acao-final.json`,
+      `${PLANO}/revisao-plano.json`,
+      ".app/propostas/plano-de-acao-final.json",
+      ".app/propostas/revisao-plano.json",
+    ]) {
+      expect(fixture.manifesto.arquivos, caminho).toContainEqual({ caminho, etapa: "10" })
+    }
+    for (const caminho of [`${PLANO}/plano-de-acao-estrategico.json`, ".app/propostas/plano-de-acao-estrategico.json"]) {
+      expect(fixture.manifesto.arquivos, caminho).toContainEqual({ caminho, etapa: "08" })
+    }
+    expect(fixture.manifesto.kit["10"]).toEqual(["contexto/brutos/apresentacao-transcricao-bruta.docx"])
+    expect(fixture.estadoCompleto.insumos).toContainEqual(
+      expect.objectContaining({ etapa: "10", insumoId: "apresentacao-transcricao", arquivo: "contexto/brutos/apresentacao-transcricao-bruta.docx", status: "valido" }),
+    )
+  })
+
+  it("o estado tem a etapa 10 concluída com seção, documento e planilha aprovados", () => {
+    const dez = fixture.estadoCompleto.entregaveis.filter((e) => e.etapa === "10")
+    expect(dez.map((e) => [e.tipo, e.nomeFinal, e.status]).sort()).toEqual([
+      ["documento", "plano-de-acao-final", "aprovado"],
+      ["planilha", "plano-de-acao-final", "aprovado"],
+      ["secao", "revisao-pos-apresentacao", "aprovado"],
+    ])
+    const etapa = fixture.estadoCompleto.etapas["10"]
+    expect(etapa.status).toBe("concluida")
+    expect(etapa.resumoDecisoes).toContain("Conflito 1")
+    expect(etapa.resumoDecisoes).toContain("Ponto em aberto 1")
+  })
+
+  it("o plano da 08 aprovado em JSON é o plano v2 do fixture, byte a byte", async () => {
+    const aprovado = await readFile(caminhoNaBase(fixture, `${PLANO}/plano-de-acao-estrategico.json`))
+    expect(aprovado.equals(await readFile(path.join(RAIZ, "scripts/fixture_verdeluz/plano-de-acao.json")))).toBe(true)
+    expect((await readFile(caminhoNaBase(fixture, ".app/propostas/plano-de-acao-estrategico.json"))).equals(aprovado)).toBe(true)
+  })
+
+  it("a revisão passa no validador em modo final contra a transcrição e os dois planos", () => {
+    const saida = execFileSync("python3", [
+      path.join(RAIZ, "scripts/validar_revisao.py"),
+      "--revisao", caminhoNaBase(fixture, `${PLANO}/revisao-plano.json`),
+      "--transcricao", caminhoNaBase(fixture, "contexto/brutos/apresentacao-transcricao-bruta.docx"),
+      "--plano-08", caminhoNaBase(fixture, `${PLANO}/plano-de-acao-estrategico.json`),
+      "--plano-final", caminhoNaBase(fixture, `${PLANO}/plano-de-acao-final.json`),
+    ], { encoding: "utf8" })
+    expect(saida).toMatch(/^OK: 3 complementos, 2 conflitos, 2 pontos em aberto, 2 compromissos\./m)
+  })
+
   it("o deck e o plano de ação levam a marca FICTÍCIO", () => {
     const script = [
-      "import sys, zipfile",
+      "import html, sys, zipfile",
       "z = zipfile.ZipFile(sys.argv[1])",
-      "print(sum(z.read(n).decode('utf-8', 'ignore').count('FICTÍCIO') for n in z.namelist() if n.endswith('.xml')))",
+      "# o openpyxl grava o texto da planilha como entidade (&#205;), por isso o unescape",
+      "print(sum(html.unescape(z.read(n).decode('utf-8', 'ignore')).count('FICTÍCIO') for n in z.namelist() if n.endswith('.xml')))",
     ].join("\n")
-    for (const rel of ["entrega/apresentacao-final.pptx", "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico.docx"]) {
+    const plano = "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-estrategico"
+    const final = "entrega/ativos-aprovados/plano-de-acao/plano-de-acao-final"
+    for (const rel of ["entrega/apresentacao-final.pptx", `${plano}.docx`, `${plano}.xlsx`, `${final}.docx`, `${final}.xlsx`]) {
       const n = Number(execFileSync("python3", ["-c", script, caminhoNaBase(fixture, rel)], { encoding: "utf8" }).trim())
       expect(n, rel).toBeGreaterThan(0)
     }

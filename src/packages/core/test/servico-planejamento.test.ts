@@ -199,6 +199,29 @@ describe("prospect antigo, feito no terminal", () => {
   })
 })
 
+describe("resumo do prospect com a etapa 10", () => {
+  async function marcar(slug: string, status10: "liberada" | "concluida") {
+    const e = await servico.estado(slug)
+    for (const id of ["01", "02", "03", "04", "05", "06", "07", "08", "final"] as const) e.etapas[id].status = "concluida"
+    e.etapas["10"].status = status10
+    await writeFile(path.join(raiz, "clientes", slug, ".app/estado.json"), JSON.stringify(e))
+  }
+
+  it("tudo concluído menos a 10: etapa atual 10, 8 concluídas de 9 (a final não conta)", async () => {
+    const slug = await servico.criarProspect("Quase Pronto", null)
+    await marcar(slug, "liberada")
+    const resumo = (await servico.listarProspects(ADMIN)).find((p) => p.slug === slug)
+    expect(resumo).toMatchObject({ etapaAtual: "10", rotuloEtapaAtual: "10 · Revisão pós-apresentação", concluidas: 8, totalEtapas: 9 })
+  })
+
+  it("com a 10 concluída, o planejamento está concluído e a 10 conta", async () => {
+    const slug = await servico.criarProspect("Pronto", null)
+    await marcar(slug, "concluida")
+    const resumo = (await servico.listarProspects(ADMIN)).find((p) => p.slug === slug)
+    expect(resumo).toMatchObject({ etapaAtual: null, rotuloEtapaAtual: "Planejamento concluído", concluidas: 9, totalEtapas: 9 })
+  })
+})
+
 describe("ferramentas do agente", () => {
   it("propor_entregavel recusa arquivo inexistente ou fora de rascunhos", async () => {
     const slug = await prospectNaEtapa03()
@@ -288,6 +311,121 @@ describe("ferramentas do agente", () => {
     expect(enfileirados).toEqual([slug])
     expect((await servico.retirarFila(slug))?.texto).toContain("APROVOU")
     expect(await servico.retirarFila(slug)).toBeNull()
+  })
+
+  describe("JSONs que acompanham o documento do plano", () => {
+    const ctx08 = { slug: "iszi-cosmeticos", etapa: "08" as const }
+    const proporDocumento = async (slug: string) => {
+      const r = await servico.ferramenta(ctx08, "propor_entregavel", {
+        tipo: "documento",
+        titulo: "Plano de ação estratégico",
+        arquivo_rascunho: `clientes/${slug}/.app/rascunhos/plano.docx`,
+        nome_final: "plano-de-acao-estrategico",
+      })
+      expect(r.ok).toBe(true)
+    }
+    const aprovados = (slug: string) => path.join(raiz, "clientes", slug, "entrega/ativos-aprovados/plano-de-acao")
+    const avisos = async (slug: string) =>
+      (await servico.conversa(slug, "08")).filter((ev) => ev.tipo === "aviso" && ev.texto.startsWith("Aviso:"))
+
+    it("copia o JSON gerado ao lado do rascunho junto com o documento aprovado", async () => {
+      const slug = await prospectNaEtapa03()
+      await rascunho(slug, "plano.docx", "docx")
+      await rascunho(slug, "plano-de-acao-estrategico.json", '{"versao":1}')
+      await proporDocumento(slug)
+      await servico.aprovarEntregavel(slug, "id1")
+      expect(await readFile(path.join(aprovados(slug), "plano-de-acao-estrategico.docx"), "utf8")).toBe("docx")
+      expect(await readFile(path.join(aprovados(slug), "plano-de-acao-estrategico.json"), "utf8")).toBe('{"versao":1}')
+      expect(await avisos(slug)).toEqual([])
+      // O JSON veio pela aprovação do documento: não é "aprovado fora da interface".
+      expect((await servico.respostaEstado(slug, null)).aprovadosForaDaInterface).toEqual([])
+    })
+
+    it("sem o JSON no rascunho aprova mesmo assim e avisa na atividade", async () => {
+      const slug = await prospectNaEtapa03()
+      await rascunho(slug, "plano.docx", "docx")
+      await proporDocumento(slug)
+      await servico.aprovarEntregavel(slug, "id1")
+      expect((await servico.estado(slug)).entregaveis.find((e) => e.id === "id1")?.status).toBe("aprovado")
+      expect(existsSync(path.join(aprovados(slug), "plano-de-acao-estrategico.docx"))).toBe(true)
+      expect(existsSync(path.join(aprovados(slug), "plano-de-acao-estrategico.json"))).toBe(false)
+      expect((await avisos(slug)).map((a) => (a as { texto: string }).texto)).toEqual([
+        "Aviso: plano-de-acao-estrategico.json não foi encontrado junto do documento aprovado; a etapa 10 vai precisar dele.",
+      ])
+    })
+
+    it("falha ao copiar o JSON não desfaz a aprovação do documento", async () => {
+      const slug = await prospectNaEtapa03()
+      await rascunho(slug, "plano.docx", "docx")
+      await rascunho(slug, "plano-de-acao-estrategico.json", "{}")
+      await proporDocumento(slug)
+      const arm = (servico as unknown as { arm: FsArmazenamento }).arm
+      const copiar = arm.copiar.bind(arm)
+      vi.spyOn(arm, "copiar").mockImplementation(async (s, o, d) => {
+        if (d.endsWith(".json")) throw new Error("disco cheio")
+        return copiar(s, o, d)
+      })
+      await servico.aprovarEntregavel(slug, "id1")
+      expect((await servico.estado(slug)).entregaveis.find((e) => e.id === "id1")?.status).toBe("aprovado")
+      expect(existsSync(path.join(aprovados(slug), "plano-de-acao-estrategico.docx"))).toBe(true)
+      expect((await avisos(slug)).length).toBe(1)
+    })
+  })
+
+  describe("avisos dos acompanhantes na aprovação", () => {
+    const proporPlano = async (slug: string, etapa: "08" | "10", nomeFinal: string) => {
+      const r = await servico.ferramenta({ slug, etapa }, "propor_entregavel", {
+        tipo: "documento",
+        titulo: "Plano de ação",
+        arquivo_rascunho: `clientes/${slug}/.app/rascunhos/plano.docx`,
+        nome_final: nomeFinal,
+      })
+      expect(r.ok).toBe(true)
+    }
+    const textos = async (slug: string, etapa: "08" | "10") =>
+      (await servico.conversa(slug, etapa)).flatMap((ev) => (ev.tipo === "aviso" ? [ev.texto] : []))
+
+    it("registrarConversa que falha não impede a aprovação nem o enfileirar", async () => {
+      const slug = await prospectNaEtapa03()
+      await rascunho(slug, "plano.docx", "docx")
+      await proporPlano(slug, "08", "plano-de-acao-estrategico")
+      const erro = vi.spyOn(console, "error").mockImplementation(() => {})
+      vi.spyOn(servico, "registrarConversa").mockRejectedValue(new Error("conversa indisponível"))
+      await servico.aprovarEntregavel(slug, "id1")
+      expect((await servico.estado(slug)).entregaveis.find((e) => e.id === "id1")?.status).toBe("aprovado")
+      expect(enfileirados).toEqual([slug])
+      expect(erro).toHaveBeenCalled()
+      erro.mockRestore()
+    })
+
+    it("na 10 o aviso de acompanhante ausente não manda a etapa 10 precisar dele", async () => {
+      const slug = await prospectNaEtapa03()
+      await rascunho(slug, "plano.docx", "docx")
+      await rascunho(slug, "plano-de-acao-final.json", "{}")
+      await proporPlano(slug, "10", "plano-de-acao-final")
+      await servico.aprovarEntregavel(slug, "id1")
+      expect(await textos(slug, "10")).toEqual([
+        "Aviso: revisao-plano.json não foi encontrado junto do documento aprovado; a entrega formal fica sem ele.",
+      ])
+    })
+
+    it("na 10 o aviso de falha de cópia também fala da entrega formal", async () => {
+      const slug = await prospectNaEtapa03()
+      await rascunho(slug, "plano.docx", "docx")
+      await rascunho(slug, "plano-de-acao-final.json", "{}")
+      await rascunho(slug, "revisao-plano.json", "{}")
+      await proporPlano(slug, "10", "plano-de-acao-final")
+      const arm = (servico as unknown as { arm: FsArmazenamento }).arm
+      const copiar = arm.copiar.bind(arm)
+      vi.spyOn(arm, "copiar").mockImplementation(async (s, o, d) => {
+        if (d.endsWith("revisao-plano.json")) throw new Error("disco cheio")
+        return copiar(s, o, d)
+      })
+      await servico.aprovarEntregavel(slug, "id1")
+      expect(await textos(slug, "10")).toEqual([
+        "Aviso: não consegui copiar revisao-plano.json junto do documento aprovado; a entrega formal fica sem ele.",
+      ])
+    })
   })
 
   it("editar seção pendente grava o rascunho e a aprovação avisa a IA da edição", async () => {
@@ -803,7 +941,7 @@ describe("biblioteca", () => {
     const rel = "entrega/ativos-aprovados/graficos/cac.png"
     await imagem(slug, rel)
     await expect(
-      servico.ajustarBiblioteca(slug, rel, { etapa: "10" })
+      servico.ajustarBiblioteca(slug, rel, { etapa: "11" })
     ).rejects.toBeInstanceOf(ErroEntrada)
     await expect(
       servico.ajustarBiblioteca(slug, rel, { titulo: 5 })

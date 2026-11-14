@@ -71,7 +71,7 @@ export function contextoDeRota(request: NextRequest, env: Record<string, string 
     return valor
   }
 
-  return { supabase, origem, redirecionar, redirecionarParaFora, lembrarProximo, consumirProximo }
+  return { supabase, origem, seguro, redirecionar, redirecionarParaFora, lembrarProximo, consumirProximo }
 }
 
 /** O login existe (modo google)? No modo off as rotas /auth/* e /login mandam para /. Valor inválido lança, como no proxy. */
@@ -80,7 +80,7 @@ export function loginLigado(env: Record<string, string | undefined> = process.en
 }
 
 /** Redireciona para `/` sem tocar no Supabase (modo off: não há login a fazer). */
-export function redirecionarSemLogin(request: NextRequest, status = 307, env: Record<string, string | undefined> = process.env): NextResponse {
+export function redirecionarSemLogin(request: NextRequest, status = 307, env: Record<string, string | undefined> = process.env, caminho = "/"): NextResponse {
   const origem = origemDoRedirecionamento(request.headers, env, new URL(request.url).protocol)
-  return NextResponse.redirect(new URL("/", origem), status)
+  return NextResponse.redirect(new URL(caminho, origem), status)
 }

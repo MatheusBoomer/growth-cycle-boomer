@@ -7,6 +7,9 @@ import type { EscolhaModelo, ListaDeModelos, Sugestao, UsoDaEtapa } from "@works
 import type { LinhaConfigModelo } from "@workspace/core/nuvem/tipos"
 import type { PessoaRegistrada } from "@workspace/core/nuvem/usuarios"
 import type { NotaSkill } from "@workspace/core/notas-skills"
+import type { MudancaReport, Report, StatusReport, TipoReport } from "@workspace/core/reports"
+import { consultaDoFiltro } from "./filtro-reports"
+import { avisarResumoAdmin, type ResumoAdmin } from "./resumo-admin"
 import type { OpcoesPainel } from "@workspace/core/servico-planejamento"
 import type { Papel } from "@workspace/core/papeis"
 import type { EtapaId, ResultadoValidacao, ResumoProspect, RespostaTeste } from "@workspace/core/tipos"
@@ -16,6 +19,12 @@ export interface AjusteMensagem {
   entregavelId: string
   marcas: { forma: string; x: number; y: number; w: number; h: number }[]
   imagem?: string
+}
+
+/** Depois de mudar papel, nota ou report, os selos do admin releem o resumo. */
+function depoisDeMudarResumo<T>(r: T): T {
+  avisarResumoAdmin()
+  return r
 }
 
 export class ErroApi extends Error {
@@ -141,7 +150,10 @@ export const api = {
     chamar<{ item: ItemBiblioteca }>(`${base(slug)}/biblioteca`, comJson("PATCH", { caminho, ...mudanca })),
   /** Só admin: quem já entrou no app, com o papel e quantos projetos ativos cada um tem. */
   listarPessoas: () => chamar<{ pessoas: PessoaComProjetos[]; admins: number }>("/api/admin/pessoas", { cache: "no-store" }),
-  alterarPapel: (email: string, papel: Papel) => chamar<{ ok: true }>("/api/admin/pessoas/papel", comJson("POST", { email, papel })),
+  alterarPapel: (email: string, papel: Papel) =>
+    chamar<{ ok: true }>("/api/admin/pessoas/papel", comJson("POST", { email, papel })).then(depoisDeMudarResumo),
+  /** Só admin: os números dos selos do cabeçalho do admin e da aba Reports. */
+  resumoAdmin: () => chamar<ResumoAdmin>("/api/admin/resumo", { cache: "no-store" }),
   /** Só admin: modelo e esforço de cada alvo das etapas, com as sugestões e os modelos que a conta enxerga. */
   configModelos: () => chamar<ConfigModelos>("/api/admin/modelos", { cache: "no-store" }),
   /** Só admin: grava o modelo e o esforço de um alvo da etapa; nulo é "padrão", e os dois nulos apagam a linha. */
@@ -153,10 +165,20 @@ export const api = {
   itemSkill: (id: string) => chamar<DetalheItemSkill>(`/api/admin/skills/${encodeURIComponent(id)}`, { cache: "no-store" }),
   /** Só admin: anota uma melhoria no item do catálogo. */
   criarNotaSkill: (id: string, texto: string) =>
-    chamar<{ nota: NotaSkill }>(`/api/admin/skills/${encodeURIComponent(id)}/notas`, comJson("POST", { texto })),
+    chamar<{ nota: NotaSkill }>(`/api/admin/skills/${encodeURIComponent(id)}/notas`, comJson("POST", { texto })).then(depoisDeMudarResumo),
   /** Só admin: resolve (`true`) ou reabre (`false`) uma nota. */
   marcarNotaSkill: (notaId: number, resolvida: boolean) =>
-    chamar<{ nota: NotaSkill }>(`/api/admin/skills/notas/${notaId}`, comJson("PATCH", { resolvida })),
+    chamar<{ nota: NotaSkill }>(`/api/admin/skills/notas/${notaId}`, comJson("PATCH", { resolvida })).then(depoisDeMudarResumo),
+  /** Qualquer usuário logado: envia um report de bug ou melhoria (formulário de `montarFormularioReport`). */
+  enviarReport: (form: FormData) => chamar<{ id: number }>("/api/reports", { method: "POST", body: form }),
+  /** Só admin: reports filtrados, os mais recentes primeiro. */
+  listarReports: (f: { status: StatusReport[]; tipo: TipoReport | null }) =>
+    chamar<{ reports: Report[] }>(`/api/admin/reports${consultaDoFiltro(f)}`, { cache: "no-store" }),
+  /** Só admin: muda status e/ou nota interna. */
+  atualizarReport: (id: number, mudanca: MudancaReport) =>
+    chamar<{ report: Report }>(`/api/admin/reports/${id}`, comJson("PATCH", mudanca)).then(depoisDeMudarResumo),
+  /** Só admin: endereço da n-ésima imagem do report (0 é o print da tela, quando existe). */
+  urlImagemReport: (id: number, n: number) => `/api/admin/reports/${id}/imagens/${n}`,
   /** Só admin: custo e tempo de cada projeto ativo e a média por etapa concluída. */
   metricasGerais: () => chamar<{ projetos: ProjetoComMetricas[]; medias: MediasPorEtapa }>("/api/admin/projetos", { cache: "no-store" }),
   /** Só admin: o resumo e as métricas de um projeto. As médias por etapa (mais caras) só vêm com `{ medias: true }`. */

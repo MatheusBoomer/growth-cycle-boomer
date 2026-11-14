@@ -4,6 +4,7 @@ import { ErroConflitoVersao, ErroNaoEncontrado, ErroProspectExistente, ErroSincr
 import type { Acumulado, LinhaPresenca, LinhaUso } from "../metricas/tipos"
 import type { NivelEsforco } from "../modelos"
 import type { NotaSkill } from "../notas-skills"
+import type { FiltroReports, ImagemReport, MudancaReport, NovoReport, Report } from "../reports"
 import type { Estado, EtapaId, EventoConversa } from "../tipos"
 import type {
   ArmazemArquivos,
@@ -29,6 +30,8 @@ export class MemoriaRepositorio implements Repositorio {
   private readonly configModelos = new Map<string, LinhaConfigModelo>()
   private readonly notasSkills: NotaSkill[] = []
   private proximaNota = 1
+  private readonly reports: Report[] = []
+  private proximoReport = 1
   /** Registros de uso, abertos para inspeção nos testes. */
   readonly usos: RegistroUsoTurno[] = []
   /** Avisos de presença, abertos para inspeção nos testes. */
@@ -245,6 +248,56 @@ export class MemoriaRepositorio implements Repositorio {
     return { ...nota }
   }
 
+  async criarReport(r: NovoReport & { autor: string }): Promise<Report> {
+    const report: Report = {
+      id: this.proximoReport++,
+      tipo: r.tipo,
+      comentario: r.comentario,
+      contexto: structuredClone(r.contexto),
+      status: "aberto",
+      autor: r.autor,
+      imagens: [],
+      notaAdmin: null,
+      criadoEm: this.agora(),
+      atualizadoEm: null,
+      atualizadoPor: null,
+    }
+    this.reports.push(report)
+    return structuredClone(report)
+  }
+
+  async definirImagensReport(id: number, caminhos: string[]): Promise<void> {
+    const report = this.reports.find((r) => r.id === id)
+    if (report) report.imagens = [...caminhos]
+  }
+
+  async apagarReport(id: number): Promise<void> {
+    const i = this.reports.findIndex((r) => r.id === id)
+    if (i >= 0) this.reports.splice(i, 1)
+  }
+
+  async listarReports(filtro: FiltroReports = {}): Promise<Report[]> {
+    return this.reports
+      .filter((r) => (filtro.tipo === undefined || r.tipo === filtro.tipo) && (filtro.status === undefined || filtro.status.includes(r.status)))
+      .map((r) => structuredClone(r))
+      .sort((a, b) => b.criadoEm.localeCompare(a.criadoEm) || b.id - a.id)
+  }
+
+  async lerReport(id: number): Promise<Report | null> {
+    const report = this.reports.find((r) => r.id === id)
+    return report ? structuredClone(report) : null
+  }
+
+  async atualizarReport(id: number, mudanca: MudancaReport, por: string): Promise<Report | null> {
+    const report = this.reports.find((r) => r.id === id)
+    if (!report) return null
+    if (mudanca.status !== undefined) report.status = mudanca.status
+    if (mudanca.notaAdmin !== undefined) report.notaAdmin = mudanca.notaAdmin
+    report.atualizadoEm = this.agora()
+    report.atualizadoPor = por
+    return structuredClone(report)
+  }
+
   criadoPor(slug: string): string | null {
     return this.prospects.get(slug)?.criadoPor ?? null
   }
@@ -261,7 +314,7 @@ export class MemoriaRepositorio implements Repositorio {
   }
 }
 
-type OperacaoArmazem = "listar" | "enviar" | "baixar" | "remover"
+type OperacaoArmazem = "listar" | "enviar" | "baixar" | "remover" | "enviarImagemReport"
 
 /** Implementação em memória do ArmazemArquivos. `falharEm` permite simular falhas de rede nos testes. */
 export class MemoriaArmazem implements ArmazemArquivos {
@@ -270,6 +323,7 @@ export class MemoriaArmazem implements ArmazemArquivos {
   private readonly objetos = new Map<string, Uint8Array>()
   private readonly manifestos = new Map<string, Map<string, EntradaManifesto>>()
   private readonly sessoes = new Map<string, Uint8Array>()
+  private readonly imagensReport = new Map<string, Uint8Array>()
   /** Caminhos removidos, na ordem (espelha arquivos_lixeira). */
   readonly lixeira: Array<{ slug: string; entrada: EntradaManifesto }> = []
 
@@ -324,6 +378,21 @@ export class MemoriaArmazem implements ArmazemArquivos {
     }
     this.manifestos.delete(slug)
     for (let i = this.lixeira.length - 1; i >= 0; i--) if (this.lixeira[i]!.slug === slug) this.lixeira.splice(i, 1)
+  }
+
+  async enviarImagemReport(caminho: string, imagem: ImagemReport): Promise<void> {
+    this.verificar("enviarImagemReport", caminho)
+    this.imagensReport.set(caminho, new Uint8Array(imagem.bytes))
+  }
+
+  async baixarImagemReport(caminho: string): Promise<Uint8Array> {
+    const dados = this.imagensReport.get(caminho)
+    if (!dados) throw new ErroNaoEncontrado(`Imagem de report ${caminho} não encontrada.`)
+    return new Uint8Array(dados)
+  }
+
+  async apagarImagensReport(id: number): Promise<void> {
+    for (const chave of [...this.imagensReport.keys()]) if (chave.startsWith(`${id}/`)) this.imagensReport.delete(chave)
   }
 
   private verificar(operacao: OperacaoArmazem, caminho: string): void {

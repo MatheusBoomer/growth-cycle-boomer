@@ -1,10 +1,9 @@
 "use client"
 
-import { CircleCheckIcon, DownloadIcon, FileSpreadsheetIcon, FileTextIcon, LinkIcon, XIcon } from "lucide-react"
+import { CircleCheckIcon, CloudUploadIcon, DownloadIcon, FileSpreadsheetIcon, FileTextIcon, FileXIcon, LinkIcon, XIcon } from "lucide-react"
 import { useRef, useState } from "react"
 import { toast } from "sonner"
 import type { EstadoInsumo, EtapaId, InsumoCatalogo } from "@workspace/core/tipos"
-import { Alert, AlertAction, AlertDescription, AlertTitle } from "@workspace/ui/components/alert"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,11 +17,11 @@ import {
 } from "@workspace/ui/components/alert-dialog"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
-import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@workspace/ui/components/card"
 import { Input } from "@workspace/ui/components/input"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
 import { api, mensagemDeErro } from "@/lib/api"
+import { IconeModal } from "@/components/marca/icone-modal"
 
 export interface PropsCardInsumo {
   slug: string
@@ -38,25 +37,30 @@ export interface PropsCardInsumo {
 /** "x" do arquivo enviado: confirma e manda o arquivo para a lixeira do sistema. */
 function ExcluirEnvio({ nome, aoExcluir }: { nome: string; aoExcluir: () => void }) {
   return (
-    <AlertAction>
-      <AlertDialog>
-        <AlertDialogTrigger render={<Button variant="ghost" size="icon-xs" aria-label={`Excluir o arquivo de ${nome}`} />}>
+    <AlertDialog>
+        <AlertDialogTrigger render={<Button variant="ghost" size="icon-xs" className="ml-auto text-current hover:bg-current/10" aria-label={`Excluir o arquivo de ${nome}`} />}>
           <XIcon />
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir este arquivo?</AlertDialogTitle>
+            <IconeModal tom="perigo">
+              <FileXIcon />
+            </IconeModal>
+            <AlertDialogTitle>
+              Excluir este <em>arquivo?</em>
+            </AlertDialogTitle>
             <AlertDialogDescription>
               O arquivo de {nome} vai para a Lixeira do computador e sai desta etapa. Depois é só enviar o arquivo certo.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={aoExcluir}>Excluir</AlertDialogAction>
+            <AlertDialogAction variant="destructive" onClick={aoExcluir}>
+              Excluir
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
-    </AlertAction>
+    </AlertDialog>
   )
 }
 
@@ -110,120 +114,136 @@ export function CardInsumo({ slug, etapa, insumo, obrigatorio, estadoInsumo, tem
     }
   }
 
+  const tom = status === "valido" ? "text-sucesso" : status === "invalido" ? "text-destructive" : "text-muted-foreground"
+
   return (
-    <Card size="sm">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Icone className="size-4" /> {insumo.nome}
-        </CardTitle>
-        <CardDescription>
-          {insumo.tipo === "link" ? "Link" : insumo.formatos.join(", ")}
-        </CardDescription>
-        <CardAction>
-          <Badge variant={status === "valido" ? "sucesso" : status === "invalido" ? "perigo" : "outline"}>
-            {status === "valido" ? "Recebido" : status === "invalido" ? "Com problemas" : obrigatorio ? "Obrigatório" : "Opcional"}
-          </Badge>
-        </CardAction>
-      </CardHeader>
-      <CardContent className="space-y-3 text-sm">
-        <p>{insumo.descricao}</p>
-        <p className="text-muted-foreground">{insumo.instrucao}</p>
+    <div className="grid gap-3 rounded-[18px] border border-border bg-card p-4 text-card-foreground">
+      <div className="flex items-center gap-3">
+        <div className={cn("grid size-9 shrink-0 place-items-center rounded-xl border border-border bg-muted/50 [&_svg]:size-4", tom)}>
+          <Icone />
+        </div>
+        <div className="min-w-0">
+          <h4 className="truncate text-sm font-medium">{insumo.nome}</h4>
+          <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">{insumo.tipo === "link" ? "link" : insumo.formatos.join(" · ")}</p>
+        </div>
+        <Badge className="ml-auto shrink-0" variant={status === "valido" ? "sucesso" : status === "invalido" ? "perigo" : "outline"}>
+          {status === "valido" ? "Recebido" : status === "invalido" ? "Com problemas" : obrigatorio ? "Obrigatório" : "Opcional"}
+        </Badge>
+      </div>
+      {status === "pendente" && (
+        <div className="space-y-1 text-[13px] leading-normal text-muted-foreground">
+          <p>{insumo.descricao}</p>
+          {insumo.instrucao && <p>{insumo.instrucao}</p>}
+        </div>
+      )}
 
-        {status === "valido" && (
-          <Alert>
-            <CircleCheckIcon />
-            <AlertTitle>{estadoInsumo?.resumo ?? "Arquivo recebido"}</AlertTitle>
+      {status === "valido" && (
+        <div className="grid gap-1.5 rounded-[14px] bg-sucesso-fundo px-3 py-2.5 text-[13px] text-sucesso">
+          <div className="flex items-center gap-2.5">
+            <CircleCheckIcon className="size-4 shrink-0" />
+            <span className="min-w-0">{estadoInsumo?.resumo ?? "Arquivo recebido"}</span>
             {podeExcluir && <ExcluirEnvio nome={insumo.nome} aoExcluir={() => void excluir()} />}
-            {estadoInsumo && estadoInsumo.avisos.length > 0 && (
-              <AlertDescription>
-                <ul className="list-disc pl-4">
-                  {estadoInsumo.avisos.map((a) => (
-                    <li key={a}>{a}</li>
-                  ))}
-                </ul>
-              </AlertDescription>
-            )}
-          </Alert>
-        )}
-        {status === "invalido" && estadoInsumo && (
-          <Alert variant="destructive">
-            <AlertTitle>
-              {estadoInsumo.problemas.length} problema{estadoInsumo.problemas.length === 1 ? "" : "s"} na planilha
-            </AlertTitle>
-            {podeExcluir && <ExcluirEnvio nome={insumo.nome} aoExcluir={() => void excluir()} />}
-            <AlertDescription>
-              <ul className="list-disc pl-4">
-                {estadoInsumo.problemas.map((p) => (
-                  <li key={p}>{p}</li>
-                ))}
-              </ul>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {insumo.tipo === "link" ? (
-          <div className="flex gap-2">
-            <Input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://" aria-label={insumo.nome} />
-            <Button onClick={salvarLink} disabled={!url.trim() || enviando}>
-              {enviando && <Spinner />} Salvar
-            </Button>
           </div>
-        ) : (
-          <>
-            <input
-              ref={entrada}
-              type="file"
-              hidden
-              multiple={insumo.destino.endsWith("/")}
-              accept={insumo.formatos.join(",")}
-              onChange={(e) => void enviarArquivos(e.target.files)}
-            />
-            <div
-              role="button"
-              tabIndex={0}
-              aria-label={`Enviar ${insumo.nome}`}
-              onClick={() => entrada.current?.click()}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault()
-                  entrada.current?.click()
-                }
-              }}
-              onDragOver={(e) => {
+          {estadoInsumo && estadoInsumo.avisos.length > 0 && (
+            <ul className="list-disc pl-[46px] text-[12.5px]">
+              {estadoInsumo.avisos.map((a) => (
+                <li key={a}>{a}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+      {status === "invalido" && estadoInsumo && (
+        <div className="rounded-[14px] bg-perigo-fundo px-3.5 py-3 text-[13px] leading-normal text-destructive">
+          <div className="mb-1 flex items-center gap-2">
+            <b className="font-medium">
+              {estadoInsumo.problemas.length} problema{estadoInsumo.problemas.length === 1 ? "" : "s"} na planilha
+            </b>
+            {podeExcluir && <ExcluirEnvio nome={insumo.nome} aoExcluir={() => void excluir()} />}
+          </div>
+          <ul className="list-disc pl-4">
+            {estadoInsumo.problemas.map((p) => (
+              <li key={p}>{p}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {insumo.tipo === "link" ? (
+        <div className="flex gap-2">
+          <Input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://" aria-label={insumo.nome} />
+          <Button size="sm" className="h-9" onClick={salvarLink} disabled={!url.trim() || enviando}>
+            {enviando && <Spinner />} Salvar
+          </Button>
+        </div>
+      ) : (
+        <>
+          <input
+            ref={entrada}
+            type="file"
+            hidden
+            multiple={insumo.destino.endsWith("/")}
+            accept={insumo.formatos.join(",")}
+            onChange={(e) => void enviarArquivos(e.target.files)}
+          />
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label={`Enviar ${insumo.nome}`}
+            onClick={() => entrada.current?.click()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault()
-                setArrastando(true)
-              }}
-              onDragLeave={() => setArrastando(false)}
-              onDrop={(e) => {
-                e.preventDefault()
-                setArrastando(false)
-                void enviarArquivos(e.dataTransfer.files)
-              }}
-              className={cn(
-                "text-muted-foreground flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed p-4 text-center transition-colors",
-                arrastando && "border-primary bg-muted",
-              )}
-            >
-              {enviando ? (
-                <>
-                  <Spinner /> Validando…
-                </>
-              ) : status === "valido" ? (
-                "Enviar outra versão"
-              ) : (
-                "Arraste o arquivo aqui ou clique para escolher"
-              )}
-            </div>
-          </>
-        )}
-      </CardContent>
+                entrada.current?.click()
+              }
+            }}
+            onDragOver={(e) => {
+              e.preventDefault()
+              setArrastando(true)
+            }}
+            onDragLeave={() => setArrastando(false)}
+            onDrop={(e) => {
+              e.preventDefault()
+              setArrastando(false)
+              void enviarArquivos(e.dataTransfer.files)
+            }}
+            className={cn(
+              "flex cursor-pointer items-center justify-center gap-2 rounded-[14px] border-[1.5px] border-dashed border-border text-center text-[13px] text-muted-foreground transition-colors outline-none hover:border-foreground/25 focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:size-4",
+              status === "pendente" ? "flex-col gap-1.5 p-[18px]" : "p-2.5",
+              arrastando && "border-primary bg-primary/7 text-link-acao hover:border-primary",
+            )}
+          >
+            {enviando ? (
+              <>
+                <Spinner /> Validando…
+              </>
+            ) : arrastando ? (
+              <>
+                <CloudUploadIcon />
+                <b className="font-medium">Solte para enviar</b>
+              </>
+            ) : status === "pendente" ? (
+              <>
+                <CloudUploadIcon />
+                <span>
+                  <b className="font-medium text-foreground">Arraste o arquivo</b> ou clique para escolher
+                </span>
+              </>
+            ) : (
+              <>
+                <CloudUploadIcon /> {status === "invalido" ? "Enviar a versão corrigida" : "Enviar outra versão"}
+              </>
+            )}
+          </div>
+        </>
+      )}
       {temModelo && (
-        <CardFooter>
-          <Button variant="outline" size="sm" render={<a href={`/api/modelos/${insumo.id}`} download />} nativeButton={false}>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" className="text-muted-foreground" render={<a href={`/api/modelos/${insumo.id}`} download />} nativeButton={false}>
             <DownloadIcon /> Baixar modelo
           </Button>
-        </CardFooter>
+        </div>
       )}
-    </Card>
+    </div>
   )
 }

@@ -6,7 +6,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import { useAmbiente } from "@/components/marca/conta-contexto"
 import { resumoUso } from "@/lib/uso"
 
-const COR = { ok: "bg-volume", alerta: "bg-aviso", critico: "bg-destructive" } as const
+const COR = { ok: "bg-primary", alerta: "bg-aviso", critico: "bg-destructive" } as const
 
 /**
  * Quanto da assinatura do Claude já foi usado (sessão de 5 h e semana). O número vem do próprio

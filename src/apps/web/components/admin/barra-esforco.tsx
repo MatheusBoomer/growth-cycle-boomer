@@ -9,7 +9,7 @@ export function BarraEsforco({ esforco }: { esforco: NivelEsforco | null }) {
     <span className="flex items-center gap-2" title={FRASES_ESFORCO[esforco ?? "padrao"]}>
       <span className="flex gap-0.5" aria-hidden="true">
         {NIVEIS_ESFORCO.map((n, i) => (
-          <span key={n} className={cn("h-1.5 w-4 rounded-full", i < acesos ? "bg-foreground/70" : "bg-muted")} />
+          <span key={n} className={cn("h-1.5 w-4 rounded-full", i < acesos ? "bg-primary" : "bg-muted")} />
         ))}
       </span>
       <span className="text-muted-foreground text-xs">

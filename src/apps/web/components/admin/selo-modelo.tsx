@@ -17,7 +17,7 @@ export function SeloModelo({ modelo, lista, className }: { modelo: string | null
   const selo = seloDoModelo(modelo, lista)
   const cor = selo.padrao ? COR_PADRAO : ((selo.familia !== null ? COR_POR_FAMILIA[selo.familia] : undefined) ?? COR_NEUTRA)
   return (
-    <span className={cn("inline-flex h-5 w-fit shrink-0 items-center rounded-md border px-1.5 text-xs font-semibold whitespace-nowrap", cor, className)}>
+    <span className={cn("inline-flex w-fit shrink-0 items-center rounded-full border px-2.5 py-0.5 text-xs font-medium whitespace-nowrap", cor, className)}>
       {textoSelo(selo, lista)}
     </span>
   )

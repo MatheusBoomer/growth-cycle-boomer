@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server"
 import { avatarDeClaims, caminhoProximoSeguro, dominiosPermitidos } from "@workspace/core/autenticacao"
 import { contextoDeRota, loginLigado, redirecionarSemLogin } from "@/lib/rota-auth"
+import { COOKIE_BOAS_VINDAS } from "@/lib/boas-vindas"
 import { usuarioDeClaims } from "@/lib/sessao"
 
 export const dynamic = "force-dynamic"
@@ -28,7 +29,7 @@ async function guardarFoto(email: string, claims: Record<string, unknown>): Prom
 /** Volta do Google: troca o código por sessão (cookies), confere o domínio e o e-mail e manda para a página pedida. */
 export async function GET(request: NextRequest) {
   if (!loginLigado()) return redirecionarSemLogin(request)
-  const { supabase, redirecionar, consumirProximo } = contextoDeRota(request)
+  const { supabase, seguro, redirecionar, consumirProximo } = contextoDeRota(request)
   const parametros = request.nextUrl.searchParams
   // Lido e apagado já na entrada: toda saída abaixo, de erro ou não, leva a remoção do cookie.
   const proximo = consumirProximo()
@@ -60,7 +61,13 @@ export async function GET(request: NextRequest) {
     }
     await guardarFoto(usuario.email, data.claims)
     // Revalidado aqui: o cookie volta pelo navegador e não é confiável só por /auth/entrar tê-lo gravado.
-    return redirecionar(caminhoProximoSeguro(proximo))
+    const destino = caminhoProximoSeguro(proximo)
+    const resposta = redirecionar(destino)
+    // Login de verdade que cai na home: ela toca a entrada uma vez e apaga este cookie (por isso ele não é httpOnly).
+    // Login que volta a outra página (sessão expirada no meio do trabalho) não grava: senão a entrada tocaria ao
+    // navegar para a home depois.
+    if (destino === "/") resposta.cookies.set(COOKIE_BOAS_VINDAS, "1", { path: "/", maxAge: 120, sameSite: "lax", httpOnly: false, secure: seguro })
+    return resposta
   } catch (e) {
     console.error("[auth] falha no retorno do login", e)
     return redirecionar("/login?erro=falha")

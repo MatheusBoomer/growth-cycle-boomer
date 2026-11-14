@@ -1,13 +1,12 @@
 "use client"
 
-import { DownloadIcon, Maximize2Icon, MessageSquarePlusIcon, Minimize2Icon, SendIcon, Trash2Icon, XIcon } from "lucide-react"
+import { DownloadIcon, Maximize2Icon, MessageSquarePlusIcon, Minimize2Icon, PresentationIcon, SendIcon, Trash2Icon, XIcon } from "lucide-react"
 import { useCallback, useEffect, useState, type PointerEvent as EventoPonteiro } from "react"
 import { toast } from "sonner"
 import { emOrdemDeEnvio, type Comentario, type MapaPrevia, type Regiao } from "@workspace/core/comentarios"
 import type { Entregavel } from "@workspace/core/tipos"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@workspace/ui/components/empty"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { cn } from "@workspace/ui/lib/utils"
@@ -15,6 +14,7 @@ import { ROTULO_STATUS_ENTREGAVEL } from "@/components/cards/card-entregavel"
 import { api, mensagemDeErro, urlArquivo } from "@/lib/api"
 import { alvoDeDigitacao } from "@/lib/layout-colunas"
 import { pontoNoSlide, regiaoEntre, type Ponto } from "@/lib/regiao"
+import { BarraVisualizador, CarregandoVisualizador, EstadoVisualizador } from "@/components/trabalho/barra-visualizador"
 
 type Previa = { disponivel: boolean; slides: string[]; mapa: MapaPrevia | null; erro: string | null }
 type Rascunho = { slide: number; regiao: Regiao | null }
@@ -144,22 +144,18 @@ export function VisualizadorApresentacao({
 
   return (
     <section className="flex h-full min-h-0 flex-col" aria-label="Visualizador da apresentação">
-      <header className="flex items-center gap-2 border-b px-3 py-2">
-        <h2 className="truncate text-sm font-medium">{entregavel?.titulo ?? "Apresentação"}</h2>
-        {entregavel && (
-          <Badge variant={entregavel.status === "aprovado" ? "sucesso" : entregavel.status === "pendente" ? "aviso" : "outline"}>{ROTULO_STATUS_ENTREGAVEL[entregavel.status]}</Badge>
-        )}
-        <div className="ml-auto flex items-center gap-1">
+      <BarraVisualizador titulo={entregavel?.titulo ?? "Apresentação"} selo={entregavel && <Badge variant={entregavel.status === "aprovado" ? "sucesso" : entregavel.status === "pendente" ? "aviso" : "outline"}>{ROTULO_STATUS_ENTREGAVEL[entregavel.status]}</Badge>}>
           {entregavel && (
             <Button
-              variant="ghost"
-              size="icon-sm"
+              variant="outline"
+              size="sm"
+              className="mr-1 h-[30px]"
               aria-label="Baixar .pptx"
               title="Baixar .pptx"
               render={<a href={urlArquivo(slug, entregavel.arquivoRascunho, true)} download />}
               nativeButton={false}
             >
-              <DownloadIcon />
+              <DownloadIcon /> .pptx
             </Button>
           )}
           <Button variant="ghost" size="icon-sm" aria-label={telaCheia ? "Sair da tela cheia" : "Tela cheia"} onClick={aoAlternarTelaCheia}>
@@ -168,50 +164,40 @@ export function VisualizadorApresentacao({
           <Button variant="ghost" size="icon-sm" aria-label="Fechar" onClick={aoFechar}>
             <XIcon />
           </Button>
-        </div>
-      </header>
+      </BarraVisualizador>
 
       {!entregavel ? (
-        <Empty className="flex-1">
-          <EmptyHeader>
-            <EmptyTitle>Apresentação indisponível</EmptyTitle>
-            <EmptyDescription>Esta versão não está mais entre os entregáveis da etapa.</EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <EstadoVisualizador icone={<PresentationIcon />} titulo="Apresentação" destaque="indisponível">
+          Esta versão não está mais entre os entregáveis da etapa.
+        </EstadoVisualizador>
       ) : dados === undefined ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 text-sm">
-          <Spinner />
-          <span className="text-muted-foreground">Gerando a prévia dos slides…</span>
-        </div>
+        <CarregandoVisualizador texto="Gerando a prévia dos slides…" />
       ) : dados === null || !dados.disponivel ? (
-        <Empty className="flex-1">
-          <EmptyHeader>
-            <EmptyTitle>Prévia indisponível</EmptyTitle>
-            <EmptyDescription>{dados?.erro ?? "Não consegui gerar a prévia."} Baixe o .pptx e abra no Google Slides.</EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <EstadoVisualizador icone={<PresentationIcon />} titulo="Prévia" destaque="indisponível">
+          {dados?.erro ?? "Não consegui gerar a prévia."} Baixe o .pptx e abra no Google Slides.
+        </EstadoVisualizador>
       ) : (
         <div className="flex min-h-0 flex-1">
-          <ol className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
+          <ol className="min-h-0 flex-1 space-y-3.5 overflow-y-auto p-3.5">
             {dados.slides.map((caminho, i) => {
               const numero = i + 1
               const doSlide = pendentes.filter((c) => c.slide === numero)
               return (
                 <li key={caminho} className="space-y-2">
-                  <div className="text-muted-foreground flex items-center gap-2 text-xs">
-                    <span className="font-mono">{numero}</span>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span className="font-mono">{String(numero).padStart(2, "0")}</span>
                     <span className="truncate">{dados.mapa?.slides[i]?.titulo}</span>
                     {podeComentar && (
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="ml-auto h-6 px-2 text-xs"
+                        className="ml-auto h-[26px] px-2.5 text-xs text-muted-foreground"
                         onClick={() => {
                           setRascunho({ slide: numero, regiao: null })
                           setTexto("")
                         }}
                       >
-                        <MessageSquarePlusIcon /> Comentar slide
+                        <MessageSquarePlusIcon /> Comentar
                       </Button>
                     )}
                   </div>
@@ -227,18 +213,18 @@ export function VisualizadorApresentacao({
                     onLostPointerCapture={() => setArraste(null)}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element -- arquivo local servido pela rota do app */}
-                    <img src={urlArquivo(slug, caminho)} alt={`Slide ${numero}`} draggable={false} className="w-full rounded-md border" />
+                    <img src={urlArquivo(slug, caminho)} alt={`Slide ${numero}`} draggable={false} className="w-full rounded-xl border border-border bg-papel" />
                     {doSlide.map((c) =>
                       c.regiao ? (
-                        <div key={c.id} className="border-primary bg-primary/10 pointer-events-none absolute rounded-sm border-2" style={pct(c.regiao)}>
-                          <span className="bg-primary text-primary-foreground absolute -top-3 -left-3 flex size-6 items-center justify-center rounded-full text-xs font-medium">
+                        <div key={c.id} className="pointer-events-none absolute rounded-md border-2 border-primary bg-primary/10" style={pct(c.regiao)}>
+                          <span className="absolute -top-[11px] -left-[11px] flex size-[22px] items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground ring-3 ring-papel">
                             {numeroDe(c)}
                           </span>
                         </div>
                       ) : (
                         <span
                           key={c.id}
-                          className="bg-primary text-primary-foreground absolute top-2 right-2 flex size-6 items-center justify-center rounded-full text-xs font-medium"
+                          className="absolute top-2 right-2 flex size-[22px] items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground ring-3 ring-papel"
                         >
                           {numeroDe(c)}
                         </span>
@@ -252,7 +238,7 @@ export function VisualizadorApresentacao({
                     )}
                   </div>
                   {rascunho?.slide === numero && (
-                    <div className="space-y-2 rounded-md border p-2">
+                    <div className="space-y-2 rounded-2xl border border-border bg-card p-3">
                       <p className="text-muted-foreground text-xs">
                         {rascunho.regiao ? "Comentário sobre a área marcada" : "Comentário sobre o slide inteiro"}
                       </p>

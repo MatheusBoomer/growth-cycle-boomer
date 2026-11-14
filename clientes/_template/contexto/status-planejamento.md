@@ -15,6 +15,7 @@ Atualizado pela própria skill ao final de cada etapa (ver Regra 6 em
 | 07 · Mídia paga | ⬜ | | |
 | 08 · Plano de ação | ⬜ | | |
 | Apresentação final | ⬜ | | |
+| 10 · Revisão pós-apresentação | ⬜ | | |
 
 ## Próximo passo
 

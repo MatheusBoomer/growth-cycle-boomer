@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Instrument+Serif:ital@0;1&family=Geist+Mono&display=swap" rel="stylesheet">
+<style>
+  :root, .escuro {
+    --pagina: #050506; --bg: #0a0a0b; --fg: #f4f4f5; --muted: #8b8b93; --muted-2: #5d5d66; --line: rgb(255 255 255 / .08); --line-2: rgb(255 255 255 / .14);
+    --card: rgb(18 18 20 / .72); --sombra: 0 30px 60px -30px rgb(0 0 0 / .9); --acento: #ff8a3d; --brilho: rgb(235 97 10 / .22); --brilho-2: rgb(91 157 240 / .07);
+    --pontos: rgb(255 255 255 / .05); --botao: #f4f4f5; --botao-txt: #0a0a0b;
+  }
+  .perola {
+    --pagina: #e8e6e2; --bg: #f7f6f3; --fg: #17150f; --muted: #67635b; --muted-2: #9d988f; --line: rgb(45 35 20 / .085); --line-2: rgb(45 35 20 / .16);
+    --card: rgb(255 255 255 / .78); --sombra: 0 30px 60px -32px rgb(60 45 25 / .35); --acento: #c94d05; --brilho: rgb(235 97 10 / .16); --brilho-2: rgb(44 107 208 / .06);
+    --pontos: rgb(45 35 20 / .06); --botao: #17150f; --botao-txt: #fff;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--pagina); color: var(--fg); font-family: "Geist", system-ui, sans-serif; padding: 40px 48px 80px; -webkit-font-smoothing: antialiased; transition: background .4s; }
+  em { font-family: "Instrument Serif", Georgia, serif; font-weight: 400; }
+  .topo { display: flex; justify-content: space-between; align-items: end; max-width: 1320px; margin: 0 auto 26px; gap: 24px; }
+  .topo h1 { font-size: 28px; font-weight: 500; letter-spacing: -.02em; } .topo h1 em { color: var(--acento); font-size: 32px; }
+  .topo p { color: var(--muted); font-size: 14px; margin-top: 6px; max-width: 720px; line-height: 1.5; }
+  .temas { display: flex; gap: 2px; padding: 4px; border: 1px solid var(--line-2); border-radius: 999px; }
+  .temas button { font: 500 13px "Geist"; color: var(--muted); background: none; border: 0; padding: 7px 14px; border-radius: 999px; cursor: pointer; }
+  .temas button.on { background: var(--botao); color: var(--botao-txt); }
+  .opcao { max-width: 1320px; margin: 0 auto 12px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+  .letra { width: 28px; height: 28px; border-radius: 99px; display: grid; place-items: center; background: var(--line-2); font-weight: 600; font-size: 13px; }
+  .opcao h3 { font-size: 16px; font-weight: 500; } .opcao span.d { color: var(--muted); font-size: 13px; }
+  .sel .letra { background: #eb610a; color: #fff; }
+  .tela { position: relative; max-width: 1320px; aspect-ratio: 16/9; margin: 0 auto 44px; border-radius: 20px; overflow: hidden; background: var(--bg); border: 1px solid var(--line); isolation: isolate; }
+  .sel + .tela { outline: 2px solid #eb610a; outline-offset: 4px; }
+  .logo { font-weight: 700; font-size: 20px; letter-spacing: -.045em; color: var(--fg); } .logo b { color: #eb610a; }
+  .mono { font-family: "Geist Mono", monospace; }
+  .chip { border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 12px; color: var(--muted); }
+
+  .google { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 13px 18px; border-radius: 999px; background: var(--botao); color: var(--botao-txt); font: 500 15px "Geist"; border: 0; cursor: pointer; position: relative; overflow: hidden; transition: transform .2s; }
+  .google:hover { transform: translateY(-1px); }
+  .google::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 35%, rgb(255 255 255 / .25) 50%, transparent 65%); transform: translateX(-100%); animation: brilho 3.2s ease-in-out infinite; }
+  .perola .google::after { background: linear-gradient(110deg, transparent 35%, rgb(255 255 255 / .18) 50%, transparent 65%); }
+  @keyframes brilho { 55%, 100% { transform: translateX(100%); } }
+  .g { width: 18px; height: 18px; border-radius: 99px; background: #fff; display: grid; place-items: center; }
+  .seguro { font-size: 12px; color: var(--muted-2); text-align: center; margin-top: 14px; }
+
+  /* Pontos de fundo (prévia do lugar do dithered) */
+  .pontos { position: absolute; inset: 0; z-index: -1; background-image: radial-gradient(var(--pontos) 1px, transparent 1px); background-size: 18px 18px; -webkit-mask: radial-gradient(70% 70% at 30% 80%, #000, transparent); mask: radial-gradient(70% 70% at 30% 80%, #000, transparent); }
+
+  /* A: continuação da entrada */
+  .a .brilho { position: absolute; inset: 0; z-index: -1; background: radial-gradient(55% 55% at 25% 95%, var(--brilho), transparent 70%), radial-gradient(35% 35% at 85% 20%, var(--brilho-2), transparent 70%); }
+  .a .cima { position: absolute; top: 32px; left: 40px; right: 40px; display: flex; justify-content: space-between; align-items: center; }
+  .a .base { position: absolute; left: 40px; bottom: 36px; right: 40px; }
+  .a .bv { font-family: "Instrument Serif"; font-style: italic; font-size: 50px; color: var(--muted); }
+  .a .gigante { font-size: 196px; font-weight: 600; letter-spacing: -.07em; line-height: .82; white-space: nowrap; }
+  .a .gigante em { font-style: italic; color: #eb610a; letter-spacing: -.03em; margin-left: .08em; }
+  .a .rodape { display: flex; justify-content: space-between; margin-top: 40px; font-size: 13px; color: var(--muted); }
+  .a .cartao { position: absolute; top: 96px; right: 40px; width: 360px; border: 1px solid var(--line-2); border-radius: 22px; padding: 26px; background: var(--card); backdrop-filter: blur(18px); box-shadow: var(--sombra); }
+  .cartao .k { font-size: 11px; color: var(--muted-2); text-transform: uppercase; letter-spacing: .14em; }
+  .cartao h2 { font-size: 26px; font-weight: 500; letter-spacing: -.03em; margin-top: 10px; line-height: 1.1; }
+  .cartao h2 em { color: var(--acento); }
+  .cartao p { font-size: 14px; color: var(--muted); margin: 10px 0 22px; line-height: 1.5; }
+
+  /* B: centrado editorial */
+  .b { display: grid; place-items: center; text-align: center; }
+  .b .brilho { position: absolute; inset: 0; z-index: -1; background: radial-gradient(40% 45% at 50% 55%, var(--brilho), transparent 70%); }
+  .b .cima { position: absolute; top: 32px; left: 40px; right: 40px; display: flex; justify-content: space-between; align-items: center; }
+  .b .meio { width: 860px; }
+  .b .tag { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; font-size: 12.5px; color: var(--muted); background: var(--card); }
+  .b .tag i { width: 6px; height: 6px; border-radius: 9px; background: #2fbf8c; box-shadow: 0 0 10px #2fbf8c; }
+  .b h2 { font-size: 92px; font-weight: 500; letter-spacing: -.055em; line-height: .95; margin-top: 22px; }
+  .b h2 em { color: var(--acento); letter-spacing: -.02em; }
+  .b p { font-size: 16px; color: var(--muted); margin: 20px auto 30px; max-width: 460px; line-height: 1.5; }
+  .b .google { width: 300px; margin: 0 auto; }
+  .b .etapas { position: absolute; bottom: 30px; left: 0; right: 0; display: flex; justify-content: center; gap: 22px; font-size: 12.5px; color: var(--muted-2); }
+  .b .etapas b { font: 400 11px "Geist Mono"; color: var(--muted); margin-right: 6px; }
+  .nota { max-width: 1320px; margin: 0 auto; color: var(--muted); font-size: 13px; line-height: 1.6; }
+</style>
+</head>
+<body class="escuro">
+  <div class="topo">
+    <div>
+      <h1>Login · <em>duas composições</em></h1>
+      <p>Hoje o login é um card pequeno no meio. As duas propostas usam a mesma linguagem da entrada. O pontilhado no fundo só marca onde o dithered vai entrar depois. Troque o tema no canto e clique no título de uma opção para marcar.</p>
+    </div>
+    <div class="temas" id="temas"><button data-t="escuro" class="on">Escuro</button><button data-t="perola">Claro pérola</button></div>
+  </div>
+
+  <div class="opcao" data-choice="a" onclick="marcar(this)"><div class="letra">A</div><h3>Continuação da entrada</h3><span class="d">· "Growth <i>Cycle</i>" gigante embaixo, cartão de vidro no canto</span></div>
+  <div class="tela a">
+    <div class="brilho"></div><div class="pontos"></div>
+    <div class="cima"><span class="logo">bo<b>omer</b></span><span class="chip mono" data-relogio>--:-- em São Paulo</span></div>
+    <div class="cartao">
+      <div class="k">Acesso da equipe</div>
+      <h2>Entre para continuar o <em>planejamento</em></h2>
+      <p>Use a sua conta Google da Boomer.</p>
+      <button class="google"><span class="g"><svg width="12" height="12" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.8 6C12.4 13.7 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.5-.8-3-.8-4.7s.3-3.2.8-4.7l-7.8-6C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.4 2.3-6.3 0-11.6-4.2-13.5-9.9l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg></span>Entrar com Google</button>
+      <div class="seguro">Só contas @boomer.com.br ou @gestaoboomer.com</div>
+    </div>
+    <div class="base">
+      <div class="bv">Planejamento estratégico de 12 meses</div>
+      <div class="gigante">Growth<em>Cycle</em></div>
+      <div class="rodape"><span>Diagnóstico · Metas · Mídia · Plano de ação</span><span>Boomer · 2026</span></div>
+    </div>
+  </div>
+
+  <div class="opcao" data-choice="b" onclick="marcar(this)"><div class="letra">B</div><h3>Centrado e editorial</h3><span class="d">· uma frase grande, o botão logo abaixo, as 8 etapas no rodapé</span></div>
+  <div class="tela b">
+    <div class="brilho"></div><div class="pontos" style="-webkit-mask:radial-gradient(60% 60% at 50% 55%, #000, transparent);mask:radial-gradient(60% 60% at 50% 55%, #000, transparent)"></div>
+    <div class="cima"><span class="logo">bo<b>omer</b></span><span class="chip mono" data-relogio>--:-- em São Paulo</span></div>
+    <div class="meio">
+      <span class="tag"><i></i>Growth Cycle · acesso da equipe</span>
+      <h2>Do diagnóstico ao <em>contrato fechado.</em></h2>
+      <p>Entre com a sua conta Google da Boomer para continuar os planejamentos.</p>
+      <button class="google"><span class="g"><svg width="12" height="12" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.8 6C12.4 13.7 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.5-.8-3-.8-4.7s.3-3.2.8-4.7l-7.8-6C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.4 2.3-6.3 0-11.6-4.2-13.5-9.9l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg></span>Entrar com Google</button>
+    </div>
+    <div class="etapas"><span><b>01</b>Contexto</span><span><b>03</b>Diagnóstico</span><span><b>05</b>Soluções e metas</span><span><b>07</b>Mídia e ação</span><span><b>09</b>Apresentação</span></div>
+  </div>
+
+  <p class="nota">Depois do login, a entrada "Bem-vindo ao Growth Cycle" toca uma vez por sessão e cai na home.</p>
+<script>
+  function relogio() { const t = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }); document.querySelectorAll("[data-relogio]").forEach((r) => (r.textContent = `${t} em São Paulo`)); }
+  relogio(); setInterval(relogio, 30000);
+  document.querySelectorAll("#temas button").forEach((b) => (b.onclick = () => { document.body.className = b.dataset.t; document.querySelectorAll("#temas button").forEach((x) => x.classList.toggle("on", x === b)); }));
+  function marcar(el) { document.querySelectorAll(".opcao").forEach((o) => o.classList.toggle("sel", o === el)); }
+</script>
+</body>
+</html>

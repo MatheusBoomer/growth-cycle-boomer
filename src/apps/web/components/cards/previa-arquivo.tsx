@@ -1,9 +1,8 @@
 "use client"
 
-import { DownloadIcon, FileCode2Icon, FileSpreadsheetIcon, FileTextIcon, PanelRightOpenIcon, PresentationIcon } from "lucide-react"
+import { DownloadIcon, FileCode2Icon, FileSpreadsheetIcon, FileTextIcon, PanelRightOpenIcon, PresentationIcon, ZoomInIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 import type { TipoEntregavel } from "@workspace/core/tipos"
-import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from "@workspace/ui/components/attachment"
 import { Button } from "@workspace/ui/components/button"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { Markdown } from "@/components/markdown"
@@ -49,11 +48,11 @@ export function PreviaArquivo({
       <div className="group relative">
         <button type="button" className="block w-full cursor-zoom-in" onClick={aoAbrir} aria-label={`Abrir ${titulo}`} disabled={!aoAbrir}>
           {/* eslint-disable-next-line @next/next/no-img-element -- arquivo local servido pela rota do app */}
-          <img src={url} alt={titulo} className="w-full rounded-md border bg-papel" />
+          <img src={url} alt={titulo} className="w-full rounded-2xl border border-border bg-papel" />
         </button>
         {aoAbrir && (
-          <Button size="sm" variant="midia" className="absolute top-2 right-2" onClick={aoAbrir}>
-            <PanelRightOpenIcon /> Abrir
+          <Button size="sm" variant="midia" className="absolute top-2.5 right-2.5 h-[30px] px-3 text-xs" onClick={aoAbrir}>
+            <ZoomInIcon /> Ampliar
           </Button>
         )}
       </div>
@@ -64,11 +63,11 @@ export function PreviaArquivo({
       <Skeleton className="h-24 w-full" />
     ) : (
       <div className="relative">
-        <div className="max-h-96 overflow-y-auto rounded-md border p-3">
+        <div className="max-h-96 overflow-y-auto rounded-2xl border border-border bg-card p-4">
           <Markdown>{texto}</Markdown>
         </div>
         {aoAbrir && (
-          <Button size="sm" variant="midia" className="absolute top-2 right-2" onClick={aoAbrir}>
+          <Button size="sm" variant="midia" className="absolute top-2.5 right-2.5 h-[30px] px-3 text-xs" onClick={aoAbrir}>
             <PanelRightOpenIcon /> Expandir
           </Button>
         )}
@@ -77,65 +76,71 @@ export function PreviaArquivo({
   }
   if (tipo === "html") {
     return (
-      <Attachment state="done">
-        <AttachmentMedia variant="icon">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-border bg-card px-3 py-2.5">
+        <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-aviso-fundo text-aviso [&_svg]:size-4">
           <FileCode2Icon />
-        </AttachmentMedia>
-        <AttachmentContent>
-          <AttachmentTitle>{titulo}</AttachmentTitle>
-          <AttachmentDescription>Relatório HTML · abra para conferir</AttachmentDescription>
-        </AttachmentContent>
+        </div>
+        <div className="min-w-[140px] flex-1">
+          <b className="block truncate text-[13.5px] font-medium">{titulo}</b>
+          <small className="text-xs text-muted-foreground">Relatório HTML · abra para conferir</small>
+        </div>
         {aoAbrir && (
-          <AttachmentActions>
-            <Button size="sm" variant="outline" onClick={aoAbrir}>
-              <PanelRightOpenIcon /> Abrir
-            </Button>
-          </AttachmentActions>
+          <Button size="sm" variant="outline" className="ml-auto shrink-0" onClick={aoAbrir}>
+            Abrir
+          </Button>
         )}
-      </Attachment>
+      </div>
     )
   }
   if (tipo === "roteiro") return <PreviaRoteiro slug={slug} caminho={caminho} caminhoAnterior={caminhoAnterior} entregavelId={entregavelId} podeComentar={podeComentar} />
   if (tipo === "apresentacao") {
     return (
-      <Attachment state="done">
-        <AttachmentMedia variant="icon">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-border bg-card px-3 py-2.5">
+        <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/12 text-link-acao [&_svg]:size-4">
           <PresentationIcon />
-        </AttachmentMedia>
-        <AttachmentContent>
-          <AttachmentTitle>{titulo}</AttachmentTitle>
-          <AttachmentDescription>PowerPoint · abra no Google Slides (Arquivo → Importar slides) ou no PowerPoint</AttachmentDescription>
-        </AttachmentContent>
-        <AttachmentActions>
+        </div>
+        <div className="min-w-[140px] flex-1">
+          <b className="block truncate text-[13.5px] font-medium">{titulo}</b>
+          <small className="text-xs text-muted-foreground">Abra no Google Slides (Arquivo → Importar slides) ou no PowerPoint</small>
+        </div>
+        <div className="ml-auto flex shrink-0 items-center gap-1.5">
           {aoAbrir && (
-            <Button size="sm" variant="outline" onClick={aoAbrir}>
-              <PanelRightOpenIcon /> Abrir prévia
+            <Button size="sm" variant="ghost" onClick={aoAbrir}>
+              Abrir prévia
             </Button>
           )}
-          <AttachmentAction render={<a href={urlArquivo(slug, caminho, true)} download aria-label="Baixar" />} nativeButton={false}>
-            <DownloadIcon />
-          </AttachmentAction>
-        </AttachmentActions>
-      </Attachment>
+          <Button size="sm" variant="outline" render={<a href={urlArquivo(slug, caminho, true)} download />} nativeButton={false}>
+            <DownloadIcon /> Baixar
+          </Button>
+        </div>
+      </div>
     )
   }
   return (
-    <Attachment state="done">
-      <AttachmentMedia variant="icon">{tipo === "planilha" ? <FileSpreadsheetIcon /> : <FileTextIcon />}</AttachmentMedia>
-      <AttachmentContent>
-        <AttachmentTitle>{titulo}</AttachmentTitle>
-        <AttachmentDescription>{tipo === "planilha" ? "Planilha Excel · veja a prévia sem baixar" : "Documento Word · abra para conferir"}</AttachmentDescription>
-      </AttachmentContent>
-      <AttachmentActions>
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-border bg-card px-3 py-2.5">
+      <div
+        className={
+          tipo === "planilha"
+            ? "grid size-10 shrink-0 place-items-center rounded-xl bg-sucesso-fundo text-sucesso [&_svg]:size-4"
+            : "grid size-10 shrink-0 place-items-center rounded-xl bg-selo-sonnet-fundo text-selo-sonnet [&_svg]:size-4"
+        }
+      >
+        {tipo === "planilha" ? <FileSpreadsheetIcon /> : <FileTextIcon />}
+      </div>
+      <div className="min-w-[140px] flex-1">
+        <b className="block truncate text-[13.5px] font-medium">{titulo}</b>
+        <small className="text-xs text-muted-foreground">{tipo === "planilha" ? "Planilha Excel · veja a prévia sem baixar" : "Documento Word · abra para conferir"}</small>
+      </div>
+      <div className="ml-auto flex shrink-0 items-center gap-1.5">
         {tipo === "planilha" && aoAbrir && (
-          <Button size="sm" variant="outline" onClick={aoAbrir}>
-            <PanelRightOpenIcon /> Ver prévia
+          <Button size="sm" variant="ghost" onClick={aoAbrir}>
+            Ver prévia
           </Button>
         )}
-        <AttachmentAction render={<a href={urlArquivo(slug, caminho, true)} download aria-label="Baixar" />} nativeButton={false}>
-          <DownloadIcon />
-        </AttachmentAction>
-      </AttachmentActions>
-    </Attachment>
+        <Button size="sm" variant="outline" render={<a href={urlArquivo(slug, caminho, true)} download />} nativeButton={false}>
+          <DownloadIcon /> Baixar
+        </Button>
+      </div>
+    </div>
   )
 }

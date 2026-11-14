@@ -5,7 +5,7 @@ description: Constrói o plano estratégico de mídia paga — alocação de ver
 
 # Skill 07 — Planejamento de Mídia Paga
 
-Skill 7 de 9. Corresponde ao Prompt 9 do processo original. Ainda não é a etapa de criação de criativos,
+Skill 7 de 10. Corresponde ao Prompt 9 do processo original. Ainda não é a etapa de criação de criativos,
 configuração de campanhas ou plano de ação — é só estratégia de alocação e direcionamento.
 
 ## Antes de começar (checklist do analista)

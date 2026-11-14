@@ -1,5 +1,6 @@
 "use client"
 
+import { RotateCcwIcon } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import type { Catalogo, EtapaId } from "@workspace/core/tipos"
@@ -14,8 +15,9 @@ import {
 } from "@workspace/ui/components/alert-dialog"
 import { Button } from "@workspace/ui/components/button"
 import { Spinner } from "@workspace/ui/components/spinner"
-import { cn } from "@workspace/ui/lib/utils"
 import { api, mensagemDeErro } from "@/lib/api"
+import { CaixaAviso, IconeModal } from "@/components/marca/icone-modal"
+import { EscolhaEtapa } from "@/components/home/escolha-etapa"
 
 export function DialogoReposicionar({
   slug,
@@ -52,28 +54,24 @@ export function DialogoReposicionar({
     <AlertDialog open={aberto} onOpenChange={aoMudar}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Em qual etapa o teste começa?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Isto apaga o que você fez neste cliente e volta ao início da etapa escolhida. As etapas anteriores ficam concluídas.
-          </AlertDialogDescription>
+          <IconeModal tom="aviso">
+            <RotateCcwIcon />
+          </IconeModal>
+          <AlertDialogTitle>
+            Em qual etapa o <em>teste</em> começa<em>?</em>
+          </AlertDialogTitle>
         </AlertDialogHeader>
-        <div className="grid gap-1.5" role="radiogroup" aria-label="Etapa de partida">
-          {catalogo.etapas.map((e) => (
-            <button
-              key={e.id}
-              type="button"
-              role="radio"
-              aria-checked={escolhida === e.id}
-              onClick={() => setEscolhida(e.id)}
-              className={cn(
-                "hover:bg-muted rounded-lg border px-3 py-2 text-left text-sm transition",
-                escolhida === e.id && "border-primary bg-muted font-medium",
-              )}
-            >
-              {e.rotuloStatus}
-            </button>
-          ))}
-        </div>
+        <AlertDialogDescription render={<div />}>
+          <CaixaAviso>
+            Isto apaga o que você fez neste cliente e volta ao início da etapa escolhida. As etapas anteriores ficam concluídas.
+          </CaixaAviso>
+        </AlertDialogDescription>
+        <EscolhaEtapa
+          etapas={catalogo.etapas.map((e) => ({ id: e.id, rotulo: e.rotuloStatus, fase: e.fase }))}
+          valor={escolhida}
+          aoEscolher={setEscolhida}
+          rotulo="Etapa de partida"
+        />
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
           <Button variant="destructive" disabled={reposicionando} onClick={reposicionar}>

@@ -13,19 +13,29 @@ const Toaster = ({ ...props }: ToasterProps) => {
       className="toaster group"
       icons={{
         success: (
-          <CircleCheckIcon className="size-4" />
+          <span className="grid size-[26px] place-items-center rounded-[9px] bg-sucesso-fundo text-sucesso">
+            <CircleCheckIcon className="size-3.5" />
+          </span>
         ),
         info: (
-          <InfoIcon className="size-4" />
+          <span className="grid size-[26px] place-items-center rounded-[9px] bg-selo-sonnet-fundo text-selo-sonnet">
+            <InfoIcon className="size-3.5" />
+          </span>
         ),
         warning: (
-          <TriangleAlertIcon className="size-4" />
+          <span className="grid size-[26px] place-items-center rounded-[9px] bg-aviso-fundo text-aviso">
+            <TriangleAlertIcon className="size-3.5" />
+          </span>
         ),
         error: (
-          <OctagonXIcon className="size-4" />
+          <span className="grid size-[26px] place-items-center rounded-[9px] bg-perigo-fundo text-destructive">
+            <OctagonXIcon className="size-3.5" />
+          </span>
         ),
         loading: (
-          <Loader2Icon className="size-4 animate-spin" />
+          <span className="grid size-[26px] place-items-center rounded-[9px] bg-muted text-muted-foreground">
+            <Loader2Icon className="size-3.5 animate-spin" />
+          </span>
         ),
       }}
       style={
@@ -33,12 +43,13 @@ const Toaster = ({ ...props }: ToasterProps) => {
           "--normal-bg": "var(--popover)",
           "--normal-text": "var(--popover-foreground)",
           "--normal-border": "var(--border)",
-          "--border-radius": "var(--radius)",
+          "--border-radius": "16px",
+          "--width": "340px",
         } as React.CSSProperties
       }
       toastOptions={{
         classNames: {
-          toast: "cn-toast",
+          toast: "cn-toast gap-3! px-3.5! py-3! shadow-(--sombra-card)! [&_[data-icon]]:size-auto! [&_[data-icon]]:self-start! [&_[data-title]]:font-medium! [&_[data-description]]:text-muted-foreground!",
         },
       }}
       {...props}

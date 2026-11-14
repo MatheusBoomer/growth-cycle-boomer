@@ -72,5 +72,6 @@ trás da seção 1, mas não viram slide visível.
 
 Depois de exportar o arquivo final, marque "Apresentação final" como ✅ em
 `contexto/status-planejamento.md` do prospect e confirme ao analista, em
-linguagem natural, onde o arquivo ficou salvo dentro de `entrega/`. Este é o
-fim do processo — não há próxima etapa nem próximo comando a sugerir.
+linguagem natural, onde o arquivo ficou salvo dentro de `entrega/`. Aqui acaba a
+montagem da apresentação; a etapa seguinte é a 10 (revisão pós-apresentação),
+que o analista inicia depois da reunião com o prospect.

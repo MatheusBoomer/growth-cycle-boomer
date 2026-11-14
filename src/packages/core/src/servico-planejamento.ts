@@ -19,6 +19,7 @@ import { etapaDoCatalogo, faseDaEtapa, insumoDoCatalogo } from "./catalogo"
 import { itensDoCatalogo } from "./catalogo-skills"
 import { extrairOverrides, montarDossie, type AnteriorDossie } from "./dossie"
 import {
+  acompanhantes,
   aprovarEntregavel,
   destinoAprovado,
   encontrarEntregavel,
@@ -41,6 +42,7 @@ import type { Acumulado, Limites, LinhaPresenca, LinhaUso } from "./metricas/tip
 import { alvosDaEtapa, ALVO_PRINCIPAL, NIVEIS_ESFORCO, validarEscolha, type EscolhaModelo, type ListaDeModelos, type NivelEsforco, type UsoDaEtapa } from "./modelos"
 import type { EntradaUsoTurno, LinhaConfigModelo, RegistroUsoTurno } from "./nuvem/tipos"
 import { LIMITE_TEXTO_NOTA, type NotaSkill } from "./notas-skills"
+import { type FiltroReports, type Report, validarImagensReport, validarMudancaReport, validarNovoReport } from "./reports"
 import { aplicarOverrides, lerKit, reposicionarNoFixture } from "./servico-teste"
 import { ehAdmin, normalizarEmail, podeVerProspect, type UsuarioComPapel } from "./papeis"
 import { normalizarSlug } from "./slug"
@@ -49,6 +51,7 @@ import {
   ORDEM_ETAPAS,
   TIPOS_ENTREGAVEL,
   type Catalogo,
+  type Entregavel,
   type Estado,
   type EtapaId,
   type EventoConversa,
@@ -285,6 +288,33 @@ export class ServicoPlanejamento {
     const nota = await this.arm.marcarNotaSkill(id, resolvida, autor)
     if (!nota) throw new ErroNaoEncontrado("Nota inexistente.")
     return nota
+  }
+
+  /** Valida texto e imagens antes de tocar no armazenamento; o autor é sempre o da sessão. */
+  async criarReport(entrada: unknown, autor: string, tela: Uint8Array | null, extras: Uint8Array[]): Promise<Report> {
+    const novo = validarNovoReport(entrada)
+    const imagens = validarImagensReport(tela, extras)
+    return this.arm.criarReport(novo, autor, imagens)
+  }
+
+  listarReports(filtro?: FiltroReports): Promise<Report[]> {
+    return this.arm.listarReports(filtro)
+  }
+
+  /** ErroNaoEncontrado (404) se o report não existe; ErroEntrada (400) se a mudança é inválida. */
+  async atualizarReport(id: number, entrada: unknown, por: string): Promise<Report> {
+    const mudanca = validarMudancaReport(entrada)
+    const report = await this.arm.atualizarReport(id, mudanca, por)
+    if (!report) throw new ErroNaoEncontrado("Report não encontrado.")
+    return report
+  }
+
+  /** Bytes da n-ésima imagem do report; ErroNaoEncontrado se o report ou a imagem não existem. */
+  async imagemReport(id: number, n: number): Promise<{ bytes: Uint8Array; contentType: "image/png" | "image/jpeg" }> {
+    const report = await this.arm.lerReport(id)
+    const caminho = report?.imagens[n]
+    if (!caminho) throw new ErroNaoEncontrado("Imagem não encontrada.")
+    return { bytes: await this.arm.baixarImagemReport(caminho), contentType: caminho.endsWith(".png") ? "image/png" : "image/jpeg" }
   }
 
   /** Quantas notas abertas há em cada item (itens sem nota aberta não aparecem). */
@@ -626,8 +656,11 @@ export class ServicoPlanejamento {
     const modelosDisponiveis = this.catalogo.insumos
       .filter((i) => i.modelo && existsSync(path.join(this.arm.raiz, PASTA_MODELOS, i.modelo)))
       .map((i) => i.id)
+    // Os JSONs que acompanham o documento do plano chegam pela aprovação dele: também contam como aprovados pela interface.
     const aprovadosPelaInterface = new Set(
-      estado.entregaveis.filter((e) => e.status === "aprovado").map((e) => destinoAprovado(e)),
+      estado.entregaveis
+        .filter((e) => e.status === "aprovado")
+        .flatMap((e) => [destinoAprovado(e), ...acompanhantes(e).map((a) => a.destino)]),
     )
     const aprovadosForaDaInterface = (await this.arm.listarAprovados(slug)).filter((a) => !aprovadosPelaInterface.has(a))
     return { estado, catalogo: this.catalogo, condicoes, turnoAtivo, turnoPor, modelosDisponiveis, aprovadosForaDaInterface }
@@ -684,6 +717,7 @@ export class ServicoPlanejamento {
       etapaAtual: atual,
       rotuloEtapaAtual: atual ? etapaDoCatalogo(this.catalogo, atual).rotuloStatus : "Planejamento concluído",
       concluidas: ORDEM_ETAPAS.filter((id) => id !== "final" && e.etapas[id].status === "concluida").length,
+      // a apresentação final fica fora da contagem (não tem número); a 10 conta
       totalEtapas: ORDEM_ETAPAS.length - 1,
       pendencias: e.entregaveis.filter((x) => x.status === "pendente").length,
       teste: e.teste !== undefined,
@@ -872,15 +906,64 @@ export class ServicoPlanejamento {
       let novo = comDecididoPor(aprovarEntregavel(e, id, this.agora()), id, autor)
       const destino = destinoAprovado(alvo)
       await this.arm.copiar(slug, alvo.arquivoRascunho, destino)
+      const avisos = await this.copiarAcompanhantes(slug, alvo)
       novo = me.reavaliarPronta(novo, alvo.etapa, this.catalogo, this.agora())
-      return { estado: novo, resultado: { ...alvo, destino } }
+      return { estado: novo, resultado: { ...alvo, destino, avisos } }
     })
+    // A aprovação já está gravada: aviso que não consegue ser registrado não pode impedir o enfileirar.
+    for (const texto of aprovado.avisos) {
+      try {
+        await this.registrarConversa(slug, aprovado.etapa, { tipo: "aviso", nivel: "alerta", texto, em: this.agora() })
+      } catch (e) {
+        console.error(`Não consegui registrar o aviso da aprovação em "${slug}":`, e)
+      }
+    }
     await this.enfileirar(
       slug,
       aprovado.etapa,
       mensagemAprovacao(aprovado.titulo, aprovado.nomeFinal, `clientes/${slug}/${aprovado.destino}`, aprovado.editadoEm !== undefined),
       autor,
     )
+  }
+
+  /**
+   * Copia os JSONs que acompanham o documento do plano. Acompanhante ausente ou que falha ao copiar não
+   * desfaz a aprovação do documento: vira um aviso na atividade da etapa.
+   */
+  private async copiarAcompanhantes(slug: string, alvo: Entregavel): Promise<string[]> {
+    const avisos: string[] = []
+    for (const { origem, destino } of acompanhantes(alvo)) {
+      const nome = origem.slice(origem.lastIndexOf("/") + 1)
+      // Na 08 o acompanhante é insumo da 10; na própria 10 não há etapa seguinte que dependa dele.
+      const consequencia = alvo.etapa === "10" ? "a entrega formal fica sem ele." : "a etapa 10 vai precisar dele."
+      try {
+        if (await this.arm.existeArquivo(slug, origem)) {
+          await this.arm.copiar(slug, origem, destino)
+          continue
+        }
+        avisos.push(`Aviso: ${nome} não foi encontrado junto do documento aprovado; ${consequencia}`)
+      } catch {
+        avisos.push(`Aviso: não consegui copiar ${nome} junto do documento aprovado; ${consequencia}`)
+      }
+    }
+    return avisos
+  }
+
+  /**
+   * Os JSONs gerados ao lado do documento em .app/rascunhos/ vão para a pasta da cópia da proposta
+   * (.app/propostas/), de onde a aprovação os pega. Falha aqui não barra a proposta: a aprovação avisa.
+   */
+  private async trazerAcompanhantes(slug: string, alvo: Entregavel, copia: string): Promise<void> {
+    const pasta = copia.slice(0, copia.lastIndexOf("/") + 1)
+    for (const { origem } of acompanhantes(alvo)) {
+      try {
+        if (await this.arm.existeArquivo(slug, origem)) {
+          await this.arm.copiar(slug, origem, `${pasta}${origem.slice(origem.lastIndexOf("/") + 1)}`)
+        }
+      } catch {
+        // acompanhante que não chegou vira aviso na aprovação
+      }
+    }
   }
 
   /** O analista corrige a seção pendente direto no visualizador; o texto vale como a proposta. */
@@ -1165,6 +1248,7 @@ export class ServicoPlanejamento {
     await this.mutar(slug, async (e) => {
       const novo = proporEntregavel(e, { etapa, tipo, titulo, arquivoRascunho: copia, nomeFinal }, id, this.agora())
       await this.arm.copiar(slug, rel, copia)
+      await this.trazerAcompanhantes(slug, { ...encontrarEntregavel(novo, id), arquivoRascunho: rel }, copia)
       return { estado: me.reavaliarPronta(novo, etapa, this.catalogo, this.agora()), resultado: undefined }
     })
     await this.registrarConversa(slug, etapa, { tipo: "card_entregavel", entregavelId: id, em: this.agora() })

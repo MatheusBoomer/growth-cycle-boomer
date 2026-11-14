@@ -1,4 +1,4 @@
-export const ORDEM_ETAPAS = ["01", "02", "03", "04", "05", "06", "07", "08", "final"] as const
+export const ORDEM_ETAPAS = ["01", "02", "03", "04", "05", "06", "07", "08", "final", "10"] as const
 export type EtapaId = (typeof ORDEM_ETAPAS)[number]
 
 /**

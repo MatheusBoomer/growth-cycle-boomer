@@ -1,6 +1,6 @@
 "use client"
 
-import { FileIcon, PaperclipIcon, PanelRightOpenIcon, SendIcon, SquareIcon } from "lucide-react"
+import { ArrowUpIcon, AtSignIcon, FileIcon, PanelRightOpenIcon, PlusIcon, SquareIcon } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import type { EtapaId } from "@workspace/core/tipos"
@@ -15,7 +15,7 @@ import { renderizarAnotada } from "@/lib/anotacoes-canvas"
 import { separadorAntes } from "@/lib/citacao"
 import { consultaDeMencao, textoParaAgente } from "@/lib/mencoes"
 import { descartarSuperadas, numerar } from "@/lib/referencias"
-import { faixaDeMarcacoes } from "@/lib/anotacoes"
+import { faixaDeMarcacoes, numerosDaEtiqueta } from "@/lib/anotacoes"
 import { useReferencias } from "./contexto-referencias"
 import { EtiquetaAnexo, iconeDoTipo } from "./etiqueta-anexo"
 
@@ -201,10 +201,11 @@ export function Compositor({
   const podeEnviar = !desabilitado && !enviando && !subindo && (texto.trim() !== "" || (!comReferencia && prontos.length > 0))
 
   return (
-    <div className="border-t p-3">
+    <div className="px-4 pt-1 pb-4">
       <div
         className={cn(
-          "mx-auto flex max-w-3xl flex-col gap-2 rounded-lg transition-shadow",
+          "border-input bg-popover/90 mx-auto flex max-w-3xl flex-col gap-2 rounded-[22px] border p-3 shadow-[0_20px_50px_-24px_rgb(0_0_0/0.5)] backdrop-blur-xl transition-[box-shadow,border-color]",
+          "focus-within:border-primary/50 focus-within:ring-primary/15 focus-within:ring-4",
           arrastando && "ring-primary/50 ring-2 ring-offset-4 ring-offset-background",
         )}
         onDragOver={(e) => {
@@ -231,6 +232,7 @@ export function Compositor({
                 nome={r.titulo}
                 icone={iconeDoTipo(r.tipo)}
                 detalhe={faixaDeMarcacoes(numeracao[i]!.primeira, numeracao[i]!.quantidade) || "ajuste pedido"}
+                numeros={numerosDaEtiqueta(numeracao[i]!.primeira, numeracao[i]!.quantidade)}
                 aoRemover={() => ref.remover(r.entregavelId)}
                 aoAbrir={r.urlImagem ? () => ref.iniciarMarcacao(r.entregavelId) : undefined}
               />
@@ -345,18 +347,29 @@ export function Compositor({
           disabled={desabilitado}
           rows={3}
           aria-label="Mensagem para o agente"
+          // Dentro da pílula do compositor: sem borda nem fundo próprios (o brilho do foco fica na pílula).
+          className="resize-none border-0 bg-transparent px-1 shadow-none focus-visible:ring-0 dark:bg-transparent"
         />
         </div>
         <div className="flex items-center gap-2">
           <input ref={entradaArquivo} type="file" multiple hidden onChange={(e) => void anexar(e.target.files)} />
+          <Button variant="outline" size="xs" aria-label="Anexar arquivo" disabled={desabilitado} onClick={() => entradaArquivo.current?.click()}>
+            <PlusIcon aria-hidden="true" /> Anexar
+          </Button>
           <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Anexar arquivo"
+            variant="outline"
+            size="xs"
+            aria-label="Mencionar um arquivo"
             disabled={desabilitado}
-            onClick={() => entradaArquivo.current?.click()}
+            onClick={() => {
+              // Põe um "@" no fim e abre a lista de arquivos, como se a pessoa tivesse digitado.
+              const novo = texto === "" || texto.endsWith(" ") || texto.endsWith("\n") ? `${texto}@` : `${texto} @`
+              setTexto(novo)
+              atualizarConsulta(novo, novo.length)
+              campo.current?.focus()
+            }}
           >
-            <PaperclipIcon />
+            <AtSignIcon aria-hidden="true" /> Mencionar
           </Button>
           {ativoAqui ? (
             <Button
@@ -367,8 +380,14 @@ export function Compositor({
               <SquareIcon /> Parar
             </Button>
           ) : (
-            <Button className="ml-auto" onClick={() => void enviar()} disabled={!podeEnviar}>
-              {enviando ? <Spinner /> : <SendIcon />} Enviar
+            <Button
+              aria-label="Enviar"
+              title="Enviar (Enter)"
+              className="bg-foreground text-background ml-auto size-9 rounded-full p-0 shadow-none ring-0 hover:brightness-100 hover:opacity-90"
+              onClick={() => void enviar()}
+              disabled={!podeEnviar}
+            >
+              {enviando ? <Spinner /> : <ArrowUpIcon />}
             </Button>
           )}
         </div>

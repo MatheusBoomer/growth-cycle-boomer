@@ -5,7 +5,3 @@ export const CONFIG_TEMA = {
   themes: ["dark", "light"],
   storageKey: "tema-boomer",
 } as const satisfies { defaultTheme: string; enableSystem: boolean; themes: readonly string[]; storageKey: string }
-
-export function proximoTema(atual: string | undefined): "dark" | "light" {
-  return atual === "light" ? "dark" : "light"
-}

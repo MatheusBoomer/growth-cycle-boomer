@@ -4,11 +4,11 @@ import { useState } from "react"
 import { toast } from "sonner"
 import type { NotaSkill } from "@workspace/core/notas-skills"
 import { LIMITE_TEXTO_NOTA } from "@workspace/core/notas-skills"
-import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Button } from "@workspace/ui/components/button"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { api, mensagemDeErro } from "@/lib/api"
 import { ehErroSemNuvem, MSG_SEM_NUVEM, rotuloAutorEData, rotuloResolvidas, separarNotas } from "@/lib/catalogo-skills-tela"
+import { AvisoAdmin } from "@/components/admin/aviso-admin"
 
 interface Props {
   itemId: string
@@ -60,9 +60,7 @@ export function NotasSkill({ itemId, notas, semNuvem, aoSemNuvem, aoCriar, aoAtu
 
   if (semNuvem) {
     return (
-      <Alert>
-        <AlertDescription>{MSG_SEM_NUVEM}</AlertDescription>
-      </Alert>
+      <AvisoAdmin mensagem={MSG_SEM_NUVEM} aba="notas" />
     )
   }
 

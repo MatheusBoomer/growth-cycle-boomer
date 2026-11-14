@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Instrument+Serif:ital@0;1&family=Geist+Mono&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Temas ---------- */
+  :root, .escuro {
+    --pagina: #050506; --bg: #0a0a0b; --fg: #f4f4f5; --muted: #8b8b93; --muted-2: #5d5d66;
+    --line: rgb(255 255 255 / .08); --line-2: rgb(255 255 255 / .14);
+    --card-a: rgb(255 255 255 / .045); --card-b: rgb(255 255 255 / .015); --sombra: none;
+    --acento: #ff8a3d; --acento-forte: #eb610a; --acento-txt: #fff; --verde: #2fbf8c; --azul: #5b9df0; --ambar: #fbbf24;
+    --ambar-fundo: rgb(251 191 36 / .1); --verde-fundo: rgb(47 191 140 / .14); --vazio: rgb(255 255 255 / .1);
+    --brilho: rgb(235 97 10 / .13); --botao-forte: #f4f4f5; --botao-forte-txt: #0a0a0b; --seg-on: rgb(255 255 255 / .09);
+    --compositor: rgb(20 20 22 / .9); --fundo-grafico: rgb(0 0 0 / .25);
+  }
+  .creme {
+    --pagina: #ebe6dd; --bg: #f6f2eb; --fg: #1c1712; --muted: #6f665b; --muted-2: #a0968a;
+    --line: rgb(60 40 20 / .1); --line-2: rgb(60 40 20 / .18);
+    --card-a: #fffdf9; --card-b: #fcf9f4; --sombra: 0 1px 0 #fff inset, 0 12px 28px -18px rgb(80 50 20 / .25);
+    --acento: #c94d05; --acento-forte: #e15b08; --acento-txt: #fff; --verde: #12805a; --azul: #2f6fc4; --ambar: #a15c00;
+    --ambar-fundo: rgb(217 119 6 / .12); --verde-fundo: rgb(18 128 90 / .12); --vazio: rgb(60 40 20 / .1);
+    --brilho: rgb(235 97 10 / .14); --botao-forte: #1c1712; --botao-forte-txt: #f6f2eb; --seg-on: #fff;
+    --compositor: rgb(255 253 249 / .92); --fundo-grafico: rgb(60 40 20 / .03);
+  }
+  .perola {
+    --pagina: #e8e6e2; --bg: #f7f6f3; --fg: #17150f; --muted: #67635b; --muted-2: #9d988f;
+    --line: rgb(45 35 20 / .085); --line-2: rgb(45 35 20 / .16);
+    --card-a: #ffffff; --card-b: #fdfcfa; --sombra: 0 1px 0 #fff inset, 0 1px 2px rgb(45 35 20 / .04), 0 12px 28px -18px rgb(60 45 25 / .22);
+    --acento: #c94d05; --acento-forte: #e85e09; --acento-txt: #fff; --verde: #10805a; --azul: #2c6bd0; --ambar: #a15c00;
+    --ambar-fundo: rgb(217 119 6 / .11); --verde-fundo: rgb(16 128 90 / .11); --vazio: rgb(45 35 20 / .09);
+    --brilho: rgb(235 97 10 / .11); --botao-forte: #17150f; --botao-forte-txt: #fff; --seg-on: #fff;
+    --compositor: rgb(255 255 255 / .93); --fundo-grafico: rgb(45 35 20 / .025);
+  }
+  .gelo {
+    --pagina: #e4e5e9; --bg: #f7f7f8; --fg: #0f1115; --muted: #5e636e; --muted-2: #9a9fa9;
+    --line: rgb(15 20 35 / .08); --line-2: rgb(15 20 35 / .15);
+    --card-a: #ffffff; --card-b: #ffffff; --sombra: 0 1px 2px rgb(15 20 35 / .04), 0 12px 28px -18px rgb(15 20 35 / .2);
+    --acento: #c94d05; --acento-forte: #eb610a; --acento-txt: #fff; --verde: #0f7a55; --azul: #2563eb; --ambar: #a15c00;
+    --ambar-fundo: rgb(217 119 6 / .1); --verde-fundo: rgb(15 122 85 / .1); --vazio: rgb(15 20 35 / .09);
+    --brilho: rgb(235 97 10 / .08); --botao-forte: #0f1115; --botao-forte-txt: #fff; --seg-on: #fff;
+    --compositor: rgb(255 255 255 / .94); --fundo-grafico: rgb(15 20 35 / .025);
+  }
+
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--pagina); color: var(--fg); font-family: "Geist", system-ui, sans-serif; padding: 40px 48px 80px; -webkit-font-smoothing: antialiased; }
+  em { font-family: "Instrument Serif", Georgia, serif; font-weight: 400; }
+  .mono { font-family: "Geist Mono", monospace; }
+  .topo { display: flex; justify-content: space-between; align-items: end; gap: 24px; max-width: 1320px; margin: 0 auto 26px; }
+  .topo h1 { font-size: 28px; font-weight: 500; letter-spacing: -.02em; }
+  .topo h1 em { color: var(--acento); font-size: 32px; }
+  .topo p { color: var(--muted); font-size: 14px; margin-top: 6px; max-width: 720px; line-height: 1.5; }
+  .temas { display: flex; gap: 2px; padding: 4px; border: 1px solid var(--line-2); border-radius: 999px; }
+  .temas button { font: 500 13px "Geist"; color: var(--muted); background: none; border: 0; padding: 7px 14px; border-radius: 999px; cursor: pointer; }
+  .temas button.on { background: var(--botao-forte); color: var(--botao-forte-txt); }
+  .opcao { max-width: 1320px; margin: 0 auto 14px; display: flex; align-items: center; gap: 12px; }
+  .opcao h3 { font-size: 16px; font-weight: 500; } .opcao span { color: var(--muted); font-size: 13px; }
+
+  .tela { position: relative; max-width: 1320px; margin: 0 auto 44px; border-radius: 20px; overflow: hidden; background: var(--bg); border: 1px solid var(--line); isolation: isolate; }
+  .tela::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(50% 40% at 18% 0%, var(--brilho), transparent 70%); }
+
+  .nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; }
+  .logo { font-weight: 700; font-size: 20px; letter-spacing: -.045em; color: var(--fg); }
+  .logo b { color: #eb610a; }
+  .navpill, .seg { display: flex; gap: 2px; padding: 4px; border: 1px solid var(--line); border-radius: 999px; font-size: 13px; }
+  .navpill span, .seg span { padding: 6px 14px; border-radius: 999px; color: var(--muted); }
+  .navpill span.on, .seg span.on { background: var(--seg-on); color: var(--fg); box-shadow: var(--sombra); }
+  .navdir { display: flex; gap: 8px; align-items: center; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px; font-size: 12px; color: var(--muted); }
+  .alterna { width: 32px; height: 32px; border-radius: 999px; border: 1px solid var(--line-2); display: grid; place-items: center; cursor: pointer; background: none; color: var(--fg); }
+  .alterna svg { transition: transform .5s cubic-bezier(.6,.1,.2,1); }
+  .escuro .alterna svg { transform: rotate(180deg); }
+  .avatar { width: 30px; height: 30px; border-radius: 999px; background: linear-gradient(135deg, #f0894a, #b4410a); display: grid; place-items: center; font-size: 11px; font-weight: 600; color: #fff; }
+
+  /* Home */
+  .home { padding: 0 30px 34px; }
+  .cab { margin-top: 30px; display: flex; justify-content: space-between; align-items: end; }
+  .tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; color: var(--muted); margin-bottom: 14px; }
+  .tag i { width: 6px; height: 6px; border-radius: 9px; background: var(--ambar); }
+  .cab h2 { font-size: 64px; font-weight: 500; letter-spacing: -.045em; line-height: .95; }
+  .cab h2 em { color: var(--acento); letter-spacing: -.02em; }
+  .bt { font: 500 13px "Geist"; padding: 9px 16px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--fg); background: transparent; }
+  .bt.forte { background: var(--botao-forte); color: var(--botao-forte-txt); border-color: transparent; }
+  .bt.acento { background: var(--acento-forte); color: var(--acento-txt); border-color: transparent; box-shadow: 0 8px 22px -10px rgb(235 97 10 / .8); }
+  .card { position: relative; border: 1px solid var(--line); border-radius: 18px; padding: 18px; background: linear-gradient(180deg, var(--card-a), var(--card-b)); box-shadow: var(--sombra); }
+  .bento { display: grid; grid-template-columns: 7fr 5fr; gap: 14px; margin-top: 26px; }
+  .continuar { padding: 26px; display: flex; justify-content: space-between; gap: 20px; }
+  .k { font-size: 11px; color: var(--muted-2); text-transform: uppercase; letter-spacing: .14em; }
+  .continuar .nm { font-size: 38px; font-weight: 500; letter-spacing: -.035em; margin-top: 10px; }
+  .continuar .et { font-size: 15px; color: var(--muted); margin-top: 16px; }
+  .continuar .et em { display: block; font-size: 40px; color: var(--acento); line-height: 1; margin-top: 4px; }
+  .numeros { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .num { display: flex; flex-direction: column; justify-content: space-between; min-height: 116px; }
+  .num .v { font-family: "Instrument Serif"; font-size: 64px; line-height: .9; }
+  .num .l { font-size: 13px; color: var(--muted); }
+  .num.cheio { grid-column: span 2; background: linear-gradient(135deg, #ff8a3d, #eb610a 55%, #c94d05); border: 0; color: #1a0a00; flex-direction: row; align-items: center; box-shadow: 0 16px 36px -18px rgb(235 97 10 / .7); }
+  .num.cheio .l { color: #3a1500; font-size: 15px; }
+  .num.cheio .seta { width: 44px; height: 44px; border-radius: 99px; background: #1a0a00; color: #ff8a3d; display: grid; place-items: center; }
+  .filtros { margin-top: 30px; display: flex; gap: 10px; align-items: center; }
+  .busca { flex: 1; max-width: 320px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--line); border-radius: 999px; padding: 8px 8px 8px 16px; font-size: 13px; color: var(--muted-2); background: var(--card-a); }
+  .busca kbd { font: 11px "Geist Mono"; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; }
+  .filtros .dir { margin-left: auto; font-size: 13px; color: var(--muted); }
+  .grade4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px; }
+  .mini { padding: 14px; }
+  .mini .nome { font-size: 15px; font-weight: 500; display: flex; justify-content: space-between; }
+  .mini .nome span { color: var(--muted-2); }
+  .mini .etapa { margin-top: 12px; font-size: 12.5px; color: var(--muted); }
+  .mini .etapa em { display: block; font-size: 19px; color: var(--fg); line-height: 1.05; }
+  .barras { display: flex; gap: 4px; margin-top: 14px; }
+  .barras i { flex: 1; height: 4px; border-radius: 4px; background: var(--vazio); }
+  .barras i.ok { background: var(--verde); } .barras i.at { background: var(--acento-forte); }
+  .rodape { display: flex; justify-content: space-between; margin-top: 12px; font-size: 12px; color: var(--muted-2); }
+  .selo { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 500; color: var(--ambar); background: var(--ambar-fundo); border-radius: 999px; padding: 3px 9px; margin-top: 10px; }
+  .selo.ok { color: var(--verde); background: var(--verde-fundo); }
+  .pendente::before { content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: conic-gradient(from var(--ang), transparent 0 78%, color-mix(in srgb, var(--ambar) 45%, transparent) 86%, color-mix(in srgb, var(--acento-forte) 55%, transparent) 90%, transparent 96%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: gira 9s linear infinite; }
+  @property --ang { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+  @keyframes gira { to { --ang: 360deg; } }
+
+  /* Trabalho */
+  .corpo { display: grid; grid-template-columns: 260px 1fr 310px; gap: 12px; padding: 0 12px 12px; height: 720px; }
+  .painel { border: 1px solid var(--line); border-radius: 18px; background: linear-gradient(180deg, var(--card-a), var(--card-b)); box-shadow: var(--sombra); overflow: hidden; display: flex; flex-direction: column; min-height: 0; position: relative; }
+  .esqp { padding: 20px 16px; }
+  .prospect { font-size: 22px; font-weight: 500; letter-spacing: -.03em; margin-top: 6px; }
+  .ramos { position: relative; margin-top: 20px; }
+  .ramos::before { content: ""; position: absolute; left: 9px; top: 6px; bottom: 6px; width: 1px; background: var(--line-2); }
+  .fase { position: relative; padding: 7px 0 3px 26px; font-size: 11.5px; color: var(--muted); display: flex; justify-content: space-between; }
+  .fase::before { content: ""; position: absolute; left: 6px; top: 50%; width: 7px; height: 7px; margin-top: -1px; border-radius: 9px; background: var(--bg); border: 1px solid var(--line-2); }
+  .fase.feita::before { background: var(--verde); border-color: var(--verde); } .fase.atual::before { background: var(--acento-forte); border-color: var(--acento-forte); }
+  .fase b { font: 400 10.5px "Geist Mono"; color: var(--muted-2); }
+  .ramo { position: relative; display: flex; align-items: center; gap: 8px; height: 32px; padding-left: 40px; font-size: 13.5px; color: var(--muted); border-radius: 10px; white-space: nowrap; overflow: hidden; }
+  .ramo svg { position: absolute; left: 9px; top: -14px; overflow: visible; } .ramo svg path { fill: none; stroke: var(--line-2); }
+  .ramo.ativo { color: var(--fg); background: var(--seg-on); box-shadow: var(--sombra); } .ramo.ativo svg path { stroke: var(--acento-forte); stroke-width: 1.5; }
+  .ramo.bloq { color: var(--muted-2); }
+  .marcador { position: absolute; left: 8px; width: 3px; height: 22px; border-radius: 3px; background: var(--acento-forte); }
+  .st { width: 15px; height: 15px; flex-shrink: 0; border-radius: 99px; display: grid; place-items: center; font-size: 9px; }
+  .st.ok { background: var(--verde-fundo); color: var(--verde); } .st.at { border: 1.5px solid var(--acento-forte); } .st.at::after { content: ""; width: 5px; height: 5px; border-radius: 9px; background: var(--acento-forte); }
+  .st.bl { color: var(--muted-2); }
+  .num-e { font: 11px "Geist Mono"; color: var(--muted-2); width: 18px; }
+  .cab-etapa { display: flex; justify-content: space-between; align-items: center; padding: 18px 26px; border-bottom: 1px solid var(--line); }
+  .cab-etapa .tt { font-size: 13px; color: var(--muted); } .cab-etapa .tt em { display: block; font-size: 32px; color: var(--fg); line-height: 1; margin-top: 2px; }
+  .fio { flex: 1; max-width: 660px; margin: 0 auto; padding: 24px 22px 120px; display: flex; flex-direction: column; gap: 18px; overflow: hidden; }
+  .eu { align-self: flex-end; max-width: 80%; background: var(--seg-on); border: 1px solid var(--line); padding: 11px 15px; border-radius: 18px 18px 6px 18px; font-size: 14.5px; line-height: 1.5; box-shadow: var(--sombra); }
+  .tl { display: inline-flex; gap: 9px; align-items: center; font-size: 14px; color: var(--muted); } .tl .g { color: var(--acento); } .tl .t { font: 12px "Geist Mono"; color: var(--muted-2); }
+  .resp { font-size: 15px; line-height: 1.65; color: var(--fg); opacity: .88; } .resp b { opacity: 1; font-weight: 600; }
+  .entregavel { padding: 16px; }
+  .entregavel .l1 { display: flex; justify-content: space-between; align-items: center; }
+  .entregavel .tit { font-size: 22px; } .entregavel .tipo { font-size: 12px; color: var(--muted); }
+  .grafico { margin-top: 12px; border: 1px solid var(--line); border-radius: 12px; padding: 12px 12px 6px; background: var(--fundo-grafico); }
+  .acoes { display: flex; gap: 8px; margin-top: 12px; }
+  .compositor { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); width: min(660px, calc(100% - 36px)); border: 1px solid var(--line-2); border-radius: 22px; background: var(--compositor); backdrop-filter: blur(14px); padding: 12px 12px 10px 18px; box-shadow: 0 18px 40px -22px rgb(0 0 0 / .45); }
+  .compositor p { font-size: 14.5px; color: var(--muted-2); height: 40px; }
+  .compositor .baixo { display: flex; justify-content: space-between; align-items: center; }
+  .compositor .baixo span.c { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 5px 10px; margin-right: 6px; }
+  .enviar { width: 34px; height: 34px; border-radius: 99px; background: var(--botao-forte); color: var(--botao-forte-txt); display: grid; place-items: center; }
+  .dirp { padding: 20px 18px; }
+  .dirp h4 { font-size: 13px; font-weight: 500; display: flex; justify-content: space-between; } .dirp h4 span { font: 11px "Geist Mono"; color: var(--muted-2); }
+  .item { display: flex; gap: 10px; align-items: center; border: 1px solid var(--line); border-radius: 14px; padding: 11px 12px; margin-top: 8px; font-size: 13px; background: var(--bg); }
+  .item .ic { width: 30px; height: 30px; border-radius: 9px; background: var(--vazio); display: grid; place-items: center; font-size: 13px; color: var(--muted); }
+  .item small { display: block; color: var(--muted-2); font-size: 11.5px; margin-top: 1px; }
+
+  /* Transição de tema em círculo (Animated Theme Toggler) */
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+  .nota { max-width: 1320px; margin: 0 auto; color: var(--muted); font-size: 13px; line-height: 1.6; }
+</style>
+</head>
+<body class="perola">
+  <div class="topo">
+    <div>
+      <h1>Modo claro · <em>três leituras</em></h1>
+      <p><b>Creme</b> é quente, como papel; combina com o laranja e com a serifada. <b>Pérola</b> fica no meio: branco com um toque mínimo de calor, cards brancos puros. <b>Gelo</b> é branco frio, mais próximo do claro de hoje. Troque aqui ou clique no botão redondo de tema dentro das telas para ver a transição em círculo.</p>
+    </div>
+    <div class="temas" id="temas">
+      <button data-t="creme" data-choice="creme">Claro creme</button>
+      <button data-t="perola" data-choice="perola">Claro pérola</button>
+      <button data-t="gelo" data-choice="gelo">Claro gelo</button>
+      <button data-t="escuro" data-choice="escuro">Escuro</button>
+    </div>
+  </div>
+
+  <div class="opcao"><h3>Home</h3><span>· bento + filtros, como você escolheu</span></div>
+  <div class="tela">
+    <div class="nav">
+      <span class="logo">bo<b>omer</b></span>
+      <div class="navpill"><span class="on">Prospects</span><span>Biblioteca</span><span>Administração</span></div>
+      <div class="navdir"><span class="chip mono" data-relogio>--:--</span><button class="alterna" data-alterna></button><span class="avatar">MS</span></div>
+    </div>
+    <div class="home">
+      <div class="cab"><div><span class="tag"><i></i>8 em andamento · 1 aprovação pendente</span><h2>Seus Growth <em>Cycles</em></h2></div>
+        <div style="display:flex;gap:8px"><span class="bt">Cliente de teste</span><span class="bt acento">+ Novo prospect</span></div></div>
+      <div class="bento">
+        <div class="card continuar">
+          <div><div class="k">Continue de onde parou</div><div class="nm">Verdeluz nuvem</div><div class="et">Etapa 04 <em>Unidade econômica</em></div><span class="bt forte" style="display:inline-block;margin-top:24px">Abrir etapa →</span></div>
+          <div data-anel="3" data-tam="200"></div>
+        </div>
+        <div class="numeros">
+          <div class="card num"><div class="v">8</div><div class="l">em andamento</div></div>
+          <div class="card num"><div class="v">3</div><div class="l">concluídos no mês</div></div>
+          <div class="card num cheio"><div><div class="v">1</div><div class="l">aprovação esperando você · Adda (demonstração)</div></div><div class="seta">→</div></div>
+        </div>
+      </div>
+      <div class="filtros"><div class="seg"><span class="on">Todos</span><span>Meus</span><span>Com aprovação pendente</span></div>
+        <div class="busca">Buscar prospect, etapa ou analista <kbd>⌘K</kbd></div><span class="dir">Todas as etapas ▾ &nbsp; Atividade recente ▾</span></div>
+      <div class="grade4" id="grade"></div>
+    </div>
+  </div>
+
+  <div class="opcao"><h3>Tela de trabalho</h3><span>· no ponto em que o gráfico espera aprovação</span></div>
+  <div class="tela">
+    <div class="nav">
+      <div style="display:flex;gap:14px;align-items:center;font-size:13px;color:var(--muted)"><span class="logo">bo<b>omer</b></span>Growth Cycles / <b style="color:var(--fg);font-weight:500">Verdeluz nuvem</b></div>
+      <div class="navdir"><span class="chip">US$ 1,84 nesta etapa</span><span class="chip mono" data-relogio>--:--</span><button class="alterna" data-alterna></button><span class="avatar">MS</span></div>
+    </div>
+    <div class="corpo">
+      <aside class="painel esqp">
+        <div class="k">Prospect</div><div class="prospect">Verdeluz nuvem</div>
+        <div class="ramos" id="ramos"></div>
+      </aside>
+      <main class="painel">
+        <div class="cab-etapa"><div class="tt">Etapa 04 · Diagnóstico<em>Unidade econômica</em></div><span class="chip">◫ Painel</span></div>
+        <div class="fio">
+          <div class="eu">Mandei a base de clientes dos últimos 24 meses. Calcula o LTV/CAC por safra e me mostra a evolução.</div>
+          <div class="tl"><span class="g">✦</span>Pensou por <span class="t">4,4 s</span> ▸</div>
+          <div class="resp">O <b>LTV/CAC subiu de 1,3 para 1,6</b> entre maio e outubro. O CAC ficou quase parado, quem puxou foi o LTV: a recompra em 90 dias passou de 18% para 26%.</div>
+          <div class="card entregavel pendente">
+            <div class="l1"><div><div class="tipo">Gráfico · proposta 1</div><div class="tit"><em>LTV e CAC por safra</em></div></div><span class="selo" style="margin:0">● Aguardando aprovação</span></div>
+            <div class="grafico" id="grafico"></div>
+            <div class="acoes"><span class="bt acento">Aprovar</span><span class="bt">Pedir ajuste</span></div>
+          </div>
+        </div>
+        <div class="compositor"><p>Peça um ajuste, cite um arquivo com @ ou arraste uma planilha…</p><div class="baixo"><div><span class="c">＋ Anexar</span><span class="c">@ Mencionar</span></div><span class="enviar">↑</span></div></div>
+      </main>
+      <aside class="painel dirp">
+        <h4>Entregáveis da etapa <span>0/1</span></h4>
+        <div class="item"><div class="ic">▥</div><div>LTV e CAC por safra<small>Aguardando aprovação</small></div></div>
+        <h4 style="margin-top:22px">Insumos <span>1/1</span></h4>
+        <div class="item"><div class="ic" style="color:var(--verde);background:var(--verde-fundo)">✓</div><div>cliente-historico.xlsx<small>Recebido · 4.812 clientes</small></div></div>
+      </aside>
+    </div>
+  </div>
+
+  <p class="nota">Nos dois claros, o laranja de texto escurece um pouco (#c94d05) para manter a leitura sobre fundo claro; botões e o anel seguem no laranja da marca. O card laranja de aprovações é igual nos três temas.</p>
+
+<script>
+  const SOL = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+  const LUA = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+  const cor = (v) => getComputedStyle(document.body).getPropertyValue(v).trim();
+
+  function anel(ok, tam) {
+    const r = tam / 2 - tam * .07, c = tam / 2, sw = Math.max(3, tam * .05);
+    let s = `<svg width="${tam}" height="${tam}">`;
+    for (let i = 0; i < 8; i++) {
+      const a0 = (i * 45 + 3.5 - 90) * Math.PI / 180, a1 = ((i + 1) * 45 - 3.5 - 90) * Math.PI / 180;
+      const k = i < ok ? "var(--verde)" : i === ok ? "var(--acento-forte)" : "var(--vazio)";
+      s += `<path d="M${c + r * Math.cos(a0)} ${c + r * Math.sin(a0)} A${r} ${r} 0 0 1 ${c + r * Math.cos(a1)} ${c + r * Math.sin(a1)}" fill="none" style="stroke:${k}" stroke-width="${sw}" stroke-linecap="round"/>`;
+    }
+    if (tam > 100) s += `<text x="50%" y="47%" text-anchor="middle" style="fill:var(--fg)" font-family="Instrument Serif" font-size="${tam * .3}">${ok}<tspan style="fill:var(--muted-2)" font-size="${tam * .16}">/8</tspan></text><text x="50%" y="64%" text-anchor="middle" style="fill:var(--muted)" font-family="Geist" font-size="${tam * .06}">etapas concluídas</text>`;
+    return s + "</svg>";
+  }
+  document.querySelectorAll("[data-anel]").forEach((e) => (e.innerHTML = anel(+e.dataset.anel, +e.dataset.tam)));
+
+  const P = [["Verdeluz nuvem", "04", "Unidade econômica", 3, "há 2 h"], ["Adda (demonstração)", "09", "Apresentação final", 8, "há 5 h", 1], ["Sottile Jalecos", "02", "Contextualização estratégica", 1, "ontem"], ["Sottile Teste", "07", "Mídia paga", 6, "há 3 dias"]];
+  document.getElementById("grade").innerHTML = P.map(([n, num, et, ok, q, pend]) => `<div class="card mini ${pend ? "pendente" : ""}"><div class="nome">${n}<span>···</span></div>
+    <div class="etapa">${ok >= 8 ? "Concluído" : "Etapa " + num}<em>${et}</em></div>
+    <div class="barras">${Array.from({ length: 8 }, (_, i) => `<i class="${i < ok ? "ok" : i === ok ? "at" : ""}"></i>`).join("")}</div>
+    ${pend ? '<span class="selo">● 1 aprovação pendente</span>' : ""}<div class="rodape"><span>${Math.min(ok, 8)} de 8 etapas</span><span>${q}</span></div></div>`).join("");
+
+  const F = [["Contexto", "feita", [["01", "Preparação de contexto", "ok"], ["02", "Contextualização estratégica", "ok"]]], ["Diagnóstico", "atual", [["03", "Diagnóstico de performance", "ok"], ["04", "Unidade econômica", "at"]]], ["Soluções e metas", "", [["05", "Soluções", "bl"], ["06", "Metas e cenários", "bl"]]], ["Mídia e ação", "", []], ["Apresentação", "", []]];
+  const ST = { ok: '<span class="st ok">✓</span>', at: '<span class="st at"></span>', bl: '<span class="st bl">🔒︎</span>' };
+  document.getElementById("ramos").innerHTML = F.map(([f, s, es]) => `<div class="fase ${s}"><span>${f}</span><b>${es.filter((e) => e[2] === "ok").length}/${es.length || 2}</b></div>` +
+    es.map(([n, t, st]) => `<div class="ramo ${st === "at" ? "ativo" : ""} ${st === "bl" ? "bloq" : ""}"><svg width="30" height="30"><path d="M0 0 V14 Q0 30 16 30 H28"/></svg>${ST[st]}<span class="num-e">${n}</span>${t}</div>`).join("")).join("");
+  setTimeout(() => { const a = document.querySelector(".ramo.ativo"), r = document.getElementById("ramos"); r.insertAdjacentHTML("afterbegin", `<div class="marcador" style="top:${a.offsetTop + 5}px"></div>`); }, 50);
+
+  function grafico() {
+    const v = [[3.1, 2.4], [3.4, 2.6], [2.9, 2.5], [3.8, 2.7], [4.2, 2.8], [4.6, 2.9]], m = ["mai", "jun", "jul", "ago", "set", "out"], W = 600, H = 120, bw = 30;
+    let s = `<svg width="100%" viewBox="0 0 ${W} ${H + 20}" style="display:block;height:auto;max-height:160px">`;
+    v.forEach(([a, b], i) => { const x = 30 + i * (W - 60) / 5;
+      s += `<rect x="${x - bw - 2}" y="${H - a / 5 * H}" width="${bw}" height="${a / 5 * H}" rx="5" style="fill:var(--acento-forte)"/><rect x="${x + 2}" y="${H - b / 5 * H}" width="${bw}" height="${b / 5 * H}" rx="5" style="fill:var(--azul)" opacity=".85"/><text x="${x}" y="${H + 15}" style="fill:var(--muted)" font-size="11" text-anchor="middle" font-family="Geist">${m[i]}</text>`; });
+    return s + "</svg>";
+  }
+  document.getElementById("grafico").innerHTML = grafico();
+
+  function aplicar(t) {
+    document.body.className = t;
+    document.querySelectorAll("#temas button").forEach((b) => b.classList.toggle("on", b.dataset.t === t));
+    document.querySelectorAll("[data-alterna]").forEach((b) => (b.innerHTML = t === "escuro" ? LUA : SOL));
+  }
+  let ultimoClaro = "creme";
+  function trocar(t, origem) {
+    if (t !== "escuro") ultimoClaro = t;
+    if (!document.startViewTransition || !origem) return aplicar(t);
+    const r = origem.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+    const raio = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+    document.startViewTransition(() => aplicar(t)).ready.then(() => {
+      document.documentElement.animate({ clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${raio}px at ${x}px ${y}px)`] }, { duration: 650, easing: "cubic-bezier(.6,.1,.2,1)", pseudoElement: "::view-transition-new(root)" });
+    });
+  }
+  document.querySelectorAll("#temas button").forEach((b) => (b.onclick = () => trocar(b.dataset.t, b)));
+  document.querySelectorAll("[data-alterna]").forEach((b) => (b.onclick = () => trocar(document.body.className === "escuro" ? ultimoClaro : "escuro", b)));
+  aplicar("perola"); ultimoClaro = "perola";
+  function relogio() { document.querySelectorAll("[data-relogio]").forEach((r) => (r.textContent = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }))); }
+  relogio(); setInterval(relogio, 30000);
+</script>
+</body>
+</html>

@@ -43,6 +43,13 @@ describe("BarraEtapas", () => {
     await desmontar()
   })
 
+  it("o segmento da etapa atual pulsa de leve (só com movimento liberado)", async () => {
+    const { raiz, desmontar } = await montar({ concluidas: 2, total: 9, atual: true })
+    expect(raiz.querySelector('[data-estado="atual"]')!.className).toContain("motion-safe:animate-pulse")
+    expect(raiz.querySelector('[data-estado="concluida"]')!.className).not.toContain("animate-pulse")
+    await desmontar()
+  })
+
   it("não passa de total mesmo com concluidas maior", async () => {
     const { raiz, desmontar } = await montar({ concluidas: 9, total: 4, atual: true })
     expect(raiz.querySelector('[role="img"]')!.children).toHaveLength(4)

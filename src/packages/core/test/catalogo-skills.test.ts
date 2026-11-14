@@ -7,9 +7,9 @@ import { itensDoCatalogo, lerItemDoCatalogo } from "../src/catalogo-skills"
 import { catalogoReal, RAIZ } from "./ajuda"
 
 describe("catálogo de skills", () => {
-  it("lista 15 itens: 1 de processo, 9 de etapas, 2 de subagentes e 3 de regras, nessa ordem", () => {
+  it("lista 16 itens: 1 de processo, 10 de etapas, 2 de subagentes e 3 de regras, nessa ordem", () => {
     const itens = itensDoCatalogo(RAIZ, catalogoReal())
-    expect(itens).toHaveLength(15)
+    expect(itens).toHaveLength(16)
     expect(itens.map((i) => i.id)).toEqual([
       "visao-geral",
       "etapa:01",
@@ -21,6 +21,7 @@ describe("catálogo de skills", () => {
       "etapa:07",
       "etapa:08",
       "etapa:final",
+      "etapa:10",
       "subagente:analista-dados",
       "subagente:pesquisador-benchmark",
       "regra:padrao-visual",
@@ -29,7 +30,7 @@ describe("catálogo de skills", () => {
     ])
     const grupos = itens.map((i) => i.grupo)
     expect(grupos.filter((g) => g === "Processo")).toHaveLength(1)
-    expect(grupos.filter((g) => g === "Etapas")).toHaveLength(9)
+    expect(grupos.filter((g) => g === "Etapas")).toHaveLength(10)
     expect(grupos.filter((g) => g === "Subagentes")).toHaveLength(2)
     expect(grupos.filter((g) => g === "Regras compartilhadas")).toHaveLength(3)
   })
@@ -131,8 +132,8 @@ describe("fluxogramas do catálogo", () => {
   ]
   const comFluxo = () => itensDoCatalogo(RAIZ, catalogoReal()).filter((i) => i.temFluxo)
 
-  it("há 12 itens com fluxo", () => {
-    expect(comFluxo()).toHaveLength(12)
+  it("há 13 itens com fluxo", () => {
+    expect(comFluxo()).toHaveLength(13)
   })
 
   it("todo item com fluxo tem o arquivo existente e não vazio", () => {
@@ -150,5 +151,12 @@ describe("fluxogramas do catálogo", () => {
       expect(primeira?.trim(), i.id).toBe("flowchart TD")
       for (const c of CLASSDEFS) expect(fluxo, `${i.id}: ${c}`).toContain(c)
     }
+  })
+
+  it("a etapa:10 tem fluxo existente, com flowchart TD e as três classDef", () => {
+    const fluxo = lerItemDoCatalogo(RAIZ, catalogoReal(), "etapa:10")?.fluxo
+    expect(fluxo).toBeTruthy()
+    expect(fluxo!.split("\n").find((l) => l.trim() !== "")?.trim()).toBe("flowchart TD")
+    for (const c of CLASSDEFS) expect(fluxo).toContain(c)
   })
 })

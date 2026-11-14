@@ -1,0 +1,52 @@
+flowchart TD
+  I1["Transcrição da reunião de apresentação e plano da 08 (JSON v2)"]
+  D1{"Existe o plano v2 da 08?"}
+  P1["Pedir para refazer a 08"]
+  P2["Perguntas: datas e participantes"]
+  P3["Fase 1 · Leitura e cruzamento: complementos, conflitos, pontos em aberto e compromissos"]
+  V1["validar_revisao.py --rascunho"]
+  D2{"Saiu ERRO?"}
+  P4["Corrigir o registro da revisão"]
+  P5["Fase 2 · Análise no card"]
+  C1{"Analista aprova?"}
+  P6["Analista decide conflitos e pontos em aberto no chat"]
+  P7["Fase 3 · Aplicar as decisões e revisar em cadeia"]
+  V2["validar_revisao.py final, com o plano final"]
+  P8["Fase 3 · validar_plano_acao.py e gerar_plano_acao.py (plano final)"]
+  D3{"Saiu ERRO?"}
+  C2{"Analista aprova?"}
+  P9["Fase 4 · Relatório (relatorio_revisao.py)"]
+  C3{"Pergunta-guia: sim?"}
+  E1["Entrega: plano final (.docx + .xlsx)"]
+  H1["Handoff: plano final para a entrega formal e slides do deck a atualizar"]
+
+  I1 --> D1
+  D1 -->|"não"| P1
+  D1 -->|"sim"| P2
+  P2 --> P3
+  P3 --> V1
+  V1 --> D2
+  D2 -->|"sim"| P4
+  P4 --> V1
+  D2 -->|"não"| P5
+  P5 --> C1
+  C1 -->|"sim"| P6
+  C1 -->|"não, ajustar"| P3
+  P6 --> P7
+  P7 --> V2
+  V2 --> P8
+  P8 --> D3
+  D3 -->|"sim"| P7
+  D3 -->|"não"| C2
+  C2 -->|"sim"| P9
+  C2 -->|"não, ajustar"| P7
+  P9 --> C3
+  C3 -->|"sim"| E1
+  C3 -->|"não, ajustar"| P7
+  E1 --> H1
+
+  class C1,C2,C3 checkpoint
+  class E1,H1 entrega
+  classDef checkpoint fill:#fff1e6,stroke:#e8803a,color:#7a3d0c
+  classDef subagente fill:#e8f0fd,stroke:#1f4fa8,color:#173a7a
+  classDef entrega fill:#e6f6ec,stroke:#16743b,color:#0f4f28

@@ -2,24 +2,28 @@
 
 ## 08 · Plano de ação: Verdeluz Cosméticos Veganos
 
-Plano aprovado (`plano-de-acao-estrategico.docx`), montado pelo `scripts/preencher_plano_acao_docx.py` a partir do modelo da agência. `validar_solucoes.py --modo plano` sem erro: as 24 soluções do registro viraram ação.
+Plano aprovado em duas versões, documento (`plano-de-acao-estrategico.docx`) e planilha (`plano-de-acao-estrategico.xlsx`), geradas do mesmo JSON pelo `scripts/gerar_plano_acao.py`. `validar_plano_acao.py` sem erro e sem aviso: 25 ações com os 10 campos, e as 24 soluções do registro viraram ação.
 
-### Decisões do analista
+### Decisões do analista (abertura)
 - **Data de hoje:** 22/10/2026. O plano começa na segunda-feira seguinte (26/10/2026), e nenhuma ação cai em período passado.
-- **Cenário-base:** Realista.
-- **Frentes mais urgentes** (viram o Horizonte 1): ruptura do sérum e estoque (P2), eficiência da mídia (P1) e recompra (P3), junto com a mensuração e a margem por SKU, que destravam os demais itens.
-- **Horizontes:** H1 Imediato (Semana 1: 26/10 a 30/10/2026), H2 Curto Prazo (02/11 a 27/11/2026, até a Black Friday, o primeiro pico) e H3 Médio Prazo (DEZ/2026 a MAI/2027, até o Dia das Mães).
-- **Responsáveis:** uma ação tem sempre um responsável principal nomeado no campo "como" (Marina e Luiza pelo cliente, Bruna na operação do site, Caio no conteúdo, Rafael nas campanhas, Agência no desenho e na medição).
+- **Cenário de referência:** Realista, com os números da 06 e da 07. As metas dos 3 meses usam os valores de JAN/27: receita captada de R$ 90.568, conversão de 1,42%, ticket de R$ 201,69, custo por sessão paga de R$ 1,55, dependência de mídia paga de 51,5% e ROAS global de 3,60x. Quebra de 5,5% (média do Realista) e CAC sob o teto de R$ 80.
+- **Frentes prioritárias** (viram o Imediato): ruptura do sérum e estoque (P2), eficiência da mídia (P1) e recompra (P3), junto com a mensuração e a margem por SKU, que destravam o resto.
+- **Quem executa do lado do cliente:** Marina e Luiza (sócias), Bruna (e-commerce e atendimento) e Caio (conteúdo). Os nomes ficam no campo "como"; o dono é disciplina · empresa.
+- **Quem opera a mídia:** a Boomer, com o Rafael (gestor de tráfego freelancer) executando sob a coordenação da Boomer. Sem agência parceira.
+- **Ferramentas:** Nuvemshop, GA4, Google Merchant, ferramenta de e-mail com um fluxo ativo e WhatsApp com consentimento.
+- **Restrições de calendário:** Black Friday em 27/11/2026, prazo de 45 dias do laboratório e contabilidade que fecha o mês no dia 10. Sem troca de plataforma.
+- **Margem de contribuição antes da mídia:** 35% (resposta do analista). Pisos de ROAS calculados pelo gerador: **2,86** sobre a receita aprovada e **3,02** sobre a captada (quebra de 5,5%). O piso é o empate da primeira compra e serve de referência de gatilho, não de meta.
+- **Empresa no campo Dono:** Boomer.
 
 ### O que o plano traz
-- **25 ações:** 6 no Imediato, 11 no Curto Prazo e 8 no Médio Prazo. Duas são de governança, sem solução do registro (envio da margem por SKU e cadência mensal de resultados).
-- **Cobertura das frentes:** Mídia Paga / Canal Principal (3 ações), Eficiência Operacional (6), Produto / Mix / Portfólio (6), Redução de Dependências (5) e Monitoramento e Governança (5, contando a margem e a cadência).
-- **Marcos do Horizonte 1:** teto de CAC e regra de escala (P1.S1), estoque de segurança dos três líderes (P2.S1), alerta de estoque ligado à mídia (P2.S3), painel único de KPIs (P7.S1), margem por SKU da Curva A e cupom e UTM por influenciadora (P7.S2).
-- **Marcos do Horizonte 2:** Black Friday com brinde e lista de espera (P6.S1 e P6.S2), recuperação de carrinho em 3 toques (P5.S1), antifraude e lembrete de PIX (P4.S1 e P4.S2) e régua de reposição (P3.S1).
-- **Marcos do Horizonte 3:** reativação dos 7.176 clientes de compra única em JAN e FEV (P3.S2), novos kits (P8.S1) e revisão da Curva C (P8.S2), antes do pré-aquecimento do Dia das Mães.
+- **Janela de prova:** 26/10/2026 a 25/01/2027. Fim do ciclo: 30/09/2027.
+- **25 ações:** 6 no Imediato (26/10 a 30/10/2026), 11 no Curto prazo (02/11 a 30/11/2026, até a Black Friday) e 8 no Médio prazo (DEZ/2026 a SET/2027). Duas são de governança, sem solução do registro (margem por SKU e reunião mensal de resultados).
+- **Alavancas da meta:** 15 ações, todas com início e entrega dentro da janela de prova. A reativação dos 7.176 clientes de compra única (P3.S2) foi redesenhada para a régua configurada e o primeiro disparo até 08/01/2027; o efeito fica no KPI.
+- **Fora da janela, sem ser alavanca da meta:** novos kits (P8.S1), revisão da Curva C (P8.S2), item adicional no carrinho (P8.S3) e datas menores (P6.S3), que preparam o Dia das Mães e o resto do ano.
+- **Cobertura das frentes:** Mídia Paga / Canal Principal (3 ações), Eficiência Operacional (6), Produto / Mix / Portfólio (6), Redução de Dependências (5) e Monitoramento e Governança (5).
 
 ### Ressalvas
-- A Black Friday (27/11/2026) cai no fim do Horizonte 2. As ações de estoque (P2.S1) precisam estar prontas antes da abertura da lista de espera (02/11).
+- A reposição do sérum pedida na Semana 1 chega em até 45 dias: até lá, o alerta de cobertura protege a verba, e o sérum sai da Black Friday se a cobertura ficar abaixo de 7 dias em 20/11/2026.
+- A regra de escala em degraus vale para aumentos acima da verba mensal do plano de mídia da 07.
 - Os impactos das soluções se sobrepõem e não se somam.
-- As datas dos novos kits e das datas menores dependem da margem por SKU, que a Luiza envia na Semana 1.
-- O título do `.docx` usa o travessão que o modelo da agência já traz.
+- A margem de 35% é fictícia, como todo o cliente de teste.

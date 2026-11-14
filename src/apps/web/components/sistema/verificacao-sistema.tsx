@@ -1,7 +1,8 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import { useCallback, useEffect, useState } from "react"
+import { TriangleAlertIcon } from "lucide-react"
+import { type ReactNode, useCallback, useEffect, useState } from "react"
 import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -13,6 +14,7 @@ import {
   DialogTitle,
 } from "@workspace/ui/components/dialog"
 import { ehPaginaDeLogin } from "@/lib/login"
+import { IconeModal } from "@/components/marca/icone-modal"
 
 interface Sistema {
   claude: { instalado: boolean; versao: string | null; logado: boolean; metodo: string | null; plano: string | null }
@@ -61,27 +63,32 @@ export function VerificacaoSistema() {
       <Dialog open={bloqueado}>
         <DialogContent showCloseButton={false}>
           <DialogHeader>
-            <DialogTitle>Falta configurar esta máquina</DialogTitle>
+            <IconeModal tom="aviso">
+              <TriangleAlertIcon />
+            </IconeModal>
+            <DialogTitle>
+              Falta configurar <em>esta máquina</em>
+            </DialogTitle>
             <DialogDescription>
               {comChaveDaApi
                 ? "O agente roda pela API da Anthropic, a partir do servidor. Resolva os itens abaixo e verifique de novo."
                 : "O agente roda pelo Claude Code instalado aqui. Resolva os itens abaixo e verifique de novo."}
             </DialogDescription>
           </DialogHeader>
-          <ol className="list-decimal space-y-2 pl-5 text-sm">
-            {semChave && <li>Falta a chave da API do agente (ANTHROPIC_API_KEY).</li>}
+          <ul className="grid gap-2">
+            {semChave && <ItemPendente>Falta a chave da API do agente (ANTHROPIC_API_KEY).</ItemPendente>}
             {!comChaveDaApi && !sistema.claude.instalado && (
-              <li>
+              <ItemPendente>
                 Instale o Claude Code (<a className="underline" href="https://docs.claude.com/en/docs/claude-code/setup" target="_blank" rel="noreferrer">guia de instalação</a>).
-              </li>
+              </ItemPendente>
             )}
             {!comChaveDaApi && sistema.claude.instalado && !sistema.claude.logado && (
-              <li>
+              <ItemPendente>
                 No terminal, rode <code className="font-mono">claude auth login</code> e entre com a conta da Boomer.
-              </li>
+              </ItemPendente>
             )}
             {!sistema.python.ok && (
-              <li>
+              <ItemPendente>
                 {nuvem ? (
                   "O Python 3 com openpyxl, pandas e matplotlib precisa estar disponível no servidor."
                 ) : (
@@ -89,9 +96,9 @@ export function VerificacaoSistema() {
                     Instale o Python 3 e rode <code className="font-mono">pip3 install openpyxl pandas matplotlib</code>.
                   </>
                 )}
-              </li>
+              </ItemPendente>
             )}
-          </ol>
+          </ul>
           <DialogFooter>
             <Button onClick={verificar} disabled={verificando}>
               Verificar de novo
@@ -120,5 +127,15 @@ export function VerificacaoSistema() {
         </div>
       )}
     </>
+  )
+}
+
+/** Um item a resolver, em cartão com o ponto âmbar (protótipo 8-modais.html). */
+function ItemPendente({ children }: { children: ReactNode }) {
+  return (
+    <li className="flex items-start gap-3 rounded-[14px] border border-border px-3.5 py-3 text-[13.5px] leading-normal">
+      <span aria-hidden className="mt-[7px] size-2 shrink-0 rounded-full bg-aviso shadow-[0_0_0_4px_var(--aviso-fundo)]" />
+      <div className="min-w-0">{children}</div>
+    </li>
   )
 }

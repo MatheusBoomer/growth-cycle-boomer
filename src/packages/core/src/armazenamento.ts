@@ -4,12 +4,13 @@ import path from "node:path"
 import { ehImagem } from "./biblioteca"
 import type { Comentario } from "./comentarios"
 import { ErroCaminhoForaDoProspect, ErroEntrada, ErroNaoEncontrado, ErroNumeracaoAntiga, ErroProspectExistente } from "./erros"
-import { etapaVazia } from "./maquina-estados"
+import { etapaVazia, recalcularLiberacoes } from "./maquina-estados"
 import { classificarNumeracao } from "./migracao-etapas"
 import type { Acumulado, LinhaPresenca, LinhaUso } from "./metricas/tipos"
 import { normalizarSlug } from "./slug"
 import type { NivelEsforco } from "./modelos"
 import type { NotaSkill } from "./notas-skills"
+import { type FiltroReports, type ImagemReport, MSG_REPORTS_SEM_NUVEM, type MudancaReport, type NovoReport, type Report } from "./reports"
 import type { LinhaConfigModelo, RegistroUsoTurno } from "./nuvem/tipos"
 import { ORDEM_ETAPAS, type Estado, type EtapaId, type EventoConversa } from "./tipos"
 
@@ -50,11 +51,19 @@ export function arquivoVisivel(relativo: string): boolean {
 
 /** Completa um estado gravado antes de etapas ou campos novos existirem. */
 export function normalizarEstado(estado: Estado): Estado {
-  // estado.json gravado antes de uma etapa nova (ex.: 05 · Soluções) não tem a chave dela
+  // estado.json gravado antes de uma etapa nova (ex.: 10 · Revisão pós-apresentação) não tem a chave dela
   const etapas = { ...estado.etapas }
-  for (const id of ORDEM_ETAPAS) etapas[id] ??= etapaVazia("bloqueada")
+  let completou = false
+  for (const id of ORDEM_ETAPAS) {
+    if (etapas[id] == null) {
+      etapas[id] = etapaVazia("bloqueada")
+      completou = true
+    }
+  }
   // estado.json gravado antes do card de perguntas não tem o campo
-  return { ...estado, etapas, perguntas: estado.perguntas ?? [] }
+  const completo = { ...estado, etapas, perguntas: estado.perguntas ?? [] }
+  // a etapa que acabou de entrar nasce bloqueada: se a anterior já está concluída, ela precisa abrir liberada
+  return completou ? recalcularLiberacoes(completo) : completo
 }
 
 /**
@@ -363,6 +372,27 @@ export class FsArmazenamento {
 
   async marcarNotaSkill(_id: number, _resolvida: boolean, _autor: string): Promise<NotaSkill | null> {
     throw new ErroEntrada("A administração de pessoas só existe com os dados na nuvem.")
+  }
+
+  /** Em disco não há reports: todas as operações dizem que só existem na nuvem. */
+  async criarReport(_novo: NovoReport, _autor: string, _imagens: ImagemReport[]): Promise<Report> {
+    throw new ErroEntrada(MSG_REPORTS_SEM_NUVEM)
+  }
+
+  async listarReports(_filtro?: FiltroReports): Promise<Report[]> {
+    throw new ErroEntrada(MSG_REPORTS_SEM_NUVEM)
+  }
+
+  async lerReport(_id: number): Promise<Report | null> {
+    throw new ErroEntrada(MSG_REPORTS_SEM_NUVEM)
+  }
+
+  async atualizarReport(_id: number, _mudanca: MudancaReport, _por: string): Promise<Report | null> {
+    throw new ErroEntrada(MSG_REPORTS_SEM_NUVEM)
+  }
+
+  async baixarImagemReport(_caminho: string): Promise<Uint8Array> {
+    throw new ErroEntrada(MSG_REPORTS_SEM_NUVEM)
   }
 
   /** No disco, conversas e comentários vivem em .app/, que o reposicionamento do cliente de teste já apaga. */

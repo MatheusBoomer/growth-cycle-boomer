@@ -1,3 +1,4 @@
+import { nomeCurto } from "@workspace/core/autenticacao"
 import type { EtapaId, ResumoProspect } from "@workspace/core/tipos"
 import { ORDEM_ETAPAS } from "@workspace/core/tipos"
 import { normalizarEmail } from "@workspace/core/papeis"
@@ -10,6 +11,8 @@ export interface FiltroProspects {
   etapas: EtapaId[]
   /** Só quem tem aprovação pendente. */
   soPendentes: boolean
+  /** A busca também olha o analista (só admin: para os outros o dono é sempre a própria pessoa). */
+  buscaPorDono?: boolean
   /** E-mail de quem está usando a tela; não filtra sozinho (a tela o usa para montar `donos`). */
   email: string | null
 }
@@ -21,13 +24,15 @@ function simplificar(texto: string): string {
   return texto.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase()
 }
 
-/** Filtros da home: busca por nome, dono, etapa e pendência. Puro, para testar sem tela. */
-export function filtrarProspects(lista: ResumoProspect[], { busca, donos, etapas, soPendentes }: FiltroProspects): ResumoProspect[] {
+/** Filtros da home: busca por nome, etapa ou analista; dono, etapa e pendência. Puro, para testar sem tela. */
+export function filtrarProspects(lista: ResumoProspect[], { busca, donos, etapas, soPendentes, buscaPorDono = false }: FiltroProspects): ResumoProspect[] {
   const termo = simplificar(busca.trim())
   const donosAceitos = new Set(donos.map(normalizarEmail))
   const etapasAceitas = new Set<EtapaId>(etapas)
   return lista.filter((p) => {
-    if (!simplificar(p.nome).includes(termo)) return false
+    // Nome, etapa e, para admin, o analista (para os outros o dono é sempre a própria pessoa e puxaria a lista inteira).
+    const onde = [p.nome, p.rotuloEtapaAtual ?? "", buscaPorDono && p.dono ? nomeCurto(p.dono) : ""].map(simplificar)
+    if (termo !== "" && !onde.some((t) => t.includes(termo))) return false
     if (donosAceitos.size > 0 && (p.dono === null || !donosAceitos.has(normalizarEmail(p.dono)))) return false
     if (etapasAceitas.size > 0 && (p.etapaAtual === null || !etapasAceitas.has(p.etapaAtual))) return false
     if (soPendentes && p.pendencias <= 0) return false

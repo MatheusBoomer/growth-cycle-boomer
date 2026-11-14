@@ -7,7 +7,6 @@ import { formatarDuracao, formatarUsd } from "@workspace/core/metricas/formato"
 import type { ListaDeModelos } from "@workspace/core/modelos"
 import { compararComMedia, type MediaEtapa, type MetricasEtapa } from "@workspace/core/metricas/resumo"
 import { tempoUtil } from "@workspace/core/metricas/tempo"
-import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Button } from "@workspace/ui/components/button"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@workspace/ui/components/table"
@@ -15,6 +14,9 @@ import { api, mensagemDeErro, type DetalheProjeto as Detalhe } from "@/lib/api"
 import { Termo } from "./legenda-termos"
 import { formatarDataHora, MarcaEstimado, type EtapaRotulada } from "./painel-projetos"
 import { SeloModelo } from "./selo-modelo"
+import { AvisoAdmin } from "@/components/admin/aviso-admin"
+import { TituloDestacado } from "@/components/trabalho/barra-visualizador"
+import { partesDoRotulo } from "@/lib/home"
 
 /** O que a coluna de modelos mostra quando a etapa não tem custo por modelo: custo só estimado (linhas antigas) ou sem o detalhe. */
 export function textoSemModelos(m: MetricasEtapa): string {
@@ -50,9 +52,9 @@ function BarraCusto({ tipo, valor, maior }: { tipo: "custo-etapa" | "custo-pesso
 
 function Numero({ rotulo, children }: { rotulo: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-1 rounded-xl border p-4">
-      <dt className="text-muted-foreground text-xs font-medium">{rotulo}</dt>
-      <dd className="text-xl font-semibold tracking-tight tabular-nums">{children}</dd>
+    <div className="flex flex-col gap-1 rounded-[18px] border border-border bg-muted/30 px-4 py-3.5">
+      <dt className="text-[10.5px] tracking-[0.14em] text-muted-foreground uppercase">{rotulo}</dt>
+      <dd className="mt-1.5 text-[30px] leading-none font-medium tracking-[-0.03em] tabular-nums">{children}</dd>
     </div>
   )
 }
@@ -88,9 +90,7 @@ export function DetalheProjeto({ slug, etapas }: { slug: string; etapas: EtapaRo
 
   if (erro) {
     return (
-      <Alert>
-        <AlertDescription>{erro}</AlertDescription>
-      </Alert>
+      <AvisoAdmin mensagem={erro} aba="detalhe" />
     )
   }
   if (!detalhe) return <Skeleton className="h-64 w-full" />
@@ -113,12 +113,14 @@ export function DetalheProjeto({ slug, etapas }: { slug: string; etapas: EtapaRo
             <Link href="/admin/projetos" className="text-muted-foreground hover:text-foreground text-xs font-medium">
               Todos os projetos
             </Link>
-            <h2 className="mt-1 text-lg font-semibold tracking-tight">{projeto.nome}</h2>
+            <h2 className="mt-1 text-[30px] leading-[1.1] font-medium tracking-[-0.03em] [&_em]:text-[33px]">
+              <TituloDestacado texto={projeto.nome} />
+            </h2>
             <p className="text-muted-foreground text-sm">
               {projeto.dono ? nomeCurto(projeto.dono) : "Sem dono"} · {projeto.rotuloEtapaAtual} · última atividade {formatarDataHora(metricas.ultimaAtividade).toLowerCase()}
             </p>
           </div>
-          <Button render={<Link href={`/prospects/${encodeURIComponent(slug)}`} />} nativeButton={false}>
+          <Button variant="outline" render={<Link href={`/prospects/${encodeURIComponent(slug)}`} />} nativeButton={false}>
             Abrir projeto
           </Button>
         </div>
@@ -134,11 +136,13 @@ export function DetalheProjeto({ slug, etapas }: { slug: string; etapas: EtapaRo
       </section>
 
       {semUso ? (
-        <p className="text-muted-foreground text-sm">Sem uso registrado ainda</p>
+        <p className="rounded-[18px] border border-dashed border-border px-5 py-6 text-center text-sm text-muted-foreground">Sem uso registrado ainda</p>
       ) : (
         <>
           <section className="flex flex-col gap-3">
-            <h2 className="text-base font-semibold tracking-tight">Por etapa</h2>
+            <h2 className="text-[15px] font-medium">
+              Por <em className="font-serif text-[17px] font-normal text-link-acao italic">etapa</em>
+            </h2>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -164,24 +168,26 @@ export function DetalheProjeto({ slug, etapas }: { slug: string; etapas: EtapaRo
                   const modelos = Object.entries(m.custo.modelos)
                   return (
                     <TableRow key={etapa.id}>
-                      <TableCell className="font-medium">{etapa.rotulo}</TableCell>
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="font-medium">
+                        <EtapaComNumero rotulo={etapa.rotulo} />
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-[12.5px] tabular-nums">
                         {formatarUsd(m.custo.usd)}
                         {m.custo.estimado && <MarcaEstimado />}
                         <BarraCusto tipo="custo-etapa" valor={m.custo.usd} maior={maiorCustoEtapa} />
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">{m.custo.turnos}</TableCell>
+                      <TableCell className="text-right font-mono text-[12.5px] tabular-nums">{m.custo.turnos}</TableCell>
                       <TableCell className="text-muted-foreground text-xs">
                         {modelos.length === 0 ? textoSemModelos(m) : modelos.map(([modelo, usd]) => (
                           <div key={modelo} className="flex items-center gap-1.5 py-0.5">
                             <SeloModelo modelo={modelo} lista={lista ?? SEM_LISTA} />
-                            <span className="tabular-nums">{formatarUsd(usd)}</span>
+                            <span className="font-mono tabular-nums">{formatarUsd(usd)}</span>
                           </div>
                         ))}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">{formatarDuracao(m.tempo.agente)}</TableCell>
-                      <TableCell className="text-right tabular-nums">{formatarDuracao(m.tempo.ativo)}</TableCell>
-                      <TableCell className="text-right tabular-nums">{formatarDuracao(m.tempo.ocioso)}</TableCell>
+                      <TableCell className="text-right font-mono text-[12.5px] tabular-nums">{formatarDuracao(m.tempo.agente)}</TableCell>
+                      <TableCell className="text-right font-mono text-[12.5px] tabular-nums">{formatarDuracao(m.tempo.ativo)}</TableCell>
+                      <TableCell className="text-right font-mono text-[12.5px] tabular-nums">{formatarDuracao(m.tempo.ocioso)}</TableCell>
                       <TableCell className="text-muted-foreground text-xs">
                         {comparacao.custo && <div>Custo: {comparacao.custo}</div>}
                         {comparacao.tempo && <div>Tempo útil: {comparacao.tempo}</div>}
@@ -194,7 +200,9 @@ export function DetalheProjeto({ slug, etapas }: { slug: string; etapas: EtapaRo
           </section>
 
           <section className="flex flex-col gap-3">
-            <h2 className="text-base font-semibold tracking-tight">Por pessoa</h2>
+            <h2 className="text-[15px] font-medium">
+              Por <em className="font-serif text-[17px] font-normal text-link-acao italic">pessoa</em>
+            </h2>
             {metricas.porPessoa.length === 0 ? (
               <p className="text-muted-foreground text-sm">Nenhuma pessoa registrada.</p>
             ) : (
@@ -218,13 +226,13 @@ export function DetalheProjeto({ slug, etapas }: { slug: string; etapas: EtapaRo
                   {metricas.porPessoa.map((p) => (
                     <TableRow key={p.email}>
                       <TableCell className="font-medium">{nomeCurto(p.email)}</TableCell>
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="text-right font-mono text-[12.5px] tabular-nums">
                         {formatarUsd(p.custoUsd)}
                         <BarraCusto tipo="custo-pessoa" valor={p.custoUsd} maior={maiorCustoPessoa} />
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">{formatarDuracao(p.tempo.ativo)}</TableCell>
-                      <TableCell className="text-right tabular-nums">{formatarDuracao(p.tempo.ocioso)}</TableCell>
-                      <TableCell className="text-right tabular-nums">{formatarDuracao(p.tempo.descartado)}</TableCell>
+                      <TableCell className="text-right font-mono text-[12.5px] tabular-nums">{formatarDuracao(p.tempo.ativo)}</TableCell>
+                      <TableCell className="text-right font-mono text-[12.5px] tabular-nums">{formatarDuracao(p.tempo.ocioso)}</TableCell>
+                      <TableCell className="text-right font-mono text-[12.5px] tabular-nums">{formatarDuracao(p.tempo.descartado)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -234,5 +242,16 @@ export function DetalheProjeto({ slug, etapas }: { slug: string; etapas: EtapaRo
         </>
       )}
     </div>
+  )
+}
+
+/** "03 · Diagnóstico de performance" com o número em mono e apagado. */
+function EtapaComNumero({ rotulo }: { rotulo: string }) {
+  const { numero, titulo } = partesDoRotulo(rotulo)
+  return (
+    <>
+      {numero && <span className="mr-1.5 font-mono text-[11px] font-normal text-muted-foreground">{numero}</span>}
+      {titulo}
+    </>
   )
 }

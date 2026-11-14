@@ -1,16 +1,15 @@
 "use client"
 
-import { LockIcon } from "lucide-react"
+import { LockIcon, PlayIcon } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import type { EtapaId, RespostaEstado } from "@workspace/core/tipos"
 import { Button } from "@workspace/ui/components/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card"
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@workspace/ui/components/empty"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { CardInsumo } from "@/components/cards/card-insumo"
 import { PainelKit } from "@/components/teste/painel-kit"
 import { api, mensagemDeErro } from "@/lib/api"
+import { passosDoQueEsperar } from "@/lib/o-que-esperar"
 
 export function EtapaLiberada({
   slug,
@@ -25,16 +24,20 @@ export function EtapaLiberada({
   const etapaCat = dados.catalogo.etapas.find((e) => e.id === etapa)!
 
   if (dados.estado.etapas[etapa].status === "bloqueada") {
+    const indice = dados.catalogo.etapas.findIndex((e) => e.id === etapa)
+    const anterior = indice > 0 ? dados.catalogo.etapas[indice - 1] : undefined
     return (
-      <Empty className="flex-1">
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <LockIcon />
-          </EmptyMedia>
-          <EmptyTitle>Etapa bloqueada</EmptyTitle>
-          <EmptyDescription>Conclua a etapa anterior para liberar esta.</EmptyDescription>
-        </EmptyHeader>
-      </Empty>
+      <div className="flex flex-1 flex-col items-center justify-center gap-2.5 p-10 text-center">
+        <div className="mb-1 grid size-12 place-items-center rounded-2xl border border-border bg-muted/40 text-muted-foreground [&_svg]:size-5">
+          <LockIcon />
+        </div>
+        <h2 className="text-[20px] font-medium tracking-[-0.02em]">
+          Etapa <em className="font-serif font-normal text-link-acao italic">bloqueada</em>
+        </h2>
+        <p className="max-w-[300px] text-[13.5px] text-muted-foreground">
+          {anterior?.numero ? `Conclua a Etapa ${anterior.numero} para liberar esta.` : "Conclua a etapa anterior para liberar esta."}
+        </p>
+      </div>
     )
   }
 
@@ -49,46 +52,67 @@ export function EtapaLiberada({
     }
   }
 
+  const passos = passosDoQueEsperar(etapaCat.oQueEsperar)
+  const temArquivos = etapaCat.insumos.length > 0 || Boolean(dados.estado.teste)
+  const etapaOcupada = dados.turnoAtivo === null ? null : dados.catalogo.etapas.find((e) => e.id === dados.turnoAtivo)
+
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
-      <div className="mx-auto flex max-w-2xl flex-col gap-6 p-8">
-        <div>
-          <p className="text-muted-foreground text-sm">{etapaCat.numero ? `Etapa ${etapaCat.numero}` : "Etapa final"}</p>
-          <h2 className="text-2xl font-semibold">{etapaCat.titulo}</h2>
-          <p className="text-muted-foreground mt-2">{etapaCat.descricao}</p>
-        </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>O que esperar desta etapa</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>{etapaCat.oQueEsperar}</p>
-          </CardContent>
-        </Card>
-        {etapaCat.insumos.length > 0 && (
-          <div className="space-y-3">
-            <h3 className="font-medium">Arquivos desta etapa</h3>
-            <p className="text-muted-foreground text-sm">Pode enviar agora, quando o agente pedir ou anexando no chat depois que a conversa começar.</p>
-            {etapaCat.insumos.map((ref) => (
-              <CardInsumo
-                key={ref.id}
-                slug={slug}
-                etapa={etapa}
-                insumo={dados.catalogo.insumos.find((i) => i.id === ref.id)!}
-                obrigatorio={ref.obrigatorio}
-                estadoInsumo={dados.estado.insumos.find((i) => i.etapa === etapa && i.insumoId === ref.id) ?? null}
-                temModelo={dados.modelosDisponiveis.includes(ref.id)}
-              />
+      {/* O nome da etapa já está no cabeçalho logo acima. Uma coluna só: o que esperar, os arquivos e, por último, o botão. */}
+      <div className="mx-auto flex max-w-2xl flex-col gap-8 p-6 sm:p-8">
+        <div className="min-w-0">
+          <p className="text-[10.5px] tracking-[0.14em] text-muted-foreground uppercase">Antes de começar</p>
+          <h2 className="mt-2 text-[26px] leading-[1.15] font-medium tracking-[-0.03em]">
+            O que esperar <em className="font-serif font-normal text-link-acao italic">desta etapa</em>
+          </h2>
+          <ol className="mt-5 grid gap-2.5">
+            {passos.map((p, i) => (
+              <li key={p} className="flex gap-3 text-[13.5px] leading-normal text-muted-foreground">
+                <span className="grid size-6 shrink-0 place-items-center rounded-full border border-border font-mono text-[11px] text-link-acao">
+                  {i + 1}
+                </span>
+                <span className="pt-0.5">{p}</span>
+              </li>
             ))}
+          </ol>
+        </div>
+        {temArquivos && (
+          <div data-arquivos className="grid min-w-0 content-start gap-2.5 empty:hidden">
+            {etapaCat.insumos.length > 0 && (
+              <>
+                <p className="text-[10.5px] tracking-[0.14em] text-muted-foreground uppercase">Arquivos desta etapa</p>
+                <p className="text-[13px] leading-normal text-muted-foreground">Pode enviar agora, quando o agente pedir ou anexando no chat.</p>
+                {etapaCat.insumos.map((ref) => (
+                  <CardInsumo
+                    key={ref.id}
+                    slug={slug}
+                    etapa={etapa}
+                    insumo={dados.catalogo.insumos.find((i) => i.id === ref.id)!}
+                    obrigatorio={ref.obrigatorio}
+                    estadoInsumo={dados.estado.insumos.find((i) => i.etapa === etapa && i.insumoId === ref.id) ?? null}
+                    temModelo={dados.modelosDisponiveis.includes(ref.id)}
+                  />
+                ))}
+              </>
+            )}
+            {dados.estado.teste && <PainelKit slug={slug} etapa={etapa} />}
           </div>
         )}
-        {dados.estado.teste && <PainelKit slug={slug} etapa={etapa} />}
-        <p className="text-muted-foreground text-sm">O agente começa já com o dossiê das etapas anteriores (decisões e entregáveis aprovados).</p>
-        <div className="flex items-center gap-3">
-          <Button size="lg" onClick={iniciar} disabled={iniciando || dados.turnoAtivo !== null}>
-            {iniciando && <Spinner />} Iniciar etapa
-          </Button>
-          {dados.turnoAtivo !== null && <span className="text-muted-foreground text-sm">O agente está respondendo em outra etapa…</span>}
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-3.5">
+            <Button size="lg" className="h-11 px-5.5 text-sm" onClick={iniciar} disabled={iniciando || dados.turnoAtivo !== null}>
+              {iniciando ? <Spinner /> : <PlayIcon className="fill-current" />} Iniciar etapa
+            </Button>
+            {dados.turnoAtivo === null && (
+              <span className="text-[12.5px] text-muted-foreground">O agente começa já com o dossiê das etapas anteriores.</span>
+            )}
+          </div>
+          {etapaOcupada && (
+            <p className="mt-3 flex items-center gap-2 text-[13px] text-muted-foreground">
+              <Spinner className="text-link-acao" />
+              O agente está respondendo {etapaOcupada.numero ? `na Etapa ${etapaOcupada.numero}` : "em outra etapa"}. Assim que terminar, dá para iniciar.
+            </p>
+          )}
         </div>
       </div>
     </div>

@@ -156,7 +156,7 @@ describe("PainelProjetos", () => {
   it("tudo zero mostra o estado vazio do período", async () => {
     painelMetricas.mockResolvedValue(resposta(zerado()))
     const m = await montar()
-    expect(m.raiz.textContent).toContain("Ainda não há uso registrado neste período")
+    expect(m.raiz.textContent).toContain("Nenhum uso neste período")
     expect(m.raiz.querySelector('[aria-label="Filtros do painel"]')).not.toBeNull()
     expect(m.raiz.querySelector('[aria-label="Números do período"]')).toBeNull()
     await m.desmontar()

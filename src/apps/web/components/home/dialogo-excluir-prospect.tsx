@@ -1,5 +1,6 @@
 "use client"
 
+import { Trash2Icon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -17,6 +18,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Field, FieldError, FieldLabel } from "@workspace/ui/components/field"
 import { Input } from "@workspace/ui/components/input"
 import { api, mensagemDeErro } from "@/lib/api"
+import { IconeModal } from "@/components/marca/icone-modal"
 
 export function DialogoExcluirProspect({
   prospect,
@@ -60,7 +62,12 @@ export function DialogoExcluirProspect({
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Excluir “{prospect.nome}”?</AlertDialogTitle>
+          <IconeModal tom="perigo">
+            <Trash2Icon />
+          </IconeModal>
+          <AlertDialogTitle>
+            Excluir <em>{prospect.nome}?</em>
+          </AlertDialogTitle>
           <AlertDialogDescription>
             A pasta do prospect, com insumos, conversas e entregáveis aprovados, vai para a Lixeira do macOS. Dá para recuperar por lá.
           </AlertDialogDescription>

@@ -172,19 +172,25 @@ Nada a enviar nesta etapa.
 
 ### O que responder ao agente
 
-O agente começa pedindo três confirmações. Respostas usadas na produção deste cliente:
+O agente mostra o que já sabe e confirma as 9 perguntas da abertura, uma por mensagem. Respostas usadas na produção deste cliente:
 
-- **Data de hoje:** 22/10/2026. O plano começa na segunda-feira seguinte, 26/10/2026. Se você fizer o teste em outra data, diga a data real e peça que nenhuma ação caia em período passado.
-- **Cenário-base:** Realista.
-- **Frentes mais urgentes:** a ruptura do sérum e o estoque (P2), a eficiência da mídia paga (P1) e a recompra e o CRM (P3). A mensuração (P7) e o envio da margem por SKU entram na primeira semana, porque destravam o resto.
-- **Responsáveis:** o plano deve nomear a Marina e a Luiza pelo cliente, a Bruna na operação do site, o Caio no conteúdo e o Rafael nas campanhas. A Agência cuida do desenho e da medição.
-- **Horizontes:** Imediato (primeira semana), Curto Prazo (até a Black Friday de 27/11/2026) e Médio Prazo (até o Dia das Mães de 2027).
-- **Cobertura:** o validador exige que as 24 soluções do registro virem ação. Se o agente deixar alguma de fora, peça para incluir; nunca remova uma solução do registro.
-- Confira o `.docx` gerado (25 ações, 3 horizontes e a tabela-resumo) e aprove.
+1. **Data de hoje:** 22/10/2026. O plano começa na segunda-feira seguinte, 26/10/2026, e a janela de prova vai de 26/10/2026 a 25/01/2027. Se você fizer o teste em outra data, diga a data real e peça que nenhuma ação caia em período passado.
+2. **Cenário de referência:** Realista, com os números aprovados na 06 e na 07 (metas dos 3 meses pelos valores de JAN/27).
+3. **Frentes prioritárias:** a ruptura do sérum e o estoque (P2), a eficiência da mídia paga (P1) e a recompra e o CRM (P3). A mensuração (P7) e o envio da margem por SKU entram na primeira semana, porque destravam o resto.
+4. **Quem executa do lado do cliente:** Marina e Luiza (sócias), Bruna (e-commerce e atendimento) e Caio (conteúdo). Os nomes ficam no "como"; o dono é disciplina · empresa.
+5. **Quem opera a mídia:** a Boomer, com o Rafael (gestor de tráfego freelancer) executando sob a coordenação da Boomer. Não há agência parceira.
+6. **Ferramentas:** Nuvemshop, GA4, Google Merchant, ferramenta de e-mail (um fluxo de carrinho e a newsletter) e WhatsApp com consentimento.
+7. **Restrições de calendário:** Black Friday em 27/11/2026, prazo de 45 dias do laboratório e contabilidade que fecha o mês no dia 10. Sem troca de plataforma.
+8. **Margem de contribuição antes da mídia:** 35%. Com a quebra de 5,5% do Realista, o gerador calcula os pisos de ROAS de 2,86 (receita aprovada) e 3,02 (captada).
+9. **Empresa no campo Dono:** Boomer.
+
+- **Cobertura:** o validador exige que as 24 soluções do registro virem ação e que as alavancas da meta caibam na janela de prova. Se o agente deixar alguma solução de fora, peça para incluir; nunca remova uma solução do registro.
+- Confira o .docx e o .xlsx gerados (25 ações com os 10 campos, 3 horizontes, a abertura com os pisos de ROAS e a tabela-resumo; os dois com as mesmas ações, datas e números) e aprove os dois.
+- Na pergunta-guia, responda "sim".
 
 ### Handoff
 
-Nesta sessão, o plano de ação ficou fechado, e esta era a última etapa de conteúdo! Não preciso de nada novo. O próximo passo é montar a apresentação final, um arquivo .pptx editável no molde da agência, com o roteiro slide a slide para você aprovar antes.
+Nesta sessão, o plano de ação ficou fechado, em documento e planilha, e esta era a última etapa de conteúdo! Não preciso de nada novo. O próximo passo é montar a apresentação final, um arquivo .pptx editável no molde da agência, com o roteiro slide a slide para você aprovar antes.
 
 Quando estiver pronto, rode `/apresentacao-final`.
 
@@ -201,9 +207,38 @@ O agente confere se há material das cinco seções do deck, escreve o roteiro s
 - **Escala:** deck de cerca de 55 slides, com os três cenários e o Realista em destaque. Todo gráfico e toda tabela aprovados entram, um por slide, e todo problema do registro vira um slide de desafio.
 - **Pilares do plano (o agente pede o seu aval):** aquisição eficiente (P1, P4 e P5), produto e estoque (P2 e P8) e retenção (P3, P6 e P7). As iniciativas podem ficar num único slide de seis itens.
 - **Plano de ação:** três slides de texto, um por horizonte, e o `.docx` completo anexo à entrega.
+- **Atenção (fixture):** o `.pptx` aprovado deste cliente de teste não foi regenerado depois da migração para o plano de ação v2; a seção 05 do deck ainda mostra "(Agência)" e as datas antigas dos horizontes H2 e H3, enquanto o roteiro já traz os nomes e as datas novos.
 - **Checklist de qualidade (Regra 8):** confirme que os quatro itens estão atendidos: problema com 1 a 3 soluções, hipótese antes da ação, impacto em R$ ou % e cada solução virando ação do plano.
 - Aprove o roteiro e, depois, a apresentação. Se o agente avisar que um texto não cabe numa caixa, peça para encurtar a frase.
 
 ### Handoff
 
 Esta é a última etapa do processo. A apresentação está pronta em entrega/apresentacao-final.pptx e abre no Google Slides (Arquivo, Importar slides) ou no PowerPoint. Antes de enviar ao prospect, vale abrir o arquivo e conferir os slides de tabela ao lado de texto, onde o título pode ficar sob a imagem. Para o plano de ação, suba o `.docx` no Drive se quiser o link no slide. Também é bom fechar com o cliente as pendências da Semana 1: a margem por SKU da Curva A, o brinde da Black Friday, o estoque de segurança e o segundo fornecedor de embalagem.
+
+## Etapa 10
+
+### O que enviar
+
+- **Transcrição da reunião de apresentação:** o arquivo `apresentacao-transcricao-bruta.docx` da pasta do kit (reunião fictícia de cerca de 34 minutos).
+
+### O que responder ao agente
+
+O agente lê a transcrição, confirma três dados (um por mensagem) e depois mostra a análise da reunião, com complementos, conflitos, pontos em aberto e compromissos. Respostas usadas na produção deste cliente:
+
+1. **Data de hoje:** 23/11/2026. Se você fizer o teste em outra data, diga a data real: nenhuma ação nova ou alterada pode começar antes dela.
+2. **Data da reunião de apresentação:** 22/11/2026.
+3. **Participantes:** pela Boomer, Camila (estrategista) e Rafael (gestor de tráfego, freelancer sob coordenação da Boomer); pela Verdeluz, Marina e Luiza (sócias). Os nomes ficam como a transcrição identifica quem fala.
+
+Confira os trechos citados na transcrição e aprove a análise. Decisões usadas na produção deste cliente:
+
+- **Conflito 1 (cupom e UTM por influenciadora, "já testamos cupom de primeira compra"):** Opção C. Antes, confira se o agente investigou como foi o teste (duas parceiras, três semanas, 10% na primeira compra, sem link) e se disse que ele não invalida a recomendação. Cupom sem desconto extra, com brinde, mais a UTM no link da bio, e 60 dias antes de julgar.
+- **Conflito 2 (Curva C antes do Dia das Mães):** Opção C. Revisão em FEV e MAR/2027 como previsto e descontinuação só a partir de JUN/2027.
+- **Ponto em aberto 1 (assinatura do sérum, "vou pensar"):** confirmar com a Marina até 11/12/2026, na primeira reunião de resultados.
+- **Ponto em aberto 2 (TikTok, "vamos ver"):** descartar. O TikTok segue orgânico, sem linha na verba aprovada na 07, e volta à pauta se crescer.
+- **Compromisso fora do escopo (texto do rótulo do sérum):** a Camila faz uma leitura única, como cortesia, e alinha na reunião de 11/12/2026 que revisão de rótulo não faz parte do Growth Cycle.
+- Confira o documento e a planilha do plano final (25 ações; mudam as ações 6, 17, 18, 21 e 23, e a ação 6 passa ao Curto prazo) e aprove os dois.
+- Na pergunta-guia, responda "sim".
+
+### Handoff
+
+Nesta sessão, o plano de ação foi revisado com o que o cliente trouxe na reunião de apresentação. O plano final, em documento Word e planilha Excel, é o que vai para a entrega formal ao cliente; o plano apresentado fica guardado como registro. Não preciso de mais nada: esta era a última etapa do Growth Cycle.

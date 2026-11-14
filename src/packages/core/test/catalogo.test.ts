@@ -12,15 +12,32 @@ import type { Catalogo } from "../src/tipos"
 import { catalogoReal } from "./ajuda"
 
 describe("catálogo", () => {
-  it("carrega o etapas.json real com as 9 etapas na ordem", () => {
+  it("carrega o etapas.json real com as 10 etapas na ordem", () => {
     const c = catalogoReal()
-    expect(c.etapas.map((e) => e.id)).toEqual(["01", "02", "03", "04", "05", "06", "07", "08", "final"])
+    expect(c.etapas.map((e) => e.id)).toEqual(["01", "02", "03", "04", "05", "06", "07", "08", "final", "10"])
     expect(etapaDoCatalogo(c, "03").skill).toBe("03-diagnostico-performance")
     expect(etapaDoCatalogo(c, "05").skill).toBe("05-solucoes")
     expect(etapaDoCatalogo(c, "07").skill).toBe("07-midia-paga")
     expect(etapaDoCatalogo(c, "08").skill).toBe("08-plano-de-acao")
     expect(etapaDoCatalogo(c, "final").skill).toBe("09-apresentacao-final")
+    expect(etapaDoCatalogo(c, "10").skill).toBe("10-revisao-pos-apresentacao")
     expect(insumoDoCatalogo(c, "clientes-historico").sensivel).toBe(true)
+  })
+
+  it("a etapa 10 pede a transcrição da apresentação e sai em fase própria", () => {
+    const c = catalogoReal()
+    const e = etapaDoCatalogo(c, "10")
+    expect(e).toMatchObject({ fase: "Pós-apresentação", numero: "10", titulo: "Revisão pós-apresentação", rotuloStatus: "10 · Revisão pós-apresentação", subagentes: [] })
+    expect(e.insumos).toEqual([{ id: "apresentacao-transcricao", obrigatorio: true }])
+    expect(insumoDoCatalogo(c, "apresentacao-transcricao")).toMatchObject({
+      tipo: "arquivo",
+      formatos: [".docx", ".txt", ".md"],
+      destino: "contexto/brutos/apresentacao-transcricao-bruta",
+      modelo: null,
+      validador: null,
+      sensivel: false,
+    })
+    expect(() => validarCatalogo(c)).not.toThrow()
   })
 
   it("recusa etapa referenciando insumo inexistente", () => {
@@ -53,7 +70,7 @@ describe("catálogo", () => {
     expect(() => validarCatalogo(c)).toThrow(/subagentes/)
   })
 
-  it("agrupa as 9 etapas do etapas.json real em 5 fases, na ordem de aparição", () => {
+  it("agrupa as 10 etapas do etapas.json real em 6 fases, na ordem de aparição", () => {
     const c = catalogoReal()
     expect(c.etapas.every((e) => typeof e.fase === "string" && e.fase.length > 0)).toBe(true)
     expect([...new Set(c.etapas.map((e) => e.fase))]).toEqual([
@@ -62,6 +79,7 @@ describe("catálogo", () => {
       "Soluções e metas",
       "Mídia e ação",
       "Apresentação",
+      "Pós-apresentação",
     ])
     expect(c.etapas.map((e) => e.fase)).toEqual([
       "Contexto",
@@ -73,6 +91,7 @@ describe("catálogo", () => {
       "Mídia e ação",
       "Mídia e ação",
       "Apresentação",
+      "Pós-apresentação",
     ])
   })
 
@@ -102,7 +121,8 @@ describe("catálogo", () => {
     expect(proximaEtapa("06")).toBe("07")
     expect(proximaEtapa("07")).toBe("08")
     expect(proximaEtapa("08")).toBe("final")
-    expect(proximaEtapa("final")).toBeNull()
+    expect(proximaEtapa("final")).toBe("10")
+    expect(proximaEtapa("10")).toBeNull()
   })
 
   it("erra com mensagem clara para id desconhecido", () => {

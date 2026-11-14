@@ -116,10 +116,11 @@ describe("GET /auth/entrar", () => {
     expect(r.headers.get("location")).toBe("http://127.0.0.1:3000/login?erro=falha")
   })
 
-  it("modo off: não há login, vai para / sem tocar no Supabase", async () => {
+  it("modo off (local): entra direto na home, com a entrada de boas-vindas, sem tocar no Supabase", async () => {
     vi.stubEnv("PLANEJAMENTO_AUTH", "")
     const r = await GET(req("/auth/entrar"))
     expect(r.headers.get("location")).toBe("http://127.0.0.1:3000/")
+    expect((r as unknown as { cookies: { get: (n: string) => unknown } }).cookies.get("gc-boas-vindas")).toMatchObject({ value: "1", path: "/" })
     expect(createServerClient).not.toHaveBeenCalled()
   })
 })
