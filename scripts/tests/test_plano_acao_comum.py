@@ -58,8 +58,9 @@ def test_constantes_e_acoes():
 
 
 def test_plano_valido_cumpre_as_regras_do_exemplo():
-    # Sem erros e sem avisos: o exemplo atende a todas as regras do validador.
-    assert validar(ex.plano_valido(), ex.registro_valido()) == ([], [])
+    # Sem erros e só o aviso de plano sem ondas: o exemplo atende a todas as regras do validador.
+    erros, avisos = validar(ex.plano_valido(), ex.registro_valido())
+    assert erros == [] and len(avisos) == 1 and "sem ondas" in avisos[0]
 
 
 def test_ler_data_rejeita_digitos_unicode():
