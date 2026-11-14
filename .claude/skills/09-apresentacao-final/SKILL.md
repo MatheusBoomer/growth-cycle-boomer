@@ -44,6 +44,7 @@ dos campos é o `ESQUEMA` em `scripts/gerar_apresentacao.py`:
 | `bullets` | `titulo`, `subtitulo`, `itens` (1 a 6) |
 | `cartoes` | `titulo`, `subtitulo`, `cartoes` (exatamente 3) |
 | `desafio` | `titulo`, `problema`, `hipoteses` (1 a 5), `solucoes` (1 a 3), `impacto`; `problema_id` obrigatório quando houver registro |
+| `tabela_plano` | `linhas` (1 a 16 ações: `num`, `acao`, `horizonte`, `quando`, `quem`, `frente`), `link` (opcional, https; leva ao documento detalhado) |
 | `benchmark` | `titulo`, `subtitulo`, `concorrente`, `imagens` (1 a 3), `conclusoes` (1 a 3), `link` (tipo reservado, sem uso no roteiro padrão) |
 | `obrigado` | nenhum |
 
@@ -61,7 +62,7 @@ adapte ao material de cada prospect):
 | 02. Desafios | divisória · `bullets` com a lista de desafios (título e impacto de cada problema) · um `desafio` por problema do registro, na ordem de prioridade, com `problema_id` · `cartoes` com os 3 pilares · um `bullets` por iniciativa de cada pilar (pilares e iniciativas vêm do analista; ver regras) |
 | 03. Metas | divisória · `imagem_larga` com a tabela de metas e os 3 cenários · `grafico` com as curvas dos cenários |
 | 04. Cenários e impactos | divisória · `bullets` com a metodologia (KPIs influenciadores e de resultado) · `imagem_larga` com as tabelas de projeção e de KPIs · `bullets` com as considerações · alocação de verba (`grafico` e `imagem_larga`) · estratégia por Curva ABC · calendário de mídia · ROAS esperado · dependência de mídia paga |
-| 05. Plano de ação | divisória · estrutura de campanhas (imagem aprovada, se houver) · `bullets` sobre as campanhas · `imagem_larga` com os planos de ação (B2C, B2B) |
+| 05. Plano de ação | divisória · estrutura de campanhas (imagem aprovada, se houver) · `bullets` sobre as campanhas · `tabela_plano`, uma tabela por slide, com todas as ações do plano aprovado (ver "Plano de ação em tabela") |
 | Fechamento | obrigado |
 
 Regras:
@@ -94,6 +95,24 @@ Regras:
 - **Lista de desafios (`bullets`):** no máximo 6 itens; com mais de 6
   problemas, divida em dois slides de lista. A ordem é a do array `problemas`
   de `contexto/solucoes.json` (a Skill 05 grava por prioridade).
+- **Plano de ação em tabela:** o plano vai para o deck como tabelas (Ação |
+  Horizonte | Quando | Quem | Frente), não como bullets nem como imagem. Nunca
+  copie ação na mão: gere os slides do `.docx` aprovado e cole a lista no roteiro,
+  depois da divisória "Plano de ação":
+
+  ```bash
+  python3 scripts/linhas_plano_acao.py --prospect clientes/<slug> --link <url-do-documento>
+  ```
+
+  O script lê a tabela-resumo do `plano-de-acao-estrategico.docx`, mantém a ordem
+  do plano e divide em slides pelo tamanho do texto (ação longa ocupa mais). Peça
+  ao analista, antes de montar o roteiro, o **link do documento detalhado** (o
+  `.docx` do plano subido no Google Drive, com compartilhamento aberto a quem
+  recebe a apresentação). O link vai em todo slide de tabela e vira a frase
+  "Clique aqui para acessar o documento detalhado de cada ação". Sem link, a
+  frase sai do slide e o gerador avisa: diga ao analista que o link falta. O
+  gerador também avisa quando alguma ação do plano aprovado ficou de fora das
+  tabelas: trate o aviso antes de propor o deck.
 - **Escala esperada:** 40 a 60 slides (o deck de referência tinha 61 com a
   seção de benchmark, que não se aplica mais). Um deck
   muito menor indica que faltou material ou cobertura; diga ao analista o que

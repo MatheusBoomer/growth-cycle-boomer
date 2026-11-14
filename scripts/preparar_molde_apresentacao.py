@@ -22,6 +22,7 @@ from pptx import Presentation
 from pptx.oxml.ns import qn
 
 import adicionar_modelo_desafio
+import adicionar_modelo_tabela_plano
 import apresentacao_pptx as ap
 
 # página do deck original (1-based) -> tipo; a ordem aqui é a ordem dos slides no molde
@@ -137,6 +138,7 @@ def preparar(original: Path, saida: Path) -> None:
         saida.parent.mkdir(parents=True, exist_ok=True)
         prs.save(saida)
     adicionar_modelo_desafio.adicionar(saida)
+    adicionar_modelo_tabela_plano.adicionar(saida)
     ajustar_jornada(saida)
     ajustar_capa(saida)
 

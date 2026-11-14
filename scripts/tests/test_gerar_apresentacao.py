@@ -353,3 +353,82 @@ def test_roteiro_do_fixture_e_o_de_referencia_e_valida():
     assert roteiro == _roteiro_referencia()
     erros, _ = ga.validar_roteiro(roteiro, ROTEIRO_FIXTURE.parents[3], tipos_molde())
     assert erros == []
+
+
+# ---- slide tabela_plano (plano de ação em tabela nativa) ----
+
+def _linha(n, acao="Auditar o pixel", quando="Semana 1"):
+    return {"num": str(n), "acao": acao, "horizonte": "Imediato", "quando": quando, "quem": "Agência", "frente": "Monitoramento e Governança"}
+
+
+def _roteiro_tabela(link="https://docs.google.com/document/d/abc/edit", linhas=None):
+    slide = {"tipo": "tabela_plano", "linhas": linhas or [_linha(1), _linha(2, "Revisar o antifraude")]}
+    if link:
+        slide["link"] = link
+    return {"versao": 1, "prospect": "Marca Teste", "slides": [slide]}
+
+
+def test_tabela_plano_preenche_linhas_e_link(prospect, tmp_path):
+    saida = tmp_path / "deck.pptx"
+    r = ga.gerar(_roteiro_tabela(), prospect, saida)
+    assert r["slides"] == 1 and not any("link" in a for a in r["avisos"])
+    slide = Presentation(saida).slides[0]
+    c = ap.campos(slide)
+    linhas = [[cel.text for cel in linha.cells] for linha in c["tabela"].table.rows]
+    assert linhas[0][1:] == ["Ação", "Horizonte", "Quando", "Quem", "Frente"]
+    assert linhas[1] == ["1", "Auditar o pixel", "Imediato", "Semana 1", "Agência", "Monitoramento e Governança"]
+    assert linhas[2][1] == "Revisar o antifraude" and len(linhas) == 3
+    runs = c["link"].text_frame.paragraphs[0].runs
+    assert runs[0].text == "Clique aqui" and runs[0].hyperlink.address == "https://docs.google.com/document/d/abc/edit"
+    assert runs[1].hyperlink.address is None
+
+
+def test_tabela_plano_sem_link_sai_a_frase_e_avisa(prospect, tmp_path):
+    saida = tmp_path / "deck.pptx"
+    r = ga.gerar(_roteiro_tabela(link=None), prospect, saida)
+    assert any("sem o link" in a for a in r["avisos"])
+    assert "link" not in ap.campos(Presentation(saida).slides[0])
+
+
+@pytest.mark.parametrize(
+    "alteracao,trecho",
+    [
+        (lambda s: s.update(link="ftp://x"), "link"),
+        (lambda s: s.update(linhas=[]), "linhas"),
+        (lambda s: s.update(linhas=[_linha(n) for n in range(1, 18)]), "linhas"),
+        (lambda s: s["linhas"][0].pop("quem"), "quem"),
+        (lambda s: s["linhas"][0].update(acao="  "), "acao"),
+    ],
+)
+def test_tabela_plano_erros_de_validacao(prospect, alteracao, trecho):
+    roteiro = _roteiro_tabela()
+    alteracao(roteiro["slides"][0])
+    erros, _ = ga.validar_roteiro(roteiro, prospect, tipos_molde())
+    assert erros and any(trecho in e for e in erros), erros
+    assert all(e.startswith("Slide 1") for e in erros)
+
+
+def test_tabela_plano_aviso_quando_o_texto_estoura(prospect, tmp_path):
+    longa = "Revisar " + "o rastreamento de todas as campanhas " * 3
+    roteiro = _roteiro_tabela(linhas=[_linha(n, longa, "Mês 1 a 3 (JUN a AGO), até o portão de verba") for n in range(1, 13)])
+    r = ga.gerar(roteiro, prospect, tmp_path / "deck.pptx")
+    assert any("Slide 1" in a and "tabela" in a and "não cabe" in a for a in r["avisos"])
+
+
+def test_aviso_de_acao_do_plano_aprovado_fora_dos_slides(prospect, tmp_path):
+    from docx import Document
+
+    pasta = prospect / "entrega/ativos-aprovados/plano-de-acao"
+    pasta.mkdir(parents=True)
+    doc = Document()
+    t = doc.add_table(rows=3, cols=6)
+    for i, v in enumerate(["#", "Ação", "Frente", "Horizonte", "Quando", "Por Quem"]):
+        t.rows[0].cells[i].text = v
+    for n, acao in ((1, "Auditar o pixel"), (2, "Ação que ficou de fora")):
+        for i, v in enumerate([str(n), acao, "Mídia Paga", "Imediato", "Semana 1", "Agência"]):
+            t.rows[n].cells[i].text = v
+    doc.save(pasta / "plano-de-acao-estrategico.docx")
+    r = ga.gerar(_roteiro_tabela(linhas=[_linha(1)]), prospect, tmp_path / "deck.pptx")
+    assert any("1 ações do plano de ação aprovado" in a and "Ação que ficou de fora" in a for a in r["avisos"])
+    r = ga.gerar(_roteiro_tabela(linhas=[_linha(1), _linha(2, "Ação que ficou de fora")]), prospect, tmp_path / "deck2.pptx")
+    assert not any("plano de ação aprovado" in a for a in r["avisos"])

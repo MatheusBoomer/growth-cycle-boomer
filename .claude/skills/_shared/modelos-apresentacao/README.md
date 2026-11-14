@@ -13,3 +13,9 @@ roteiro e preenche os campos.
 Para mudar o visual: abrir no Google Slides, editar mantendo os textos
 alternativos e as anotações, exportar como .pptx por cima deste arquivo e
 rodar `python3 -m pytest scripts/tests/test_molde_apresentacao.py`.
+
+**Plano de ação (`tabela_plano`):** tabela nativa e editável (Ação | Horizonte |
+Quando | Quem | Frente) com a frase "Clique aqui" ligada ao documento detalhado.
+É acrescentada por `scripts/adicionar_modelo_tabela_plano.py` (chamado no fim de
+`preparar_molde_apresentacao.py`); para mudar cores, colunas ou fonte, edite as
+constantes desse script e rode-o de novo sobre o molde.
