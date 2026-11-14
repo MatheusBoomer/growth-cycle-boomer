@@ -402,6 +402,15 @@ def _validar_blocos_novos(plano: dict, erros: list[str], avisos: list[str]) -> N
             "O plano não tem kpis_acompanhamento: liste os KPIs e o limite de cada um (com número do "
             "cenário aprovado) para o acompanhamento entre os checkpoints."
         )
+    if plano.get("ondas"):
+        faltam = {
+            "como_funciona": "o texto 'Como este plano funciona' (como ler as ondas, os horizontes e o dono de cada ação)",
+            "protocolo_mudanca": "o protocolo para mudar uma coisa de cada vez e reverter com segurança",
+            "metas_mensais": "a tabela das metas dos primeiros meses (gerada por scripts/metas_mensais.py)",
+        }
+        for chave, o_que in faltam.items():
+            if not plano.get(chave):
+                avisos.append(f"O plano em ondas não tem {chave}: inclua {o_que}.")
 
 
 def validar(plano, registro, rascunho: bool = False) -> tuple[list[str], list[str]]:

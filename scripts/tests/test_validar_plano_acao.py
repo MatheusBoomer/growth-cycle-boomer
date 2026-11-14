@@ -656,6 +656,14 @@ def com_ondas():
     """plano_com_ondas() com kpis_acompanhamento: o ponto de partida sem ERRO e sem AVISO."""
     plano = copy.deepcopy(plano_com_ondas())
     plano["kpis_acompanhamento"] = copy.deepcopy(KPIS)
+    plano["como_funciona"] = [{"titulo": "Lógica do plano", "texto": "Três ondas com checkpoint."}]
+    plano["protocolo_mudanca"] = {"intro": "Uma mudança por vez.", "regras": ["Fazer backup antes."]}
+    plano["metas_mensais"] = {
+        "cenario": "Realista",
+        "colunas": ["Mês", "Receita (R$)"],
+        "linhas": [["Nov/26", "100,00"], ["Dez/26", "200,00"]],
+        "observacao": None,
+    }
     return plano
 
 
@@ -683,6 +691,39 @@ def test_plano_com_ondas_sem_kpis_avisa():
     erros, avisos = validar_plano(plano)
     assert erros == []
     assert len(avisos) == 1 and "kpis_acompanhamento" in avisos[0]
+
+
+@pytest.mark.parametrize("chave", ["como_funciona", "protocolo_mudanca", "metas_mensais"])
+@pytest.mark.parametrize("vazio", ["ausente", None])
+def test_plano_com_ondas_sem_bloco_obrigatorio_da_skill_avisa(chave, vazio):
+    plano = com_ondas()
+    if vazio == "ausente":
+        del plano[chave]
+    else:
+        plano[chave] = vazio
+    erros, avisos = validar_plano(plano)
+    assert erros == []
+    assert len(avisos) == 1 and chave in avisos[0], avisos
+
+
+def test_plano_com_ondas_com_como_funciona_vazio_avisa():
+    plano = com_ondas()
+    plano["como_funciona"] = []
+    erros, avisos = validar_plano(plano)
+    assert erros == [] and len(avisos) == 1 and "como_funciona" in avisos[0]
+
+
+def test_plano_com_ondas_sem_os_tres_blocos_da_um_aviso_por_bloco():
+    plano = com_ondas()
+    for chave in ("como_funciona", "protocolo_mudanca", "metas_mensais"):
+        del plano[chave]
+    erros, avisos = validar_plano(plano)
+    assert erros == [] and len(avisos) == 3
+
+
+def test_plano_sem_ondas_nao_cobra_os_blocos_das_ondas():
+    erros, avisos = validar_plano(plano_valido())
+    assert erros == [] and len(avisos) == 1 and "sem ondas" in avisos[0]
 
 
 def test_kpis_acompanhamento_vazio_equivale_a_ausente():

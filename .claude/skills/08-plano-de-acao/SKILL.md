@@ -262,7 +262,8 @@ Cada ação tem `numero`, `frente`, os 10 campos (`acao`, `achado_origem`,
 `alavanca`, `como`, `dono`, `inicio`, `entrega`, `depende_de`, `evidencia`,
 `kpi_meta`, `gatilho`), `alavanca_da_meta` e `solucoes`, e, quando depende de
 escolha do cliente, `decisao_cliente`. Pisos de ROAS e tabela-resumo são
-derivados pelo gerador e não entram no JSON.
+derivados pelo gerador e não entram no JSON. Numere as ações na ordem do
+documento (onda, depois horizonte e frente).
 
 **Chaves do plano em ondas.** Para o gerador e o validador elas são opcionais
 (um plano antigo, só com horizontes, continua válido, com aviso). **Para esta
@@ -398,8 +399,9 @@ passar. `AVISO:` → corrija ou mostre ao analista com a sua leitura. O
 validador dá ERRO para onda fora de ordem ou sobreposta, ação fora de onda ou
 em mais de uma, ação cujo início cai fora da janela da onda, checkpoint fora
 do intervalo permitido e `decisao_cliente.ate` fora do ciclo; dá AVISO para
-plano sem ondas, onda sem ação, onda sem checkpoint (exceto a última) e plano
-sem `kpis_acompanhamento`. Aviso de ondas ou de KPIs não se deixa passar: esta
+plano sem ondas, onda sem ação, onda sem checkpoint (exceto a última), plano
+sem `kpis_acompanhamento` e plano com ondas sem `como_funciona`,
+`protocolo_mudanca` ou `metas_mensais`. Aviso de ondas ou de KPIs não se deixa passar: esta
 skill sempre os resolve.
 
 Checkpoint: o analista resolve cada [VALIDAR] e [PREENCHER] e aprova a lista
@@ -415,17 +417,19 @@ python3 scripts/metas_mensais.py \
   --plano <plano-de-acao.json> \
   --projecao clientes/<slug>/entrega/ativos-aprovados/projecao/projecao-de-cenarios.xlsx \
   --cenario Realista --meses 3 \
-  --rotulos "Nov/26,Dez/26,Jan/27" \
   --checks "dd/mm/aaaa,dd/mm/aaaa,dd/mm/aaaa"
 ```
 
 `--cenario` é o da `abertura` (Realista, Pessimista ou Otimista). `--meses` é
-3, os meses da janela de prova; `--rotulos` (um por mês, no formato `Nov/26`)
-e `--checks` (a data do check de cada mês, dd/mm/aaaa, coerente com os
-checkpoints das ondas) têm de ter a mesma quantidade que `--meses`. O script
-recalcula a cadeia de KPIs da projeção e grava o bloco `metas_mensais` no
-JSON; diz `OK` ou `ERRO:`. Com `ERRO:`, corrija rótulos, checks, cenário
-ou projeção e rode de novo. Nunca digite essas linhas na mão, e rode de novo se
+3, os meses da janela de prova; `--checks` (a data do check de cada mês,
+dd/mm/aaaa, coerente com os checkpoints das ondas) tem de ter a mesma
+quantidade que `--meses`. O mês 1 da projeção é o mês de `fim_ciclo` do plano
+menos 11 meses, e os rótulos (`Out/26`, `Nov/26`…) saem sozinhos dessa conta;
+`--rotulos` é opcional e, se vier, tem de ser igual aos gerados. O documento
+intitula a tabela "Metas dos N primeiros meses", com N igual ao número de
+meses. O script recalcula a cadeia de KPIs da projeção e grava o bloco
+`metas_mensais` no JSON; diz `OK` ou `ERRO:`. Com `ERRO:`, corrija
+`fim_ciclo`, checks, cenário ou projeção e rode de novo. Nunca digite essas linhas na mão, e rode de novo se
 o cenário ou as datas mudarem. Onde os mesmos KPIs aparecem, os números
 dos meses têm de bater com as metas da abertura (mesmo cenário, mesma fonte).
 
