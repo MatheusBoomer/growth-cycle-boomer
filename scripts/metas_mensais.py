@@ -9,6 +9,7 @@ cadeia de KPIs do `projecao.py`, sem usar os valores em cache das fórmulas:
     receita = vendas x ticket médio
 
 O resultado vira o bloco `metas_mensais` do JSON do plano (os outros campos ficam como estão).
+Os números saem em pt-BR (1.234,56): conversão com duas casas, % pagas com uma.
 Os meses da planilha são relativos ("Mês m-12"), então quem chama passa os rótulos reais.
 
     python3 scripts/metas_mensais.py --plano <json> --projecao <xlsx> --cenario Realista --meses 3 \\
@@ -27,7 +28,7 @@ from pathlib import Path
 import openpyxl
 from openpyxl.utils.exceptions import InvalidFileException
 
-from plano_acao_comum import ErroPlano, formatar_decimal, formatar_percentual
+from plano_acao_comum import ErroPlano, formatar_percentual
 
 # Cenário do plano -> aba da planilha (o Realista é a aba "Meta").
 ABA_DO_CENARIO = {"Realista": "Meta", "Pessimista": "Pessimista", "Otimista": "Otimista"}
@@ -89,17 +90,22 @@ def calcular_meses(projecao: Path, cenario: str, meses: int) -> list[dict]:
     return resultado
 
 
+def _br(valor: float, casas: int) -> str:
+    """Número em pt-BR com ponto de milhar e vírgula decimal: 1234.5 -> '1.234,50' (com 2 casas)."""
+    return f"{valor:,.{casas}f}".replace(",", "_").replace(".", ",").replace("_", ".")
+
+
 def montar_bloco(linhas: list[dict], rotulos_mes: list[str], checks: list[str], cenario: str) -> dict:
     """Bloco `metas_mensais` do plano: uma linha por mês e uma de total."""
     if len(rotulos_mes) != len(linhas):
         raise ErroPlano(f"São {len(linhas)} meses, mas vieram {len(rotulos_mes)} rótulos de mês.")
     if len(checks) != len(linhas):
         raise ErroPlano(f"São {len(linhas)} meses, mas vieram {len(checks)} datas de checks.")
-    inteiro = lambda v: formatar_decimal(v, 0)  # noqa: E731
+    inteiro = lambda v: _br(v, 0)  # noqa: E731
     tabela = [
         [
             rotulo, check, inteiro(l["receita"]), inteiro(l["investimento"]),
-            formatar_decimal(l["ticket"]), formatar_percentual(l["conversao"]), formatar_decimal(l["cps"]),
+            _br(l["ticket"], 2), _br(l["conversao"] * 100, 2) + "%", _br(l["cps"], 2),
             formatar_percentual(l["pct_pagas"]), inteiro(l["sessoes"]), inteiro(l["vendas"]),
         ]
         for l, rotulo, check in zip(linhas, rotulos_mes, checks)

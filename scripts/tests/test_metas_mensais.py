@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -24,6 +25,11 @@ ABA = {"Realista": "Meta", "Pessimista": "Pessimista", "Otimista": "Otimista"}
 def _entradas(cenario: str, linha: int):
     ws = openpyxl.load_workbook(PROJECAO, data_only=False)[ABA[cenario]]
     return [ws.cell(row=linha, column=col).value for col in range(2, 7)]
+
+
+def _br(valor: float, casas: int) -> str:
+    """Formato pt-BR 1.234,56 montado por outro caminho que o da implementação (separador '_')."""
+    return f"{valor:_.{casas}f}".replace(".", ",").replace("_", ".")
 
 
 def _receita(cenario: str, linha: int) -> float:
@@ -92,20 +98,40 @@ def test_montar_bloco_formata_e_soma():
     b, c, d, e, f = _entradas("Realista", 2)
     primeira = bloco["linhas"][0]
     assert primeira[0] == "Nov/26" and primeira[1] == "02/12/2026"
-    assert primeira[2] == f"{round(_receita('Realista', 2)):d}"
-    assert primeira[3] == f"{round(b):d}"
-    assert primeira[4] == f"{c:.2f}".replace(".", ",")
-    assert primeira[6] == f"{e:.2f}".replace(".", ",")
+    assert primeira[2] == _br(_receita("Realista", 2), 0)
+    assert primeira[3] == _br(b, 0)
+    assert primeira[4] == _br(c, 2)
+    assert primeira[5] == _br(d * 100, 2) + "%"
+    assert primeira[6] == _br(e, 2)
     assert primeira[7] == f"{round(f * 100)}%"
-    assert primeira[8] == f"{round(b / e / f):d}"
-    assert primeira[9] == f"{round(b / e / f * d):d}"
+    assert primeira[8] == _br(b / e / f, 0)
+    assert primeira[9] == _br(b / e / f * d, 0)
 
     total = bloco["linhas"][3]
     assert total[0] == "3 meses"
     soma_receita = sum(_receita("Realista", r) for r in (2, 3, 4))
     soma_invest = sum(_entradas("Realista", r)[0] for r in (2, 3, 4))
-    assert total[2] == f"{round(soma_receita):d}"
-    assert total[3] == f"{round(soma_invest):d}"
+    soma_sessoes = sum(_entradas("Realista", r)[0] / _entradas("Realista", r)[3] / _entradas("Realista", r)[4] for r in (2, 3, 4))
+    assert total[2] == _br(soma_receita, 0)
+    assert total[3] == _br(soma_invest, 0)
+    assert total[8] == _br(soma_sessoes, 0)
+
+
+def test_conversao_com_duas_casas_e_milhar_com_ponto():
+    meses = m.calcular_meses(PROJECAO, "Realista", 3)
+    meses[0]["conversao"] = 0.0034
+    meses[1]["conversao"] = 0.0156
+    meses[1]["pct_pagas"] = 0.951
+    meses[0]["receita"] = 1234567.891
+    meses[0]["ticket"] = 1234.5
+    bloco = m.montar_bloco(meses, ROTULOS, CHECKS, "Realista")
+    assert bloco["linhas"][0][5] == "0,34%"
+    assert bloco["linhas"][1][5] == "1,56%"
+    assert bloco["linhas"][1][7] == "95,1%"
+    assert bloco["linhas"][0][2] == "1.234.568"
+    assert bloco["linhas"][0][4] == "1.234,50"
+    for linha in bloco["linhas"]:  # nenhuma célula fica com 4 dígitos seguidos (milhar sem ponto)
+        assert not any(re.search(r"\d{4}", celula) for celula in linha[2:] if not celula.endswith("%"))
 
 
 def test_montar_bloco_exige_um_rotulo_e_um_check_por_mes():
