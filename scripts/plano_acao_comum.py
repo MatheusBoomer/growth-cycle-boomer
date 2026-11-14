@@ -226,12 +226,29 @@ def texto_piso_roas(plano: dict) -> list[str]:
 
 
 # Campos comparados por `diferencas`, além dos de CAMPOS_ACAO.
-_CAMPOS_COMPARADOS = CAMPOS_ACAO + ("frente", "horizonte", "depende_de", "alavanca_da_meta", "solucoes")
+# `onda` não está na ação: é derivada (número da onda que lista a ação, ou None).
+_CAMPOS_COMPARADOS = CAMPOS_ACAO + (
+    "frente", "horizonte", "onda", "depende_de", "alavanca_da_meta", "solucoes", "decisao_cliente",
+)
+
+
+def _numero_da_onda(plano: dict, numero) -> int | None:
+    """Número da onda que lista a ação, ou None (plano sem ondas ou ação fora de todas)."""
+    ondas_plano = plano.get("ondas")
+    if not isinstance(ondas_plano, list):
+        return None
+    for onda in ondas_plano:
+        if isinstance(onda, dict) and isinstance(onda.get("acoes"), list) and numero in onda["acoes"]:
+            return onda.get("numero")
+    return None
 
 
 def _acoes_por_numero(plano: dict) -> dict[int, dict]:
-    """Ações por número, com o nome do horizonte onde estão guardado em `horizonte`."""
-    return {a.get("numero"): {**a, "horizonte": nome} for nome, a in acoes(plano)}
+    """Ações por número, com o nome do horizonte em `horizonte` e o número da onda em `onda`."""
+    return {
+        a.get("numero"): {**a, "horizonte": nome, "onda": _numero_da_onda(plano, a.get("numero"))}
+        for nome, a in acoes(plano)
+    }
 
 
 def _metas_por_kpi(plano: dict) -> dict:

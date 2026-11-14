@@ -175,6 +175,29 @@ def test_diferencas_horizonte_dependencias_solucoes_e_metas_incluidas_removidas(
     assert c.diferencas(b, a)["metas_alteradas"] == ["ROAS"]
 
 
+def test_diferencas_pega_mudanca_de_onda_e_de_decisao_do_cliente():
+    import copy
+    a = ex.plano_com_ondas()
+    b = copy.deepcopy(a)
+    assert c.diferencas(a, b)["alteradas"] == {}
+    # ação 4 muda de onda (2 -> 3)
+    b["ondas"][1]["acoes"].remove(4)
+    b["ondas"][2]["acoes"].append(4)
+    # decisão do cliente da ação 3 resolvida (sai) e a da 5 muda de recomendação
+    acoes_b = {x["numero"]: x for _, x in c.acoes(b)}
+    acoes_b[3]["decisao_cliente"] = None
+    acoes_b[5]["decisao_cliente"]["recomendacao"] = "Autorizar só o e-mail."
+    alteradas = c.diferencas(a, b)["alteradas"]
+    assert alteradas == {3: ["decisao_cliente"], 4: ["onda"], 5: ["decisao_cliente"]}
+
+
+def test_diferencas_plano_sem_ondas_nao_ganha_diferenca_de_onda():
+    import copy
+    a = ex.plano_valido()
+    assert c.diferencas(a, copy.deepcopy(a))["alteradas"] == {}
+    assert all(x["onda"] is None for x in c._acoes_por_numero(a).values())
+
+
 # ---------- ondas e decisões do cliente ----------
 
 def test_ondas_sem_a_chave_devolve_lista_vazia():
