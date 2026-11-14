@@ -19,7 +19,7 @@ sys.path.insert(0, str(RAIZ / "scripts"))
 import linhas_plano_acao  # noqa: E402
 
 G = "entrega/ativos-aprovados/graficos/"
-DOCX_PLANO = RAIZ / "clientes/_fixtures/verdeluz/base" / linhas_plano_acao.CAMINHO_DOCX
+JSON_PLANO = RAIZ / "clientes/_fixtures/verdeluz/base" / linhas_plano_acao.CAMINHO_PLANO
 LINK_PLANO = "https://docs.google.com/document/d/verdeluz-plano-de-acao-exemplo/edit"
 NOME = "Verdeluz Cosméticos Veganos (FICTÍCIO)"
 
@@ -184,7 +184,7 @@ def montar() -> dict:
 
     # 05. Plano de ação: tabelas lidas do .docx aprovado (Skill 08), no formato Ação | Horizonte | Quando | Quem | Frente
     s.append(divisoria("05.", "PLANO **DE AÇÃO**"))
-    s += linhas_plano_acao.slides_do_roteiro(linhas_plano_acao.ler_tabela_docx(DOCX_PLANO), LINK_PLANO)
+    s += linhas_plano_acao.slides_do_roteiro(linhas_plano_acao.ler_plano(JSON_PLANO), LINK_PLANO)
     s.append({"tipo": "obrigado"})
     return {"versao": 1, "prospect": NOME, "slides": s}
 

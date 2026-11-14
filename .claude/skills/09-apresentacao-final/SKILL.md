@@ -21,7 +21,7 @@ Confira que existe material das 5 seções do deck em `entrega/ativos-aprovados/
 | 02. Desafios | `contexto/solucoes.json`, `secoes/05-solucoes.md` | 05 |
 | 03. Metas | `graficos/cenarios-*`, `graficos/tabela-cenarios-*`, `secoes/06-*.md` | 06 |
 | 04. Cenários e impactos | `secoes/06-*.md`, `secoes/07-midia-paga.md`, `graficos/tabela-*` | 06 e 07 |
-| 05. Plano de ação | `plano-de-acao/plano-de-acao-estrategico.docx` (documento) e `plano-de-acao/plano-de-acao-estrategico.xlsx` (planilha), `secoes/08-*.md` | 08 |
+| 05. Plano de ação | `plano-de-acao/plano-de-acao-estrategico.json` (plano; as linhas da tabela vêm dele), `.docx` (documento) e `.xlsx` (planilha), `secoes/08-*.md` | 08 |
 
 Faltando material de uma seção, diga ao analista o que falta e de qual etapa
 vem; não monte um deck incompleto em silêncio.
@@ -98,15 +98,17 @@ Regras:
   de `contexto/solucoes.json` (a Skill 05 grava por prioridade).
 - **Plano de ação em tabela:** o plano vai para o deck como tabelas (Ação |
   Horizonte | Quando | Quem | Frente), não como bullets nem como imagem. Nunca
-  copie ação na mão: gere os slides do `.docx` aprovado e cole a lista no roteiro,
+  copie ação na mão: gere os slides do JSON do plano aprovado e cole a lista no roteiro,
   depois da divisória "Plano de ação":
 
   ```bash
   python3 scripts/linhas_plano_acao.py --prospect clientes/<slug> --link <url-do-documento>
   ```
 
-  O script lê a tabela-resumo do `plano-de-acao-estrategico.docx`, mantém a ordem
-  do plano e divide em slides pelo tamanho do texto (ação longa ocupa mais). Peça
+  O script lê o `plano-de-acao-estrategico.json` que a Skill 08 salva ao lado do
+  `.docx` e da `.xlsx` (em `entrega/ativos-aprovados/plano-de-acao/`), põe as
+  ações em ordem cronológica de início (Quando como "dd/mm a dd/mm", Quem sem a
+  empresa) e divide em slides pelo tamanho do texto (ação longa ocupa mais). Peça
   ao analista, antes de montar o roteiro, o **link do documento detalhado** (o
   `.docx` do plano subido no Google Drive, com compartilhamento aberto a quem
   recebe a apresentação). O link vai em todo slide de tabela e vira a frase

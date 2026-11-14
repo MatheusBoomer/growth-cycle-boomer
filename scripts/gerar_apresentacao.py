@@ -250,12 +250,12 @@ def _problemas_fora_do_roteiro(roteiro: dict, pasta: Path, avisos: List[str]) ->
 
 
 def _acoes_fora_do_roteiro(roteiro: dict, pasta: Path, avisos: List[str]) -> None:
-    """Toda ação da tabela-resumo do plano de ação aprovado deve entrar nos slides tabela_plano."""
-    caminho = pasta / plano.CAMINHO_DOCX
+    """Toda ação do plano de ação aprovado deve entrar nos slides tabela_plano."""
+    caminho = pasta / plano.CAMINHO_PLANO
     if not caminho.is_file():
         return
     try:
-        aprovadas = [l["acao"] for l in plano.ler_tabela_docx(caminho)]
+        aprovadas = [l["acao"] for l in plano.ler_plano(caminho)]
     except (plano.ErroPlano, OSError, ValueError, KeyError) as e:
         avisos.append(f"O plano de ação aprovado não pôde ser lido para a conferência de cobertura: {e}")
         return

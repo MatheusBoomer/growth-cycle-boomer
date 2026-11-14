@@ -416,18 +416,14 @@ def test_tabela_plano_aviso_quando_o_texto_estoura(prospect, tmp_path):
 
 
 def test_aviso_de_acao_do_plano_aprovado_fora_dos_slides(prospect, tmp_path):
-    from docx import Document
-
     pasta = prospect / "entrega/ativos-aprovados/plano-de-acao"
     pasta.mkdir(parents=True)
-    doc = Document()
-    t = doc.add_table(rows=3, cols=6)
-    for i, v in enumerate(["#", "Ação", "Frente", "Horizonte", "Quando", "Por Quem"]):
-        t.rows[0].cells[i].text = v
-    for n, acao in ((1, "Auditar o pixel"), (2, "Ação que ficou de fora")):
-        for i, v in enumerate([str(n), acao, "Mídia Paga", "Imediato", "Semana 1", "Agência"]):
-            t.rows[n].cells[i].text = v
-    doc.save(pasta / "plano-de-acao-estrategico.docx")
+    acoes = [
+        {"numero": n, "acao": acao, "frente": "Mídia Paga", "dono": "Gestor de tráfego · Boomer", "inicio": f"0{n}/11/2026", "entrega": f"0{n + 1}/11/2026"}
+        for n, acao in ((1, "Auditar o pixel"), (2, "Ação que ficou de fora"))
+    ]
+    plano_json = {"data_referencia": "22/10/2026", "horizontes": [{"nome": "Imediato", "acoes": acoes}]}
+    (pasta / "plano-de-acao-estrategico.json").write_text(json.dumps(plano_json, ensure_ascii=False), encoding="utf-8")
     r = ga.gerar(_roteiro_tabela(linhas=[_linha(1)]), prospect, tmp_path / "deck.pptx")
     assert any("1 ações do plano de ação aprovado" in a and "Ação que ficou de fora" in a for a in r["avisos"])
     r = ga.gerar(_roteiro_tabela(linhas=[_linha(1), _linha(2, "Ação que ficou de fora")]), prospect, tmp_path / "deck2.pptx")
