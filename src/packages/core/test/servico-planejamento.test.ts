@@ -21,7 +21,9 @@ import { MemoriaArmazem, MemoriaRepositorio } from "../src/nuvem/memoria"
 import { Mesa } from "../src/nuvem/mesa"
 import type { UsuarioComPapel } from "../src/papeis"
 import { ServicoPlanejamento } from "../src/servico-planejamento"
-import type { EtapaId, EventoTempoReal, ResultadoValidacao } from "../src/tipos"
+import { condicoesConcluir } from "../src/maquina-estados"
+import type { Estado, EtapaId, EventoTempoReal, ResultadoValidacao } from "../src/tipos"
+import { confirmarValidacaoCliente, registrarDownloadValidacao, registrarValidacaoGerada } from "../src/validacao-cliente"
 import { pastaDoFixture } from "../src/fixture"
 import { catalogoReal, raizTemporaria } from "./ajuda"
 import { criarFixtureMinimo } from "./fixture-minimo"
@@ -602,6 +604,159 @@ describe("ferramentas do agente", () => {
     expect(r.ok).toBe(false)
     const outraEtapa = await servico.salvarAnexo(slug, "02", "H.xlsx", new Uint8Array([1]))
     expect((await servico.ferramenta(ctx03, "registrar_insumo_anexado", { insumo_id: "historico-mensal", arquivo: outraEtapa })).ok).toBe(false)
+  })
+
+  describe("insumos da 03 pedidos e recebidos pela conversa da 04", () => {
+    const ctx04 = { slug: "iszi-cosmeticos", etapa: "04" as const }
+
+    async function gravarEstado(slug: string, e: Estado) {
+      await writeFile(path.join(raiz, "clientes", slug, ".app/estado.json"), JSON.stringify(e))
+    }
+
+    /** 03 concluída e 04 em andamento, como na correção feita depois do diagnóstico. */
+    async function prospectNaEtapa04() {
+      const slug = await prospectNaEtapa03()
+      const e = await servico.estado(slug)
+      e.etapas["03"].status = "concluida"
+      e.etapas["04"].status = "liberada"
+      await gravarEstado(slug, e)
+      await servico.iniciarEtapa(slug, "04")
+      return slug
+    }
+
+    async function enviarHistorico(slug: string, nome = "hist.xlsx") {
+      const temp = path.join(raiz, "upload.xlsx")
+      await writeFile(temp, "x")
+      return servico.receberInsumoArquivo(slug, "03", "historico-mensal", temp, nome)
+    }
+
+    it("solicitar_insumo da 03 pela 04 mostra card com etapaInsumo 03", async () => {
+      const slug = await prospectNaEtapa04()
+      const r = await servico.ferramenta(ctx04, "solicitar_insumo", { insumo_id: "historico-mensal" })
+      expect(r.ok).toBe(true)
+      expect((await servico.conversa(slug, "04")).at(-1)).toMatchObject({
+        tipo: "card_insumo",
+        insumoId: "historico-mensal",
+        etapaInsumo: "03",
+      })
+      // insumo da própria 04 não carrega etapaInsumo
+      await servico.ferramenta(ctx04, "solicitar_insumo", { insumo_id: "clientes-historico" })
+      const proprio = (await servico.conversa(slug, "04")).at(-1)
+      expect(proprio).toMatchObject({ tipo: "card_insumo", insumoId: "clientes-historico" })
+      expect(proprio).not.toHaveProperty("etapaInsumo")
+    })
+
+    it("solicitar_insumo de insumo de outra etapa fora da 04 continua recusado", async () => {
+      const slug = await prospectNaEtapa04()
+      // conversa da 03 não pede insumo da 04
+      expect((await servico.ferramenta(ctx03, "solicitar_insumo", { insumo_id: "clientes-historico" })).ok).toBe(false)
+      // a 04 só empresta insumo da 03, não de outras etapas
+      expect((await servico.ferramenta(ctx04, "solicitar_insumo", { insumo_id: "site" })).ok).toBe(false)
+      // com a 04 concluída não há correção em andamento
+      const e = await servico.estado(slug)
+      e.etapas["04"].status = "concluida"
+      await gravarEstado(slug, e)
+      const r = await servico.ferramenta(ctx04, "solicitar_insumo", { insumo_id: "historico-mensal" })
+      expect(r).toMatchObject({ ok: false, mensagem: expect.stringContaining("não pertence a esta etapa") })
+      expect((await servico.conversa(slug, "04")).some((ev) => ev.tipo === "card_insumo")).toBe(false)
+    })
+
+    it("registrar anexo como historico-mensal pela 04 grava dados/historico-mensal.xlsx e o insumo na etapa 03", async () => {
+      const slug = await prospectNaEtapa04()
+      const anexo = await servico.salvarAnexo(slug, "04", "Histórico.xlsx", new Uint8Array([120]))
+      const r = await servico.ferramenta(ctx04, "registrar_insumo_anexado", { insumo_id: "historico-mensal", arquivo: anexo })
+      expect(r.ok).toBe(true)
+      expect(r.mensagem).toContain("registrado")
+      const estado = await servico.estado(slug)
+      const reg = estado.insumos.find((i) => i.etapa === "03" && i.insumoId === "historico-mensal")
+      expect(reg).toMatchObject({ status: "valido", atualizadoEm: "2026-09-28T10:00:00.000Z" })
+      expect(estado.insumos.some((i) => i.etapa === "04" && i.insumoId === "historico-mensal")).toBe(false)
+      expect(existsSync(path.join(raiz, "clientes", slug, "dados/historico-mensal.xlsx"))).toBe(true)
+      expect(existsSync(path.join(raiz, anexo))).toBe(true)
+      // anexo registrado pelo chat não enfileira mensagem automática
+      expect(estado.filaAutomatica.filter((i) => i.texto.includes("passou na validação"))).toHaveLength(0)
+    })
+
+    it("registrar anexo pela 04 de insumo de outra etapa continua recusado", async () => {
+      const slug = await prospectNaEtapa04()
+      const anexo = await servico.salvarAnexo(slug, "04", "S.xlsx", new Uint8Array([1]))
+      expect((await servico.ferramenta(ctx04, "registrar_insumo_anexado", { insumo_id: "site", arquivo: anexo })).ok).toBe(false)
+    })
+
+    /** 04 pronta: PDF gerado, baixado e confirmado, gráfico da 03 aprovado antes da troca de dados. */
+    async function quatroProntaComPdf() {
+      const slug = await prospectNaEtapa04()
+      let e = await servico.estado(slug)
+      e.insumos.push({
+        etapa: "04",
+        insumoId: "clientes-historico",
+        status: "valido",
+        problemas: [],
+        avisos: [],
+        resumo: "ok",
+        arquivo: "dados/clientes-historico.xlsx",
+        atualizadoEm: "2026-09-27T09:00:00.000Z",
+      })
+      e.entregaveis.push({
+        id: "g1",
+        etapa: "03",
+        etapaConversa: "04",
+        tipo: "grafico",
+        titulo: "Receita mensal",
+        arquivoRascunho: ".app/propostas/g1.png",
+        nomeFinal: "receita-mensal",
+        status: "aprovado",
+        ajustePedido: null,
+        criadoEm: "2026-09-27T09:30:00.000Z",
+        decididoEm: "2026-09-27T10:00:00.000Z",
+      })
+      e = registrarValidacaoGerada(e, "2026-09-27T12:00:00.000Z")
+      e = registrarDownloadValidacao(e, null, "2026-09-27T12:30:00.000Z")
+      e = confirmarValidacaoCliente(e, null, "2026-09-27T13:00:00.000Z")
+      e.etapas["04"].sinalizada = true
+      e.etapas["04"].status = "pronta"
+      expect(condicoesConcluir(e, "04", catalogoReal())).toEqual([])
+      await gravarEstado(slug, e)
+      return slug
+    }
+
+    it("troca de insumo da 03 com a 04 pronta volta a 04 para em_andamento e enfileira na 04", async () => {
+      const slug = await quatroProntaComPdf()
+      expect((await servico.estado(slug)).etapas["04"].status).toBe("pronta")
+      const r = await enviarHistorico(slug)
+      expect(r.ok).toBe(true)
+      const estado = await servico.estado(slug)
+      expect(estado.etapas["04"].status).toBe("em_andamento")
+      expect(estado.etapas["03"].status).toBe("concluida")
+      expect(estado.insumos.find((i) => i.etapa === "03" && i.insumoId === "historico-mensal")).toMatchObject({ status: "valido" })
+      expect(estado.filaAutomatica.map((i) => i.etapa)).toEqual(["04"])
+      expect(enfileirados).toContain(slug)
+      expect(await servico.retirarFila(slug)).toMatchObject({ etapa: "04", texto: expect.stringContaining("passou na validação") })
+    })
+
+    it("upload invalido da 03 com a 04 pronta nao reabre a 04 nem enfileira", async () => {
+      const slug = await quatroProntaComPdf()
+      proximaValidacao = { ok: false, problemas: ["12 meses"], avisos: [], resumo: null }
+      const r = await enviarHistorico(slug)
+      expect(r.ok).toBe(false)
+      const estado = await servico.estado(slug)
+      expect(estado.etapas["04"].status).toBe("pronta")
+      expect(estado.filaAutomatica).toHaveLength(0)
+    })
+
+    it("insumo da 03 recebido sem a 04 aberta nao enfileira nada", async () => {
+      const slug = await prospectNaEtapa03()
+      const e = await servico.estado(slug)
+      e.etapas["03"].status = "concluida"
+      e.etapas["04"].status = "liberada"
+      await gravarEstado(slug, e)
+      const r = await enviarHistorico(slug)
+      expect(r.ok).toBe(true)
+      const estado = await servico.estado(slug)
+      expect(estado.filaAutomatica).toHaveLength(0)
+      expect(estado.etapas["04"].status).toBe("liberada")
+      expect(estado.insumos.find((i) => i.etapa === "03" && i.insumoId === "historico-mensal")).toMatchObject({ status: "valido" })
+    })
   })
 
   it("sinalizar lista o que falta; concluir grava o arquivo de decisões e libera a 04", async () => {

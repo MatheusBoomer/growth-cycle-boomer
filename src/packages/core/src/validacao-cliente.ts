@@ -19,6 +19,13 @@ function aprovadosDoDocumento(estado: Estado): Entregavel[] {
   )
 }
 
+/** Troca de dados é um envio que passou na validação: um upload que terminou "invalido" não muda nada no documento. */
+function trocasDeInsumo(estado: Estado, depoisDe: string, etapas: EtapaId[]): string[] {
+  return estado.insumos
+    .filter((i) => i.status === "valido" && etapas.includes(i.etapa) && i.atualizadoEm > depoisDe)
+    .map((i) => i.atualizadoEm)
+}
+
 /**
  * Aprovados do documento que são anteriores à última troca de insumo (03 ou 04) feita depois da primeira geração do PDF.
  * Trocas de insumo antes do primeiro PDF não contam: é o fluxo normal da 04.
@@ -26,9 +33,7 @@ function aprovadosDoDocumento(estado: Estado): Entregavel[] {
 export function entregaveisAntesDaTroca(estado: Estado): Entregavel[] {
   const v = estado.validacaoCliente
   if (!v) return []
-  const trocas = estado.insumos
-    .filter((i) => ETAPAS_DO_DOCUMENTO.includes(i.etapa) && i.atualizadoEm > v.primeiraGeracaoEm)
-    .map((i) => i.atualizadoEm)
+  const trocas = trocasDeInsumo(estado, v.primeiraGeracaoEm, ETAPAS_DO_DOCUMENTO)
   if (trocas.length === 0) return []
   const ultima = trocas.reduce((a, b) => (a > b ? a : b))
   return aprovadosDoDocumento(estado).filter((e) => e.decididoEm !== null && e.decididoEm < ultima)
@@ -45,7 +50,7 @@ export function documentoDefasado(estado: Estado): boolean {
 export function refezTresDepoisDoPdf(estado: Estado): boolean {
   const v = estado.validacaoCliente
   if (!v) return false
-  const insumoNovo = estado.insumos.some((i) => i.etapa === "03" && i.atualizadoEm > v.primeiraGeracaoEm)
+  const insumoNovo = trocasDeInsumo(estado, v.primeiraGeracaoEm, ["03"]).length > 0
   const entregavelNovo = estado.entregaveis.some(
     (e) => e.status === "aprovado" && e.etapa === "03" && e.decididoEm !== null && e.decididoEm > v.primeiraGeracaoEm,
   )

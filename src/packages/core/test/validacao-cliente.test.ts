@@ -172,6 +172,38 @@ describe("validação do cliente (núcleo)", () => {
     expect(refezTresDepoisDoPdf(base())).toBe(false)
   })
 
+  it("upload invalido depois do PDF nao conta como troca de dados", () => {
+    let e = aprovado(base(), "03", "g1", "Receita mensal", T0)
+    e = registrarValidacaoGerada(e, T2)
+    e = registrarInsumo(
+      e,
+      { etapa: "03", insumoId: "historico-mensal", status: "invalido", problemas: ["12 meses"], avisos: [], resumo: null, arquivo: null },
+      T3,
+    )
+    e = registrarInsumo(
+      e,
+      { etapa: "04", insumoId: "clientes-historico", status: "invalido", problemas: ["x"], avisos: [], resumo: null, arquivo: null },
+      T4,
+    )
+    expect(entregaveisAntesDaTroca(e)).toEqual([])
+    expect(refezTresDepoisDoPdf(e)).toBe(false)
+    expect(pendenciasValidacao(e).some((p) => p.startsWith("Aprovar de novo"))).toBe(false)
+    expect(() => registrarValidacaoGerada(e, T5)).not.toThrow()
+  })
+
+  it("upload valido depois de um invalido volta a contar como troca de dados", () => {
+    let e = aprovado(base(), "03", "g1", "Receita mensal", T0)
+    e = registrarValidacaoGerada(e, T2)
+    e = registrarInsumo(
+      e,
+      { etapa: "03", insumoId: "historico-mensal", status: "invalido", problemas: ["x"], avisos: [], resumo: null, arquivo: null },
+      T3,
+    )
+    e = insumo(e, "03", "historico-mensal", T4)
+    expect(refezTresDepoisDoPdf(e)).toBe(true)
+    expect(entregaveisAntesDaTroca(e).map((x) => x.titulo)).toEqual(["Receita mensal"])
+  })
+
   it("refezTresDepoisDoPdf verdadeiro para entregável aprovado da 03 depois do PDF", () => {
     const e = registrarValidacaoGerada(base(), T2)
     expect(refezTresDepoisDoPdf(aprovado(e, "03", "g1", "G", T1))).toBe(false)

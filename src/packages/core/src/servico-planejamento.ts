@@ -966,6 +966,19 @@ export class ServicoPlanejamento {
     return insumoDoCatalogo(this.catalogo, insumoId)
   }
 
+  /**
+   * Etapa a que o insumo pertence quando pedido ou anexado na conversa de `etapaConversa`: a própria etapa, ou a 03 quando
+   * a 04 está aberta (correção depois do diagnóstico). Qualquer outro caso é recusado como insumo de outra etapa.
+   */
+  private donoDoInsumo(etapaConversa: EtapaId, insumoId: string, estado: Estado): EtapaId {
+    const lista = (etapa: EtapaId) => etapaDoCatalogo(this.catalogo, etapa).insumos.some((r) => r.id === insumoId)
+    if (lista(etapaConversa)) return etapaConversa
+    const status04 = estado.etapas["04"].status
+    if (etapaConversa === "04" && (status04 === "em_andamento" || status04 === "pronta") && lista("03")) return "03"
+    this.insumoDaEtapa(etapaConversa, insumoId) // lança o ErroEntrada de "não pertence a esta etapa"
+    return etapaConversa
+  }
+
   async receberInsumoArquivo(
     slug: string,
     etapa: EtapaId,
@@ -1039,7 +1052,7 @@ export class ServicoPlanejamento {
     autor: string | null,
     notificarAgente = true,
   ): Promise<void> {
-    const emAndamento = await this.mutar(slug, (e) => {
+    const aberta = await this.mutar(slug, (e) => {
       let novo = registrarInsumo(
         e,
         {
@@ -1055,11 +1068,17 @@ export class ServicoPlanejamento {
       )
       novo = comEnviadoPor(novo, etapa, insumo.id, autor)
       novo = me.reavaliarPronta(novo, etapa, this.catalogo, this.agora())
-      const s = novo.etapas[etapa].status
-      return { estado: novo, resultado: s === "em_andamento" || s === "pronta" }
+      const aberto = (id: EtapaId) => novo.etapas[id].status === "em_andamento" || novo.etapas[id].status === "pronta"
+      if (aberto(etapa)) return { estado: novo, resultado: etapa }
+      // Insumo da 03 trocado na correção: a 03 está concluída, mas a 04 aberta precisa saber e reavaliar o que ficou velho.
+      if (etapa === "03" && novo.etapas["03"].status === "concluida" && aberto("04")) {
+        novo = me.reavaliarPronta(novo, "04", this.catalogo, this.agora())
+        return { estado: novo, resultado: "04" as EtapaId }
+      }
+      return { estado: novo, resultado: null }
     })
-    if (resultado.ok && destino && emAndamento && notificarAgente) {
-      await this.enfileirar(slug, etapa, mensagemInsumoRecebido(insumo.nome, `clientes/${slug}/${destino}`, resultado.resumo), autor)
+    if (resultado.ok && destino && aberta && notificarAgente) {
+      await this.enfileirar(slug, aberta, mensagemInsumoRecebido(insumo.nome, `clientes/${slug}/${destino}`, resultado.resumo), autor)
     }
   }
 
@@ -1201,8 +1220,15 @@ export class ServicoPlanejamento {
   }
 
   private async ferramentaSolicitar(slug: string, etapa: EtapaId, d: Record<string, unknown>): Promise<RespostaFerramenta> {
-    const insumo = this.insumoDaEtapa(etapa, campoTexto(d.insumo_id, "insumo_id"))
-    await this.registrarConversa(slug, etapa, { tipo: "card_insumo", insumoId: insumo.id, em: this.agora() })
+    const insumoId = campoTexto(d.insumo_id, "insumo_id")
+    const dono = this.donoDoInsumo(etapa, insumoId, await this.estado(slug))
+    const insumo = this.insumoDaEtapa(dono, insumoId)
+    await this.registrarConversa(slug, etapa, {
+      tipo: "card_insumo",
+      insumoId: insumo.id,
+      ...(dono !== etapa ? { etapaInsumo: dono } : {}),
+      em: this.agora(),
+    })
     return {
       ok: true,
       mensagem: `Pedido de "${insumo.nome}" mostrado ao analista, com o modelo para baixar quando houver. Aguarde: quando o arquivo passar na validação você recebe uma mensagem com o caminho.`,
@@ -1215,7 +1241,9 @@ export class ServicoPlanejamento {
    * O anexo original continua na biblioteca; só uma cópia vai para a pasta do insumo.
    */
   private async ferramentaRegistrarAnexo(slug: string, etapa: EtapaId, d: Record<string, unknown>): Promise<RespostaFerramenta> {
-    const insumo = this.insumoDaEtapa(etapa, campoTexto(d.insumo_id, "insumo_id"))
+    const insumoId = campoTexto(d.insumo_id, "insumo_id")
+    const dono = this.donoDoInsumo(etapa, insumoId, await this.estado(slug))
+    const insumo = this.insumoDaEtapa(dono, insumoId)
     if (insumo.tipo !== "arquivo") throw new ErroEntrada("Este insumo é um link, não um arquivo.")
     const arquivo = campoTexto(d.arquivo, "arquivo")
     const rel = this.arm.relativoAoProspect(slug, arquivo)
@@ -1229,7 +1257,7 @@ export class ServicoPlanejamento {
     const temp = path.join(pastaTemp, nomeSeguro(nomeOriginal))
     try {
       await copyFile(this.arm.caminhoAbsoluto(slug, rel), temp)
-      const r = await this.receberInsumoArquivo(slug, etapa, insumo.id, temp, nomeOriginal, null, false)
+      const r = await this.receberInsumoArquivo(slug, dono, insumo.id, temp, nomeOriginal, null, false)
       if (!r.ok) {
         return {
           ok: true,

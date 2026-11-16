@@ -191,7 +191,8 @@ export type EventoConversa =
   | { tipo: "texto_agente"; texto: string; em: string }
   | { tipo: "atividade"; nome: string; detalhe: string; em: string }
   | { tipo: "card_entregavel"; entregavelId: string; em: string }
-  | { tipo: "card_insumo"; insumoId: string; em: string }
+  /** `etapaInsumo` só aparece quando o insumo é de outra etapa que a da conversa (a 04 pedindo um insumo da 03). */
+  | { tipo: "card_insumo"; insumoId: string; etapaInsumo?: EtapaId; em: string }
   | { tipo: "card_perguntas"; conjuntoId: string; em: string }
   | { tipo: "aviso"; nivel: "info" | "alerta" | "erro"; texto: string; em: string }
   | { tipo: "turno_fim"; status: "ok" | "interrompido" | "erro"; detalhe: string | null; em: string }
