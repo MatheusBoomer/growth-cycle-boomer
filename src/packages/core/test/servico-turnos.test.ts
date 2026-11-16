@@ -1,4 +1,4 @@
-import { cp, mkdir, writeFile } from "node:fs/promises"
+import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { FsArmazenamento } from "../src/armazenamento"
@@ -6,12 +6,14 @@ import { Barramento } from "../src/barramento"
 import { ErroReiniciando, ErroTurnoAtivo } from "../src/erros"
 import { FakeExecutor, roteiroSimples, type Roteiro } from "../src/executor/fake"
 import type { PedidoTurno } from "../src/executor/tipos"
+import { pastaDoFixture } from "../src/fixture"
 import type { MemoriaDeSessao } from "../src/nuvem/memoria-sessao"
 import type { RegistroUsoTurno } from "../src/nuvem/tipos"
 import type { EscolhaModelo } from "../src/modelos"
 import { ServicoPlanejamento } from "../src/servico-planejamento"
 import { aspasShell, montarMcpConfig, montarSettingsHook, ServicoTurnos, type ConfigTurnos } from "../src/servico-turnos"
 import { catalogoReal, RAIZ, raizTemporaria } from "./ajuda"
+import { criarFixtureMinimo } from "./fixture-minimo"
 
 let raiz: string
 let servico: ServicoPlanejamento
@@ -1137,5 +1139,115 @@ describe("modelo e esforço configurados para a etapa", () => {
     const b = montar({}, roteiro("model not found"))
     const slugB = await rodar(b, "01", "Erro Sem Modelo")
     expect((await b.svc.conversa(slugB, "01")).at(-1)).toMatchObject({ detalhe: "model not found" })
+  })
+})
+
+describe("modo ensaiado: o executor é escolhido por prospect", () => {
+  const FORA_DO_ROTEIRO = "Fora do roteiro: use Avançar ensaio ou reinicie a etapa."
+
+  beforeEach(async () => {
+    await criarFixtureMinimo(pastaDoFixture(raiz, "mini"))
+  })
+
+  function comEnsaio() {
+    const executor = new FakeExecutor(roteiroSimples("principal"))
+    const executorEnsaio = new FakeExecutor(roteiroSimples("ensaio"))
+    const t = new ServicoTurnos({ servico, executor, executorEnsaio, barramento, catalogo: catalogoReal(), config })
+    return { t, executor, executorEnsaio }
+  }
+
+  async function lerRoteiro03() {
+    return JSON.parse(await readFile(path.join(pastaDoFixture(raiz, "mini"), "ensaio/03/roteiro.json"), "utf8")) as {
+      trechos: unknown[]
+    }
+  }
+
+  it("prospect sem ensaio usa o executor principal, com contexto sem trecho e sem consumir o índice", async () => {
+    const { t, executor, executorEnsaio } = comEnsaio()
+    const slug = await servico.criarClienteTeste("mini", "03", null, false)
+    await servico.iniciarEtapa(slug, "03")
+    await t.enviarMensagem(slug, "03", "oi")
+    await t.aguardarOcioso(slug)
+    expect(executorEnsaio.pedidos).toHaveLength(0)
+    expect(executor.pedidos).toHaveLength(1)
+    expect(executor.pedidos[0]!.contexto).toEqual({ slug, etapa: "03", fixture: "mini", trecho: null, textoAnalista: "oi" })
+    expect((await servico.estado(slug)).teste?.trechos?.["03"]).toBeUndefined()
+  })
+
+  it("prospect comum recebe contexto com fixture null", async () => {
+    const { t, executor } = comEnsaio()
+    const slug = await servico.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    expect(executor.pedidos[0]!.contexto).toEqual({ slug, etapa: "01", fixture: null, trecho: null, textoAnalista: null })
+  })
+
+  it("prospect com ensaio toca o trecho 0 e, no turno seguinte, o trecho 1", async () => {
+    const { t, executor, executorEnsaio } = comEnsaio()
+    const slug = await servico.criarClienteTeste("mini", "03", null, true)
+    await servico.iniciarEtapa(slug, "03")
+    const { trechos } = await lerRoteiro03()
+    await t.enviarMensagem(slug, "03", "Segue a planilha.")
+    await t.aguardarOcioso(slug)
+    await t.enviarMensagem(slug, "03", "O analista APROVOU o entregável “X” (x). Siga.")
+    await t.aguardarOcioso(slug)
+    expect(executor.pedidos).toHaveLength(0)
+    expect(executorEnsaio.pedidos).toHaveLength(2)
+    expect(executorEnsaio.pedidos[0]!.contexto).toEqual({
+      slug,
+      etapa: "03",
+      fixture: "mini",
+      trecho: trechos[0],
+      textoAnalista: "Segue a planilha.",
+    })
+    expect(executorEnsaio.pedidos[1]!.contexto?.trecho).toEqual(trechos[1])
+    const conversa = await servico.conversa(slug, "03")
+    expect(conversa.some((e) => e.tipo === "aviso" && e.texto === FORA_DO_ROTEIRO)).toBe(false)
+  })
+
+  it("depois do último trecho, o executor de ensaio recebe trecho null e sem aviso de fora do roteiro", async () => {
+    const { t, executorEnsaio } = comEnsaio()
+    const slug = await servico.criarClienteTeste("mini", "03", null, true)
+    await servico.iniciarEtapa(slug, "03")
+    for (const texto of ["Segue a planilha.", "O analista APROVOU o entregável “X” (x).", "mais uma"]) {
+      await t.enviarMensagem(slug, "03", texto)
+      await t.aguardarOcioso(slug)
+    }
+    expect(executorEnsaio.pedidos[2]!.contexto?.trecho).toBeNull()
+    const conversa = await servico.conversa(slug, "03")
+    expect(conversa.some((e) => e.tipo === "aviso" && e.texto === FORA_DO_ROTEIRO)).toBe(false)
+  })
+
+  it("aprovação onde o trecho espera ajuste registra o aviso de fora do roteiro e toca o trecho mesmo assim", async () => {
+    const { t, executorEnsaio } = comEnsaio()
+    const slug = await servico.criarClienteTeste("mini", "03", null, true)
+    await servico.iniciarEtapa(slug, "03")
+    const arquivo = path.join(pastaDoFixture(raiz, "mini"), "ensaio/03/roteiro.json")
+    const ajuste = { gatilho: "ajuste", textoPreenchido: "mais curto", passos: [] }
+    await writeFile(arquivo, JSON.stringify({ versao: 1, etapa: "03", trechos: [ajuste] }))
+    await t.enviarMensagem(slug, "03", "O analista APROVOU o entregável “X” (x). Siga para o próximo passo da skill.")
+    await t.aguardarOcioso(slug)
+    expect(executorEnsaio.pedidos[0]!.contexto?.trecho).toEqual(ajuste)
+    const conversa = await servico.conversa(slug, "03")
+    const aviso = conversa.findIndex((e) => e.tipo === "aviso" && e.nivel === "alerta" && e.texto === FORA_DO_ROTEIRO)
+    expect(aviso).toBeGreaterThan(-1)
+    expect(conversa.findIndex((e) => e.tipo === "texto_agente")).toBeGreaterThan(aviso)
+  })
+
+  it("etapa sem pacote de ensaio termina com aviso de erro e turno_fim erro, e aceita um turno novo depois", async () => {
+    const { t, executor, executorEnsaio } = comEnsaio()
+    const slug = await servico.criarClienteTeste("mini", "03", null, true)
+    await servico.iniciarEtapa(slug, "03")
+    await rm(path.join(pastaDoFixture(raiz, "mini"), "ensaio"), { recursive: true })
+    await t.enviarMensagem(slug, "03", "oi")
+    await t.aguardarOcioso(slug)
+    expect(executor.pedidos).toHaveLength(0)
+    expect(executorEnsaio.pedidos).toHaveLength(0)
+    const conversa = await servico.conversa(slug, "03")
+    expect(conversa.at(-2)).toMatchObject({ tipo: "aviso", nivel: "erro", texto: expect.stringContaining("Falta o roteiro de ensaio") })
+    expect(conversa.at(-1)).toMatchObject({ tipo: "turno_fim", status: "erro" })
+    expect((await servico.estado(slug)).teste?.trechos?.["03"]).toBeUndefined()
+    await expect(t.enviarMensagem(slug, "03", "de novo")).resolves.toBeUndefined()
+    await t.aguardarOcioso(slug)
   })
 })

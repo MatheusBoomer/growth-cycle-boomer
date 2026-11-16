@@ -7,6 +7,7 @@ import { carregarCatalogo } from "@workspace/core/catalogo"
 import { AgentSdkExecutor } from "@workspace/core/executor/agent-sdk"
 import { ambienteDoAgente } from "@workspace/core/executor/ambiente-agente"
 import { ClaudeCliExecutor } from "@workspace/core/executor/claude-cli"
+import { criarExecutorEnsaio } from "@workspace/core/executor/ensaio"
 import { criarExecutorDemo } from "@workspace/core/executor/fake"
 import { consultarModelosSdk } from "@workspace/core/executor/modelos-sdk"
 import { criarCacheDeModelos, type ListaDeModelos } from "@workspace/core/modelos"
@@ -155,6 +156,8 @@ export function servidor(): Servidor {
   const turnos = new ServicoTurnos({
     servico,
     executor,
+    // Cliente de teste com Modo ensaiado reproduz o roteiro gravado, sem chamar o Claude.
+    executorEnsaio: criarExecutorEnsaio({}),
     barramento,
     catalogo,
     memoria: nuvem?.memoria,
