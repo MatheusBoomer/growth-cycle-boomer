@@ -11,10 +11,10 @@ Conteúdo, nesta ordem: título; abertura (metas, cenário, o que cabe nos 3 mes
 o que não cabe, premissas, piso de ROAS); cada horizonte com as ações agrupadas
 por frente (10 campos por ação); tabela-resumo cronológica.
 
-Plano com `ondas`: layout do modelo Happy Duck — como o plano funciona, visão geral, metas
-mensais, sessões não pagas, abertura, protocolo de mudança, cada onda (objetivo, calendário de
+Plano com `fases`: layout do modelo Happy Duck — como o plano funciona, visão geral, metas
+mensais, sessões não pagas, abertura, protocolo de mudança, cada fase (objetivo, calendário de
 mídia, ações em tabela de 2 colunas, checkpoint), KPIs de acompanhamento e decisões do cliente.
-Os blocos opcionais ausentes são omitidos; sem `ondas` vale o layout acima, sem alteração.
+Os blocos opcionais ausentes são omitidos; sem `fases` vale o layout acima, sem alteração.
 
 O script não reescreve `word/header1.xml`, fontes, `styles.xml` nem `theme1.xml`
 — copia-os do modelo sem alteração. Só `word/document.xml` é gerado do zero, a
@@ -35,7 +35,7 @@ from plano_acao_comum import (
     acoes,
     decisoes_do_cliente,
     limpar_texto,
-    ondas,
+    fases,
     tabela_resumo,
     texto_depende,
     texto_piso_roas,
@@ -310,7 +310,7 @@ def _abertura(plano: dict) -> list[str]:
 
 
 # ---------------------------------------------------------------------------
-# Layout com ondas (modelo Happy Duck): tabelas genéricas, bloco da ação em tabela, checkpoint
+# Layout com fases (modelo Happy Duck): tabelas genéricas, bloco da ação em tabela, checkpoint
 # ---------------------------------------------------------------------------
 
 LARGURA_TOTAL = 9029
@@ -397,29 +397,29 @@ def campos_da_acao_em_tabela(acao: dict) -> list[tuple[str, str]]:
     ]
 
 
-def onda_titulo(onda: dict) -> str:
-    """Título da onda (com a janela) seguido de 'Objetivo' e 'Calendário de mídia'."""
+def fase_titulo(fase: dict) -> str:
+    """Título da fase (com a janela) seguido de 'Objetivo' e 'Calendário de mídia'."""
     partes = [
         _p_open(after=80, before=360, keep_next=True)
-        + _run(f"Onda {onda['numero']} · {onda['nome']} ({onda['inicio']} a {onda['fim']})", bold=True, sz="30")
+        + _run(f"Fase {fase['numero']} · {fase['nome']} ({fase['inicio']} a {fase['fim']})", bold=True, sz="30")
         + _EMPTY_TRAIL
         + "</w:p>",
-        _p_lead("Objetivo:", onda.get("objetivo", ""), after=80, keep_next=True),
+        _p_lead("Objetivo:", fase.get("objetivo", ""), after=80, keep_next=True),
     ]
-    if onda.get("calendario_midia"):
-        partes.append(_p_lead("Calendário de mídia:", onda["calendario_midia"], after=120, keep_next=True))
+    if fase.get("calendario_midia"):
+        partes.append(_p_lead("Calendário de mídia:", fase["calendario_midia"], after=120, keep_next=True))
     return "".join(partes)
 
 
-def checkpoint_bloco(onda: dict, ha_proxima: bool = True) -> str:
-    """Bloco do checkpoint ao fim da onda; vazio quando ela não tem checkpoint."""
-    cp = onda.get("checkpoint")
+def checkpoint_bloco(fase: dict, ha_proxima: bool = True) -> str:
+    """Bloco do checkpoint ao fim da fase; vazio quando ela não tem checkpoint."""
+    cp = fase.get("checkpoint")
     if not cp:
         return ""
     quando = f"{cp['data']} ({cp['duracao']})" if cp.get("duracao") else cp["data"]
-    liberar = f"Para liberar a Onda {onda['numero'] + 1}." if ha_proxima else "Para fechar o ciclo."
+    liberar = f"Para liberar a Fase {fase['numero'] + 1}." if ha_proxima else "Para fechar o ciclo."
     return (
-        subtitulo_paragrafo(f"Checkpoint {onda['numero']}: {quando}", keep_next=True)
+        subtitulo_paragrafo(f"Checkpoint {fase['numero']}: {quando}", keep_next=True)
         + _p_lead("• Pauta.", cp["pauta"], after=80)
         + _p_lead(f"• {liberar}", cp["para_liberar"], after=80)
         + _p_lead("• Quem decide.", cp["quem_decide"], after=240)
@@ -437,11 +437,11 @@ def _como_funciona(plano: dict) -> list[str]:
 
 def _visao_geral(plano: dict) -> list[str]:
     linhas = [
-        [f"Onda {v['numero']}\n{v['nome']}", v["janela"], v["calendario_midia"] or "", v["foco"] or "",
+        [f"Fase {v['numero']}\n{v['nome']}", v["janela"], v["calendario_midia"] or "", v["foco"] or "",
          str(v["total_acoes"])]
         for v in visao_geral(plano)
     ]
-    cabecalhos = ["Onda", "Janela", "Calendário de mídia", "Foco", "Ações"]
+    cabecalhos = ["Fase", "Janela", "Calendário de mídia", "Foco", "Ações"]
     return [horizonte_titulo("Visão geral"), tabela_generica(cabecalhos, linhas, LARGURAS_VISAO_GERAL),
             spacer_paragrafo()]
 
@@ -451,7 +451,8 @@ def _metas_mensais(plano: dict) -> list[str]:
     if not metas:
         return []
     meses = max(len(metas.get("linhas") or []) - 1, 0)  # a última linha é o total
-    partes = [horizonte_titulo(f"Metas dos {meses} primeiros meses")]
+    titulo = "Metas do primeiro mês" if meses == 1 else f"Metas dos {meses} primeiros meses"
+    partes = [horizonte_titulo(titulo)]
     if metas.get("cenario"):
         partes.append(texto_paragrafo(f"Cenário: {metas['cenario']}", after=120))
     larguras = LARGURAS_METAS_MENSAIS if len(metas["colunas"]) == len(LARGURAS_METAS_MENSAIS) else _larguras_iguais(len(metas["colunas"]))
@@ -516,7 +517,7 @@ def _fechamento(plano: dict) -> list[str]:
     return partes
 
 
-def _corpo_com_ondas(plano: dict) -> list[str]:
+def _corpo_com_fases(plano: dict) -> list[str]:
     partes = [titulo_paragrafo(plano["prospect"]), spacer_paragrafo()]
     partes.extend(_como_funciona(plano))
     partes.extend(_visao_geral(plano))
@@ -526,10 +527,10 @@ def _corpo_com_ondas(plano: dict) -> list[str]:
     partes.extend(_protocolo_mudanca(plano))
 
     por_numero = {a.get("numero"): (h, a) for h, a in acoes(plano)}
-    lista = ondas(plano)
-    for i, onda in enumerate(lista):
-        partes.append(onda_titulo(onda))
-        for numero in sorted(onda.get("acoes") or []):
+    lista = fases(plano)
+    for i, fase in enumerate(lista):
+        partes.append(fase_titulo(fase))
+        for numero in sorted(fase.get("acoes") or []):
             if numero not in por_numero:
                 continue
             horizonte, acao = por_numero[numero]
@@ -538,14 +539,14 @@ def _corpo_com_ondas(plano: dict) -> list[str]:
                 cabecalho_da_acao(acao, horizonte, plano),
                 campos_da_acao_em_tabela(acao),
             ))
-        partes.append(checkpoint_bloco(onda, ha_proxima=i + 1 < len(lista)))
+        partes.append(checkpoint_bloco(fase, ha_proxima=i + 1 < len(lista)))
     partes.extend(_fechamento(plano))
     return partes
 
 
 def montar_document_xml(plano: dict) -> str:
-    if ondas(plano):
-        body_parts = _corpo_com_ondas(plano)
+    if fases(plano):
+        body_parts = _corpo_com_fases(plano)
         body_parts.append(_p_open(after=0) + _EMPTY_TRAIL + "</w:p>")
         body_parts.append(SECT_PR)
         return _envelopar(body_parts)

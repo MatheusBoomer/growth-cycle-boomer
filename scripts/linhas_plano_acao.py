@@ -7,7 +7,7 @@ roteiro da apresentação, já divididos em páginas, para ninguém copiar açã
     python3 scripts/linhas_plano_acao.py --prospect clientes/<slug> [--link <url>] [--por-slide 15]
 
 Imprime a lista JSON de slides (cole no roteiro, depois da divisória "Plano de
-ação"). Plano em ondas: a ordem é a do documento (onda e, dentro dela, número da
+ação"). Plano em fases: a ordem é a do documento (fase e, dentro dela, número da
 ação); plano só com horizontes: a cronológica (início da ação). Cada slide leva
 `linhas` e, com --link, o `link` do documento detalhado.
 
@@ -47,11 +47,11 @@ class ErroPlano(Exception):
 
 
 def _pares_na_ordem_do_documento(dados: dict) -> List[tuple]:
-    """(horizonte, ação) por onda e, dentro dela, por número; ação fora de toda onda vai ao fim, por número."""
+    """(horizonte, ação) por fase e, dentro dela, por número; ação fora de toda fase vai ao fim, por número."""
     por_numero = {a["numero"]: (h, a) for h, a in comum.acoes(dados)}
     pares, usados = [], set()
-    for onda in comum.ondas(dados):
-        for numero in sorted(onda.get("acoes") or []):
+    for fase in comum.fases(dados):
+        for numero in sorted(fase.get("acoes") or []):
             if numero in por_numero and numero not in usados:
                 pares.append(por_numero[numero])
                 usados.add(numero)
@@ -60,14 +60,14 @@ def _pares_na_ordem_do_documento(dados: dict) -> List[tuple]:
 
 
 def ler_plano(caminho: Path) -> List[Dict[str, str]]:
-    """Linhas do plano aprovado (JSON da Skill 08): por onda e número quando o plano tem ondas,
+    """Linhas do plano aprovado (JSON da Skill 08): por fase e número quando o plano tem fases,
     senão em ordem cronológica de início."""
     if not caminho.is_file():
         raise ErroPlano(f"Plano de ação aprovado não encontrado: {caminho}")
     try:
         dados = json.loads(caminho.read_text(encoding="utf-8"))
         ano_base = comum.ler_data(dados.get("data_referencia"), "data_referencia").year
-        pares = _pares_na_ordem_do_documento(dados) if comum.ondas(dados) else comum.acoes_cronologicas_com_horizonte(dados)
+        pares = _pares_na_ordem_do_documento(dados) if comum.fases(dados) else comum.acoes_cronologicas_com_horizonte(dados)
         linhas = [
             {
                 "num": str(a["numero"]),
@@ -177,20 +177,30 @@ def _paginas_gulosas(linhas: List[Dict[str, str]]) -> List[List[Dict[str, str]]]
 
 def _paginas_equilibradas(linhas: List[Dict[str, str]]) -> List[List[Dict[str, str]]]:
     """O menor número de páginas que cabe (pelo enchimento guloso), com as linhas distribuídas do modo mais
-    parelho: minimiza a soma dos quadrados das alturas, mantendo cada página dentro do limite."""
+    parelho: minimiza a soma dos quadrados das alturas, mantendo cada página dentro do limite.
+
+    A altura de cada linha é calculada uma vez e as páginas candidatas saem de somas acumuladas; como uma
+    página maior nunca é mais baixa, a busca de cada página para na primeira que não cabe."""
     n = len(_paginas_gulosas(linhas))
     total = len(linhas)
+    cabecalho = ALTURA_BASE_LINHA + ALTURA_LINHA_DE_TEXTO
+    acumulado = [0]
+    for linha in linhas:
+        acumulado.append(acumulado[-1] + ALTURA_BASE_LINHA + ALTURA_LINHA_DE_TEXTO * _linhas_de_texto(linha))
     infinito = float("inf")
     custo = [[infinito] * (total + 1) for _ in range(n + 1)]
     inicio = [[0] * (total + 1) for _ in range(n + 1)]
     custo[0][0] = 0.0
     for k in range(1, n + 1):
         for j in range(k, total + 1):
-            for i in range(k - 1, j):
-                if custo[k - 1][i] == infinito or not _cabe(linhas[i:j]):
+            for i in range(j - 1, k - 2, -1):
+                altura = cabecalho + acumulado[j] - acumulado[i]
+                if j - i > 1 and (j - i > MAX_LINHAS_POR_SLIDE or altura > ALTURA_UTIL):
+                    break
+                if custo[k - 1][i] == infinito:
                     continue
-                c = custo[k - 1][i] + altura_estimada(linhas[i:j]) ** 2
-                if c < custo[k][j]:
+                c = custo[k - 1][i] + altura ** 2
+                if c <= custo[k][j]:  # `<=` na ordem decrescente fica com o menor `i` entre empates
                     custo[k][j], inicio[k][j] = c, i
     if custo[n][total] == infinito:  # não deve acontecer: o enchimento guloso já é uma solução
         return _paginas_gulosas(linhas)

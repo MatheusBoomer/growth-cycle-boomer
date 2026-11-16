@@ -175,7 +175,7 @@ Nada a enviar nesta etapa.
 O agente mostra o que já sabe e confirma as 9 perguntas da abertura, uma por mensagem. Respostas usadas na produção deste cliente:
 
 1. **Data de hoje:** 22/10/2026. O plano começa na segunda-feira seguinte, 26/10/2026, e a janela de prova vai de 26/10/2026 a 25/01/2027. Se você fizer o teste em outra data, diga a data real e peça que nenhuma ação caia em período passado.
-2. **Cenário de referência:** Realista, com os números aprovados na 06 e na 07 (metas dos 3 meses pelos valores de JAN/27).
+2. **Cenário de referência:** Realista, com os números aprovados na 06 e na 07 (metas dos indicadores pelos valores de JAN/27, o último mês da janela de prova; a tabela mensal cobre OUT/26 a DEZ/26).
 3. **Frentes prioritárias:** a ruptura do sérum e o estoque (P2), a eficiência da mídia paga (P1) e a recompra e o CRM (P3). A mensuração (P7) e o envio da margem por SKU entram na primeira semana, porque destravam o resto.
 4. **Quem executa do lado do cliente:** Marina e Luiza (sócias), Bruna (e-commerce e atendimento) e Caio (conteúdo). Os nomes ficam no "como"; o dono é disciplina · empresa.
 5. **Quem opera a mídia:** a Boomer, com o Rafael (gestor de tráfego freelancer) executando sob a coordenação da Boomer. Não há agência parceira.
@@ -185,7 +185,7 @@ O agente mostra o que já sabe e confirma as 9 perguntas da abertura, uma por me
 9. **Empresa no campo Dono:** Boomer.
 
 - **Cobertura:** o validador exige que as 24 soluções do registro virem ação e que as alavancas da meta caibam na janela de prova. Se o agente deixar alguma solução de fora, peça para incluir; nunca remova uma solução do registro.
-- Confira o .docx e o .xlsx gerados (25 ações com os 10 campos, 4 ondas com checkpoint, 3 horizontes, a abertura com os pisos de ROAS, as metas dos 3 primeiros meses, o protocolo de mudança, os KPIs de acompanhamento e as 3 decisões que dependem da Verdeluz; os dois com as mesmas ações, datas e números) e aprove os dois.
+- Confira o .docx e o .xlsx gerados (25 ações com os 10 campos, 4 fases com checkpoint, 3 horizontes, a abertura com os pisos de ROAS, as metas dos 3 primeiros meses, o protocolo de mudança, os KPIs de acompanhamento e as 3 decisões que dependem da Verdeluz; os dois com as mesmas ações, datas e números) e aprove os dois.
 - Na pergunta-guia, responda "sim".
 
 ### Handoff

@@ -12,7 +12,7 @@ sys.path.insert(0, str(RAIZ / "scripts"))
 sys.path.insert(0, str(RAIZ / "scripts" / "tests"))
 import plano_acao_comum as c  # noqa: E402
 import validar_plano_acao as v  # noqa: E402
-from plano_v2_exemplo import plano_com_ondas, plano_valido, registro_valido  # noqa: E402
+from plano_v2_exemplo import plano_com_fases, plano_valido, registro_valido  # noqa: E402
 
 
 def acao(plano: dict, numero: int) -> dict:
@@ -31,14 +31,14 @@ def tem(erros, trecho):
     return any(trecho in e for e in erros)
 
 
-def sem_aviso_de_ondas(avisos):
-    """Tira o aviso "Plano sem ondas", que todo plano sem a chave `ondas` recebe."""
-    return [a for a in avisos if "sem ondas" not in a]
+def sem_aviso_de_fases(avisos):
+    """Tira o aviso "Plano sem fases", que todo plano sem a chave `fases` recebe."""
+    return [a for a in avisos if "sem fases" not in a]
 
 
 def test_plano_valido_passa():
     erros, avisos = v.validar(plano_valido(), registro_valido())
-    assert erros == [] and sem_aviso_de_ondas(avisos) == []
+    assert erros == [] and sem_aviso_de_fases(avisos) == []
 
 
 # --- uma mutação por regra: (nome, função que altera o plano, trecho esperado) ---
@@ -388,7 +388,7 @@ def test_registro_inutilizavel_vira_erro():
 def avisos_de(plano, rascunho=False):
     erros, avisos = v.validar(plano, registro_valido(), rascunho=rascunho)
     assert erros == [], erros
-    return sem_aviso_de_ondas(avisos)
+    return sem_aviso_de_fases(avisos)
 
 
 @pytest.mark.parametrize("verbo", ["Otimizar", "acompanhar", "Priorizar", "direcionar", "Melhorar"])
@@ -439,7 +439,7 @@ def test_aviso_margem_ausente_so_em_rascunho():
     avisos = avisos_de(plano, rascunho=True)
     assert len(avisos) == 1 and "margem" in avisos[0]
     erros, avisos_final = v.validar(plano, registro_valido())
-    assert tem(erros, "margem") and sem_aviso_de_ondas(avisos_final) == []
+    assert tem(erros, "margem") and sem_aviso_de_fases(avisos_final) == []
 
 
 # --- CLI ---
@@ -455,7 +455,7 @@ def test_cli_plano_valido(tmp_path, capsys):
     assert v.main(_gravar(tmp_path)) == 0
     linhas = capsys.readouterr().out.splitlines()
     assert linhas[-1] == "OK: 6 ações, 3 soluções cobertas."
-    assert len(linhas) == 2 and linhas[0].startswith("AVISO: Plano sem ondas")
+    assert len(linhas) == 2 and linhas[0].startswith("AVISO: Plano sem fases")
 
 
 def test_cli_avisos_vao_para_stdout_antes_do_ok(tmp_path, capsys):
@@ -524,7 +524,7 @@ def test_cli_depende_de_malformado_nao_levanta(tmp_path, capsys, deps):
     assert err.startswith("ERRO:") and "depende" in err and "Traceback" not in err
 
 
-# --- onda final de correções ---
+# --- fase final de correções ---
 
 @pytest.mark.parametrize("rascunho", [False, True])
 def test_alavanca_da_meta_ausente_e_erro(rascunho):
@@ -644,19 +644,19 @@ def test_janela_nos_limites_85_95_nao_avisa(fim):
     plano = copy.deepcopy(plano_valido())
     plano["janela_prova"]["fim"] = fim
     erros, avisos = v.validar(plano, registro_valido())
-    assert erros == [] and sem_aviso_de_ondas(avisos) == []
+    assert erros == [] and sem_aviso_de_fases(avisos) == []
 
 
-# --- ondas, checkpoints, decisões do cliente e blocos novos (todos opcionais) ---
+# --- fases, checkpoints, decisões do cliente e blocos novos (todos opcionais) ---
 
 KPIS = [{"kpi": "Taxa de quebra", "meta_limite": "Meta 25%; acima de 30% volta ao Contenção"}]
 
 
-def com_ondas():
-    """plano_com_ondas() com kpis_acompanhamento: o ponto de partida sem ERRO e sem AVISO."""
-    plano = copy.deepcopy(plano_com_ondas())
+def com_fases():
+    """plano_com_fases() com kpis_acompanhamento: o ponto de partida sem ERRO e sem AVISO."""
+    plano = copy.deepcopy(plano_com_fases())
     plano["kpis_acompanhamento"] = copy.deepcopy(KPIS)
-    plano["como_funciona"] = [{"titulo": "Lógica do plano", "texto": "Três ondas com checkpoint."}]
+    plano["como_funciona"] = [{"titulo": "Lógica do plano", "texto": "Três fases com checkpoint."}]
     plano["protocolo_mudanca"] = {"intro": "Uma mudança por vez.", "regras": ["Fazer backup antes."]}
     plano["metas_mensais"] = {
         "cenario": "Realista",
@@ -671,22 +671,22 @@ def validar_plano(plano, rascunho=False):
     return v.validar(plano, registro_valido(), rascunho=rascunho)
 
 
-def onda(plano, numero):
-    return next(o for o in plano["ondas"] if o["numero"] == numero)
+def fase(plano, numero):
+    return next(o for o in plano["fases"] if o["numero"] == numero)
 
 
-def test_plano_com_ondas_valido_passa():
-    assert validar_plano(com_ondas()) == ([], [])
+def test_plano_com_fases_valido_passa():
+    assert validar_plano(com_fases()) == ([], [])
 
 
-def test_plano_antigo_sem_ondas_so_avisa():
+def test_plano_antigo_sem_fases_so_avisa():
     erros, avisos = validar_plano(plano_valido())
     assert erros == []
-    assert len(avisos) == 1 and "sem ondas" in avisos[0]
+    assert len(avisos) == 1 and "sem fases" in avisos[0]
 
 
-def test_plano_com_ondas_sem_kpis_avisa():
-    plano = com_ondas()
+def test_plano_com_fases_sem_kpis_avisa():
+    plano = com_fases()
     del plano["kpis_acompanhamento"]
     erros, avisos = validar_plano(plano)
     assert erros == []
@@ -695,8 +695,8 @@ def test_plano_com_ondas_sem_kpis_avisa():
 
 @pytest.mark.parametrize("chave", ["como_funciona", "protocolo_mudanca", "metas_mensais"])
 @pytest.mark.parametrize("vazio", ["ausente", None])
-def test_plano_com_ondas_sem_bloco_obrigatorio_da_skill_avisa(chave, vazio):
-    plano = com_ondas()
+def test_plano_com_fases_sem_bloco_obrigatorio_da_skill_avisa(chave, vazio):
+    plano = com_fases()
     if vazio == "ausente":
         del plano[chave]
     else:
@@ -706,181 +706,190 @@ def test_plano_com_ondas_sem_bloco_obrigatorio_da_skill_avisa(chave, vazio):
     assert len(avisos) == 1 and chave in avisos[0], avisos
 
 
-def test_plano_com_ondas_com_como_funciona_vazio_avisa():
-    plano = com_ondas()
+def test_rascunho_nao_cobra_metas_mensais_mas_cobra_os_outros_blocos():
+    plano = com_fases()
+    for chave in ("como_funciona", "protocolo_mudanca", "metas_mensais"):
+        del plano[chave]
+    erros, avisos = validar_plano(plano, rascunho=True)
+    assert erros == []
+    assert len(avisos) == 2 and not any("metas_mensais" in a for a in avisos), avisos
+
+
+def test_plano_com_fases_com_como_funciona_vazio_avisa():
+    plano = com_fases()
     plano["como_funciona"] = []
     erros, avisos = validar_plano(plano)
     assert erros == [] and len(avisos) == 1 and "como_funciona" in avisos[0]
 
 
-def test_plano_com_ondas_sem_os_tres_blocos_da_um_aviso_por_bloco():
-    plano = com_ondas()
+def test_plano_com_fases_sem_os_tres_blocos_da_um_aviso_por_bloco():
+    plano = com_fases()
     for chave in ("como_funciona", "protocolo_mudanca", "metas_mensais"):
         del plano[chave]
     erros, avisos = validar_plano(plano)
     assert erros == [] and len(avisos) == 3
 
 
-def test_plano_sem_ondas_nao_cobra_os_blocos_das_ondas():
+def test_plano_sem_fases_nao_cobra_os_blocos_das_fases():
     erros, avisos = validar_plano(plano_valido())
-    assert erros == [] and len(avisos) == 1 and "sem ondas" in avisos[0]
+    assert erros == [] and len(avisos) == 1 and "sem fases" in avisos[0]
 
 
 def test_kpis_acompanhamento_vazio_equivale_a_ausente():
-    plano = com_ondas()
+    plano = com_fases()
     plano["kpis_acompanhamento"] = []
     erros, avisos = validar_plano(plano)
     assert erros == []
     assert len(avisos) == 1 and "kpis_acompanhamento" in avisos[0]
 
 
-def test_ondas_lista_vazia_equivale_a_sem_ondas():
-    plano = com_ondas()
-    plano["ondas"] = []
+def test_fases_lista_vazia_equivale_a_sem_fases():
+    plano = com_fases()
+    plano["fases"] = []
     erros, avisos = validar_plano(plano)
-    assert erros == [] and any("sem ondas" in a for a in avisos)
+    assert erros == [] and any("sem fases" in a for a in avisos)
 
 
-def _ondas_fora_de_ordem(p):
-    p["ondas"][0], p["ondas"][1] = p["ondas"][1], p["ondas"][0]
+def _fases_fora_de_ordem(p):
+    p["fases"][0], p["fases"][1] = p["fases"][1], p["fases"][0]
 
 
-def _ondas_sobrepostas(p):
-    onda(p, 2)["inicio"] = "01/11/2026"  # a onda 1 termina em 01/11
+def _fases_sobrepostas(p):
+    fase(p, 2)["inicio"] = "01/11/2026"  # a fase 1 termina em 01/11
 
 
 def _numeracao_pulada(p):
-    onda(p, 3)["numero"] = 5
+    fase(p, 3)["numero"] = 5
 
 
 def _numeracao_texto(p):
-    onda(p, 2)["numero"] = "2"
+    fase(p, 2)["numero"] = "2"
 
 
 def _primeira_antes_da_referencia(p):
-    onda(p, 1)["inicio"] = "21/10/2026"  # referência: 22/10/2026
+    fase(p, 1)["inicio"] = "21/10/2026"  # referência: 22/10/2026
 
 
 def _ultima_depois_do_fim_do_ciclo(p):
-    onda(p, 3)["fim"] = "01/10/2027"  # fim do ciclo: 30/09/2027
+    fase(p, 3)["fim"] = "01/10/2027"  # fim do ciclo: 30/09/2027
 
 
-def _onda_inicio_depois_do_fim(p):
-    onda(p, 2)["fim"] = "01/11/2026"
+def _fase_inicio_depois_do_fim(p):
+    fase(p, 2)["fim"] = "01/11/2026"
 
 
-def _onda_data_invalida(p):
-    onda(p, 2)["inicio"] = "2026-11-02"
+def _fase_data_invalida(p):
+    fase(p, 2)["inicio"] = "2026-11-02"
 
 
 @pytest.mark.parametrize(
     "mutar, trecho",
     [
-        (_ondas_fora_de_ordem, "fora de ordem"),
-        (_ondas_sobrepostas, "Onda 2: começa em 01/11/2026, mas a Onda 1 só termina em 01/11/2026"),
+        (_fases_fora_de_ordem, "fora de ordem"),
+        (_fases_sobrepostas, "Fase 2: começa em 01/11/2026, mas a Fase 1 só termina em 01/11/2026"),
         (_numeracao_pulada, "numeradas de 1 a 3"),
         (_numeracao_texto, "numeradas de 1 a 3"),
-        (_primeira_antes_da_referencia, "Onda 1: início 21/10/2026 antes da data de referência 22/10/2026"),
-        (_ultima_depois_do_fim_do_ciclo, "Onda 3: fim 01/10/2027 depois do fim do ciclo (30/09/2027)"),
-        (_onda_inicio_depois_do_fim, "Onda 2: o início 02/11/2026 é depois do fim 01/11/2026"),
-        (_onda_data_invalida, "Onda 2: "),
+        (_primeira_antes_da_referencia, "Fase 1: início 21/10/2026 antes da data de referência 22/10/2026"),
+        (_ultima_depois_do_fim_do_ciclo, "Fase 3: fim 01/10/2027 depois do fim do ciclo (30/09/2027)"),
+        (_fase_inicio_depois_do_fim, "Fase 2: o início 02/11/2026 é depois do fim 01/11/2026"),
+        (_fase_data_invalida, "Fase 2: "),
     ],
 )
-def test_regra_de_erro_das_ondas(mutar, trecho):
-    plano = com_ondas()
+def test_regra_de_erro_das_fases(mutar, trecho):
+    plano = com_fases()
     mutar(plano)
     assert tem(validar_plano(plano)[0], trecho), validar_plano(plano)[0]
 
 
 @pytest.mark.parametrize("campo", ["nome", "calendario_midia", "objetivo"])
 @pytest.mark.parametrize("vazio", ["", "   ", None])
-def test_onda_com_campo_de_texto_vazio(campo, vazio):
-    plano = com_ondas()
-    onda(plano, 2)[campo] = vazio
-    assert tem(validar_plano(plano)[0], f"Onda 2: campo {campo} vazio")
+def test_fase_com_campo_de_texto_vazio(campo, vazio):
+    plano = com_fases()
+    fase(plano, 2)[campo] = vazio
+    assert tem(validar_plano(plano)[0], f"Fase 2: campo {campo} vazio")
 
 
-def test_onda_sem_a_chave_de_texto():
-    plano = com_ondas()
-    del onda(plano, 1)["objetivo"]
-    assert tem(validar_plano(plano)[0], "Onda 1: campo objetivo vazio")
+def test_fase_sem_a_chave_de_texto():
+    plano = com_fases()
+    del fase(plano, 1)["objetivo"]
+    assert tem(validar_plano(plano)[0], "Fase 1: campo objetivo vazio")
 
 
 @pytest.mark.parametrize("campo", ["duracao", "pauta", "para_liberar", "quem_decide"])
 @pytest.mark.parametrize("vazio", ["", "  ", None])
 def test_checkpoint_com_campo_de_texto_vazio(campo, vazio):
-    plano = com_ondas()
-    onda(plano, 1)["checkpoint"][campo] = vazio
-    assert tem(validar_plano(plano)[0], f"Onda 1: checkpoint.{campo} vazio")
+    plano = com_fases()
+    fase(plano, 1)["checkpoint"][campo] = vazio
+    assert tem(validar_plano(plano)[0], f"Fase 1: checkpoint.{campo} vazio")
 
 
-def test_acao_em_duas_ondas():
-    plano = com_ondas()
-    onda(plano, 2)["acoes"].append(1)
-    assert tem(validar_plano(plano)[0], 'Ação 1 ("Liberar os acessos"): está em mais de uma onda (Onda 1 e Onda 2)')
+def test_acao_em_duas_fases():
+    plano = com_fases()
+    fase(plano, 2)["acoes"].append(1)
+    assert tem(validar_plano(plano)[0], 'Ação 1 ("Liberar os acessos"): está em mais de uma fase (Fase 1 e Fase 2)')
 
 
-def test_acao_em_nenhuma_onda():
-    plano = com_ondas()
-    onda(plano, 3)["acoes"].remove(6)
+def test_acao_em_nenhuma_fase():
+    plano = com_fases()
+    fase(plano, 3)["acoes"].remove(6)
     assert tem(
         validar_plano(plano)[0],
-        'Ação 6 ("Implantar a rotina mensal de revisão do plano"): não está em nenhuma onda',
+        'Ação 6 ("Implantar a rotina mensal de revisão do plano"): não está em nenhuma fase',
     )
 
 
-def test_onda_cita_acao_que_nao_existe():
-    plano = com_ondas()
-    onda(plano, 2)["acoes"].append(99)
-    assert tem(validar_plano(plano)[0], "Onda 2: cita a ação 99, que não existe no plano")
+def test_fase_cita_acao_que_nao_existe():
+    plano = com_fases()
+    fase(plano, 2)["acoes"].append(99)
+    assert tem(validar_plano(plano)[0], "Fase 2: cita a ação 99, que não existe no plano")
 
 
-def test_inicio_da_acao_depois_da_janela_da_onda():
-    plano = com_ondas()
-    acao(plano, 4)["inicio"] = "01/12/2026"  # a onda 2 vai até 30/11/2026
+def test_inicio_da_acao_depois_da_janela_da_fase():
+    plano = com_fases()
+    acao(plano, 4)["inicio"] = "01/12/2026"  # a fase 2 vai até 30/11/2026
     assert tem(
         validar_plano(plano)[0],
         'Ação 4 ("Checar ruptura de estoque continuamente"): início 01/12/2026 fora da janela '
-        "da Onda 2 (02/11/2026 a 30/11/2026)",
+        "da Fase 2 (02/11/2026 a 30/11/2026)",
     )
 
 
-def test_inicio_da_acao_antes_da_janela_da_onda():
-    plano = com_ondas()
-    acao(plano, 3)["inicio"] = "01/11/2026"  # a onda 2 começa em 02/11/2026
-    assert tem(validar_plano(plano)[0], "início 01/11/2026 fora da janela da Onda 2")
+def test_inicio_da_acao_antes_da_janela_da_fase():
+    plano = com_fases()
+    acao(plano, 3)["inicio"] = "01/11/2026"  # a fase 2 começa em 02/11/2026
+    assert tem(validar_plano(plano)[0], "início 01/11/2026 fora da janela da Fase 2")
 
 
-def test_entrega_da_acao_pode_passar_da_janela_da_onda():
-    plano = com_ondas()
-    assert acao(plano, 4)["entrega"] == "15/12/2026"  # a onda 2 termina em 30/11/2026
+def test_entrega_da_acao_pode_passar_da_janela_da_fase():
+    plano = com_fases()
+    assert acao(plano, 4)["entrega"] == "15/12/2026"  # a fase 2 termina em 30/11/2026
     assert validar_plano(plano)[0] == []
 
 
 def test_inicio_da_acao_nos_limites_da_janela_passa():
-    plano = com_ondas()
-    assert acao(plano, 3)["inicio"] == onda(plano, 2)["inicio"]
+    plano = com_fases()
+    assert acao(plano, 3)["inicio"] == fase(plano, 2)["inicio"]
     assert validar_plano(plano)[0] == []
 
 
-def test_checkpoint_antes_do_inicio_da_onda():
-    plano = com_ondas()
-    onda(plano, 2)["checkpoint"]["data"] = "01/11/2026"  # a onda 2 começa em 02/11/2026
-    assert tem(validar_plano(plano)[0], "Onda 2: checkpoint.data 01/11/2026 antes do início da onda (02/11/2026)")
+def test_checkpoint_antes_do_inicio_da_fase():
+    plano = com_fases()
+    fase(plano, 2)["checkpoint"]["data"] = "01/11/2026"  # a fase 2 começa em 02/11/2026
+    assert tem(validar_plano(plano)[0], "Fase 2: checkpoint.data 01/11/2026 antes do início da fase (02/11/2026)")
 
 
-def test_checkpoint_depois_do_inicio_da_onda_seguinte():
-    plano = com_ondas()
-    onda(plano, 1)["checkpoint"]["data"] = "03/11/2026"  # a onda 2 começa em 02/11/2026
+def test_checkpoint_depois_do_inicio_da_fase_seguinte():
+    plano = com_fases()
+    fase(plano, 1)["checkpoint"]["data"] = "03/11/2026"  # a fase 2 começa em 02/11/2026
     assert tem(
         validar_plano(plano)[0],
-        "Onda 1: checkpoint.data 03/11/2026 depois do início da Onda 2 (02/11/2026)",
+        "Fase 1: checkpoint.data 03/11/2026 depois do início da Fase 2 (02/11/2026)",
     )
 
 
-def test_checkpoint_no_dia_do_inicio_da_onda_seguinte_passa():
-    plano = com_ondas()
-    onda(plano, 1)["checkpoint"]["data"] = "02/11/2026"
+def test_checkpoint_no_dia_do_inicio_da_fase_seguinte_passa():
+    plano = com_fases()
+    fase(plano, 1)["checkpoint"]["data"] = "02/11/2026"
     assert validar_plano(plano)[0] == []
 
 
@@ -894,38 +903,38 @@ def _checkpoint(data):
     }
 
 
-def test_checkpoint_da_ultima_onda_depois_do_fim_do_ciclo():
-    plano = com_ondas()
-    onda(plano, 3)["checkpoint"] = _checkpoint("01/10/2027")
+def test_checkpoint_da_ultima_fase_depois_do_fim_do_ciclo():
+    plano = com_fases()
+    fase(plano, 3)["checkpoint"] = _checkpoint("01/10/2027")
     assert tem(
         validar_plano(plano)[0],
-        "Onda 3: checkpoint.data 01/10/2027 depois do fim do ciclo (30/09/2027)",
+        "Fase 3: checkpoint.data 01/10/2027 depois do fim do ciclo (30/09/2027)",
     )
 
 
-def test_checkpoint_da_ultima_onda_dentro_do_ciclo_passa():
-    plano = com_ondas()
-    onda(plano, 3)["checkpoint"] = _checkpoint("30/06/2027")
+def test_checkpoint_da_ultima_fase_dentro_do_ciclo_passa():
+    plano = com_fases()
+    fase(plano, 3)["checkpoint"] = _checkpoint("30/06/2027")
     assert validar_plano(plano) == ([], [])
 
 
 @pytest.mark.parametrize("data", ["2026-10-30", "30/10/26", "31/02/2026", None, ""])
 def test_checkpoint_com_data_invalida(data):
-    plano = com_ondas()
-    onda(plano, 1)["checkpoint"]["data"] = data
-    assert tem(validar_plano(plano)[0], "Onda 1: checkpoint.data")
+    plano = com_fases()
+    fase(plano, 1)["checkpoint"]["data"] = data
+    assert tem(validar_plano(plano)[0], "Fase 1: checkpoint.data")
 
 
 @pytest.mark.parametrize("checkpoint", ["30/10/2026", ["30/10/2026"], 7, {}])
 def test_checkpoint_que_nao_e_objeto_completo(checkpoint):
-    plano = com_ondas()
-    onda(plano, 1)["checkpoint"] = checkpoint
-    assert tem(validar_plano(plano)[0], "Onda 1: checkpoint")
+    plano = com_fases()
+    fase(plano, 1)["checkpoint"] = checkpoint
+    assert tem(validar_plano(plano)[0], "Fase 1: checkpoint")
 
 
 @pytest.mark.parametrize("ate", ["2026-11-27", "27/11/26", "31/02/2027", None, ""])
 def test_decisao_do_cliente_com_data_invalida(ate):
-    plano = com_ondas()
+    plano = com_fases()
     acao(plano, 5)["decisao_cliente"]["ate"] = ate
     assert tem(
         validar_plano(plano)[0],
@@ -935,21 +944,21 @@ def test_decisao_do_cliente_com_data_invalida(ate):
 
 @pytest.mark.parametrize("ate", ["21/10/2026", "01/10/2027"])
 def test_decisao_do_cliente_fora_da_referencia_ao_fim_do_ciclo(ate):
-    plano = com_ondas()
+    plano = com_fases()
     acao(plano, 5)["decisao_cliente"]["ate"] = ate
     assert tem(validar_plano(plano)[0], f"decisao_cliente.ate {ate} fora do ciclo (22/10/2026 a 30/09/2027)")
 
 
 @pytest.mark.parametrize("ate", ["22/10/2026", "30/09/2027"])
 def test_decisao_do_cliente_nos_limites_do_ciclo_passa(ate):
-    plano = com_ondas()
+    plano = com_fases()
     acao(plano, 5)["decisao_cliente"]["ate"] = ate
     assert validar_plano(plano)[0] == []
 
 
 @pytest.mark.parametrize("vazio", ["", "   ", None])
 def test_decisao_do_cliente_com_recomendacao_vazia(vazio):
-    plano = com_ondas()
+    plano = com_fases()
     acao(plano, 3)["decisao_cliente"]["recomendacao"] = vazio
     assert tem(
         validar_plano(plano)[0],
@@ -958,7 +967,7 @@ def test_decisao_do_cliente_com_recomendacao_vazia(vazio):
 
 
 def test_decisao_do_cliente_nula_ou_ausente_passa():
-    plano = com_ondas()
+    plano = com_fases()
     acao(plano, 3)["decisao_cliente"] = None
     del acao(plano, 5)["decisao_cliente"]
     assert validar_plano(plano) == ([], [])
@@ -966,12 +975,12 @@ def test_decisao_do_cliente_nula_ou_ausente_passa():
 
 @pytest.mark.parametrize("valor", ["aprovar", ["a"], 3, True])
 def test_decisao_do_cliente_que_nao_e_objeto(valor):
-    plano = com_ondas()
+    plano = com_fases()
     acao(plano, 3)["decisao_cliente"] = valor
     assert tem(validar_plano(plano)[0], "decisao_cliente precisa ser um objeto")
 
 
-def test_decisao_do_cliente_valida_tambem_sem_ondas():
+def test_decisao_do_cliente_valida_tambem_sem_fases():
     plano = copy.deepcopy(plano_valido())
     acao(plano, 3)["decisao_cliente"] = {"ate": "21/10/2026", "recomendacao": "Aprovar."}
     assert tem(validar_plano(plano)[0], "decisao_cliente.ate 21/10/2026 fora do ciclo")
@@ -996,8 +1005,8 @@ def _sessoes_validas():
 
 
 def test_blocos_novos_validos_passam():
-    plano = com_ondas()
-    plano["como_funciona"] = [{"titulo": "Lógica do plano", "texto": "Três ondas com checkpoint."}]
+    plano = com_fases()
+    plano["como_funciona"] = [{"titulo": "Lógica do plano", "texto": "Três fases com checkpoint."}]
     plano["metas_mensais"] = _meta_mensal_valida()
     plano["sessoes_nao_pagas"] = _sessoes_validas()
     plano["protocolo_mudanca"] = {"intro": "Uma mudança por vez.", "regras": ["Fazer backup antes."]}
@@ -1005,20 +1014,20 @@ def test_blocos_novos_validos_passam():
 
 
 def test_metas_mensais_com_observacao_texto_passa():
-    plano = com_ondas()
+    plano = com_fases()
     plano["metas_mensais"] = {**_meta_mensal_valida(), "observacao": "Meses com mais de 4 semanas."}
     assert validar_plano(plano) == ([], [])
 
 
 def test_metas_mensais_linha_com_numero_de_celulas_errado():
-    plano = com_ondas()
+    plano = com_fases()
     plano["metas_mensais"] = _meta_mensal_valida()
     plano["metas_mensais"]["linhas"][1] = ["Dez/26"]
     assert tem(validar_plano(plano)[0], "metas_mensais.linhas[2]: 1 células, mas colunas tem 2")
 
 
 def test_sessoes_nao_pagas_linha_com_numero_de_celulas_errado():
-    plano = com_ondas()
+    plano = com_fases()
     plano["sessoes_nao_pagas"] = _sessoes_validas()
     plano["sessoes_nao_pagas"]["linhas"][0] = ["Nov/26", "1000", "extra"]
     assert tem(validar_plano(plano)[0], "sessoes_nao_pagas.linhas[1]: 3 células, mas colunas tem 2")
@@ -1041,7 +1050,7 @@ def test_sessoes_nao_pagas_linha_com_numero_de_celulas_errado():
     ],
 )
 def test_tabelas_malformadas(bloco, chave, valor, trecho):
-    plano = com_ondas()
+    plano = com_fases()
     plano[bloco] = _meta_mensal_valida() if bloco == "metas_mensais" else _sessoes_validas()
     plano[bloco][chave] = valor
     assert tem(validar_plano(plano)[0], trecho), validar_plano(plano)[0]
@@ -1050,14 +1059,14 @@ def test_tabelas_malformadas(bloco, chave, valor, trecho):
 @pytest.mark.parametrize("bloco", ["metas_mensais", "sessoes_nao_pagas", "protocolo_mudanca"])
 @pytest.mark.parametrize("valor", ["texto", ["a"], 3, True])
 def test_bloco_que_deveria_ser_objeto(bloco, valor):
-    plano = com_ondas()
+    plano = com_fases()
     plano[bloco] = valor
     assert tem(validar_plano(plano)[0], f"{bloco} precisa ser um objeto")
 
 
 @pytest.mark.parametrize("chave", ["colunas", "linhas", "cenario"])
 def test_metas_mensais_sem_chave(chave):
-    plano = com_ondas()
+    plano = com_fases()
     plano["metas_mensais"] = _meta_mensal_valida()
     del plano["metas_mensais"][chave]
     assert tem(validar_plano(plano)[0], f"metas_mensais.{chave}")
@@ -1077,7 +1086,7 @@ def test_metas_mensais_sem_chave(chave):
     ],
 )
 def test_kpis_acompanhamento_malformado(valor):
-    plano = com_ondas()
+    plano = com_fases()
     plano["kpis_acompanhamento"] = valor
     assert tem(validar_plano(plano)[0], "kpis_acompanhamento"), validar_plano(plano)[0]
 
@@ -1089,14 +1098,14 @@ def test_kpis_acompanhamento_malformado(valor):
         {"titulo": "x", "texto": "y"},
         ["texto"],
         [{"titulo": "Lógica"}],
-        [{"texto": "Três ondas."}],
-        [{"titulo": "", "texto": "Três ondas."}],
+        [{"texto": "Três fases."}],
+        [{"titulo": "", "texto": "Três fases."}],
         [{"titulo": "Lógica", "texto": "  "}],
         [{"titulo": "Lógica", "texto": 5}],
     ],
 )
 def test_como_funciona_malformado(valor):
-    plano = com_ondas()
+    plano = com_fases()
     plano["como_funciona"] = valor
     assert tem(validar_plano(plano)[0], "como_funciona"), validar_plano(plano)[0]
 
@@ -1114,78 +1123,78 @@ def test_como_funciona_malformado(valor):
     ],
 )
 def test_protocolo_de_mudanca_malformado(valor, trecho):
-    plano = com_ondas()
+    plano = com_fases()
     plano["protocolo_mudanca"] = valor
     assert tem(validar_plano(plano)[0], trecho), validar_plano(plano)[0]
 
 
-def test_onda_que_cita_a_mesma_acao_duas_vezes():
-    plano = com_ondas()
-    onda(plano, 1)["acoes"] = [1, 1, 2]
-    assert tem(validar_plano(plano)[0], "Onda 1: cita a ação 1 mais de uma vez")
+def test_fase_que_cita_a_mesma_acao_duas_vezes():
+    plano = com_fases()
+    fase(plano, 1)["acoes"] = [1, 1, 2]
+    assert tem(validar_plano(plano)[0], "Fase 1: cita a ação 1 mais de uma vez")
 
 
-def test_aviso_onda_sem_acao():
-    plano = com_ondas()
-    onda(plano, 3)["acoes"] = []
+def test_aviso_fase_sem_acao():
+    plano = com_fases()
+    fase(plano, 3)["acoes"] = []
     avisos = validar_plano(plano)[1]
-    assert any("Onda 3: não tem nenhuma ação" in a for a in avisos)
+    assert any("Fase 3: não tem nenhuma ação" in a for a in avisos)
 
 
-def test_aviso_onda_sem_checkpoint_exceto_a_ultima():
-    plano = com_ondas()
-    onda(plano, 2)["checkpoint"] = None
+def test_aviso_fase_sem_checkpoint_exceto_a_ultima():
+    plano = com_fases()
+    fase(plano, 2)["checkpoint"] = None
     erros, avisos = validar_plano(plano)
     assert erros == []
     assert avisos == [
-        "Onda 2: sem checkpoint; toda onda, exceto a última, termina num checkpoint "
+        "Fase 2: sem checkpoint; toda fase, exceto a última, termina num checkpoint "
         "com data, pauta e quem decide."
     ]
 
 
-def test_ultima_onda_sem_checkpoint_nao_avisa():
-    plano = com_ondas()
-    assert onda(plano, 3)["checkpoint"] is None
+def test_ultima_fase_sem_checkpoint_nao_avisa():
+    plano = com_fases()
+    assert fase(plano, 3)["checkpoint"] is None
     assert validar_plano(plano)[1] == []
 
 
-def test_onda_sem_a_chave_checkpoint_avisa_como_nula():
-    plano = com_ondas()
-    del onda(plano, 1)["checkpoint"]
+def test_fase_sem_a_chave_checkpoint_avisa_como_nula():
+    plano = com_fases()
+    del fase(plano, 1)["checkpoint"]
     erros, avisos = validar_plano(plano)
-    assert erros == [] and any("Onda 1: sem checkpoint" in a for a in avisos)
+    assert erros == [] and any("Fase 1: sem checkpoint" in a for a in avisos)
 
 
 @pytest.mark.parametrize(
-    "ondas",
-    ["texto", 42, {"numero": 1}, [1], ["onda"], [None], [{}], [[]], [{"numero": 1, "acoes": "1,2"}]],
+    "fases",
+    ["texto", 42, {"numero": 1}, [1], ["fase"], [None], [{}], [[]], [{"numero": 1, "acoes": "1,2"}]],
 )
-def test_ondas_malformadas_viram_erro_sem_excecao(ondas):
-    plano = com_ondas()
-    plano["ondas"] = ondas
+def test_fases_malformadas_viram_erro_sem_excecao(fases):
+    plano = com_fases()
+    plano["fases"] = fases
     erros, _ = validar_plano(plano)
-    assert erros, "um ondas malformado precisa gerar erro"
+    assert erros, "um fases malformado precisa gerar erro"
     assert all(isinstance(e, str) for e in erros)
 
 
 @pytest.mark.parametrize("campo", ["acoes", "inicio", "fim", "nome", "checkpoint"])
 @pytest.mark.parametrize("valor", [None, 7, "texto", [], {}, True])
-def test_campo_de_onda_malformado_nao_levanta(campo, valor):
-    plano = com_ondas()
-    onda(plano, 2)[campo] = valor
+def test_campo_de_fase_malformado_nao_levanta(campo, valor):
+    plano = com_fases()
+    fase(plano, 2)[campo] = valor
     erros, avisos = validar_plano(plano)
     assert all(isinstance(m, str) for m in erros + avisos)
 
 
-def test_ondas_com_horizontes_quebrados_nao_levanta():
-    plano = com_ondas()
+def test_fases_com_horizontes_quebrados_nao_levanta():
+    plano = com_fases()
     plano["horizontes"] = "quebrado"
     erros, _ = validar_plano(plano)
     assert tem(erros, "horizontes")
 
 
-def test_ondas_com_datas_de_referencia_quebradas_nao_levanta():
-    plano = com_ondas()
+def test_fases_com_datas_de_referencia_quebradas_nao_levanta():
+    plano = com_fases()
     plano["data_referencia"] = "ontem"
     plano["fim_ciclo"] = None
     erros, _ = validar_plano(plano)
@@ -1193,12 +1202,12 @@ def test_ondas_com_datas_de_referencia_quebradas_nao_levanta():
 
 
 def test_marcacao_nas_chaves_novas_e_erro_no_final_e_passa_no_rascunho():
-    plano = com_ondas()
-    onda(plano, 1)["objetivo"] += " [VALIDAR]"
+    plano = com_fases()
+    fase(plano, 1)["objetivo"] += " [VALIDAR]"
     plano["kpis_acompanhamento"][0]["meta_limite"] = "[PREENCHER: limite]"
     acao(plano, 3)["decisao_cliente"]["recomendacao"] += " [VALIDAR]"
     erros_final, _ = validar_plano(plano)
-    assert tem(erros_final, "plano.ondas[0].objetivo")
+    assert tem(erros_final, "plano.fases[0].objetivo")
     assert tem(erros_final, "plano.kpis_acompanhamento[0].meta_limite")
     assert tem(erros_final, "decisao_cliente.recomendacao")
     assert validar_plano(plano, rascunho=True)[0] == []

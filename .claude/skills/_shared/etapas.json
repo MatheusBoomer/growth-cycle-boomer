@@ -97,8 +97,8 @@
       "numero": "08",
       "titulo": "Plano de ação",
       "rotuloStatus": "08 · Plano de ação",
-      "descricao": "Monta o plano de ação em ondas, cada uma com checkpoint, com 10 campos por ação, abertura com metas e premissas, em documento Word e planilha Excel iguais.",
-      "oQueEsperar": "O agente começa confirmando o que já sabe e perguntando o que falta: quem executa do lado do cliente, quem opera a mídia, ferramentas, restrições de calendário, a margem de contribuição antes da mídia (para o piso de ROAS) e se a empresa aparece como Agência ou Boomer. Depois monta a abertura do plano e as ondas a partir do calendário de mídia, cada onda com janela e checkpoint (data, pauta, o que libera a próxima e quem decide), e as ações, cada uma com dono, datas, evidência, meta e gatilho. As metas dos 3 primeiros meses saem da projeção aprovada, e o agente gera o documento Word e a planilha Excel. A etapa só fecha quando você responder sim à pergunta-guia: se o cliente fizer só isto por 3 meses, o resultado vem?",
+      "descricao": "Monta o plano de ação em fases, cada uma com checkpoint, com 10 campos por ação, abertura com metas e premissas, em documento Word e planilha Excel iguais.",
+      "oQueEsperar": "O agente começa confirmando o que já sabe e perguntando o que falta: quem executa do lado do cliente, quem opera a mídia, ferramentas, restrições de calendário, a margem de contribuição antes da mídia (para o piso de ROAS) e se a empresa aparece como Agência ou Boomer. Depois monta a abertura do plano e as fases a partir do calendário de mídia, cada fase com janela e checkpoint (data, pauta, o que libera a próxima e quem decide), e as ações, cada uma com dono, datas, evidência, meta e gatilho. As metas dos 3 primeiros meses saem da projeção aprovada, e o agente gera o documento Word e a planilha Excel. A etapa só fecha quando você responder sim à pergunta-guia: se o cliente fizer só isto por 3 meses, o resultado vem?",
       "skill": "08-plano-de-acao",
       "subagentes": [],
       "insumos": []

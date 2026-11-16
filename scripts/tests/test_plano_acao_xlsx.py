@@ -19,12 +19,12 @@ import plano_acao_comum as c  # noqa: E402
 import plano_v2_exemplo as ex  # noqa: E402
 from plano_acao_xlsx import (  # noqa: E402
     ABA_METAS,
-    ABA_PLANO_ONDAS,
+    ABA_PLANO_FASES,
     ABA_RESUMO,
-    COLUNAS_ONDAS,
+    COLUNAS_FASES,
     COLUNAS_PLANO,
     STATUS,
-    STATUS_ONDAS,
+    STATUS_FASES,
     gerar_xlsx,
 )
 
@@ -214,7 +214,7 @@ def ex_aba_plano():
 
 
 # ---------------------------------------------------------------------------
-# Plano com ondas: aba por onda, resumo por frente e aba de metas
+# Plano com fases: aba por fase, resumo por frente e aba de metas
 # ---------------------------------------------------------------------------
 
 def _acoes_por_numero(plano):
@@ -226,24 +226,24 @@ def _linhas_de_acao(ws):
     return [l for l in range(1, ws.max_row + 1) if isinstance(ws.cell(l, 1).value, int)]
 
 
-def test_ondas_tres_abas_na_ordem(tmp_path):
-    saida, resumo, wb = _gerar(ex.plano_com_ondas(), tmp_path)
-    assert ABA_PLANO_ONDAS == "Plano de Ação Estratégico"
+def test_fases_tres_abas_na_ordem(tmp_path):
+    saida, resumo, wb = _gerar(ex.plano_com_fases(), tmp_path)
+    assert ABA_PLANO_FASES == "Plano de Ação Estratégico"
     assert ABA_RESUMO == "Resumo por frente"
-    assert wb.sheetnames == [ABA_PLANO_ONDAS, ABA_RESUMO, ABA_METAS]
+    assert wb.sheetnames == [ABA_PLANO_FASES, ABA_RESUMO, ABA_METAS]
     assert resumo == {"output": str(saida), "total_acoes": 6}
-    assert STATUS_ONDAS == ["A iniciar", "Em andamento", "Concluída", "Atrasada", "Adiada"]
-    assert COLUNAS_ONDAS == [
+    assert STATUS_FASES == ["A iniciar", "Em andamento", "Concluída", "Atrasada", "Adiada"]
+    assert COLUNAS_FASES == [
         "Nº", "Ação", "Racional (achado de origem)", "Alavanca da meta", "Frente", "Horizonte",
         "Responsável", "Início", "Entrega", "Depende de", "Como", "Evidência",
         "Impacto esperado / KPI e meta", "Gatilho", "Status",
     ]
 
 
-def test_ondas_titulo_subtitulo_e_congelamento(tmp_path):
-    plano = ex.plano_com_ondas()
+def test_fases_titulo_subtitulo_e_congelamento(tmp_path):
+    plano = ex.plano_com_fases()
     _, _, wb = _gerar(plano, tmp_path)
-    ws = wb[ABA_PLANO_ONDAS]
+    ws = wb[ABA_PLANO_FASES]
     assert ws["A1"].value == "PLANO DE AÇÃO ESTRATÉGICO — MARCA TESTE"
     assert "A1:O1" in {str(r) for r in ws.merged_cells.ranges}
     assert "A2:O2" in {str(r) for r in ws.merged_cells.ranges}
@@ -254,23 +254,23 @@ def test_ondas_titulo_subtitulo_e_congelamento(tmp_path):
     assert ws["A1"].fill.fgColor.rgb.endswith("1C2F5F")
 
 
-def test_ondas_faixa_cabecalho_e_acoes_de_cada_onda(tmp_path):
-    plano = ex.plano_com_ondas()
+def test_fases_faixa_cabecalho_e_acoes_de_cada_fase(tmp_path):
+    plano = ex.plano_com_fases()
     _, _, wb = _gerar(plano, tmp_path)
-    ws = wb[ABA_PLANO_ONDAS]
+    ws = wb[ABA_PLANO_FASES]
     por_numero = _acoes_por_numero(plano)
-    faixas = [l for l in range(1, ws.max_row + 1) if str(ws.cell(l, 1).value).startswith("ONDA ")]
-    assert faixas == [4, 8, 12]  # título, subtítulo, linha em branco; depois faixa, cabeçalho e 2 ações por onda
-    assert ws.cell(faixas[0], 1).value == "ONDA 1 · CONTENÇÃO · 26/10 A 01/11"
-    assert ws.cell(faixas[1], 1).value == "ONDA 2 · ESCALA · 02/11 A 30/11"
-    assert ws.cell(faixas[2], 1).value == "ONDA 3 · MANUTENÇÃO · 01/12 A 30/06/27"
+    faixas = [l for l in range(1, ws.max_row + 1) if str(ws.cell(l, 1).value).startswith("FASE ")]
+    assert faixas == [4, 8, 12]  # título, subtítulo, linha em branco; depois faixa, cabeçalho e 2 ações por fase
+    assert ws.cell(faixas[0], 1).value == "FASE 1 · CONTENÇÃO · 26/10 A 01/11"
+    assert ws.cell(faixas[1], 1).value == "FASE 2 · ESCALA · 02/11 A 30/11"
+    assert ws.cell(faixas[2], 1).value == "FASE 3 · MANUTENÇÃO · 01/12 A 30/06/27"
     mescladas = {str(r) for r in ws.merged_cells.ranges}
     limites = faixas + [ws.max_row + 1]
-    for onda, ini, fim in zip(plano["ondas"], limites, limites[1:]):
+    for fase, ini, fim in zip(plano["fases"], limites, limites[1:]):
         assert f"A{ini}:O{ini}" in mescladas
-        assert [cel.value for cel in ws[ini + 1]] == COLUNAS_ONDAS  # cabeçalho repetido
+        assert [cel.value for cel in ws[ini + 1]] == COLUNAS_FASES  # cabeçalho repetido
         numeros = [ws.cell(l, 1).value for l in range(ini + 2, fim)]
-        assert numeros == sorted(onda["acoes"])
+        assert numeros == sorted(fase["acoes"])
         for linha in range(ini + 2, fim):
             horizonte, a = por_numero[ws.cell(linha, 1).value]
             assert ws.cell(linha, 2).value == a["acao"]
@@ -283,14 +283,14 @@ def test_ondas_faixa_cabecalho_e_acoes_de_cada_onda(tmp_path):
             assert ws.cell(linha, 12).value == a["evidencia"]
             assert ws.cell(linha, 13).value == a["kpi_meta"]
             assert ws.cell(linha, 14).value == a["gatilho"]
-            assert ws.cell(linha, 15).value == STATUS_ONDAS[0]  # "A iniciar"
+            assert ws.cell(linha, 15).value == STATUS_FASES[0]  # "A iniciar"
     assert ws.cell(faixas[0] + 1, 1).fill.fgColor.rgb.endswith("1C2F5F")
 
 
-def test_ondas_datas_e_depende_de_com_nome(tmp_path):
-    plano = ex.plano_com_ondas()
+def test_fases_datas_e_depende_de_com_nome(tmp_path):
+    plano = ex.plano_com_fases()
     _, _, wb = _gerar(plano, tmp_path)
-    ws = wb[ABA_PLANO_ONDAS]
+    ws = wb[ABA_PLANO_FASES]
     linhas = {ws.cell(l, 1).value: l for l in _linhas_de_acao(ws)}
     for numero, (_, a) in _acoes_por_numero(plano).items():
         linha = linhas[numero]
@@ -304,10 +304,10 @@ def test_ondas_datas_e_depende_de_com_nome(tmp_path):
     assert ws.cell(linhas[1], 8).value == datetime(2026, 10, 26)
 
 
-def test_ondas_validacao_de_status_so_nas_linhas_de_acao(tmp_path):
-    plano = ex.plano_com_ondas()
+def test_fases_validacao_de_status_so_nas_linhas_de_acao(tmp_path):
+    plano = ex.plano_com_fases()
     _, _, wb = _gerar(plano, tmp_path)
-    ws = wb[ABA_PLANO_ONDAS]
+    ws = wb[ABA_PLANO_FASES]
     validacoes = ws.data_validations.dataValidation
     assert len(validacoes) == 1
     v = validacoes[0]
@@ -323,13 +323,13 @@ def test_ondas_validacao_de_status_so_nas_linhas_de_acao(tmp_path):
     assert celulas == esperado
 
 
-def test_ondas_zebra_e_estilo_das_linhas(tmp_path):
-    _, _, wb = _gerar(ex.plano_com_ondas(), tmp_path)
-    ws = wb[ABA_PLANO_ONDAS]
+def test_fases_zebra_e_estilo_das_linhas(tmp_path):
+    _, _, wb = _gerar(ex.plano_com_fases(), tmp_path)
+    ws = wb[ABA_PLANO_FASES]
     linhas = _linhas_de_acao(ws)
     assert ws.cell(linhas[0], 2).alignment.wrap_text
     cores = {ws.cell(l, 2).fill.fgColor.rgb[-6:] for l in linhas[:2]}
-    assert len(cores) == 2  # zebra: linhas vizinhas da mesma onda têm cores diferentes
+    assert len(cores) == 2  # zebra: linhas vizinhas da mesma fase têm cores diferentes
     assert ws.sheet_view.showGridLines is False
 
 
@@ -348,14 +348,14 @@ def _recalcular(caminho, tmp_path):
     return openpyxl.load_workbook(destino / Path(caminho).name, data_only=True)
 
 
-def test_ondas_resumo_recalculado_bate_com_o_json(tmp_path):
-    plano = ex.plano_com_ondas()
+def test_fases_resumo_recalculado_bate_com_o_json(tmp_path):
+    plano = ex.plano_com_fases()
     saida, _, wb = _gerar(plano, tmp_path)
     # preenche os status das linhas de ação, em rodízio, para exercitar o bloco "Status do plano"
-    ws = wb[ABA_PLANO_ONDAS]
+    ws = wb[ABA_PLANO_FASES]
     status_por_numero = {}
     for i, linha in enumerate(_linhas_de_acao(ws)):
-        status_por_numero[ws.cell(linha, 1).value] = STATUS_ONDAS[i % 3]  # não usa Atrasada nem Adiada
+        status_por_numero[ws.cell(linha, 1).value] = STATUS_FASES[i % 3]  # não usa Atrasada nem Adiada
         ws.cell(linha, 15).value = status_por_numero[ws.cell(linha, 1).value]
     preenchido = tmp_path / "preenchido.xlsx"
     wb.save(preenchido)
@@ -377,26 +377,26 @@ def test_ondas_resumo_recalculado_bate_com_o_json(tmp_path):
     assert resumo.cell(l_total, 5).value == total
 
     contagem_status = Counter(status_por_numero.values())
-    for status in STATUS_ONDAS:
+    for status in STATUS_FASES:
         assert resumo.cell(linhas[status], 2).value == contagem_status.get(status, 0), status
     l_conf = linhas[f"Conferência (total de ações = {total})"]
     assert resumo.cell(l_conf, 2).value == total  # todas as ações têm status
 
 
-def test_ondas_resumo_recalculado_com_o_status_inicial_das_acoes(tmp_path):
-    plano = ex.plano_com_ondas()
+def test_fases_resumo_recalculado_com_o_status_inicial_das_acoes(tmp_path):
+    plano = ex.plano_com_fases()
     saida, _, _ = _gerar(plano, tmp_path)
     resumo = _recalcular(saida, tmp_path)[ABA_RESUMO]
     total = len(c.acoes(plano))
     linhas = {resumo.cell(l, 1).value: l for l in range(1, resumo.max_row + 1)}
     assert resumo.cell(linhas["A iniciar"], 2).value == total
-    for status in STATUS_ONDAS[1:]:
+    for status in STATUS_FASES[1:]:
         assert resumo.cell(linhas[status], 2).value == 0, status
     assert resumo.cell(linhas[f"Conferência (total de ações = {total})"], 2).value == total
 
 
-def test_ondas_resumo_usa_formulas_sobre_a_aba_do_plano(tmp_path):
-    _, _, wb = _gerar(ex.plano_com_ondas(), tmp_path)
+def test_fases_resumo_usa_formulas_sobre_a_aba_do_plano(tmp_path):
+    _, _, wb = _gerar(ex.plano_com_fases(), tmp_path)
     resumo = wb[ABA_RESUMO]
     formulas = [str(cel.value) for linha in resumo.iter_rows() for cel in linha if str(cel.value).startswith("=")]
     assert any(f.startswith("=COUNTIFS('Plano de Ação Estratégico'!") for f in formulas)
@@ -404,46 +404,46 @@ def test_ondas_resumo_usa_formulas_sobre_a_aba_do_plano(tmp_path):
     assert resumo.sheet_view.showGridLines is False
 
 
-def test_ondas_texto_com_e_comercial_e_menor_que_volta_igual(tmp_path):
-    plano = ex.plano_com_ondas()
+def test_fases_texto_com_e_comercial_e_menor_que_volta_igual(tmp_path):
+    plano = ex.plano_com_fases()
     achado = "Taxa < 5% & carrinho > 10% em \"A&B\" <tag>"
     plano["horizontes"][0]["acoes"][0]["achado_origem"] = achado
     plano["horizontes"][0]["acoes"][0]["acao"] = "Liberar <acessos> & medir"
     numero = plano["horizontes"][0]["acoes"][0]["numero"]
     _, _, wb = _gerar(plano, tmp_path)
-    ws = wb[ABA_PLANO_ONDAS]
+    ws = wb[ABA_PLANO_FASES]
     linha = next(l for l in _linhas_de_acao(ws) if ws.cell(l, 1).value == numero)
     assert ws.cell(linha, 3).value == achado
     assert ws.cell(linha, 2).value == "Liberar <acessos> & medir"
 
 
-def test_ondas_aba_de_metas_e_a_de_hoje(tmp_path):
-    plano = ex.plano_com_ondas()
+def test_fases_aba_de_metas_e_a_de_hoje(tmp_path):
+    plano = ex.plano_com_fases()
     _, _, wb = _gerar(plano, tmp_path)
     ws = wb[ABA_METAS]
     assert ws["A1"].value == "Prospect"
     assert "Piso de ROAS" in _texto_metas(ws)
 
 
-def test_ondas_modelo_precisa_das_tres_abas(tmp_path):
+def test_fases_modelo_precisa_das_tres_abas(tmp_path):
     modelo = _modelo(tmp_path)  # só as duas abas de hoje
     with pytest.raises(c.ErroPlano, match="Resumo por frente"):
-        gerar_xlsx(ex.plano_com_ondas(), tmp_path / "out.xlsx", modelo)
+        gerar_xlsx(ex.plano_com_fases(), tmp_path / "out.xlsx", modelo)
     assert not (tmp_path / "out.xlsx").exists()
 
 
-def test_ondas_modelo_com_as_tres_abas_e_preenchido(tmp_path):
-    modelo = _modelo(tmp_path, abas=(ABA_PLANO_ONDAS, ABA_RESUMO, ABA_METAS))
+def test_fases_modelo_com_as_tres_abas_e_preenchido(tmp_path):
+    modelo = _modelo(tmp_path, abas=(ABA_PLANO_FASES, ABA_RESUMO, ABA_METAS))
     original = modelo.read_bytes()
-    _, resumo, wb = _gerar(ex.plano_com_ondas(), tmp_path, modelo)
+    _, resumo, wb = _gerar(ex.plano_com_fases(), tmp_path, modelo)
     assert resumo["total_acoes"] == 6
-    assert wb.sheetnames == [ABA_PLANO_ONDAS, ABA_RESUMO, ABA_METAS]
-    assert wb[ABA_PLANO_ONDAS]["A1"].value.startswith("PLANO DE AÇÃO ESTRATÉGICO")
-    assert len(_linhas_de_acao(wb[ABA_PLANO_ONDAS])) == 6
+    assert wb.sheetnames == [ABA_PLANO_FASES, ABA_RESUMO, ABA_METAS]
+    assert wb[ABA_PLANO_FASES]["A1"].value.startswith("PLANO DE AÇÃO ESTRATÉGICO")
+    assert len(_linhas_de_acao(wb[ABA_PLANO_FASES])) == 6
     assert wb[ABA_RESUMO]["A3"].value == "Frente"
     assert modelo.read_bytes() == original
 
 
-def test_sem_ondas_continua_com_duas_abas_de_hoje(tmp_path):
+def test_sem_fases_continua_com_duas_abas_de_hoje(tmp_path):
     _, _, wb = _gerar(ex.plano_valido(), tmp_path)
     assert wb.sheetnames == ["Plano de Ação", "Metas do plano"]

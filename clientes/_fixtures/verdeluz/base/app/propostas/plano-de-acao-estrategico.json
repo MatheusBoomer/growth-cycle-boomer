@@ -12,7 +12,7 @@
   "como_funciona": [
     {
       "titulo": "Lógica do plano",
-      "texto": "Este plano organiza os 12 meses do ciclo (outubro de 2026 a setembro de 2027) em 4 ondas, seguindo o calendário estratégico de mídia da 07. A lógica é simples: primeiro destravam-se a regra de verba, o estoque, a medição e a margem; depois a mídia é reestruturada para a Black Friday; só então se escala. Cada onda termina em um checkpoint, exceto a última, e todo mês os resultados são comparados com a planilha de metas."
+      "texto": "Este plano organiza os 12 meses do ciclo (outubro de 2026 a setembro de 2027) em 4 fases, seguindo o calendário estratégico de mídia da 07. A lógica é simples: primeiro destravam-se a regra de verba, o estoque, a medição e a margem; depois a mídia é reestruturada para a Black Friday; só então se escala. Cada fase termina em um checkpoint, exceto a última, e todo mês os resultados são comparados com a planilha de metas."
     },
     {
       "titulo": "Data-base",
@@ -181,7 +181,7 @@
     ],
     "observacao": null
   },
-  "ondas": [
+  "fases": [
     {
       "numero": 1,
       "nome": "Destravar verba, estoque, medição e margem",
@@ -252,7 +252,7 @@
         "data": "25/01/2027",
         "duracao": "60 minutos",
         "pauta": "Fechamento da janela de prova: metas de JAN/27 (receita captada de R$ 90.568, conversão de 1,42%, ROAS de 3,60x e dependência de mídia paga de 51,5%) contra o realizado e resultado do primeiro disparo da reativação.",
-        "para_liberar": "Leitura dos 3 primeiros meses fechada e o gatilho de cada KPI revisto, para liberar o preparo do Dia das Mães da Onda 4.",
+        "para_liberar": "Leitura dos 3 primeiros meses fechada e o gatilho de cada KPI revisto, para liberar o preparo do Dia das Mães da Fase 4.",
         "quem_decide": "Luiza e Marina (Verdeluz), com a equipe da Boomer"
       }
     },
