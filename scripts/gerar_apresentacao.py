@@ -22,6 +22,7 @@ from typing import Dict, List, Tuple
 from pptx import Presentation
 
 import apresentacao_pptx as ap
+import linhas_plano_acao as plano
 
 RAIZ = Path(__file__).resolve().parent.parent
 CAMINHO_MOLDE = RAIZ / ".claude/skills/_shared/modelos-apresentacao/molde-apresentacao.pptx"
@@ -33,7 +34,10 @@ TIPOS_SEM_AVISO_DE_ESTOURO = {"capa", "divisoria"}
 # Caracteres por item do roteiro (sem os prefixos "Hipótese: " e "Solução: " que o gerador acrescenta).
 LIMITES_DESAFIO = {"titulo": 60, "problema": 140, "hipoteses": 90, "solucoes": 100, "impacto": 100}
 
-# campo -> ("texto" | "lista" | "imagem" | "imagens" | "bloco" | "link", mínimo, máximo)
+# Colunas de cada linha do slide tabela_plano, na ordem do slide.
+COLUNAS_PLANO = ("num", "acao", "horizonte", "quando", "quem", "frente")
+
+# campo -> ("texto" | "lista" | "imagem" | "imagens" | "bloco" | "link" | "link_opcional" | "tabela", mínimo, máximo)
 ESQUEMA: Dict[str, Dict[str, tuple]] = {
     "capa": {"prospect": ("texto", 1, 1)},
     "jornada": {},
@@ -53,6 +57,8 @@ ESQUEMA: Dict[str, Dict[str, tuple]] = {
         "titulo": ("texto", 1, 1), "problema": ("texto", 1, 1), "hipoteses": ("lista", 1, 5),
         "solucoes": ("lista", 1, 3), "impacto": ("texto", 1, 1),
     },
+    # tabela nativa do plano de ação; `link` leva ao documento detalhado e pode faltar (o gerador avisa)
+    "tabela_plano": {"linhas": ("tabela", 1, 16), "link": ("link_opcional", 0, 1)},
     "obrigado": {},
 }
 
@@ -76,6 +82,20 @@ def _validar_imagem(rel, pasta: Path, onde: str, erros: List[str]) -> None:
         erros.append(f"{onde}: a imagem precisa ser png ou jpg ({rel}).")
     elif not alvo.is_file():
         erros.append(f"{onde}: imagem não encontrada ({rel}).")
+
+
+def _validar_tabela(linhas, minimo: int, maximo: int, onde: str, erros: List[str]) -> None:
+    if not isinstance(linhas, list) or not minimo <= len(linhas) <= maximo:
+        erros.append(f"{onde}: precisa ter de {minimo} a {maximo} linhas.")
+        return
+    for n, linha in enumerate(linhas, start=1):
+        if not isinstance(linha, dict):
+            erros.append(f"{onde}, linha {n}: formato inválido.")
+            continue
+        for coluna in COLUNAS_PLANO:
+            valor = linha.get(coluna)
+            if not isinstance(valor, (str, int)) or isinstance(valor, bool) or not str(valor).strip():
+                erros.append(f"{onde}, linha {n}: a coluna {coluna} precisa de um texto.")
 
 
 def _validar_desafio(s: dict, i: int, erros: List[str]) -> None:
@@ -111,8 +131,14 @@ def validar_roteiro(roteiro: dict, pasta_prospect: Path, tipos_do_molde: set) ->
         for campo, (modo, minimo, maximo) in ESQUEMA[tipo].items():
             onde = f"Slide {i} ({tipo}), campo {campo}"
             valor = s.get(campo)
+            if valor is None and modo == "link_opcional":
+                continue
             if valor is None:
                 erros.append(f"{onde}: obrigatório.")
+            elif modo in ("link", "link_opcional") and (not isinstance(valor, str) or not valor.startswith(("https://", "http://"))):
+                erros.append(f"{onde}: o link precisa começar com https://.")
+            elif modo == "tabela":
+                _validar_tabela(valor, minimo, maximo, onde, erros)
             elif modo in ("texto", "link") and (not isinstance(valor, str) or not valor.strip()):
                 erros.append(f"{onde}: precisa ser um texto.")
             elif modo == "link" and not valor.startswith(("https://", "http://")):
@@ -146,6 +172,12 @@ def _preencher(prs, slide, tipo: str, dados: dict, pasta: Path, numero: int, avi
         _preencher_campos(slide, c, tipo, dados, pasta)
     if tipo in TIPOS_SEM_AVISO_DE_ESTOURO:
         return
+    if tipo == "tabela_plano":
+        altura = plano.altura_estimada(dados["linhas"])
+        if altura > plano.ALTURA_UTIL:
+            avisos.append(f"Slide {numero}, campo tabela: o texto provavelmente não cabe ({altura / plano.ALTURA_UTIL:.0%} do espaço); divida em mais slides ou encurte as ações.")
+        if not dados.get("link"):
+            avisos.append(f"Slide {numero}: a tabela do plano de ação está sem o link do documento detalhado.")
     for nome, forma in ap.campos(slide).items():
         if forma.has_text_frame and ap.ocupacao(forma) > LIMITE_OCUPACAO:
             avisos.append(f"Slide {numero}, campo {nome}: o texto provavelmente não cabe na caixa ({ap.ocupacao(forma):.0%} do espaço).")
@@ -153,7 +185,7 @@ def _preencher(prs, slide, tipo: str, dados: dict, pasta: Path, numero: int, avi
 
 def _preencher_campos(slide, c, tipo: str, dados: dict, pasta: Path) -> None:
     for campo, (modo, _, _) in ESQUEMA[tipo].items():
-        valor = dados[campo]
+        valor = dados.get(campo)
         if tipo == "capa":
             ap.substituir_token(slide, "{{prospect}}", valor)
         elif modo == "texto" and campo in c:
@@ -178,6 +210,13 @@ def _preencher_campos(slide, c, tipo: str, dados: dict, pasta: Path) -> None:
                     forma._element.getparent().remove(forma._element)
         elif modo == "link":
             ap.definir_link(c[campo], valor)
+        elif modo == "tabela":
+            ap.preencher_tabela(c["tabela"],[[str(linha[coluna]) for coluna in COLUNAS_PLANO] for linha in valor])
+        elif modo == "link_opcional":
+            if valor:
+                ap.definir_link(c[campo], valor, so_primeiro_trecho=True)
+            else:  # sem endereço, a frase "Clique aqui" não leva a lugar nenhum: sai do slide
+                c[campo]._element.getparent().remove(c[campo]._element)
 
 
 def _graficos_fora_do_roteiro(roteiro: dict, pasta: Path) -> List[str]:
@@ -210,6 +249,28 @@ def _problemas_fora_do_roteiro(roteiro: dict, pasta: Path, avisos: List[str]) ->
         avisos.append(f"{len(fora)} problemas do registro de soluções não entraram no deck: {', '.join(fora)}.")
 
 
+def _acoes_fora_do_roteiro(roteiro: dict, pasta: Path, avisos: List[str]) -> None:
+    """Toda ação do plano de ação aprovado deve entrar nos slides tabela_plano."""
+    if not any(s.get("tipo") == "tabela_plano" and not s.get("pendencia") for s in roteiro["slides"]):
+        return  # deck sem tabela do plano: nada a conferir
+    try:
+        linhas, _ = plano.ler_linhas(pasta)
+    except plano.ErroPlano as e:
+        if not (pasta / plano.CAMINHO_PLANO).is_file() and not (pasta / plano.CAMINHO_DOCX).is_file():
+            avisos.append("conferência de cobertura do plano de ação não feita: nenhum plano aprovado encontrado.")
+        else:
+            avisos.append(f"O plano de ação aprovado não pôde ser lido para a conferência de cobertura: {e}")
+        return
+    except (OSError, ValueError, KeyError) as e:
+        avisos.append(f"O plano de ação aprovado não pôde ser lido para a conferência de cobertura: {e}")
+        return
+    aprovadas = [l["acao"] for l in linhas]
+    no_deck = {" ".join(str(l["acao"]).split()) for s in roteiro["slides"] if s.get("tipo") == "tabela_plano" and not s.get("pendencia") for l in s["linhas"]}
+    fora = [a for a in aprovadas if a not in no_deck]
+    if fora:
+        avisos.append(f"{len(fora)} ações do plano de ação aprovado não entraram nos slides de tabela: {'; '.join(fora[:5])}{'…' if len(fora) > 5 else ''}.")
+
+
 def gerar(roteiro: dict, pasta_prospect: Path, saida: Path, molde: Path = CAMINHO_MOLDE) -> dict:
     prs = Presentation(molde)
     modelos = {ap.tipo_do_slide(s): s for s in prs.slides}
@@ -237,6 +298,7 @@ def gerar(roteiro: dict, pasta_prospect: Path, saida: Path, molde: Path = CAMINH
     if fora:
         avisos.append(f"{len(fora)} gráficos aprovados não entraram no roteiro: {', '.join(fora)}.")
     _problemas_fora_do_roteiro(roteiro, pasta_prospect, avisos)
+    _acoes_fora_do_roteiro(roteiro, pasta_prospect, avisos)
     saida.parent.mkdir(parents=True, exist_ok=True)
     prs.save(saida)
     caminho_mapa = saida.with_name("mapa-slides.json")

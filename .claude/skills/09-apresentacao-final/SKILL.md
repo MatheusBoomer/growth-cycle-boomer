@@ -21,7 +21,7 @@ Confira que existe material das 5 seções do deck em `entrega/ativos-aprovados/
 | 02. Desafios | `contexto/solucoes.json`, `secoes/05-solucoes.md` | 05 |
 | 03. Metas | `graficos/cenarios-*`, `graficos/tabela-cenarios-*`, `secoes/06-*.md` | 06 |
 | 04. Cenários e impactos | `secoes/06-*.md`, `secoes/07-midia-paga.md`, `graficos/tabela-*` | 06 e 07 |
-| 05. Plano de ação | `plano-de-acao/plano-de-acao-estrategico.docx` (documento) e `plano-de-acao/plano-de-acao-estrategico.xlsx` (planilha), `secoes/08-*.md` | 08 |
+| 05. Plano de ação | `plano-de-acao/plano-de-acao-estrategico.json` (plano; as linhas da tabela vêm dele), `.docx` (documento) e `.xlsx` (planilha), `secoes/08-*.md` | 08 |
 
 Faltando material de uma seção, diga ao analista o que falta e de qual etapa
 vem; não monte um deck incompleto em silêncio.
@@ -45,6 +45,7 @@ dos campos é o `ESQUEMA` em `scripts/gerar_apresentacao.py`:
 | `bullets` | `titulo`, `subtitulo`, `itens` (1 a 6) |
 | `cartoes` | `titulo`, `subtitulo`, `cartoes` (exatamente 3) |
 | `desafio` | `titulo`, `problema`, `hipoteses` (1 a 5), `solucoes` (1 a 3), `impacto`; `problema_id` obrigatório quando houver registro |
+| `tabela_plano` | `linhas` (1 a 16 ações: `num`, `acao`, `horizonte`, `quando`, `quem`, `frente`), `link` (opcional, https; leva ao documento detalhado) |
 | `benchmark` | `titulo`, `subtitulo`, `concorrente`, `imagens` (1 a 3), `conclusoes` (1 a 3), `link` (tipo reservado, sem uso no roteiro padrão) |
 | `obrigado` | nenhum |
 
@@ -62,7 +63,7 @@ adapte ao material de cada prospect):
 | 02. Desafios | divisória · `bullets` com a lista de desafios (título e impacto de cada problema) · um `desafio` por problema do registro, na ordem de prioridade, com `problema_id` · `cartoes` com os 3 pilares · um `bullets` por iniciativa de cada pilar (pilares e iniciativas vêm do analista; ver regras) |
 | 03. Metas | divisória · `imagem_larga` com a tabela de metas e os 3 cenários · `grafico` com as curvas dos cenários |
 | 04. Cenários e impactos | divisória · `bullets` com a metodologia (KPIs influenciadores e de resultado) · `imagem_larga` com as tabelas de projeção e de KPIs · `bullets` com as considerações · alocação de verba (`grafico` e `imagem_larga`) · estratégia por Curva ABC · calendário de mídia · ROAS esperado · dependência de mídia paga |
-| 05. Plano de ação | divisória · estrutura de campanhas (imagem aprovada, se houver) · `bullets` sobre as campanhas · um `bullets` por horizonte (Imediato, Curto prazo, Médio prazo), com as ações, datas e donos lidos do documento e da planilha do plano |
+| 05. Plano de ação | divisória · estrutura de campanhas (imagem aprovada, se houver) · `bullets` sobre as campanhas · `tabela_plano`, uma tabela por slide, com todas as ações do plano aprovado (ver "Plano de ação em tabela") |
 | Fechamento | obrigado |
 
 Regras:
@@ -95,6 +96,32 @@ Regras:
 - **Lista de desafios (`bullets`):** no máximo 6 itens; com mais de 6
   problemas, divida em dois slides de lista. A ordem é a do array `problemas`
   de `contexto/solucoes.json` (a Skill 05 grava por prioridade).
+- **Plano de ação em tabela:** o plano vai para o deck como tabelas (Ação |
+  Horizonte | Quando | Quem | Frente), não como bullets nem como imagem. Nunca
+  copie ação na mão: gere os slides do JSON do plano aprovado e cole a lista no roteiro,
+  depois da divisória "Plano de ação":
+
+  ```bash
+  python3 scripts/linhas_plano_acao.py --prospect clientes/<slug> --link <url-do-documento>
+  ```
+
+  O script lê o `plano-de-acao-estrategico.json` que a Skill 08 salva ao lado do
+  `.docx` e da `.xlsx` (em `entrega/ativos-aprovados/plano-de-acao/`), põe as
+  ações na ordem do documento (plano em ondas: onda e, dentro dela, número da
+  ação; plano só com horizontes: cronológica de início; Quando como "dd/mm a
+  dd/mm", Quem sem a empresa) e divide em slides pelo tamanho do texto (ação
+  longa ocupa mais), com o mesmo número de ações por slide sempre que possível.
+  Prospect antigo, só com o `.docx` aprovado, tem a tabela-resumo do `.docx`
+  lida no lugar do JSON (o script avisa "plano lido do .docx (formato antigo)").
+  Peça
+  ao analista, antes de montar o roteiro, o **link do documento detalhado** (o
+  `.docx` do plano subido no Google Drive, com compartilhamento aberto a quem
+  recebe a apresentação). O link vai em todo slide de tabela e vira a frase
+  "Clique aqui para acessar o documento detalhado de cada ação". Sem link, a
+  frase sai do slide e o gerador avisa: diga ao analista que o link falta. O
+  gerador também avisa quando alguma ação do plano aprovado ficou de fora das
+  tabelas, ou quando não achou plano aprovado nenhum para conferir (com slide de
+  tabela no roteiro): trate o aviso antes de propor o deck.
 - **Escala esperada:** 40 a 60 slides (o deck de referência tinha 61 com a
   seção de benchmark, que não se aplica mais). Um deck
   muito menor indica que faltou material ou cobertura; diga ao analista o que

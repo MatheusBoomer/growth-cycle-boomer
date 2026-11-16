@@ -2,14 +2,16 @@ flowchart TD
   I1["Ativos aprovados das etapas 03 a 08"]
   D1{"Falta material de alguma das 5 seções?"}
   P1["Avisar o que falta e de qual etapa"]
+  P0["Pedir o link do documento detalhado do plano de ação"]
   P2["Fase 1 · Roteiro slide a slide (40 a 60 slides)"]
-  P3["Cobrir todo gráfico, tabela e desafio do registro"]
+  P2B["Plano de ação em tabelas: linhas_plano_acao.py lê o JSON do plano aprovado"]
+  P3["Cobrir todo gráfico, tabela, desafio e ação do plano"]
   P4["Checklist da Regra 8 (4 itens)"]
   C1{"Analista aprova?"}
   P5["Fase 2 · gerar_apresentacao.py monta o .pptx"]
   D2{"Saiu ERRO ou aviso de texto?"}
   P6["Corrigir ou encurtar no roteiro e regerar"]
-  D3{"Aviso de cobertura: gráfico ou problema de fora?"}
+  D3{"Aviso de cobertura: gráfico, problema ou ação de fora?"}
   P8["Incluir no roteiro o que ficou de fora"]
   C2{"Analista aprova?"}
   P7["Ajustar só os slides citados no roteiro"]
@@ -19,9 +21,11 @@ flowchart TD
 
   I1 --> D1
   D1 -->|"sim"| P1
-  D1 -->|"não"| P2
-  P1 --> P2
-  P2 --> P3
+  D1 -->|"não"| P0
+  P1 --> P0
+  P0 --> P2
+  P2 --> P2B
+  P2B --> P3
   P3 --> P4
   P4 --> C1
   C1 -->|"sim"| P5

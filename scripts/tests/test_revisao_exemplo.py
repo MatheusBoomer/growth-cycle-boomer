@@ -21,7 +21,8 @@ def _trechos(revisao):
 
 
 def test_exemplo_coerente():
-    assert validar(ex.plano_final_valido(), registro_valido()) == ([], [])
+    erros, avisos = validar(ex.plano_final_valido(), registro_valido())
+    assert erros == [] and len(avisos) == 1 and "sem ondas" in avisos[0]
     d = diferencas(plano_valido(), ex.plano_final_valido())
     assert d["incluidas"] == [7]
     assert d["removidas"] == [6]

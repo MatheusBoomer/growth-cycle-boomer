@@ -12,7 +12,15 @@ import argparse
 import json
 from pathlib import Path
 
+import sys
+
+RAIZ = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(RAIZ / "scripts"))
+import linhas_plano_acao  # noqa: E402
+
 G = "entrega/ativos-aprovados/graficos/"
+JSON_PLANO = RAIZ / "clientes/_fixtures/verdeluz/base" / linhas_plano_acao.CAMINHO_PLANO
+LINK_PLANO = "https://docs.google.com/document/d/verdeluz-plano-de-acao-exemplo/edit"
 NOME = "Verdeluz Cosméticos Veganos (FICTÍCIO)"
 
 
@@ -174,19 +182,9 @@ def montar() -> dict:
                  "Marketplace fora do horizonte, pela premissa do cliente", "Sem a redução, a dependência vai a 58% e o ROAS a 2,56x"], "secoes/07-midia-paga.md"),
     ]
 
-    # 05. Plano de ação
+    # 05. Plano de ação: tabelas lidas do .docx aprovado (Skill 08), no formato Ação | Horizonte | Quando | Quem | Frente
     s.append(divisoria("05.", "PLANO **DE AÇÃO**"))
-    s += [
-        bullets("Plano de ação · Horizonte 1", "Imediato: **26/10 a 30/10/2026**",
-                ["Teto de CAC de R$ 80 e regra de escala da verba (Boomer)", "Estoque de segurança de 60 dias e alerta de cobertura (Boomer e Cliente)",
-                 "Painel único de KPIs conciliando GA4 e Nuvemshop (Boomer)", "Margem por SKU da Curva A enviada pela Luiza (Cliente)", "Cupom e UTM próprios para cada influenciadora (Boomer e Cliente)"], "plano-de-acao/plano-de-acao-estrategico.docx"),
-        bullets("Plano de ação · Horizonte 2", "Curto prazo: **02/11 a 30/11/2026**, até a Black Friday",
-                ["Campanhas de aquisição e recompra separadas; 15% do Meta realocado", "Black Friday com brinde, até 20% de desconto e lista de espera", "Recuperação de carrinho em 3 toques e frete por CEP",
-                 "Antifraude, reprocesso de cartões e lembrete de PIX", "Segundo fornecedor de embalagem e régua de reposição", "Eventos de funil no GA4 e reunião mensal de resultados"], "plano-de-acao/plano-de-acao-estrategico.docx"),
-        bullets("Plano de ação · Horizonte 3", "Médio prazo: **DEZ/2026 a SET/2027**, até o fim do ciclo",
-                ["Reativação dos 7.176 clientes de compra única em JAN e FEV", "Convite do avulso para o kit e prova social nas páginas", "Boleto com vencimento menor e PIX priorizado",
-                 "Duas ou três datas menores no calendário", "Dois novos kits e revisão da Curva C antes do Dia das Mães", "Item adicional no carrinho dos três líderes"], "plano-de-acao/plano-de-acao-estrategico.docx"),
-    ]
+    s += linhas_plano_acao.slides_do_roteiro(linhas_plano_acao.ler_plano(JSON_PLANO), LINK_PLANO)
     s.append({"tipo": "obrigado"})
     return {"versao": 1, "prospect": NOME, "slides": s}
 

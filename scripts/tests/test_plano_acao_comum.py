@@ -58,8 +58,9 @@ def test_constantes_e_acoes():
 
 
 def test_plano_valido_cumpre_as_regras_do_exemplo():
-    # Sem erros e sem avisos: o exemplo atende a todas as regras do validador.
-    assert validar(ex.plano_valido(), ex.registro_valido()) == ([], [])
+    # Sem erros e só o aviso de plano sem ondas: o exemplo atende a todas as regras do validador.
+    erros, avisos = validar(ex.plano_valido(), ex.registro_valido())
+    assert erros == [] and len(avisos) == 1 and "sem ondas" in avisos[0]
 
 
 def test_ler_data_rejeita_digitos_unicode():
@@ -172,3 +173,125 @@ def test_diferencas_horizonte_dependencias_solucoes_e_metas_incluidas_removidas(
     assert d["metas_alteradas"] == ["ROAS"]
     # meta removida também conta
     assert c.diferencas(b, a)["metas_alteradas"] == ["ROAS"]
+
+
+def test_diferencas_pega_mudanca_de_onda_e_de_decisao_do_cliente():
+    import copy
+    a = ex.plano_com_ondas()
+    b = copy.deepcopy(a)
+    assert c.diferencas(a, b)["alteradas"] == {}
+    # ação 4 muda de onda (2 -> 3)
+    b["ondas"][1]["acoes"].remove(4)
+    b["ondas"][2]["acoes"].append(4)
+    # decisão do cliente da ação 3 resolvida (sai) e a da 5 muda de recomendação
+    acoes_b = {x["numero"]: x for _, x in c.acoes(b)}
+    acoes_b[3]["decisao_cliente"] = None
+    acoes_b[5]["decisao_cliente"]["recomendacao"] = "Autorizar só o e-mail."
+    alteradas = c.diferencas(a, b)["alteradas"]
+    assert alteradas == {3: ["decisao_cliente"], 4: ["onda"], 5: ["decisao_cliente"]}
+
+
+def test_diferencas_plano_antigo_contra_plano_em_ondas_ignora_onda_e_decisao():
+    a = ex.plano_com_ondas()
+    b = ex.plano_valido()  # mesmas ações, sem ondas e sem decisões do cliente
+    assert c.diferencas(a, b)["alteradas"].keys() <= {1, 2, 3, 4, 5, 6}
+    assert all("onda" not in v and "decisao_cliente" not in v for v in c.diferencas(a, b)["alteradas"].values())
+
+
+def test_diferencas_plano_sem_ondas_nao_ganha_diferenca_de_onda():
+    import copy
+    a = ex.plano_valido()
+    assert c.diferencas(a, copy.deepcopy(a))["alteradas"] == {}
+    assert all(x["onda"] is None for x in c._acoes_por_numero(a).values())
+
+
+# ---------- ondas e decisões do cliente ----------
+
+def test_ondas_sem_a_chave_devolve_lista_vazia():
+    assert c.ondas({"horizontes": []}) == []
+
+
+def test_ondas_devolve_as_ondas_do_plano():
+    assert [o["nome"] for o in c.ondas(ex.plano_com_ondas())] == ["Contenção", "Escala", "Manutenção"]
+
+
+def test_onda_da_acao():
+    plano = ex.plano_com_ondas()
+    assert c.onda_da_acao(plano, 4)["numero"] == 2
+    assert c.onda_da_acao(plano, 99) is None
+    assert c.onda_da_acao(ex.plano_valido(), 1) is None
+
+
+def test_nome_da_acao():
+    plano = ex.plano_com_ondas()
+    assert c.nome_da_acao(plano, 1) == "Liberar os acessos"
+    assert c.nome_da_acao(plano, 99) == ""
+
+
+def test_texto_depende_com_plano_traz_o_nome_das_acoes():
+    plano = ex.plano_com_ondas()
+    acoes = {a["numero"]: a for _, a in c.acoes(plano)}
+    assert c.texto_depende(acoes[3], plano) == "Ação 1 (Liberar os acessos)"
+    assert c.texto_depende(acoes[5], plano) == (
+        "Ação 2 (Ativar recuperação automática de PIX e boleto); "
+        "Ação 3 (Reestruturar as campanhas de aquisição por Curva ABC)"
+    )
+    assert c.texto_depende(acoes[1], plano) == "Nenhuma"
+
+
+def test_texto_depende_com_plano_mantem_o_numero_de_acao_que_nao_existe():
+    assert c.texto_depende({"depende_de": [9]}, ex.plano_com_ondas()) == "Ação 9"
+
+
+def test_texto_depende_sem_plano_segue_igual():
+    assert c.texto_depende({"depende_de": [2, 5]}) == "Ações 2, 5"
+
+
+def test_visao_geral():
+    linhas = c.visao_geral(ex.plano_com_ondas())
+    assert [l["numero"] for l in linhas] == [1, 2, 3]
+    assert linhas[0] == {
+        "numero": 1,
+        "nome": "Contenção",
+        "janela": "26/10/2026 a 01/11/2026",
+        "calendario_midia": "Contenção",
+        "foco": "Destravar acessos e a medição do funil antes de mexer na verba.",
+        "total_acoes": 2,
+    }
+
+
+def test_visao_geral_sem_ondas():
+    assert c.visao_geral(ex.plano_valido()) == []
+
+
+def test_decisoes_do_cliente_em_ordem_de_data():
+    plano = ex.plano_com_ondas()
+    decisoes = c.decisoes_do_cliente(plano)
+    assert [d["numero"] for d in decisoes] == [3, 5]
+    assert decisoes[0] == {
+        "numero": 3,
+        "acao": "Reestruturar as campanhas de aquisição por Curva ABC",
+        "ate": "30/10/2026",
+        "recomendacao": "Aprovar a redistribuição da verba por classe da Curva ABC.",
+    }
+    # a data manda mais que o número da ação; empate de data cai no número
+    acoes = {a["numero"]: a for _, a in c.acoes(plano)}
+    acoes[3]["decisao_cliente"]["ate"] = "27/11/2026"
+    assert [d["numero"] for d in c.decisoes_do_cliente(plano)] == [3, 5]
+    acoes[5]["decisao_cliente"]["ate"] = "01/11/2026"
+    assert [d["numero"] for d in c.decisoes_do_cliente(plano)] == [5, 3]
+
+
+def test_decisoes_do_cliente_ignora_acao_sem_decisao():
+    assert c.decisoes_do_cliente(ex.plano_valido()) == []
+
+
+def test_quando_curto():
+    assert c.quando_curto({"inicio": "12/11/2026", "entrega": "13/11/2026"}, 2026) == "12/11 a 13/11"
+    assert c.quando_curto({"inicio": "17/11/2026", "entrega": "29/01/2027"}, 2026) == "17/11 a 29/01/27"
+    assert c.quando_curto({"inicio": "02/01/2027", "entrega": "29/01/2027"}, 2026) == "02/01/27 a 29/01/27"
+
+
+def test_plano_com_ondas_continua_valido_para_o_validador():
+    erros, _ = validar(ex.plano_com_ondas(), ex.registro_valido())
+    assert erros == []

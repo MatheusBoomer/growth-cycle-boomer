@@ -23,6 +23,7 @@ ESPERADO = {
     "benchmark": {"titulo", "subtitulo", "concorrente", "conclusoes", "imagem_1", "imagem_2", "imagem_3", "link"},
     "obrigado": set(),
     "desafio": {"titulo", "esquerda", "direita"},
+    "tabela_plano": {"tabela", "link"},
 }
 
 

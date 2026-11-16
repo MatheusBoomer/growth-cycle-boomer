@@ -1,6 +1,6 @@
 ---
 name: plano-de-acao
-description: Transforma tudo que foi decidido no planejamento em um plano de ação que o cliente executa só lendo, com 10 campos por ação (dono, datas, evidência, meta e gatilho), e gera o documento Word (.docx) e a planilha Excel (.xlsx) do plano a partir da mesma lista. Última etapa de conteúdo antes da apresentação final. Use após midia-paga, com o planejamento completo aprovado.
+description: Transforma tudo que foi decidido no planejamento em um plano de ação que o cliente executa só lendo, com 10 campos por ação (dono, datas, evidência, meta e gatilho) organizado em ondas, cada uma com checkpoint, e gera o documento Word (.docx) e a planilha Excel (.xlsx) do plano a partir da mesma lista. Última etapa de conteúdo antes da apresentação final. Use após midia-paga, com o planejamento completo aprovado.
 ---
 
 # Skill 08 — Plano de Ação Estratégico
@@ -13,6 +13,13 @@ planejamento, sempre marcada [VALIDAR].
 
 O plano sai em duas versões obrigatórias, geradas do mesmo JSON pelo mesmo
 comando: documento (.docx) e planilha (.xlsx).
+
+O plano é organizado em **ondas** (modelo de referência: o plano da Happy
+Duck). Cada onda é uma janela do calendário estratégico de mídia (07) com as
+ações que começam nela e termina em um **checkpoint**: uma reunião com data,
+pauta, o que precisa estar pronto para liberar a próxima onda e quem decide.
+Os horizontes (Imediato, Curto prazo e Médio prazo) continuam em cada ação; a
+onda é a segunda leitura, por tempo e por decisão.
 
 ## Antes de começar
 
@@ -77,7 +84,9 @@ Exatamente três, nesta ordem, sempre com data real em cada ação:
 
 - **Imediato:** primeira semana após a apresentação. Ações que desbloqueiam
   as outras (rastreamento, acessos, reestruturação). Cada uma cabe em até 7
-  dias entre início e entrega (o validador avisa quando passa).
+  dias entre início e entrega (o validador avisa quando passa). O Imediato
+  abre a onda 1; a onda agrupa as ações pela data de início, então pode
+  conter ações de Curto prazo também.
 - **Curto prazo:** até o primeiro grande marco do calendário (primeiro mês
   de Pico ou Escala).
 - **Médio prazo:** até o fim do ciclo de 12 meses do cenário (`fim_ciclo`).
@@ -159,7 +168,8 @@ Nomes exatos, para bater com o registro de soluções:
   plataforma). Documento e planilha têm as mesmas ações, datas e números (o
   gerador garante, porque os dois saem do mesmo JSON).
 - **Erro 5 · Sem prazo.** Nenhuma ação com "A definir" ou "Imediato" no lugar
-  da data. Todas têm início e entrega.
+  da data. Todas têm início e entrega, e cada onda tem janela e checkpoint com
+  data.
 - **Erro 6 · Copiar o julgamento de outro cliente.** Piso de ROAS sai da
   margem deste cliente, nunca de um padrão. Você não calcula nem digita o
   piso: informe `margem_contribuicao` (e `taxa_quebra`, se as decisões a
@@ -172,7 +182,7 @@ Nomes exatos, para bater com o registro de soluções:
 - **Erro 7 · Ação que não dá para verificar.** Toda ação tem uma entrega
   visível. "Direcionar esforço", "priorizar" e "acompanhar" sozinhos não são
   ações. Toda decisão que fica com o cliente vem com a recomendação da
-  Boomer e o critério de escolha.
+  Boomer e o critério de escolha, no campo `decisao_cliente` da ação.
 
 ## Os 10 campos de cada ação
 
@@ -181,7 +191,9 @@ Campo vazio significa ação que não está pronta.
 1. **Ação:** verbo de execução + objeto. Certo: "Ativar régua de recuperação
    de Pix expirado". Errado: "Otimizar checkout".
 2. **Achado de origem:** seção do diagnóstico e o número que justificam a
-   ação. Ex.: "Receita total × aprovada: quebra de 37%".
+   ação. Ex.: "Receita total × aprovada: quebra de 37%". Cite a seção e o
+   número, **nunca "slide N"**: o plano é feito antes da apresentação, e o
+   número do slide ainda não existe.
 3. **Alavanca da meta:** o KPI que a ação move (conversão, quebra, ticket
    médio, CPS, % de dependência de mídia paga, ROAS, CAC).
 4. **Como:** passos objetivos, com valores (verba, público, ferramenta,
@@ -213,6 +225,13 @@ Campo vazio significa ação que não está pronta.
 Cada ação também leva `solucoes`: os ids do registro que ela executa (ex.:
 `["P1.S1"]`; lista vazia para governança).
 
+**Decisão do cliente.** A ação que só anda depois de uma escolha do cliente
+(verba, desconto máximo, canal, fornecedor) leva `decisao_cliente`:
+`{"ate": "dd/mm/aaaa", "recomendacao": "..."}`. `ate` é o prazo da decisão
+(entre `data_referencia` e `fim_ciclo`) e `recomendacao` é o que a Boomer
+recomenda, com o critério da escolha. Ação sem decisão do cliente não leva o
+campo (ou leva `null`).
+
 Mostre cada ação ao analista neste formato:
 
 ```
@@ -241,8 +260,41 @@ O plano é um único JSON, versão 2. O esquema completo está em
 `taxa_quebra`, fração entre 0 e 1, ex.: 0.055) e `horizontes` (3, com `nome`, `titulo`, `intro`, `acoes`).
 Cada ação tem `numero`, `frente`, os 10 campos (`acao`, `achado_origem`,
 `alavanca`, `como`, `dono`, `inicio`, `entrega`, `depende_de`, `evidencia`,
-`kpi_meta`, `gatilho`), `alavanca_da_meta` e `solucoes`. Pisos de ROAS e
-tabela-resumo são derivados pelo gerador e não entram no JSON.
+`kpi_meta`, `gatilho`), `alavanca_da_meta` e `solucoes`, e, quando depende de
+escolha do cliente, `decisao_cliente`. Pisos de ROAS e tabela-resumo são
+derivados pelo gerador e não entram no JSON. Numere as ações na ordem do
+documento (onda, depois horizonte e frente).
+
+**Chaves do plano em ondas.** Para o gerador e o validador elas são opcionais
+(um plano antigo, só com horizontes, continua válido, com aviso). **Para esta
+skill são obrigatórias**, exceto `sessoes_nao_pagas`, que é condicional (ver
+abaixo): o plano que ela entrega é sempre em ondas.
+
+- `ondas`: lista numerada de 1 a N, na ordem. Cada onda tem `numero`, `nome`,
+  `inicio` e `fim` (dd/mm/aaaa), `calendario_midia`, `objetivo`, `acoes` (os
+  números das ações) e `checkpoint` (ver a Fase 1).
+- `como_funciona`: lista de `{titulo, texto}`, o texto "Como este plano
+  funciona" (ver a Fase 1).
+- `metas_mensais`: `{cenario, colunas, linhas, observacao}`, **gerada pelo
+  `scripts/metas_mensais.py`** a partir da projeção aprovada (Fase 3). Nunca
+  digite as linhas.
+- `sessoes_nao_pagas` (**condicional**): `{colunas, linhas, premissas, risco}`.
+  Só entra quando o cenário aprovado (06) ou o plano de mídia (07) reduz a
+  dependência da mídia paga, ou quando o % de sessões pagas pesa na meta.
+  Fora desses casos, **omita a chave**; o gerador omite o bloco sem erro. Monte
+  a tabela na Fase 2, só com `sessoes` e `pct_pagas` da projeção aprovada e com
+  as decisões de Redução de Dependências. Todo volume de sessão não paga vem de
+  uma ação com volume definido; nunca invente volume. `premissas` e `risco` são
+  texto (ou lista de textos).
+- `protocolo_mudanca`: `{intro, regras}` (lista de textos), o protocolo de
+  mudanças (ver a Fase 1).
+- `kpis_acompanhamento`: lista de `{kpi, meta_limite}`, os KPIs vigiados entre
+  os checkpoints (ver a Fase 1).
+
+Os blocos de texto não levam `[VALIDAR]`, `[PREENCHER]` nem as variantes
+"(a confirmar ...)" e "(a preencher ...)" nos arquivos finais. No rascunho,
+`[VALIDAR]` e `[PREENCHER]` são aceitos (Fase 2); as variantes entre parênteses
+nunca entram: dado que falta vira pergunta ao analista, não marca no texto.
 
 Onde fica o JSON:
 - **Em edição** (Fases 1 e 2), `plano-de-acao.json`:
@@ -268,14 +320,70 @@ estoque, acessos, prazos de terceiros); margem, quebra e os pisos de ROAS
 resultantes, com uma frase dizendo com qual ROAS cada piso se compara
 (aprovada ou captada). Defina também `janela_prova` e `fim_ciclo`.
 
-Checkpoint: o analista aprova a abertura (Regra 1; na interface, pergunte no
-chat).
+Monte também a **estrutura em ondas**, a partir do calendário estratégico de
+mídia (07) e dos horizontes:
+
+1. **Ondas.** O Imediato é a onda 1. As demais seguem os meses do calendário
+   (cada mês é Contenção, Escala, Pico ou Manutenção). Uma onda pode juntar
+   meses seguidos da mesma fase. Cada uma tem:
+   - `nome`: título curto do que a onda faz (ex.: "Destravar medição, estoque
+     e margem");
+   - `calendario_midia`: a fase do calendário e o mês (ex.: "Contenção
+     (nov/26)", "Pico e Manutenção");
+   - `objetivo`: uma frase com o que a onda entrega;
+   - `inicio` e `fim`: a janela, dd/mm/aaaa.
+2. **Regras da janela.** As ondas ficam em ordem, e o `fim` de uma é
+   **estritamente anterior** ao `inicio` da seguinte (se terminam e começam no
+   mesmo dia, é sobreposição e dá ERRO; use dias consecutivos). A onda 1 não
+   começa antes da `data_referencia` e a última não termina depois do
+   `fim_ciclo`.
+3. **Ações por onda.** Uma onda agrupa as ações pela **data de início**: cada
+   ação está em exatamente uma onda e o `inicio` dela cai dentro da janela
+   dessa onda. A `entrega` pode passar do `fim` da onda (ex.: a rotina semanal
+   que começa na onda 2 e entrega só no fim da janela de prova). Liste os
+   números em `acoes` na Fase 2, quando as ações existirem.
+4. **Checkpoint.** Toda onda, menos a última, termina em um `checkpoint`; a
+   última pode ter `null`. Ele tem `data`, `duracao` (ex.: "30 minutos"),
+   `pauta` (o que se confere; os números das ações entram na Fase 2, quando
+   elas existirem), `para_liberar` (o que
+   precisa estar pronto para a próxima onda começar) e `quem_decide`. A `data`
+   cai entre o início da onda e o início da seguinte (na última, até o
+   `fim_ciclo`), de preferência nos últimos dias úteis da onda.
+5. **Como este plano funciona** (`como_funciona`, lista de `{titulo, texto}`),
+   no tom do plano de referência: a lógica do plano (primeiro destravar a
+   medição e o estoque, medir, depois escalar a mídia); a data-base e a
+   primeira ação; as datas-âncora do calendário (ex.: Black Friday e o que
+   congela em volta dela); o **plano mínimo** se o rastreamento ou os
+   responsáveis não ficarem prontos na onda 1; os horizontes e as datas deles;
+   o dono (disciplina e empresa); as frentes; e como ler cada ação (achado,
+   como, evidência, KPI e meta, gatilho). Datas e números saem do plano
+   aprovado, não do texto de outro prospect.
+6. **Protocolo de mudança** (`protocolo_mudanca`, `{intro, regras}`): uma
+   mudança por vez, anotada no registro (data, quem, o quê, por quê, como
+   desfazer, resultado); backup antes (exportar o contêiner do GTM, registrar
+   as campanhas, backup do tema); testar antes de publicar; 48 a 72 horas
+   entre mudanças no mesmo sistema; nada na sexta à tarde nem no fim de
+   semana; e o congelamento das datas-âncora do calendário, com as datas.
+7. **KPIs de acompanhamento** (`kpis_acompanhamento`, lista de `{kpi,
+   meta_limite}`): os KPIs vigiados em cada checkpoint, cada um com a meta ou
+   o limite que dispara a decisão, **com o número do cenário aprovado** (06),
+   nunca um número novo.
+Checkpoint: o analista aprova a abertura e a estrutura em ondas, ou seja, as
+janelas, os checkpoints, o texto "Como este plano funciona", o protocolo de
+mudança e os KPIs de acompanhamento (Regra 1; na interface, pergunte no chat).
 
 ## Fase 2 · Ações
 
 Monte a lista completa, por horizonte e, dentro dele, por frente, com os 10
-campos. O que exige julgamento do analista sai marcado [VALIDAR]; dado
-ausente, [PREENCHER]. Antes de mostrar, grave o JSON e rode:
+campos. Distribua as ações pelas ondas (preencha `acoes` de cada onda pela
+data de início de cada ação) e coloque `decisao_cliente`, com a recomendação
+da Boomer, em toda ação que depende de escolha do cliente. Complete a `pauta`
+dos checkpoints com os números das ações. Se o plano reduz a dependência da
+mídia paga (ver `sessoes_nao_pagas`), monte agora essa tabela, só com volumes
+de ações que tenham volume definido. O achado de origem
+cita a seção do diagnóstico e o número, nunca "slide N". O que exige
+julgamento do analista sai marcado [VALIDAR]; dado ausente, [PREENCHER]. Antes
+de mostrar, grave o JSON e rode:
 
 ```
 python3 scripts/validar_plano_acao.py \
@@ -287,14 +395,45 @@ python3 scripts/validar_plano_acao.py \
 `--rascunho` aceita as marcações e a margem ausente (`null` ou [PREENCHER] no
 rascunho; na versão final, margem ausente é erro). `ERRO:` → corrija o
 plano e rode de novo antes de mostrar; nunca apague solução do registro para
-passar. `AVISO:` → corrija ou mostre ao analista com a sua leitura.
+passar. `AVISO:` → corrija ou mostre ao analista com a sua leitura. O
+validador dá ERRO para onda fora de ordem ou sobreposta, ação fora de onda ou
+em mais de uma, ação cujo início cai fora da janela da onda, checkpoint fora
+do intervalo permitido e `decisao_cliente.ate` fora do ciclo; dá AVISO para
+plano sem ondas, onda sem ação, onda sem checkpoint (exceto a última), plano
+sem `kpis_acompanhamento` e plano com ondas sem `como_funciona`,
+`protocolo_mudanca` ou `metas_mensais`. Aviso de ondas ou de KPIs não se deixa passar: esta
+skill sempre os resolve.
 
-Checkpoint: o analista resolve cada [VALIDAR] e [PREENCHER] e aprova a lista.
+Checkpoint: o analista resolve cada [VALIDAR] e [PREENCHER] e aprova a lista
+(e, quando houver, a tabela de sessões não pagas).
 
 ## Fase 3 · Arquivos
 
-Com o plano aprovado e sem marcações, gere os dois arquivos e o JSON
-validado de uma vez:
+Com o plano aprovado e sem marcações, primeiro gere as **metas mensais** a
+partir da projeção aprovada (06), no JSON em edição:
+
+```
+python3 scripts/metas_mensais.py \
+  --plano <plano-de-acao.json> \
+  --projecao clientes/<slug>/entrega/ativos-aprovados/projecao/projecao-de-cenarios.xlsx \
+  --cenario Realista --meses 3 \
+  --checks "dd/mm/aaaa,dd/mm/aaaa,dd/mm/aaaa"
+```
+
+`--cenario` é o da `abertura` (Realista, Pessimista ou Otimista). `--meses` é
+3, os meses da janela de prova; `--checks` (a data do check de cada mês,
+dd/mm/aaaa, coerente com os checkpoints das ondas) tem de ter a mesma
+quantidade que `--meses`. O mês 1 da projeção é o mês de `fim_ciclo` do plano
+menos 11 meses, e os rótulos (`Out/26`, `Nov/26`…) saem sozinhos dessa conta;
+`--rotulos` é opcional e, se vier, tem de ser igual aos gerados. O documento
+intitula a tabela "Metas dos N primeiros meses", com N igual ao número de
+meses. O script recalcula a cadeia de KPIs da projeção e grava o bloco
+`metas_mensais` no JSON; diz `OK` ou `ERRO:`. Com `ERRO:`, corrija
+`fim_ciclo`, checks, cenário ou projeção e rode de novo. Nunca digite essas linhas na mão, e rode de novo se
+o cenário ou as datas mudarem. Onde os mesmos KPIs aparecem, os números
+dos meses têm de bater com as metas da abertura (mesmo cenário, mesma fonte).
+
+Depois, gere os dois arquivos e o JSON validado de uma vez:
 
 ```
 python3 scripts/gerar_plano_acao.py \
@@ -310,7 +449,9 @@ e sai com código diferente de zero; volte à Fase 2. Nunca escreva o `.docx`,
 o `.xlsx` ou o `plano-de-acao-estrategico.json` na mão. O `.docx` usa o modelo
 `.claude/skills/_shared/[MODELO] Plano de Ação Estratégico.docx` (padrão;
 `--modelo-docx` troca); `--modelo-xlsx` preenche um modelo de planilha quando
-existir.
+existir. Com `--modelo-xlsx` e um plano em ondas, o novo layout é escrito a
+partir da linha 1 das abas "Plano de Ação Estratégico" e "Resumo por frente" do
+modelo, e o modelo precisa ter também a aba "Metas do plano".
 
 - **Interface:** `<pasta>` = `clientes/<slug>/.app/rascunhos/`. Proponha os
   dois com `propor_entregavel`: o `.docx` com tipo `documento` e o `.xlsx`
@@ -330,15 +471,22 @@ No chat, curto e **sem tabelas**:
    ações que o atacam. Aponte achado sem ação.
 2. **Cobertura da meta:** cada KPI influenciador do cenário e as ações que o
    movem.
-3. **Coerência:** confirme que todo número do plano é igual ao do cenário
-   aprovado (06) e ao do plano de mídia (07), e que documento e planilha são
-   iguais (garantido pelo `gerar_plano_acao.py`, que gera os dois do mesmo
-   JSON). Aponte qualquer divergência.
-4. **Pendências:** o que ficou marcado [VALIDAR] ou [PREENCHER] em algum
-   momento e como foi resolvido, ou o que falta.
-5. **Riscos:** dono que talvez não tenha capacidade, meta acima do melhor mês
+3. **Cobertura por onda:** toda ação está em exatamente uma onda e começa
+   dentro da janela dela; toda onda tem ação e, menos a última, checkpoint com
+   data, pauta, o que libera a próxima onda e quem decide; as ondas não se
+   sobrepõem e ficam dentro do ciclo (da `data_referencia` ao `fim_ciclo`). Diga quantas ações
+   há em cada onda e aponte qualquer onda vazia ou sem checkpoint.
+4. **Coerência:** confirme que todo número do plano é igual ao do cenário
+   aprovado (06) e ao do plano de mídia (07), incluindo as metas mensais e os
+   KPIs de acompanhamento, e que documento e planilha são iguais (garantido
+   pelo `gerar_plano_acao.py`, que gera os dois do mesmo JSON). Aponte
+   qualquer divergência.
+5. **Pendências:** o que ficou marcado [VALIDAR] ou [PREENCHER] em algum
+   momento e como foi resolvido, ou o que falta. Nada disso, nem "(a
+   confirmar ...)" ou "(a preencher ...)", pode estar nos arquivos finais.
+6. **Riscos:** dono que talvez não tenha capacidade, meta acima do melhor mês
    do histórico, premissa frágil.
-6. **Pergunta-guia:** a sua resposta sincera. Se não, diga o que falta.
+7. **Pergunta-guia:** a sua resposta sincera. Se não, diga o que falta.
 
 Pergunte ao analista a resposta dele à pergunta-guia. A etapa só fecha com
 "sim". "Não" volta à Fase 2 com o que falta, e as Fases 3 e 4 rodam de novo.
@@ -351,15 +499,25 @@ Pergunte ao analista a resposta dele à pergunta-guia. A etapa só fecha com
 - Não propor ação em período que já passou.
 - Não usar "Imediato", "A definir" ou "Agência" genérico no lugar de data ou
   dono (o dono é sempre disciplina · empresa).
-- Não deixar decisão com o cliente sem a recomendação da Boomer.
+- Não deixar decisão com o cliente sem a recomendação da Boomer
+  (`decisao_cliente`).
+- Não citar "slide N" no achado de origem nem em nenhum texto do plano.
+- Não deixar `[VALIDAR]`, `[PREENCHER]`, "(a confirmar ...)" ou "(a preencher
+  ...)" nos arquivos finais, e não criar legenda nem permissão para elas.
+- Não digitar `metas_mensais` na mão: é do `scripts/metas_mensais.py`.
 - Não descer a nível operacional (copies, roteiros de criativo,
   configuração de plataforma).
 - Não mencionar a garantia nos arquivos.
 
 ## Critério de conclusão
 
-- Toda ação com os 10 campos preenchidos e nenhum [VALIDAR] ou [PREENCHER]
-  nos arquivos.
+- Toda ação com os 10 campos preenchidos e nenhum [VALIDAR], [PREENCHER],
+  "(a confirmar ...)" ou "(a preencher ...)" nos arquivos.
+- Plano em ondas: toda ação em exatamente uma onda, começando dentro dela;
+  toda onda, menos a última, com checkpoint; `como_funciona`,
+  `protocolo_mudanca`, `kpis_acompanhamento` e `metas_mensais` preenchidos, com
+  as metas mensais geradas pelo `scripts/metas_mensais.py`;
+  `sessoes_nao_pagas` presente só quando se aplica (ver o Formato do plano).
 - Todo achado crítico do diagnóstico e toda solução do registro com pelo
   menos uma ação.
 - Ações que são alavanca da meta dentro da janela de prova.

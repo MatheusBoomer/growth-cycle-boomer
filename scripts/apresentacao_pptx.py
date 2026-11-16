@@ -200,10 +200,36 @@ def trocar_imagem(slide, shape, caminho: Path) -> None:
     shape.left, shape.top, shape.width, shape.height = x + (w - nw) // 2, y + (h - nh) // 2, nw, nh
 
 
-def definir_link(shape, url: str) -> None:
+def definir_link(shape, url: str, so_primeiro_trecho: bool = False) -> None:
+    """Liga o texto da caixa ao endereço; com `so_primeiro_trecho`, só o 1º trecho vira link ("Clique aqui" + frase solta)."""
     for p in shape.text_frame.paragraphs:
         for r in p.runs:
             r.hyperlink.address = url
+            if so_primeiro_trecho:
+                return
+
+
+def _definir_texto_da_celula(tc, texto: str) -> None:
+    ts = list(tc.iter(qn("a:t")))
+    if ts:
+        ts[0].text = texto
+        for extra in ts[1:]:
+            extra.text = ""
+
+
+def preencher_tabela(shape, linhas: List[List[str]]) -> None:
+    """Preenche a tabela do slide-modelo (cabeçalho + 1 linha-modelo), clonando a linha-modelo para cada linha de dados."""
+    tbl = shape.table._tbl
+    trs = tbl.findall(qn("a:tr"))
+    modelo = trs[1]
+    for tr in trs[1:]:
+        tbl.remove(tr)
+    for valores in linhas:
+        tr = copy.deepcopy(modelo)
+        for tc, valor in zip(tr.findall(qn("a:tc")), valores):
+            _definir_texto_da_celula(tc, valor)
+        tbl.append(tr)
+    shape.height = sum(r.height for r in shape.table.rows)
 
 
 def substituir_token(slide, token: str, valor: str) -> int:

@@ -53,8 +53,15 @@ class ErroPrevia(Exception):
     """Mensagem pronta para o analista, em português."""
 
 
+def _titulo_da_tabela(forma) -> str:
+    numeros = [r.cells[0].text.strip() for r in list(forma.table.rows)[1:] if r.cells[0].text.strip()]
+    return f"Plano de ação · ações {numeros[0]} a {numeros[-1]}" if numeros else "Plano de ação"
+
+
 def _titulo(slide) -> str:
     c = ap.campos(slide)
+    if "tabela" in c:
+        return _titulo_da_tabela(c["tabela"])
     partes: List[str] = []
     for nome in ("titulo", "subtitulo", "concorrente"):
         if nome in c:

@@ -628,45 +628,222 @@
       "titulo": "PLANO **DE AÇÃO**"
     },
     {
-      "tipo": "bullets",
-      "titulo": "Plano de ação · Horizonte 1",
-      "subtitulo": "Imediato: **26/10 a 30/10/2026**",
-      "itens": [
-        "Teto de CAC de R$ 80 e regra de escala da verba (Boomer)",
-        "Estoque de segurança de 60 dias e alerta de cobertura (Boomer e Cliente)",
-        "Painel único de KPIs conciliando GA4 e Nuvemshop (Boomer)",
-        "Margem por SKU da Curva A enviada pela Luiza (Cliente)",
-        "Cupom e UTM próprios para cada influenciadora (Boomer e Cliente)"
+      "tipo": "tabela_plano",
+      "linhas": [
+        {
+          "num": "1",
+          "acao": "Fixar o teto de CAC de R$ 80 e a regra de escala da verba",
+          "horizonte": "Imediato",
+          "quando": "26/10 a 28/10",
+          "quem": "Gestor de tráfego",
+          "frente": "Mídia Paga / Canal Principal"
+        },
+        {
+          "num": "2",
+          "acao": "Calcular o estoque de segurança dos três líderes e pedir a reposição do sérum",
+          "horizonte": "Imediato",
+          "quando": "26/10 a 30/10",
+          "quem": "Gestão comercial",
+          "frente": "Produto / Mix / Portfólio"
+        },
+        {
+          "num": "3",
+          "acao": "Ligar o estoque à mídia com um alerta de cobertura de 7 dias",
+          "horizonte": "Imediato",
+          "quando": "26/10 a 30/10",
+          "quem": "Gestor de tráfego",
+          "frente": "Produto / Mix / Portfólio"
+        },
+        {
+          "num": "4",
+          "acao": "Montar o painel único de KPIs conciliando GA4 e Nuvemshop",
+          "horizonte": "Imediato",
+          "quando": "26/10 a 30/10",
+          "quem": "Analista de dados",
+          "frente": "Monitoramento e Governança"
+        },
+        {
+          "num": "5",
+          "acao": "Enviar a margem por SKU da Curva A e dos kits",
+          "horizonte": "Imediato",
+          "quando": "26/10 a 30/10",
+          "quem": "Gestão comercial",
+          "frente": "Monitoramento e Governança"
+        },
+        {
+          "num": "6",
+          "acao": "Criar cupom e UTM próprios para cada influenciadora",
+          "horizonte": "Imediato",
+          "quando": "26/10 a 30/10",
+          "quem": "Operação do e-commerce",
+          "frente": "Monitoramento e Governança"
+        },
+        {
+          "num": "7",
+          "acao": "Separar as campanhas de aquisição e de recompra",
+          "horizonte": "Curto prazo",
+          "quando": "02/11 a 06/11",
+          "quem": "Gestor de tráfego",
+          "frente": "Mídia Paga / Canal Principal"
+        },
+        {
+          "num": "8",
+          "acao": "Realocar 15% da prospecção ampla do Meta para Google Shopping, Performance Max e remarketing",
+          "horizonte": "Curto prazo",
+          "quando": "02/11 a 13/11",
+          "quem": "Gestor de tráfego",
+          "frente": "Mídia Paga / Canal Principal"
+        }
       ],
-      "fonte": "plano-de-acao/plano-de-acao-estrategico.docx"
+      "link": "https://docs.google.com/document/d/verdeluz-plano-de-acao-exemplo/edit"
     },
     {
-      "tipo": "bullets",
-      "titulo": "Plano de ação · Horizonte 2",
-      "subtitulo": "Curto prazo: **02/11 a 30/11/2026**, até a Black Friday",
-      "itens": [
-        "Campanhas de aquisição e recompra separadas; 15% do Meta realocado",
-        "Black Friday com brinde, até 20% de desconto e lista de espera",
-        "Recuperação de carrinho em 3 toques e frete por CEP",
-        "Antifraude, reprocesso de cartões e lembrete de PIX",
-        "Segundo fornecedor de embalagem e régua de reposição",
-        "Eventos de funil no GA4 e reunião mensal de resultados"
+      "tipo": "tabela_plano",
+      "linhas": [
+        {
+          "num": "9",
+          "acao": "Ativar a recuperação de carrinho em 3 toques",
+          "horizonte": "Curto prazo",
+          "quando": "02/11 a 13/11",
+          "quem": "Operação do e-commerce",
+          "frente": "Eficiência Operacional"
+        },
+        {
+          "num": "10",
+          "acao": "Mostrar frete e prazo por CEP na página de produto e no carrinho",
+          "horizonte": "Curto prazo",
+          "quando": "02/11 a 13/11",
+          "quem": "Operação do e-commerce",
+          "frente": "Eficiência Operacional"
+        },
+        {
+          "num": "11",
+          "acao": "Revisar o antifraude e ativar a nova tentativa de captura dos cartões recusados",
+          "horizonte": "Curto prazo",
+          "quando": "02/11 a 20/11",
+          "quem": "Operação do e-commerce",
+          "frente": "Eficiência Operacional"
+        },
+        {
+          "num": "12",
+          "acao": "Enviar lembrete 30 minutos antes de o PIX expirar",
+          "horizonte": "Curto prazo",
+          "quando": "02/11 a 20/11",
+          "quem": "Operação do e-commerce",
+          "frente": "Eficiência Operacional"
+        },
+        {
+          "num": "13",
+          "acao": "Qualificar o segundo fornecedor de embalagem do sérum",
+          "horizonte": "Curto prazo",
+          "quando": "02/11 a 27/11",
+          "quem": "Gestão de produto",
+          "frente": "Produto / Mix / Portfólio"
+        },
+        {
+          "num": "14",
+          "acao": "Rodar a Black Friday com brinde, até 20% de desconto e lista de espera",
+          "horizonte": "Curto prazo",
+          "quando": "02/11 a 30/11",
+          "quem": "Estrategista de marketing",
+          "frente": "Redução de Dependências"
+        },
+        {
+          "num": "15",
+          "acao": "Lançar a régua de reposição por produto",
+          "horizonte": "Curto prazo",
+          "quando": "09/11 a 27/11",
+          "quem": "Estrategista de CRM",
+          "frente": "Redução de Dependências"
+        },
+        {
+          "num": "16",
+          "acao": "Configurar os eventos de funil no GA4",
+          "horizonte": "Curto prazo",
+          "quando": "02/11 a 13/11",
+          "quem": "Gestor de tráfego",
+          "frente": "Monitoramento e Governança"
+        }
       ],
-      "fonte": "plano-de-acao/plano-de-acao-estrategico.docx"
+      "link": "https://docs.google.com/document/d/verdeluz-plano-de-acao-exemplo/edit"
     },
     {
-      "tipo": "bullets",
-      "titulo": "Plano de ação · Horizonte 3",
-      "subtitulo": "Médio prazo: **DEZ/2026 a SET/2027**, até o fim do ciclo",
-      "itens": [
-        "Reativação dos 7.176 clientes de compra única em JAN e FEV",
-        "Convite do avulso para o kit e prova social nas páginas",
-        "Boleto com vencimento menor e PIX priorizado",
-        "Duas ou três datas menores no calendário",
-        "Dois novos kits e revisão da Curva C antes do Dia das Mães",
-        "Item adicional no carrinho dos três líderes"
+      "tipo": "tabela_plano",
+      "linhas": [
+        {
+          "num": "17",
+          "acao": "Instituir a reunião mensal de resultados com os gatilhos de escala e contenção",
+          "horizonte": "Curto prazo",
+          "quando": "23/11 a 27/11",
+          "quem": "Analista de dados",
+          "frente": "Monitoramento e Governança"
+        },
+        {
+          "num": "18",
+          "acao": "Incluir prova social e atualizar as fotos dos kits",
+          "horizonte": "Médio prazo",
+          "quando": "01/12 a 15/01/27",
+          "quem": "Conteúdo",
+          "frente": "Eficiência Operacional"
+        },
+        {
+          "num": "19",
+          "acao": "Reduzir o vencimento do boleto para 2 dias e priorizar o PIX",
+          "horizonte": "Médio prazo",
+          "quando": "01/12 a 11/12",
+          "quem": "Operação do e-commerce",
+          "frente": "Eficiência Operacional"
+        },
+        {
+          "num": "20",
+          "acao": "Lançar dois novos kits a partir da Curva A",
+          "horizonte": "Médio prazo",
+          "quando": "04/01/27 a 31/03/27",
+          "quem": "Gestão de produto",
+          "frente": "Produto / Mix / Portfólio"
+        },
+        {
+          "num": "23",
+          "acao": "Configurar e disparar a reativação dos 7.176 clientes de compra única",
+          "horizonte": "Médio prazo",
+          "quando": "01/12 a 08/01/27",
+          "quem": "Estrategista de CRM",
+          "frente": "Redução de Dependências"
+        },
+        {
+          "num": "24",
+          "acao": "Convidar o comprador de avulso para o Kit Rotina Essencial",
+          "horizonte": "Médio prazo",
+          "quando": "01/12 a 18/12",
+          "quem": "Operação do e-commerce",
+          "frente": "Redução de Dependências"
+        },
+        {
+          "num": "25",
+          "acao": "Definir duas ou três datas menores no calendário com campanha de kit",
+          "horizonte": "Médio prazo",
+          "quando": "01/12 a 31/08/27",
+          "quem": "Estrategista de marketing",
+          "frente": "Redução de Dependências"
+        },
+        {
+          "num": "21",
+          "acao": "Revisar os 38 SKUs da Curva C e definir o destino de cada um",
+          "horizonte": "Médio prazo",
+          "quando": "01/02/27 a 31/03/27",
+          "quem": "Gestão de produto",
+          "frente": "Produto / Mix / Portfólio"
+        },
+        {
+          "num": "22",
+          "acao": "Oferecer um item adicional no carrinho dos três líderes",
+          "horizonte": "Médio prazo",
+          "quando": "01/04/27 a 30/04/27",
+          "quem": "Operação do e-commerce",
+          "frente": "Produto / Mix / Portfólio"
+        }
       ],
-      "fonte": "plano-de-acao/plano-de-acao-estrategico.docx"
+      "link": "https://docs.google.com/document/d/verdeluz-plano-de-acao-exemplo/edit"
     },
     {
       "tipo": "obrigado"

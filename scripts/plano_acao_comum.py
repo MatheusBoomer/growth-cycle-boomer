@@ -108,14 +108,88 @@ def tabela_resumo(plano: dict) -> list[dict]:
     ]
 
 
-def texto_depende(acao: dict) -> str:
-    """'Nenhuma', 'Ação 2' ou 'Ações 2, 5'."""
+def ondas(plano: dict) -> list[dict]:
+    """Ondas do plano na ordem do JSON; lista vazia quando o plano não tem `ondas`."""
+    return list(plano.get("ondas") or [])
+
+
+def onda_da_acao(plano: dict, numero: int) -> dict | None:
+    """A onda que lista a ação `numero`, ou None."""
+    for onda in ondas(plano):
+        if numero in (onda.get("acoes") or []):
+            return onda
+    return None
+
+
+def nome_da_acao(plano: dict, numero: int) -> str:
+    """Nome da ação `numero`; texto vazio quando ela não existe."""
+    for _, acao in acoes(plano):
+        if acao.get("numero") == numero:
+            return acao.get("acao", "")
+    return ""
+
+
+def texto_depende(acao: dict, plano: dict | None = None) -> str:
+    """'Nenhuma', 'Ação 2' ou 'Ações 2, 5'; com `plano`, cada ação leva o nome:
+    'Ação 2 (Nome); Ação 5 (Nome)'."""
     deps = acao.get("depende_de") or []
     if not deps:
         return "Nenhuma"
+    if plano is not None:
+        partes = []
+        for d in deps:
+            nome = nome_da_acao(plano, d)
+            partes.append(f"Ação {d} ({nome})" if nome else f"Ação {d}")
+        return "; ".join(partes)
     if len(deps) == 1:
         return f"Ação {deps[0]}"
     return "Ações " + ", ".join(str(d) for d in deps)
+
+
+def visao_geral(plano: dict) -> list[dict]:
+    """Uma linha por onda para a tabela de visão geral."""
+    return [
+        {
+            "numero": o.get("numero"),
+            "nome": o.get("nome"),
+            "janela": f"{o.get('inicio')} a {o.get('fim')}",
+            "calendario_midia": o.get("calendario_midia"),
+            "foco": o.get("objetivo"),
+            "total_acoes": len(o.get("acoes") or []),
+        }
+        for o in ondas(plano)
+    ]
+
+
+def decisoes_do_cliente(plano: dict) -> list[dict]:
+    """Ações com `decisao_cliente`, ordenadas pela data limite e, no empate, pelo número."""
+    linhas = []
+    for _, a in acoes(plano):
+        decisao = a.get("decisao_cliente")
+        if not decisao:
+            continue
+        linhas.append(
+            {
+                "numero": a.get("numero"),
+                "acao": a.get("acao"),
+                "ate": decisao.get("ate"),
+                "recomendacao": decisao.get("recomendacao"),
+            }
+        )
+    return sorted(
+        linhas,
+        key=lambda d: (ler_data(d["ate"], f"Ação {d['numero']}, decisão do cliente"), d["numero"]),
+    )
+
+
+def quando_curto(acao: dict, ano_base: int) -> str:
+    """'12/11 a 13/11': dia/mês; a data de ano diferente de `ano_base` leva '/aa' ('29/01/27')."""
+
+    def curta(texto: str, onde: str) -> str:
+        d = ler_data(texto, f"Ação {acao.get('numero')}, {onde}")
+        return d.strftime("%d/%m") if d.year == ano_base else d.strftime("%d/%m/%y")
+
+    return f"{curta(acao['inicio'], 'início')} a {curta(acao['entrega'], 'entrega')}"
 
 
 def formatar_decimal(valor: float, casas: int = 2) -> str:
@@ -152,12 +226,32 @@ def texto_piso_roas(plano: dict) -> list[str]:
 
 
 # Campos comparados por `diferencas`, além dos de CAMPOS_ACAO.
-_CAMPOS_COMPARADOS = CAMPOS_ACAO + ("frente", "horizonte", "depende_de", "alavanca_da_meta", "solucoes")
+# `onda` não está na ação: é derivada (número da onda que lista a ação, ou None).
+_CAMPOS_COMPARADOS = CAMPOS_ACAO + (
+    "frente", "horizonte", "onda", "depende_de", "alavanca_da_meta", "solucoes", "decisao_cliente",
+)
+
+
+_CAMPOS_DAS_ONDAS = ("onda", "decisao_cliente")
+
+
+def _numero_da_onda(plano: dict, numero) -> int | None:
+    """Número da onda que lista a ação, ou None (plano sem ondas ou ação fora de todas)."""
+    ondas_plano = plano.get("ondas")
+    if not isinstance(ondas_plano, list):
+        return None
+    for onda in ondas_plano:
+        if isinstance(onda, dict) and isinstance(onda.get("acoes"), list) and numero in onda["acoes"]:
+            return onda.get("numero")
+    return None
 
 
 def _acoes_por_numero(plano: dict) -> dict[int, dict]:
-    """Ações por número, com o nome do horizonte onde estão guardado em `horizonte`."""
-    return {a.get("numero"): {**a, "horizonte": nome} for nome, a in acoes(plano)}
+    """Ações por número, com o nome do horizonte em `horizonte` e o número da onda em `onda`."""
+    return {
+        a.get("numero"): {**a, "horizonte": nome, "onda": _numero_da_onda(plano, a.get("numero"))}
+        for nome, a in acoes(plano)
+    }
 
 
 def _metas_por_kpi(plano: dict) -> dict:
@@ -169,13 +263,18 @@ def diferencas(plano_a: dict, plano_b: dict) -> dict:
 
     Devolve {"incluidas": [números só em b], "removidas": [números só em a],
     "alteradas": {número: [campos que mudaram]}, "metas_alteradas": [kpis]}.
+    `onda` (número da onda que lista a ação) e `decisao_cliente` só entram na comparação quando os
+    dois planos têm ondas; plano antigo contra plano em ondas não gera diferença por esses campos.
     Ações são pareadas por `numero`; metas, por `kpi` (meta incluída, removida ou com
     `de`/`para`/`ate` diferente conta como alterada).
     """
     a, b = _acoes_por_numero(plano_a), _acoes_por_numero(plano_b)
+    # `onda` e `decisao_cliente` só existem no formato em ondas: só se comparam quando os dois planos o têm.
+    nos_dois_com_ondas = bool(plano_a.get("ondas")) and bool(plano_b.get("ondas"))
+    comparados = [c for c in _CAMPOS_COMPARADOS if nos_dois_com_ondas or c not in _CAMPOS_DAS_ONDAS]
     alteradas = {}
     for numero in sorted(set(a) & set(b)):
-        campos = [campo for campo in _CAMPOS_COMPARADOS if a[numero].get(campo) != b[numero].get(campo)]
+        campos = [campo for campo in comparados if a[numero].get(campo) != b[numero].get(campo)]
         if campos:
             alteradas[numero] = campos
     ma, mb = _metas_por_kpi(plano_a), _metas_por_kpi(plano_b)
