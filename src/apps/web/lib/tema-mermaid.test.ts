@@ -1,9 +1,21 @@
 import { describe, expect, it } from "vitest"
-import { comCoresDoTema, misturar, variaveisMermaid } from "./tema-mermaid"
+import { comCoresDoTema, hexCompleto, misturar, variaveisMermaid } from "./tema-mermaid"
 
 const CORES = { fundo: "#141416", texto: "#f4f4f5", borda: "#2a2a2e", textoApagado: "#8b8b93", acento: "#eb610a", azul: "#5b9df0", verde: "#2fbf8c" }
 
 describe("tema do Mermaid", () => {
+  it("lê o token do CSS em hex de 3 ou 6 dígitos (o claro usa #fff)", () => {
+    expect(hexCompleto("#fff")).toBe("#ffffff")
+    expect(hexCompleto(" #FfF ")).toBe("#ffffff")
+    expect(hexCompleto("#17150f")).toBe("#17150f")
+    expect(hexCompleto("#ABC123")).toBe("#abc123")
+  })
+  it("recusa o que não é hex, para o chamador usar o padrão do tema", () => {
+    expect(hexCompleto("")).toBeNull()
+    expect(hexCompleto("rgb(255 255 255 / 0.9)")).toBeNull()
+    expect(hexCompleto("#ffff")).toBeNull()
+    expect(hexCompleto("fff")).toBeNull()
+  })
   it("mistura em hex", () => {
     expect(misturar("#ffffff", "#000000", 0.5)).toBe("#808080")
     expect(misturar("#eb610a", "#141416", 1)).toBe("#eb610a")

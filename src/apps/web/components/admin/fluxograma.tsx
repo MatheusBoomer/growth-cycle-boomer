@@ -6,27 +6,29 @@ import { useEffect, useId, useRef, useState } from "react"
 import { Button } from "@workspace/ui/components/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@workspace/ui/components/dialog"
 import { Skeleton } from "@workspace/ui/components/skeleton"
-import { comCoresDoTema, misturar, variaveisMermaid, type CoresFluxo } from "@/lib/tema-mermaid"
+import { comCoresDoTema, hexCompleto, misturar, variaveisMermaid, type CoresFluxo } from "@/lib/tema-mermaid"
 
 let renderizacoes = 0
 
-/** Lê as cores do tema aberto (tokens em hex; o que não for hex cai no valor do tema escuro). */
+/** Cores de reserva por tema, para o caso de um token do CSS não vir em hex. */
+const RESERVA_ESCURO: CoresFluxo = { fundo: "#141416", texto: "#f4f4f5", borda: "", textoApagado: "#8b8b93", acento: "#eb610a", azul: "#5b9df0", verde: "#2fbf8c" }
+const RESERVA_CLARO: CoresFluxo = { fundo: "#ffffff", texto: "#17150f", borda: "", textoApagado: "#67635b", acento: "#eb610a", azul: "#3987e5", verde: "#199e70" }
+
+/** Lê as cores do tema aberto (tokens em hex de 3 ou 6 dígitos; o que não for hex cai no valor do mesmo tema). */
 function coresDoTema(): CoresFluxo {
   const estilo = getComputedStyle(document.documentElement)
-  const ler = (nome: string, padrao: string) => {
-    const v = estilo.getPropertyValue(nome).trim()
-    return /^#[0-9a-f]{6}$/i.test(v) ? v : padrao
-  }
-  const fundo = ler("--popover", "#141416")
-  const texto = ler("--foreground", "#f4f4f5")
+  const reserva = document.documentElement.classList.contains("dark") ? RESERVA_ESCURO : RESERVA_CLARO
+  const ler = (nome: string, padrao: string) => hexCompleto(estilo.getPropertyValue(nome)) ?? padrao
+  const fundo = ler("--popover", reserva.fundo)
+  const texto = ler("--foreground", reserva.texto)
   return {
     fundo,
     texto,
     borda: misturar(texto, fundo, 0.18),
-    textoApagado: ler("--muted-foreground", "#8b8b93"),
-    acento: ler("--primary", "#eb610a"),
-    azul: ler("--chart-2", "#5b9df0"),
-    verde: ler("--chart-3", "#2fbf8c"),
+    textoApagado: ler("--muted-foreground", reserva.textoApagado),
+    acento: ler("--primary", reserva.acento),
+    azul: ler("--chart-2", reserva.azul),
+    verde: ler("--chart-3", reserva.verde),
   }
 }
 

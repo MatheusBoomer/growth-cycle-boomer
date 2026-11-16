@@ -9,6 +9,17 @@ export interface CoresFluxo {
   verde: string
 }
 
+/**
+ * Valor de um token do CSS como `#rrggbb`: aceita `#rgb` (o tema claro usa `#fff`) e `#rrggbb`; qualquer outra coisa
+ * (rgb(), color-mix, vazio) vira `null` e o chamador usa o padrão do tema.
+ */
+export function hexCompleto(valor: string): string | null {
+  const v = valor.trim().toLowerCase()
+  if (/^#[0-9a-f]{6}$/.test(v)) return v
+  if (/^#[0-9a-f]{3}$/.test(v)) return `#${v[1]}${v[1]}${v[2]}${v[2]}${v[3]}${v[3]}`
+  return null
+}
+
 /** Mistura `cor` (hex) sobre `fundo` (hex) na proporção dada: o Mermaid não entende color-mix nem rgba com var(). */
 export function misturar(cor: string, fundo: string, proporcao: number): string {
   const c = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16))
