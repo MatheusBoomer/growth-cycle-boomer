@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as EventoPonteiro } from "react"
 import { toast } from "sonner"
 import { entregavelVisivel, htmlParaAbrir } from "@workspace/core/entregaveis"
-import { ORDEM_ETAPAS, type Entregavel, type EtapaId, type Estado, type StatusEtapa } from "@workspace/core/tipos"
+import { ORDEM_ETAPAS, type Entregavel, type EtapaId, type Estado, type StatusEtapa, type TipoEntregavel } from "@workspace/core/tipos"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@workspace/ui/components/empty"
@@ -27,6 +27,7 @@ import { ProvedorReferencias } from "@/components/chat/contexto-referencias"
 import { useAreaDeTrabalho } from "@/hooks/use-area-de-trabalho"
 import { useBiblioteca } from "@/hooks/use-biblioteca"
 import { totalVisivel } from "@/lib/biblioteca"
+import { visualizadorAbertoNaConversa } from "@/lib/entregaveis-da-conversa"
 import { CHAVE_COLUNA_DIREITA, chaveColunas, layoutParaPainel, layoutParaVisualizador, lerLayout, salvarLayout, type Layout } from "@/lib/layout-colunas"
 import { AvisoPresenca } from "./aviso-presenca"
 import { ContextoVisualizador } from "./contexto-visualizador"
@@ -70,7 +71,13 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   // Última largura (%) do painel aberto: é com ela que ele volta quando o analista o mostra de novo.
   const larguraPainel = useRef(22)
   const etapa = selecionada ?? (dados ? escolherEtapaInicial(dados.estado) : null)
-  const visualizadorAberto = visualizador !== null && visualizador.etapa === etapa
+  // O visualizador guarda a etapa dona do arquivo; ele abre na conversa onde o card do entregável aparece (pode ser a 04 para um da 03).
+  const tiposDoVisualizador: TipoEntregavel[] | undefined = visualizador?.secao ? ["secao"] : visualizador?.planilha ? ["planilha"] : undefined
+  const visualizadorAberto =
+    visualizador !== null &&
+    etapa !== null &&
+    dados !== null &&
+    visualizadorAbertoNaConversa(dados.estado.entregaveis, { ...visualizador, tipos: tiposDoVisualizador }, etapa)
   const [arquivoAberto, setArquivoAberto] = useState<string | null>(null)
   const colunaDireitaRef = useGroupRef()
   const inserirNoCompositor = useRef<((texto: string) => void) | null>(null)
@@ -239,7 +246,7 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
     if ((layout.visualizador ?? 0) > 0 === visualizadorAberto) salvarLayout(chaveColunas(visualizadorAberto), layout)
   }
   const aberto = visualizadorAberto
-    ? entregavelVisivel(dados.estado.entregaveis, etapa, visualizador.nomeFinal, visualizador.secao ? ["secao"] : visualizador.planilha ? ["planilha"] : undefined)
+    ? entregavelVisivel(dados.estado.entregaveis, visualizador.etapa, visualizador.nomeFinal, tiposDoVisualizador)
     : null
   const Visualizador = visualizador?.secao
     ? VisualizadorSecao

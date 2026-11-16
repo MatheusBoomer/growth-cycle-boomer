@@ -23,6 +23,7 @@ import { CardInsumo } from "@/components/cards/card-insumo"
 import { useAmbiente } from "@/components/marca/conta-contexto"
 import { api, mensagemDeErro, urlArquivo, type AcaoEtapa } from "@/lib/api"
 import { celebrarEtapaConcluida } from "@/lib/confete"
+import { entregaveisDaConversa } from "@/lib/entregaveis-da-conversa"
 import { useVisualizador } from "./contexto-visualizador"
 
 const COR: Record<StatusEntregavel, string> = { pendente: "bg-aviso", aprovado: "bg-sucesso", substituido: "bg-muted-foreground/40" }
@@ -30,12 +31,12 @@ const COR: Record<StatusEntregavel, string> = { pendente: "bg-aviso", aprovado: 
 export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: EtapaId; dados: RespostaEstado }) {
   const etapaCat = dados.catalogo.etapas.find((e) => e.id === etapa)!
   const estadoEtapa = dados.estado.etapas[etapa]
-  const entregaveis = dados.estado.entregaveis.filter((e) => e.etapa === etapa && e.status !== "substituido")
+  const entregaveis = entregaveisDaConversa(dados.estado.entregaveis, etapa).filter((e) => e.status !== "substituido")
   const condicoes = dados.condicoes[etapa]
   const [ocupado, setOcupado] = useState<AcaoEtapa | null>(null)
   const { nuvem } = useAmbiente()
   const { abrir, abrirArquivo } = useVisualizador()
-  const final = apresentacaoFinal(dados.estado.entregaveis.filter((e) => e.etapa === etapa))
+  const final = apresentacaoFinal(entregaveisDaConversa(dados.estado.entregaveis, etapa))
 
   async function executar(acao: AcaoEtapa, sucesso: string) {
     setOcupado(acao)

@@ -31,6 +31,7 @@ import {
 import { Markdown } from "@/components/markdown"
 import { useEmailDaConta } from "@/components/marca/conta-contexto"
 import { api, mensagemDeErro } from "@/lib/api"
+import { entregaveisDaConversa } from "@/lib/entregaveis-da-conversa"
 import { agruparProcesso, cardsDepoisDaResposta, iconeDoPasso, separarProcessoAoVivo, statusDosPassos, type EventoProcesso, type IconePasso } from "@/lib/passos"
 import { Compositor } from "./compositor"
 import { FimDaEtapa } from "./fim-da-etapa"
@@ -140,7 +141,7 @@ export function ChatEtapa({ slug, etapa, dados, eventos, delta }: PropsChatEtapa
     -1,
   )
 
-  const pendentes = dados.estado.entregaveis.filter((e) => e.etapa === etapa && e.status === "pendente").map((e) => e.id)
+  const pendentes = entregaveisDaConversa(dados.estado.entregaveis, etapa).filter((e) => e.status === "pendente").map((e) => e.id)
 
   const tentarDeNovo = () =>
     api.enviarMensagem(slug, etapa, "Continue de onde parou.").catch((e) => toast.error(mensagemDeErro(e)))

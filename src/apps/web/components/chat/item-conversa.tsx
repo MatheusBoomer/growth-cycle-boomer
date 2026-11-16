@@ -11,6 +11,7 @@ import { Marker, MarkerContent, MarkerIcon } from "@workspace/ui/components/mark
 import { Message, MessageContent } from "@workspace/ui/components/message"
 import { CardEntregavel } from "@/components/cards/card-entregavel"
 import { CardInsumo } from "@/components/cards/card-insumo"
+import { CardValidacaoCliente } from "@/components/cards/card-validacao-cliente"
 import { HistoricoPerguntas } from "@/components/cards/historico-perguntas"
 import { useVisualizador } from "@/components/trabalho/contexto-visualizador"
 import { faixaDeMarcacoes } from "@/lib/anotacoes"
@@ -134,22 +135,31 @@ export function ItemConversa({
       return entregavel ? <CardEntregavel slug={slug} entregavel={entregavel} anterior={versaoAnterior(dados.estado.entregaveis, entregavel)} /> : null
     }
     case "card_insumo": {
+      // O insumo pode ser de outra etapa (a 04 pede de volta o da 03): catálogo, estado e envio são da etapa dona.
+      const etapaDona = evento.etapaInsumo ?? etapa
       const insumo = dados.catalogo.insumos.find((i) => i.id === evento.insumoId)
-      const ref = dados.catalogo.etapas.find((e) => e.id === etapa)?.insumos.find((r) => r.id === evento.insumoId)
+      const ref = dados.catalogo.etapas.find((e) => e.id === etapaDona)?.insumos.find((r) => r.id === evento.insumoId)
       if (!insumo || !ref) return null
+      const statusDona = dados.estado.etapas[etapaDona].status
       return (
         <div className="max-w-xl">
           <CardInsumo
             slug={slug}
-            etapa={etapa}
+            etapa={etapaDona}
             insumo={insumo}
             obrigatorio={ref.obrigatorio}
-            estadoInsumo={dados.estado.insumos.find((i) => i.etapa === etapa && i.insumoId === insumo.id) ?? null}
+            estadoInsumo={dados.estado.insumos.find((i) => i.etapa === etapaDona && i.insumoId === insumo.id) ?? null}
             temModelo={dados.modelosDisponiveis.includes(insumo.id)}
+            removivel={etapaDona === etapa || (statusDona !== "concluida" && statusDona !== "desatualizada")}
           />
         </div>
       )
     }
+    case "card_validacao_cliente":
+      // A confirmação é uma ação da etapa 04, que é onde este card aparece.
+      return dados.estado.validacaoCliente ? (
+        <CardValidacaoCliente slug={slug} etapa="04" validacao={dados.estado.validacaoCliente} defasado={dados.validacaoDefasada} />
+      ) : null
     case "card_perguntas": {
       const conjunto = dados.estado.perguntas.find((c) => c.id === evento.conjuntoId)
       if (!conjunto) return null
