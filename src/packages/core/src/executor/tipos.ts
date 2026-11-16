@@ -1,4 +1,6 @@
+import type { TrechoEnsaio } from "../ensaio/roteiro"
 import type { NivelEsforco } from "../modelos"
+import type { EtapaId } from "../tipos"
 
 export type EventoExecutor =
   | { tipo: "sessao"; sessionId: string }
@@ -44,6 +46,17 @@ export interface PedidoTurno {
   esforco?: NivelEsforco
   /** Subagentes com a configuração do app (nome do subagente → definição). */
   agentes?: Record<string, DefinicaoAgente>
+  /** Dados do turno que só o executor de ensaio usa (preenchido pelo ServicoTurnos). */
+  contexto?: ContextoTurno
+}
+
+/** O que o executor de ensaio precisa saber do turno: de qual prospect, etapa e fixture, e qual trecho do roteiro tocar. */
+export interface ContextoTurno {
+  slug: string
+  etapa: EtapaId
+  fixture: string | null
+  trecho: TrechoEnsaio | null
+  textoAnalista: string | null
 }
 
 /** Fronteira trocável: v1 é o CLI headless; a Fase 2 troca por Agent SDK sem mexer no resto. */

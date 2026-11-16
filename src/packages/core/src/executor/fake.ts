@@ -26,23 +26,33 @@ export function roteiroSimples(texto: string, sessionId = "sessao-demo"): Roteir
   }
 }
 
+/** Resposta do endpoint interno de ferramentas do app. */
+export interface RespostaFerramenta {
+  ok?: boolean
+  mensagem?: string
+}
+
+/** Chama uma ferramenta do MCP `planejamento` pelo endpoint interno do app, com a URL e o token do `mcpConfig` do pedido. */
+export async function chamarFerramentaDoApp(pedido: PedidoTurno, ferramenta: string, entrada: unknown): Promise<RespostaFerramenta> {
+  const { PLANEJAMENTO_APP_URL, PLANEJAMENTO_TOKEN } = (
+    JSON.parse(pedido.mcpConfig) as { mcpServers: { planejamento: { env: Record<string, string> } } }
+  ).mcpServers.planejamento.env
+  const resposta = await fetch(`${PLANEJAMENTO_APP_URL}/api/interno/ferramentas`, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${PLANEJAMENTO_TOKEN}` },
+    body: JSON.stringify({ ferramenta, entrada }),
+  })
+  return (await resposta.json()) as RespostaFerramenta
+}
+
 /**
  * Liga com PLANEJAMENTO_EXECUTOR=demo: permite mexer na UI sem gastar a assinatura.
  * "demo:propor <tipo> <caminho>" faz o demo chamar propor_entregavel com um card de exemplo.
  */
 export function criarExecutorDemo(): Executor {
   return new FakeExecutor(async function* (pedido, sinal) {
-    const env = () =>
-      (JSON.parse(pedido.mcpConfig) as { mcpServers: { planejamento: { env: Record<string, string> } } }).mcpServers.planejamento.env
-    const chamarFerramenta = async (ferramenta: string, entrada: unknown) => {
-      const { PLANEJAMENTO_APP_URL, PLANEJAMENTO_TOKEN } = env()
-      const resposta = await fetch(`${PLANEJAMENTO_APP_URL}/api/interno/ferramentas`, {
-        method: "POST",
-        headers: { "content-type": "application/json", authorization: `Bearer ${PLANEJAMENTO_TOKEN}` },
-        body: JSON.stringify({ ferramenta, entrada }),
-      })
-      return ((await resposta.json()) as { mensagem?: string }).mensagem ?? "sem resposta"
-    }
+    const chamarFerramenta = async (ferramenta: string, entrada: unknown) =>
+      (await chamarFerramentaDoApp(pedido, ferramenta, entrada)).mensagem ?? "sem resposta"
 
     const comando = pedido.mensagem.match(/demo:propor\s+(\S+)\s+(\S+)/)
     if (comando) {
