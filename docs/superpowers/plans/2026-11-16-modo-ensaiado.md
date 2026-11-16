@@ -240,7 +240,7 @@
 
 Sem código novo; é a produção do conteúdo e a entrega.
 
-- [ ] **Step 1:** App local com o agente real e `PLANEJAMENTO_GRAVAR_ENSAIO=1`; criar o Verdeluz ensaiado na 01 e rodar 01 a 08 e a apresentação final seguindo as notas de demo dos decks (na 02 responder 2 perguntas; na 03 pedir ajuste no gráfico 1 e aprovar o 2; na final comentar um slide do roteiro e uma área do deck).
+- [ ] **Step 1:** App local com o agente real e `PLANEJAMENTO_GRAVAR_ENSAIO=1`; criar o Verdeluz comum (sem Modo ensaiado) na 01 e rodar 01 a 08 e a apresentação final seguindo as notas de demo dos decks (na 02 responder 2 perguntas; na 03 pedir ajuste no gráfico 1 e aprovar o 2; na final comentar um slide do roteiro e uma área do deck).
 - [ ] **Step 2:** `npx tsx scripts/ensaio-montar.ts verdeluz <etapa>` para cada etapa; revisar cada `roteiro.json` (encurtar textos longos, conferir `textoPreenchido`).
 - [ ] **Step 3:** Ensaio completo local, sem `PLANEJAMENTO_GRAVAR_ENSAIO`, etapa por etapa, conferindo que nenhum turno chama o Claude (custo do projeto continua zero no selo de admin).
 - [ ] **Step 4:** Commit do pacote `clientes/_fixtures/verdeluz/ensaio/` (`chore(fixture): roteiros de ensaio do Verdeluz`); PR, merge e `~/bin/vps-deploy deploy`.
