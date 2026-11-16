@@ -279,13 +279,13 @@ resposta, pergunte no chat, uma por vez.
    única de uma solução, a substituta passa a citá-la; nunca apague solução
    do registro). Mantenha `data_referencia`, `janela_prova` e `fim_ciclo` do
    plano da 08; ação nova ou alterada começa a partir de hoje.
-   Em plano com ondas: ação nova ou com data nova entra na onda cuja janela
-   contém o início dela (atualize a lista `acoes` da onda, e o resumo da
+   Em plano com fases: ação nova ou com data nova entra na fase cuja janela
+   contém o início dela (atualize a lista `acoes` da fase, e o resumo da
    visão geral acompanha); decisão do cliente resolvida na apresentação sai da
    ação (`decisao_cliente: null`) ou é atualizada, e a revisão a cita pelo
-   número da ação; mudança de onda e de decisão aparecem em "campos" do
-   relatório (a comparação delas só vale quando os dois planos têm ondas). Plano da 08 sem ondas não ganha ondas na etapa 10: o AVISO
-   "sem ondas" do validador é esperado.
+   número da ação; mudança de fase e de decisão aparecem em "campos" do
+   relatório (a comparação delas só vale quando os dois planos têm fases). Plano da 08 sem fases não ganha fases na etapa 10: o AVISO
+   "sem fases" do validador é esperado.
 3. **Mudança de meta, verba ou número do cenário** só com decisão explícita
    do analista num conflito. Ela vale só no plano final, com rastro: registre
    cada número que passou a divergir da 06/07 em `divergencias_cenario`

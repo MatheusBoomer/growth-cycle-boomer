@@ -106,9 +106,9 @@ def _ciclos(grafo: dict[int, list[int]]) -> list[list[int]]:
     return achados
 
 
-# --- ondas e blocos novos do plano (todas as chaves são opcionais) ---
+# --- fases e blocos novos do plano (todas as chaves são opcionais) ---
 
-_CAMPOS_TEXTO_ONDA = ("nome", "calendario_midia", "objetivo")
+_CAMPOS_TEXTO_FASE = ("nome", "calendario_midia", "objetivo")
 _CAMPOS_CHECKPOINT = ("duracao", "pauta", "para_liberar", "quem_decide")
 
 
@@ -151,17 +151,17 @@ def _texto(valor, onde: str, erros: list[str], feminino: bool = False) -> None:
         erros.append(f"{onde} precisa ser texto (veio {valor!r}).")
 
 
-def _validar_ondas(plano: dict, erros: list[str], avisos: list[str]) -> None:
-    """Confere ondas, checkpoints e a cobertura das ações; plano sem `ondas` só recebe um aviso."""
-    brutas = plano.get("ondas")
+def _validar_fases(plano: dict, erros: list[str], avisos: list[str]) -> None:
+    """Confere fases, checkpoints e a cobertura das ações; plano sem `fases` só recebe um aviso."""
+    brutas = plano.get("fases")
     if brutas is None or brutas == []:
         avisos.append(
-            "Plano sem ondas: o plano segue só os horizontes. Monte as ondas (janela, objetivo e "
+            "Plano sem fases: o plano segue só os horizontes. Monte as fases (janela, objetivo e "
             "checkpoint de cada uma) a partir do calendário estratégico de mídia."
         )
         return
     if not isinstance(brutas, list):
-        erros.append("ondas precisa ser uma lista de objetos (uma por onda).")
+        erros.append("fases precisa ser uma lista de objetos (uma por fase).")
         return
 
     referencia = _data_ou_none(plano.get("data_referencia"))
@@ -174,21 +174,21 @@ def _validar_ondas(plano: dict, erros: list[str], avisos: list[str]) -> None:
     total = len(brutas)
     numeros = [o.get("numero") if isinstance(o, dict) else None for o in brutas]
     if numeros != list(range(1, total + 1)) or not all(_inteiro(n) for n in numeros):
-        erros.append(f"As ondas precisam ser numeradas de 1 a {total}, na ordem (veio {numeros}).")
+        erros.append(f"As fases precisam ser numeradas de 1 a {total}, na ordem (veio {numeros}).")
 
-    # Cada onda lida: (posição, rótulo, objeto, início, fim, data do checkpoint).
+    # Cada fase lida: (posição, rótulo, objeto, início, fim, data do checkpoint).
     lidas: list[tuple] = []
     onde_esta: dict[int, list[str]] = {}
     for pos, o in enumerate(brutas, start=1):
         if not isinstance(o, dict):
             erros.append(
-                f"Onda {pos}: precisa ser um objeto com numero, nome, inicio, fim, calendario_midia, "
+                f"Fase {pos}: precisa ser um objeto com numero, nome, inicio, fim, calendario_midia, "
                 "objetivo, acoes e checkpoint."
             )
             continue
-        rotulo = f"Onda {o['numero'] if _inteiro(o.get('numero')) else pos}"
+        rotulo = f"Fase {o['numero'] if _inteiro(o.get('numero')) else pos}"
 
-        for campo in _CAMPOS_TEXTO_ONDA:
+        for campo in _CAMPOS_TEXTO_FASE:
             _texto(o.get(campo), f"{rotulo}: campo {campo}", erros)
 
         datas = []
@@ -207,7 +207,7 @@ def _validar_ondas(plano: dict, erros: list[str], avisos: list[str]) -> None:
             erros.append(f"{rotulo}: acoes precisa ser uma lista de números de ação.")
         else:
             if not listadas:
-                avisos.append(f"{rotulo}: não tem nenhuma ação; distribua as ações do plano pelas ondas.")
+                avisos.append(f"{rotulo}: não tem nenhuma ação; distribua as ações do plano pelas fases.")
             vistas: set[int] = set()
             for n in listadas:
                 if not _inteiro(n):
@@ -233,7 +233,7 @@ def _validar_ondas(plano: dict, erros: list[str], avisos: list[str]) -> None:
         if cp is None:
             if pos != total:
                 avisos.append(
-                    f"{rotulo}: sem checkpoint; toda onda, exceto a última, termina num checkpoint "
+                    f"{rotulo}: sem checkpoint; toda fase, exceto a última, termina num checkpoint "
                     "com data, pauta e quem decide."
                 )
         elif not isinstance(cp, dict):
@@ -252,12 +252,12 @@ def _validar_ondas(plano: dict, erros: list[str], avisos: list[str]) -> None:
 
     for n, rotulos in onde_esta.items():
         if len(rotulos) > 1:
-            erros.append(f"{_prefixo_acao(existentes[n])}está em mais de uma onda ({' e '.join(rotulos)}).")
+            erros.append(f"{_prefixo_acao(existentes[n])}está em mais de uma fase ({' e '.join(rotulos)}).")
     for n, a in existentes.items():
         if n not in onde_esta:
-            erros.append(f"{_prefixo_acao(a)}não está em nenhuma onda.")
+            erros.append(f"{_prefixo_acao(a)}não está em nenhuma fase.")
 
-    # Ordem e limites entre as ondas.
+    # Ordem e limites entre as fases.
     anterior = None
     for atual in lidas:
         _, rotulo, _, ini, fim, _ = atual
@@ -270,7 +270,7 @@ def _validar_ondas(plano: dict, erros: list[str], avisos: list[str]) -> None:
             elif fim_ant and ini <= fim_ant:
                 erros.append(
                     f"{rotulo}: começa em {_fmt(ini)}, mas a {rotulo_ant} só termina em {_fmt(fim_ant)}; "
-                    "as ondas não podem se sobrepor."
+                    "as fases não podem se sobrepor."
                 )
         anterior = atual
     if lidas and lidas[0][0] == 1 and lidas[0][3] and referencia and lidas[0][3] < referencia:
@@ -280,13 +280,13 @@ def _validar_ondas(plano: dict, erros: list[str], avisos: list[str]) -> None:
     if lidas and lidas[-1][0] == total and lidas[-1][4] and fim_ciclo and lidas[-1][4] > fim_ciclo:
         erros.append(f"{lidas[-1][1]}: fim {_fmt(lidas[-1][4])} depois do fim do ciclo ({_fmt(fim_ciclo)}).")
 
-    # O checkpoint cai entre o início da onda e o início da seguinte (a última: até o fim do ciclo).
+    # O checkpoint cai entre o início da fase e o início da seguinte (a última: até o fim do ciclo).
     for i, (pos, rotulo, _, ini, _, data_cp) in enumerate(lidas):
         if not data_cp:
             continue
         if ini and data_cp < ini:
             erros.append(
-                f"{rotulo}: checkpoint.data {_fmt(data_cp)} antes do início da onda ({_fmt(ini)})."
+                f"{rotulo}: checkpoint.data {_fmt(data_cp)} antes do início da fase ({_fmt(ini)})."
             )
         if pos == total:
             if fim_ciclo and data_cp > fim_ciclo:
@@ -338,8 +338,8 @@ def _validar_lista_de_pares(valor, nome: str, campos: tuple, erros: list[str]) -
             _texto(item.get(campo), f"{nome}[{i}].{campo}", erros)
 
 
-def _validar_blocos_novos(plano: dict, erros: list[str], avisos: list[str]) -> None:
-    """Decisões do cliente por ação e os blocos opcionais do plano com ondas."""
+def _validar_blocos_novos(plano: dict, erros: list[str], avisos: list[str], rascunho: bool = False) -> None:
+    """Decisões do cliente por ação e os blocos opcionais do plano com fases."""
     referencia = _data_ou_none(plano.get("data_referencia"))
     fim_ciclo = _data_ou_none(plano.get("fim_ciclo"))
 
@@ -397,20 +397,22 @@ def _validar_blocos_novos(plano: dict, erros: list[str], avisos: list[str]) -> N
     kpis = plano.get("kpis_acompanhamento")
     if kpis is not None and kpis != []:
         _validar_lista_de_pares(kpis, "kpis_acompanhamento", ("kpi", "meta_limite"), erros)
-    elif plano.get("ondas"):
+    elif plano.get("fases"):
         avisos.append(
             "O plano não tem kpis_acompanhamento: liste os KPIs e o limite de cada um (com número do "
             "cenário aprovado) para o acompanhamento entre os checkpoints."
         )
-    if plano.get("ondas"):
+    if plano.get("fases"):
         faltam = {
-            "como_funciona": "o texto 'Como este plano funciona' (como ler as ondas, os horizontes e o dono de cada ação)",
+            "como_funciona": "o texto 'Como este plano funciona' (como ler as fases, os horizontes e o dono de cada ação)",
             "protocolo_mudanca": "o protocolo para mudar uma coisa de cada vez e reverter com segurança",
             "metas_mensais": "a tabela das metas dos primeiros meses (gerada por scripts/metas_mensais.py)",
         }
         for chave, o_que in faltam.items():
+            if chave == "metas_mensais" and rascunho:
+                continue  # a tabela só nasce no Passo 3 (metas_mensais.py); no rascunho a falta dela é esperada
             if not plano.get(chave):
-                avisos.append(f"O plano em ondas não tem {chave}: inclua {o_que}.")
+                avisos.append(f"O plano em fases não tem {chave}: inclua {o_que}.")
 
 
 def validar(plano, registro, rascunho: bool = False) -> tuple[list[str], list[str]]:
@@ -720,8 +722,8 @@ def validar(plano, registro, rascunho: bool = False) -> tuple[list[str], list[st
     elif pisos_roas(margem, None)["aprovada"] is None:
         erros.append(f"A margem de contribuição {margem!r} é inválida: use um número maior que 0 e até 1.")
 
-    _validar_ondas(plano, erros, avisos)
-    _validar_blocos_novos(plano, erros, avisos)
+    _validar_fases(plano, erros, avisos)
+    _validar_blocos_novos(plano, erros, avisos, rascunho)
 
     return erros, avisos
 

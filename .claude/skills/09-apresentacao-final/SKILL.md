@@ -107,7 +107,7 @@ Regras:
 
   O script lê o `plano-de-acao-estrategico.json` que a Skill 08 salva ao lado do
   `.docx` e da `.xlsx` (em `entrega/ativos-aprovados/plano-de-acao/`), põe as
-  ações na ordem do documento (plano em ondas: onda e, dentro dela, número da
+  ações na ordem do documento (plano em fases: fase e, dentro dela, número da
   ação; plano só com horizontes: cronológica de início; Quando como "dd/mm a
   dd/mm", Quem sem a empresa) e divide em slides pelo tamanho do texto (ação
   longa ocupa mais), com o mesmo número de ações por slide sempre que possível.

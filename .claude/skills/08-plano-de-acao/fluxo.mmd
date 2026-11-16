@@ -1,10 +1,10 @@
 flowchart TD
   I1["Decisões das etapas 01 a 07 e registro de soluções (solucoes.json)"]
   P1["Abertura: confirmar o que já se sabe e perguntar o que falta (9 itens)"]
-  P2["Fase 1 · Abertura do plano: cenário, metas, o que cabe nos 3 meses, premissas e pisos de ROAS"]
-  P8["Montar ondas e checkpoints: janelas pelo calendário de mídia, Como este plano funciona, protocolo de mudança e KPIs de acompanhamento"]
+  P2["Passo 1 · Abertura do plano: cenário, metas, o que cabe nos 3 meses, premissas e pisos de ROAS"]
+  P8["Montar fases e checkpoints: janelas pelo calendário de mídia, Como este plano funciona, protocolo de mudança e KPIs de acompanhamento"]
   C1{"Analista aprova?"}
-  P3["Fase 2 · Ações com os 10 campos, por horizonte e frente, distribuídas nas ondas, com decisao_cliente"]
+  P3["Passo 2 · Ações com os 10 campos, por horizonte e frente, distribuídas nas fases, com decisao_cliente"]
   V1["validar_plano_acao.py --rascunho"]
   D1{"Saiu ERRO?"}
   P4["Corrigir o plano"]
@@ -13,10 +13,10 @@ flowchart TD
   P9["Gerar metas mensais da projeção (metas_mensais.py)"]
   D2{"Saiu ERRO?"}
   P11["Corrigir rótulos, checks, cenário ou projeção"]
-  P5["Fase 3 · gerar_plano_acao.py (.docx + .xlsx + JSON validado)"]
+  P5["Passo 3 · gerar_plano_acao.py (.docx + .xlsx + JSON validado)"]
   C3{"Analista aprova?"}
-  P6["Fase 4 · Relatório de verificação"]
-  P10["Conferir cobertura por onda: toda ação em uma onda, começando dentro dela"]
+  P6["Passo 4 · Relatório de verificação"]
+  P10["Conferir cobertura por fase: toda ação em uma fase, começando dentro dela"]
   C4{"Pergunta-guia: sim?"}
   E1["Entrega: plano de ação (.docx + .xlsx)"]
   H1["Handoff para a apresentação final: roteiro e .pptx"]

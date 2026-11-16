@@ -108,16 +108,16 @@ def tabela_resumo(plano: dict) -> list[dict]:
     ]
 
 
-def ondas(plano: dict) -> list[dict]:
-    """Ondas do plano na ordem do JSON; lista vazia quando o plano não tem `ondas`."""
-    return list(plano.get("ondas") or [])
+def fases(plano: dict) -> list[dict]:
+    """Fases do plano na ordem do JSON; lista vazia quando o plano não tem `fases`."""
+    return list(plano.get("fases") or [])
 
 
-def onda_da_acao(plano: dict, numero: int) -> dict | None:
-    """A onda que lista a ação `numero`, ou None."""
-    for onda in ondas(plano):
-        if numero in (onda.get("acoes") or []):
-            return onda
+def fase_da_acao(plano: dict, numero: int) -> dict | None:
+    """A fase que lista a ação `numero`, ou None."""
+    for fase in fases(plano):
+        if numero in (fase.get("acoes") or []):
+            return fase
     return None
 
 
@@ -147,7 +147,7 @@ def texto_depende(acao: dict, plano: dict | None = None) -> str:
 
 
 def visao_geral(plano: dict) -> list[dict]:
-    """Uma linha por onda para a tabela de visão geral."""
+    """Uma linha por fase para a tabela de visão geral."""
     return [
         {
             "numero": o.get("numero"),
@@ -157,7 +157,7 @@ def visao_geral(plano: dict) -> list[dict]:
             "foco": o.get("objetivo"),
             "total_acoes": len(o.get("acoes") or []),
         }
-        for o in ondas(plano)
+        for o in fases(plano)
     ]
 
 
@@ -226,30 +226,30 @@ def texto_piso_roas(plano: dict) -> list[str]:
 
 
 # Campos comparados por `diferencas`, além dos de CAMPOS_ACAO.
-# `onda` não está na ação: é derivada (número da onda que lista a ação, ou None).
+# `fase` não está na ação: é derivada (número da fase que lista a ação, ou None).
 _CAMPOS_COMPARADOS = CAMPOS_ACAO + (
-    "frente", "horizonte", "onda", "depende_de", "alavanca_da_meta", "solucoes", "decisao_cliente",
+    "frente", "horizonte", "fase", "depende_de", "alavanca_da_meta", "solucoes", "decisao_cliente",
 )
 
 
-_CAMPOS_DAS_ONDAS = ("onda", "decisao_cliente")
+_CAMPOS_DAS_FASES = ("fase",)  # só existe com fases; `decisao_cliente` tem regra própria em `diferencas`
 
 
-def _numero_da_onda(plano: dict, numero) -> int | None:
-    """Número da onda que lista a ação, ou None (plano sem ondas ou ação fora de todas)."""
-    ondas_plano = plano.get("ondas")
-    if not isinstance(ondas_plano, list):
+def _numero_da_fase(plano: dict, numero) -> int | None:
+    """Número da fase que lista a ação, ou None (plano sem fases ou ação fora de todas)."""
+    fases_plano = plano.get("fases")
+    if not isinstance(fases_plano, list):
         return None
-    for onda in ondas_plano:
-        if isinstance(onda, dict) and isinstance(onda.get("acoes"), list) and numero in onda["acoes"]:
-            return onda.get("numero")
+    for fase in fases_plano:
+        if isinstance(fase, dict) and isinstance(fase.get("acoes"), list) and numero in fase["acoes"]:
+            return fase.get("numero")
     return None
 
 
 def _acoes_por_numero(plano: dict) -> dict[int, dict]:
-    """Ações por número, com o nome do horizonte em `horizonte` e o número da onda em `onda`."""
+    """Ações por número, com o nome do horizonte em `horizonte` e o número da fase em `fase`."""
     return {
-        a.get("numero"): {**a, "horizonte": nome, "onda": _numero_da_onda(plano, a.get("numero"))}
+        a.get("numero"): {**a, "horizonte": nome, "fase": _numero_da_fase(plano, a.get("numero"))}
         for nome, a in acoes(plano)
     }
 
@@ -263,15 +263,23 @@ def diferencas(plano_a: dict, plano_b: dict) -> dict:
 
     Devolve {"incluidas": [números só em b], "removidas": [números só em a],
     "alteradas": {número: [campos que mudaram]}, "metas_alteradas": [kpis]}.
-    `onda` (número da onda que lista a ação) e `decisao_cliente` só entram na comparação quando os
-    dois planos têm ondas; plano antigo contra plano em ondas não gera diferença por esses campos.
+    `fase` (número da fase que lista a ação) só entra na comparação quando os dois planos têm fases.
+    `decisao_cliente` entra quando os dois têm fases ou quando nenhum tem (o validador aceita o campo
+    sem fases); só o par misto (um com fases, outro sem) deixa os dois campos de fora, para plano antigo
+    contra plano em fases não gerar diferença falsa.
     Ações são pareadas por `numero`; metas, por `kpi` (meta incluída, removida ou com
     `de`/`para`/`ate` diferente conta como alterada).
     """
     a, b = _acoes_por_numero(plano_a), _acoes_por_numero(plano_b)
-    # `onda` e `decisao_cliente` só existem no formato em ondas: só se comparam quando os dois planos o têm.
-    nos_dois_com_ondas = bool(plano_a.get("ondas")) and bool(plano_b.get("ondas"))
-    comparados = [c for c in _CAMPOS_COMPARADOS if nos_dois_com_ondas or c not in _CAMPOS_DAS_ONDAS]
+    # `fase` só existe no formato em fases: só se compara quando os dois planos o têm. `decisao_cliente`
+    # também vale quando nenhum tem fases; no par misto os dois ficam de fora.
+    tem_a, tem_b = bool(plano_a.get("fases")), bool(plano_b.get("fases"))
+    nos_dois_com_fases = tem_a and tem_b
+    misto = tem_a != tem_b
+    comparados = [
+        c for c in _CAMPOS_COMPARADOS
+        if (nos_dois_com_fases or c not in _CAMPOS_DAS_FASES) and not (misto and c == "decisao_cliente")
+    ]
     alteradas = {}
     for numero in sorted(set(a) & set(b)):
         campos = [campo for campo in comparados if a[numero].get(campo) != b[numero].get(campo)]

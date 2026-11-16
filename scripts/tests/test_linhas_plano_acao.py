@@ -18,11 +18,11 @@ def _linha(n, acao="Auditar o pixel", quando="Semana 1"):
     return {"num": str(n), "acao": acao, "horizonte": "Imediato", "quando": quando, "quem": "Agência", "frente": "Mídia Paga"}
 
 
-def test_le_o_plano_aprovado_em_json_por_onda_e_numero():
+def test_le_o_plano_aprovado_em_json_por_fase_e_numero():
     linhas = plano.ler_plano(PLANO_FIXTURE)
     dados = json.loads(PLANO_FIXTURE.read_text(encoding="utf-8"))
     por_numero = {a["numero"]: a for h in dados["horizontes"] for a in h["acoes"]}
-    esperado = [n for o in dados["ondas"] for n in sorted(o["acoes"])]
+    esperado = [n for o in dados["fases"] for n in sorted(o["acoes"])]
     assert len(linhas) == len(por_numero) == len(esperado) >= 10
     assert set(linhas[0]) == {"num", "acao", "horizonte", "quando", "quem", "frente"}
     assert [l["num"] for l in linhas] == [str(n) for n in esperado]
@@ -34,7 +34,7 @@ def test_le_o_plano_aprovado_em_json_por_onda_e_numero():
     assert all(re.fullmatch(r"\d{2}/\d{2}(/\d{2})? a \d{2}/\d{2}(/\d{2})?", l["quando"]) for l in linhas)
 
 
-def _plano_json(ondas=None):
+def _plano_json(fases=None):
     acao = lambda n, ini, fim: {"numero": n, "acao": f"Ação {n}", "frente": "F", "dono": "Gestor · Boomer", "inicio": ini, "entrega": fim}  # noqa: E731
     dados = {
         "data_referencia": "22/10/2026",
@@ -43,27 +43,27 @@ def _plano_json(ondas=None):
             {"nome": "Curto prazo", "acoes": [acao(3, "02/11/2026", "05/11/2026"), acao(4, "26/10/2026", "29/10/2026")]},
         ],
     }
-    if ondas:
-        dados["ondas"] = ondas
+    if fases:
+        dados["fases"] = fases
     return dados
 
 
-def test_plano_com_ondas_vem_por_onda_e_depois_por_numero(tmp_path):
-    ondas = [{"numero": 1, "acoes": [4, 1]}, {"numero": 2, "acoes": [3, 2]}]
+def test_plano_com_fases_vem_por_fase_e_depois_por_numero(tmp_path):
+    fases = [{"numero": 1, "acoes": [4, 1]}, {"numero": 2, "acoes": [3, 2]}]
     caminho = tmp_path / "plano.json"
-    caminho.write_text(json.dumps(_plano_json(ondas)), encoding="utf-8")
+    caminho.write_text(json.dumps(_plano_json(fases)), encoding="utf-8")
     linhas = plano.ler_plano(caminho)
-    assert [l["num"] for l in linhas] == ["1", "4", "2", "3"]  # onda 1 (1, 4), onda 2 (2, 3), por número dentro da onda
+    assert [l["num"] for l in linhas] == ["1", "4", "2", "3"]  # fase 1 (1, 4), fase 2 (2, 3), por número dentro da fase
     assert [l["horizonte"] for l in linhas] == ["Imediato", "Curto prazo", "Imediato", "Curto prazo"]
 
 
-def test_plano_sem_ondas_segue_a_ordem_cronologica(tmp_path):
+def test_plano_sem_fases_segue_a_ordem_cronologica(tmp_path):
     caminho = tmp_path / "plano.json"
     caminho.write_text(json.dumps(_plano_json()), encoding="utf-8")
     assert [l["num"] for l in plano.ler_plano(caminho)] == ["1", "4", "3", "2"]
 
 
-def test_acao_fora_de_toda_onda_vai_ao_fim_por_numero(tmp_path):
+def test_acao_fora_de_toda_fase_vai_ao_fim_por_numero(tmp_path):
     caminho = tmp_path / "plano.json"
     caminho.write_text(json.dumps(_plano_json([{"numero": 1, "acoes": [3, 1]}])), encoding="utf-8")
     assert [l["num"] for l in plano.ler_plano(caminho)] == ["1", "3", "2", "4"]
@@ -250,3 +250,17 @@ def test_linha_sozinha_maior_que_a_pagina_ainda_vira_um_slide():
     enorme = _linha(1, "palavra " * 200)
     slides = plano.slides_do_roteiro([enorme, _linha(2)])
     assert [len(s["linhas"]) for s in slides] == [1, 1]
+
+
+def test_paginas_equilibradas_com_centenas_de_acoes_nao_travam_e_respeitam_o_limite():
+    import time
+    linhas = [
+        {"num": str(i), "acao": "Ajustar a configuração do fluxo " * (1 + i % 5), "horizonte": "Imediato",
+         "quando": "01/11 a 30/11", "quem": "Agência", "frente": "Mídia paga"}
+        for i in range(300)
+    ]
+    inicio = time.time()
+    slides = plano.slides_do_roteiro(linhas)
+    assert time.time() - inicio < 5
+    assert sum(len(s["linhas"]) for s in slides) == 300
+    assert all(len(s["linhas"]) <= plano.MAX_LINHAS_POR_SLIDE for s in slides)

@@ -183,9 +183,9 @@ def plano_valido() -> dict:
     }
 
 
-def plano_com_ondas() -> dict:
-    """plano_valido() com 3 ondas (janelas em ordem, cada ação começa dentro da onda que a lista),
-    checkpoints nas ondas 1 e 2 (a última não tem) e decisões do cliente nas ações 3 e 5."""
+def plano_com_fases() -> dict:
+    """plano_valido() com 3 fases (janelas em ordem, cada ação começa dentro da fase que a lista),
+    checkpoints nas fases 1 e 2 (a última não tem) e decisões do cliente nas ações 3 e 5."""
     plano = plano_valido()
     acoes_por_numero = {a["numero"]: a for _, a in ((h["nome"], a) for h in plano["horizontes"] for a in h["acoes"])}
     acoes_por_numero[1]["acao"] = "Liberar os acessos"
@@ -199,7 +199,7 @@ def plano_com_ondas() -> dict:
         "ate": "27/11/2026",
         "recomendacao": "Autorizar o e-mail e o CRM como canais de recompra.",
     }
-    plano["ondas"] = [
+    plano["fases"] = [
         {
             "numero": 1,
             "nome": "Contenção",

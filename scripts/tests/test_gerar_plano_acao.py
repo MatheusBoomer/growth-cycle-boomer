@@ -362,7 +362,7 @@ def test_saida_json_colide_com_modelo_e_com_entradas(tmp_path, capsys):
     assert not (tmp_path / "a.docx").exists() and not (tmp_path / "a.xlsx").exists()
 
 
-# --- fixture Verdeluz em ondas: de ponta a ponta ---
+# --- fixture Verdeluz em fases: de ponta a ponta ---
 
 FIXTURE_PLANO = RAIZ / "scripts" / "fixture_verdeluz" / "plano-de-acao.json"
 FIXTURE_REGISTRO = RAIZ / "clientes" / "_fixtures" / "verdeluz" / "base" / "contexto" / "solucoes.json"
@@ -373,8 +373,8 @@ def _plano_verdeluz() -> dict:
     return json.loads(FIXTURE_PLANO.read_text(encoding="utf-8"))
 
 
-def _conjunto_docx_ondas(docx: Path) -> set:
-    """(número, título, início, entrega, achado) de cada ação do documento em ondas."""
+def _conjunto_docx_fases(docx: Path) -> set:
+    """(número, título, início, entrega, achado) de cada ação do documento em fases."""
     ps = _paragrafos_docx(docx)
     saida = set()
     for i, p in enumerate(ps):
@@ -387,7 +387,7 @@ def _conjunto_docx_ondas(docx: Path) -> set:
     return saida
 
 
-def _conjunto_xlsx_ondas(xlsx: Path) -> set:
+def _conjunto_xlsx_fases(xlsx: Path) -> set:
     ws = openpyxl.load_workbook(xlsx)["Plano de Ação Estratégico"]
     saida = set()
     for linha in ws.iter_rows(min_row=4, values_only=True):
@@ -401,10 +401,10 @@ def test_fixture_verdeluz_valida_sem_erro_e_sem_aviso():
     registro = json.loads(FIXTURE_REGISTRO.read_text(encoding="utf-8"))
     erros, avisos = g.validar(copy.deepcopy(plano), registro, rascunho=False)
     assert erros == []
-    assert avisos == []  # inclui "Plano sem ondas" e "sem kpis_acompanhamento"
-    assert [o["numero"] for o in plano["ondas"]] == [1, 2, 3, 4]
-    assert plano["ondas"][-1]["checkpoint"] is None
-    assert all(o["checkpoint"] for o in plano["ondas"][:-1])
+    assert avisos == []  # inclui "Plano sem fases" e "sem kpis_acompanhamento"
+    assert [o["numero"] for o in plano["fases"]] == [1, 2, 3, 4]
+    assert plano["fases"][-1]["checkpoint"] is None
+    assert all(o["checkpoint"] for o in plano["fases"][:-1])
     decisoes = [a for _, a in c.acoes(plano) if a.get("decisao_cliente")]
     assert len(decisoes) == 3
     assert 4 <= len(plano["como_funciona"]) <= 6
@@ -428,15 +428,15 @@ def test_fixture_verdeluz_gera_docx_xlsx_e_json_com_o_mesmo_conteudo(tmp_path, c
     esperado = {(a["numero"], a["acao"], a["inicio"], a["entrega"], a["achado_origem"])
                 for _, a in c.acoes(_plano_verdeluz())}
     assert len(esperado) == 25
-    assert _conjunto_docx_ondas(docx) == esperado
-    assert _conjunto_xlsx_ondas(xlsx) == esperado
+    assert _conjunto_docx_fases(docx) == esperado
+    assert _conjunto_xlsx_fases(xlsx) == esperado
     assert json.loads(saida_json.read_text(encoding="utf-8")) == _plano_verdeluz()
     paragrafos = "\n".join(_paragrafos_docx(docx))
     for titulo in ("Como este plano funciona", "Visão geral", "Metas dos 3 primeiros meses",
                    "Como mudamos minimizando riscos", "KPIs de acompanhamento e limites"):
         assert titulo in paragrafos
     for n in (1, 2, 3, 4):
-        assert f"Onda {n} · " in paragrafos
+        assert f"Fase {n} · " in paragrafos
     assert "Checkpoint 1:" in paragrafos and "Checkpoint 3:" in paragrafos and "Checkpoint 4:" not in paragrafos
     assert "Decisões que dependem de" in paragrafos
     wb = openpyxl.load_workbook(xlsx)
@@ -451,17 +451,17 @@ def test_arquivos_aprovados_do_fixture_vem_do_json_atual(tmp_path, capsys):
     assert codigo == 0, cap.err
     pasta = FIXTURE_APROVADOS / "plano-de-acao"
     assert (pasta / "plano-de-acao-estrategico.json").read_bytes() == FIXTURE_PLANO.read_bytes()
-    assert _conjunto_docx_ondas(pasta / "plano-de-acao-estrategico.docx") == _conjunto_docx_ondas(docx)
-    assert _conjunto_xlsx_ondas(pasta / "plano-de-acao-estrategico.xlsx") == _conjunto_xlsx_ondas(xlsx)
-    assert "Onda 4 · " in "\n".join(_paragrafos_docx(pasta / "plano-de-acao-estrategico.docx"))
+    assert _conjunto_docx_fases(pasta / "plano-de-acao-estrategico.docx") == _conjunto_docx_fases(docx)
+    assert _conjunto_xlsx_fases(pasta / "plano-de-acao-estrategico.xlsx") == _conjunto_xlsx_fases(xlsx)
+    assert "Fase 4 · " in "\n".join(_paragrafos_docx(pasta / "plano-de-acao-estrategico.docx"))
 
 
-def test_plano_sem_ondas_continua_gerando_docx_e_xlsx_pelos_horizontes(tmp_path, capsys):
+def test_plano_sem_fases_continua_gerando_docx_e_xlsx_pelos_horizontes(tmp_path, capsys):
     plano = ex.plano_valido()
-    assert "ondas" not in plano
+    assert "fases" not in plano
     codigo, cap, docx, xlsx = _rodar(tmp_path, capsys, plano=plano)
     assert codigo == 0, cap.err
-    assert "AVISO: Plano sem ondas" in cap.out and cap.out.strip().splitlines()[-1].startswith("OK:")
+    assert "AVISO: Plano sem fases" in cap.out and cap.out.strip().splitlines()[-1].startswith("OK:")
     assert len(_conjunto_docx(docx)) == 6 and len(_conjunto_xlsx(xlsx)) == 6
     assert "Visão geral" not in "\n".join(_paragrafos_docx(docx))
     assert openpyxl.load_workbook(xlsx).sheetnames[0] == "Plano de Ação"

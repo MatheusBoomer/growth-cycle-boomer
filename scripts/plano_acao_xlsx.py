@@ -1,8 +1,8 @@
 """Gerador da planilha .xlsx do plano de ação v2.
 
 Duas abas: "Plano de Ação" (uma linha por ação, em ordem cronológica) e
-"Metas do plano" (o prospect e a abertura do plano). Quando o plano tem `ondas`, são três:
-"Plano de Ação Estratégico" (uma faixa e um bloco de ações por onda), "Resumo por frente"
+"Metas do plano" (o prospect e a abertura do plano). Quando o plano tem `fases`, são três:
+"Plano de Ação Estratégico" (uma faixa e um bloco de ações por fase), "Resumo por frente"
 (contagens por fórmula) e "Metas do plano". Não valida o plano: quem valida é
 gerar_plano_acao.py, que chama este módulo depois do validador.
 """
@@ -23,7 +23,7 @@ from plano_acao_comum import (
     acoes_cronologicas_com_horizonte,
     ler_data,
     limpar_texto,
-    ondas,
+    fases,
     quando_curto,
     texto_depende,
     texto_piso_roas,
@@ -31,7 +31,7 @@ from plano_acao_comum import (
 
 ABA_PLANO = "Plano de Ação"
 ABA_METAS = "Metas do plano"
-ABA_PLANO_ONDAS = "Plano de Ação Estratégico"
+ABA_PLANO_FASES = "Plano de Ação Estratégico"
 ABA_RESUMO = "Resumo por frente"
 
 COLUNAS_PLANO = [
@@ -40,16 +40,16 @@ COLUNAS_PLANO = [
 ]
 STATUS = ["A fazer", "Em andamento", "Feito", "Atrasado"]
 
-COLUNAS_ONDAS = [
+COLUNAS_FASES = [
     "Nº", "Ação", "Racional (achado de origem)", "Alavanca da meta", "Frente", "Horizonte", "Responsável",
     "Início", "Entrega", "Depende de", "Como", "Evidência", "Impacto esperado / KPI e meta", "Gatilho", "Status",
 ]
-STATUS_ONDAS = ["A iniciar", "Em andamento", "Concluída", "Atrasada", "Adiada"]
-LARGURAS_ONDAS = [6, 32, 36, 22, 22, 14, 22, 11, 11, 24, 54, 32, 33, 37, 13]
-COLUNAS_DATA_ONDAS = (8, 9)
-COLUNA_STATUS_ONDAS = len(COLUNAS_ONDAS)
-# (cor da faixa, tom claro das linhas) de cada onda, em rodízio; mesma paleta da planilha de referência.
-CORES_DAS_ONDAS = [
+STATUS_FASES = ["A iniciar", "Em andamento", "Concluída", "Atrasada", "Adiada"]
+LARGURAS_FASES = [6, 32, 36, 22, 22, 14, 22, 11, 11, 24, 54, 32, 33, 37, 13]
+COLUNAS_DATA_FASES = (8, 9)
+COLUNA_STATUS_FASES = len(COLUNAS_FASES)
+# (cor da faixa, tom claro das linhas) de cada fase, em rodízio; mesma paleta da planilha de referência.
+CORES_DAS_FASES = [
     ("C0392B", "FDEDEC"), ("D68910", "FEF5E7"), ("1E8449", "EAFAF1"), ("2471A3", "EBF5FB"),
     ("7D3C98", "F5EEF8"), ("148F77", "E8F8F5"), ("566573", "F2F3F4"),
 ]
@@ -163,7 +163,7 @@ def _escrever_metas(ws, plano: dict, *, com_estilo: bool) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Plano com ondas
+# Plano com fases
 # ---------------------------------------------------------------------------
 
 def _mes_ano(texto: str, onde: str) -> str:
@@ -171,9 +171,9 @@ def _mes_ano(texto: str, onde: str) -> str:
     return f"{MESES[d.month - 1]}/{d.year}"
 
 
-def _subtitulo_ondas(plano: dict) -> str:
-    lista = ondas(plano)
-    inicio = _mes_ano(lista[0]["inicio"], "Onda 1, início")
+def _subtitulo_fases(plano: dict) -> str:
+    lista = fases(plano)
+    inicio = _mes_ano(lista[0]["inicio"], "Fase 1, início")
     fim = _mes_ano(plano.get("fim_ciclo") or lista[-1]["fim"], "fim do ciclo")
     partes = [f"Horizonte de 12 meses ({inicio} a {fim})", "Plano de ação do planejamento estratégico"]
     if plano.get("data_referencia"):
@@ -183,17 +183,17 @@ def _subtitulo_ondas(plano: dict) -> str:
     return " · ".join(partes)
 
 
-def _valores_da_acao_ondas(horizonte: str, a: dict, plano: dict) -> list:
+def _valores_da_acao_fases(horizonte: str, a: dict, plano: dict) -> list:
     onde = f"Ação {a.get('numero')}"
     return [
         a.get("numero"), a.get("acao"), a.get("achado_origem"), a.get("alavanca"), a.get("frente"), horizonte,
         a.get("dono"), ler_data(a["inicio"], f"{onde}, início"), ler_data(a["entrega"], f"{onde}, entrega"),
-        texto_depende(a, plano), a.get("como"), a.get("evidencia"), a.get("kpi_meta"), a.get("gatilho"), STATUS_ONDAS[0],
+        texto_depende(a, plano), a.get("como"), a.get("evidencia"), a.get("kpi_meta"), a.get("gatilho"), STATUS_FASES[0],
     ]
 
 
 def _faixa(ws, linha: int, texto: str, cor: str, altura: float, tamanho: int) -> None:
-    ws.merge_cells(start_row=linha, start_column=1, end_row=linha, end_column=COLUNA_STATUS_ONDAS)
+    ws.merge_cells(start_row=linha, start_column=1, end_row=linha, end_column=COLUNA_STATUS_FASES)
     cel = ws.cell(linha, 1, limpar_texto(texto))
     cel.fill = _preencher(cor)
     cel.font = Font(bold=True, color="FFFFFF", size=tamanho)
@@ -201,32 +201,32 @@ def _faixa(ws, linha: int, texto: str, cor: str, altura: float, tamanho: int) ->
     ws.row_dimensions[linha].height = altura
 
 
-def _escrever_ondas(ws, plano: dict) -> int:
-    """Título, subtítulo e, por onda: faixa, cabeçalho repetido e ações em ordem de número. Devolve o total de ações."""
-    lista = ondas(plano)
+def _escrever_fases(ws, plano: dict) -> int:
+    """Título, subtítulo e, por fase: faixa, cabeçalho repetido e ações em ordem de número. Devolve o total de ações."""
+    lista = fases(plano)
     por_numero = {a.get("numero"): (h, a) for h, a in acoes(plano)}
-    ano_base = ler_data(lista[0]["inicio"], "Onda 1, início").year
-    for col, largura in enumerate(LARGURAS_ONDAS, start=1):
+    ano_base = ler_data(lista[0]["inicio"], "Fase 1, início").year
+    for col, largura in enumerate(LARGURAS_FASES, start=1):
         ws.column_dimensions[get_column_letter(col)].width = largura
     ws.sheet_view.showGridLines = False
 
     _faixa(ws, 1, f"PLANO DE AÇÃO ESTRATÉGICO — {str(plano.get('prospect', '')).upper()}", COR_CABECALHO, 30, 16)
-    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=COLUNA_STATUS_ONDAS)
-    sub = ws.cell(2, 1, limpar_texto(_subtitulo_ondas(plano)))
+    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=COLUNA_STATUS_FASES)
+    sub = ws.cell(2, 1, limpar_texto(_subtitulo_fases(plano)))
     sub.font = Font(color=COR_CABECALHO)
     sub.alignment = _ALINHA_ESQUERDA
     ws.row_dimensions[2].height = 18
 
     linha, total = 4, 0
-    blocos_de_acao: list[tuple[int, int]] = []  # (primeira, última) linha de ação de cada onda
-    for i, onda in enumerate(lista):
-        cor_faixa, tom = CORES_DAS_ONDAS[i % len(CORES_DAS_ONDAS)]
-        janela = quando_curto({"numero": f"da onda {onda.get('numero')}", "inicio": onda["inicio"], "entrega": onda["fim"]},
+    blocos_de_acao: list[tuple[int, int]] = []  # (primeira, última) linha de ação de cada fase
+    for i, fase in enumerate(lista):
+        cor_faixa, tom = CORES_DAS_FASES[i % len(CORES_DAS_FASES)]
+        janela = quando_curto({"numero": f"da fase {fase.get('numero')}", "inicio": fase["inicio"], "entrega": fase["fim"]},
                               ano_base)
-        _faixa(ws, linha, f"ONDA {onda.get('numero')} · {str(onda.get('nome', '')).upper()} · {janela.upper()}",
+        _faixa(ws, linha, f"FASE {fase.get('numero')} · {str(fase.get('nome', '')).upper()} · {janela.upper()}",
                cor_faixa, 21.75, 11)
         linha += 1
-        for col, nome in enumerate(COLUNAS_ONDAS, start=1):
+        for col, nome in enumerate(COLUNAS_FASES, start=1):
             cel = ws.cell(linha, col, nome)
             cel.fill = _preencher(COR_CABECALHO)
             cel.font = Font(bold=True, color="FFFFFF", size=10)
@@ -235,18 +235,18 @@ def _escrever_ondas(ws, plano: dict) -> int:
         ws.row_dimensions[linha].height = 30
         linha += 1
         primeira_acao = linha
-        for n, numero in enumerate(sorted(onda.get("acoes") or [])):
+        for n, numero in enumerate(sorted(fase.get("acoes") or [])):
             if numero not in por_numero:
-                raise ErroPlano(f"a onda {onda.get('numero')} lista a ação {numero}, que não existe no plano.")
+                raise ErroPlano(f"a fase {fase.get('numero')} lista a ação {numero}, que não existe no plano.")
             horizonte, a = por_numero[numero]
             cor_linha = COR_ZEBRA[0] if n % 2 == 0 else tom
-            for col, valor in enumerate(_valores_da_acao_ondas(horizonte, a, plano), start=1):
+            for col, valor in enumerate(_valores_da_acao_fases(horizonte, a, plano), start=1):
                 cel = ws.cell(linha, col, limpar_texto(valor))
                 cel.fill = _preencher(cor_linha)
                 cel.border = _BORDA
                 cel.font = Font(bold=(col == 2), size=10)
                 cel.alignment = _ALINHA_CENTRO_QUEBRA if col in (1, 5, 6, 7, 8, 9, 15) else _ALINHA_TEXTO
-                if col in COLUNAS_DATA_ONDAS:
+                if col in COLUNAS_DATA_FASES:
                     cel.number_format = FORMATO_DATA
             linha += 1
             total += 1
@@ -255,14 +255,14 @@ def _escrever_ondas(ws, plano: dict) -> int:
 
     ws.freeze_panes = "C6"
     if blocos_de_acao:
-        ultima = get_column_letter(COLUNA_STATUS_ONDAS)
+        ultima = get_column_letter(COLUNA_STATUS_FASES)
         validacao = DataValidation(
             type="list",
-            formula1='"' + ",".join(STATUS_ONDAS) + '"',
+            formula1='"' + ",".join(STATUS_FASES) + '"',
             allow_blank=True,
             showErrorMessage=True,
             errorTitle="Status inválido",
-            error="Use: " + ", ".join(STATUS_ONDAS[:-1]) + " ou " + STATUS_ONDAS[-1] + ".",
+            error="Use: " + ", ".join(STATUS_FASES[:-1]) + " ou " + STATUS_FASES[-1] + ".",
         )
         for primeira, final in blocos_de_acao:
             validacao.add(f"{ultima}{primeira}:{ultima}{final}")
@@ -272,7 +272,7 @@ def _escrever_ondas(ws, plano: dict) -> int:
 
 def _escrever_resumo(ws, plano: dict, total: int, ultima_linha: int) -> None:
     """Contagem por frente x horizonte (COUNTIFS) e por status (COUNTIF) sobre a aba do plano."""
-    aba = f"'{ABA_PLANO_ONDAS}'"
+    aba = f"'{ABA_PLANO_FASES}'"
 
     def faixa(coluna: str) -> str:
         return f"{aba}!${coluna}$4:${coluna}${ultima_linha}"
@@ -281,7 +281,7 @@ def _escrever_resumo(ws, plano: dict, total: int, ultima_linha: int) -> None:
     ws.column_dimensions["A"].width = 34
     for col in "BCDE":
         ws.column_dimensions[col].width = 14
-    titulo = ws.cell(1, 1, f"Ações por frente e horizonte (contagem automática a partir da aba {ABA_PLANO_ONDAS})")
+    titulo = ws.cell(1, 1, f"Ações por frente e horizonte (contagem automática a partir da aba {ABA_PLANO_FASES})")
     titulo.font = Font(bold=True, size=13, color=COR_CABECALHO)
 
     for col, nome in enumerate(("Frente", *HORIZONTES, "Total"), start=1):
@@ -314,32 +314,32 @@ def _escrever_resumo(ws, plano: dict, total: int, ultima_linha: int) -> None:
     linha = linha_total + 2
     ws.cell(linha, 1, "Status do plano").font = Font(bold=True, size=10, color=COR_CABECALHO)
     primeira_status = linha + 1
-    for i, status in enumerate(STATUS_ONDAS):
+    for i, status in enumerate(STATUS_FASES):
         l = primeira_status + i
         ws.cell(l, 1, status)
         ws.cell(l, 2, f"=COUNTIF({faixa('O')},A{l})").alignment = Alignment(horizontal="center")
-    l_conf = primeira_status + len(STATUS_ONDAS)
+    l_conf = primeira_status + len(STATUS_FASES)
     ws.cell(l_conf, 1, f"Conferência (total de ações = {total})").font = Font(bold=True, size=10)
     conf = ws.cell(l_conf, 2, f"=SUM(B{primeira_status}:B{l_conf - 1})")
     conf.font = Font(bold=True, size=10)
     conf.alignment = Alignment(horizontal="center")
 
 
-def _gerar_com_ondas(plano: dict, modelo: Path | None) -> tuple[Workbook, int]:
-    abas = (ABA_PLANO_ONDAS, ABA_RESUMO, ABA_METAS)
+def _gerar_com_fases(plano: dict, modelo: Path | None) -> tuple[Workbook, int]:
+    abas = (ABA_PLANO_FASES, ABA_RESUMO, ABA_METAS)
     if modelo is not None:
         wb = load_workbook(modelo)
         if any(nome not in wb.sheetnames for nome in abas):
-            raise ErroPlano(f'o modelo .xlsx precisa das abas "{ABA_PLANO_ONDAS}", "{ABA_RESUMO}" e "{ABA_METAS}".')
-        ws_plano, ws_resumo, ws_metas, com_estilo = wb[ABA_PLANO_ONDAS], wb[ABA_RESUMO], wb[ABA_METAS], False
+            raise ErroPlano(f'o modelo .xlsx precisa das abas "{ABA_PLANO_FASES}", "{ABA_RESUMO}" e "{ABA_METAS}".')
+        ws_plano, ws_resumo, ws_metas, com_estilo = wb[ABA_PLANO_FASES], wb[ABA_RESUMO], wb[ABA_METAS], False
     else:
         wb = Workbook()
         ws_plano = wb.active
-        ws_plano.title = ABA_PLANO_ONDAS
+        ws_plano.title = ABA_PLANO_FASES
         ws_resumo = wb.create_sheet(ABA_RESUMO)
         ws_metas = wb.create_sheet(ABA_METAS)
         com_estilo = True
-    total = _escrever_ondas(ws_plano, plano)
+    total = _escrever_fases(ws_plano, plano)
     _escrever_resumo(ws_resumo, plano, total, ws_plano.max_row)
     _escrever_metas(ws_metas, plano, com_estilo=com_estilo)
     return wb, total
@@ -348,8 +348,8 @@ def _gerar_com_ondas(plano: dict, modelo: Path | None) -> tuple[Workbook, int]:
 def gerar_xlsx(plano: dict, saida: Path, modelo: Path | None = None) -> dict:
     """Grava a planilha em `saida` e devolve {"output", "total_acoes"}. Nunca altera o modelo."""
     saida = Path(saida)
-    if ondas(plano):
-        wb, total = _gerar_com_ondas(plano, modelo)
+    if fases(plano):
+        wb, total = _gerar_com_fases(plano, modelo)
         saida.parent.mkdir(parents=True, exist_ok=True)
         wb.save(saida)
         return {"output": str(saida), "total_acoes": total}

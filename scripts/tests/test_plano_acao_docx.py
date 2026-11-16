@@ -190,28 +190,28 @@ def test_docx_remove_caracteres_de_controle_ilegais(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# Layout com ondas (modelo Happy Duck)
+# Layout com fases (modelo Happy Duck)
 # ---------------------------------------------------------------------------
 
-TITULOS_ONDAS = [
+TITULOS_FASES = [
     "Como este plano funciona",
     "Visão geral",
     "Metas dos 2 primeiros meses",
     "Sessões não pagas",
     "Metas do plano",
     "Como mudamos minimizando riscos",
-    "Onda 1",
-    "Onda 2",
-    "Onda 3",
+    "Fase 1",
+    "Fase 2",
+    "Fase 3",
     "KPIs de acompanhamento e limites",
     "Decisões que dependem de Marca Teste",
 ]
 
 
 def _plano_completo() -> dict:
-    plano = ex.plano_com_ondas()
+    plano = ex.plano_com_fases()
     plano["como_funciona"] = [
-        {"titulo": "Horizontes", "texto": "O plano tem 3 ondas."},
+        {"titulo": "Horizontes", "texto": "O plano tem 3 fases."},
         {"titulo": "Dono.", "texto": "Todas as ações têm um responsável."},
     ]
     plano["metas_mensais"] = {
@@ -247,35 +247,35 @@ def _indice_titulos(saida, titulos) -> list[int]:
     return idx
 
 
-def test_docx_ondas_ordem_dos_titulos(tmp_path):
+def test_docx_fases_ordem_dos_titulos(tmp_path):
     saida, _ = _gerar(_plano_completo(), tmp_path)
-    idx = _indice_titulos(saida, TITULOS_ONDAS)
+    idx = _indice_titulos(saida, TITULOS_FASES)
     assert idx == sorted(idx) and len(set(idx)) == len(idx)
     assert _paragrafos(saida)[0].startswith("Plano de Ação Estratégico — Marca Teste")
 
 
-def test_docx_ondas_nao_tem_tabela_resumo_e_sem_ondas_tem(tmp_path):
+def test_docx_fases_nao_tem_tabela_resumo_e_sem_fases_tem(tmp_path):
     com, _ = _gerar(_plano_completo(), tmp_path)
     assert "Tabela-Resumo Cronológica" not in _texto(com)
     sem, _ = _gerar(ex.plano_valido(), tmp_path)
     assert "Tabela-Resumo Cronológica" in _texto(sem)
 
 
-def test_docx_ondas_acao_fica_dentro_da_onda(tmp_path):
-    saida, _ = _gerar(ex.plano_com_ondas(), tmp_path)
+def test_docx_fases_acao_fica_dentro_da_fase(tmp_path):
+    saida, _ = _gerar(ex.plano_com_fases(), tmp_path)
     ps = _paragrafos(saida)
-    onda1 = next(k for k, p in enumerate(ps) if p.startswith("Onda 1 ·"))
-    onda2 = next(k for k, p in enumerate(ps) if p.startswith("Onda 2 ·"))
+    fase1 = next(k for k, p in enumerate(ps) if p.startswith("Fase 1 ·"))
+    fase2 = next(k for k, p in enumerate(ps) if p.startswith("Fase 2 ·"))
     acao1 = next(k for k, p in enumerate(ps) if p.startswith("AÇÃO 1 ·"))
     acao3 = next(k for k, p in enumerate(ps) if p.startswith("AÇÃO 3 ·"))
-    assert onda1 < acao1 < onda2 < acao3
+    assert fase1 < acao1 < fase2 < acao3
     assert "AÇÃO 1 · Liberar os acessos" in ps[acao1]
-    assert ps[onda1 + 1].startswith("Objetivo:") and "Destravar acessos" in ps[onda1 + 1]
-    assert ps[onda1 + 2] == "Calendário de mídia: Contenção"
+    assert ps[fase1 + 1].startswith("Objetivo:") and "Destravar acessos" in ps[fase1 + 1]
+    assert ps[fase1 + 2] == "Calendário de mídia: Contenção"
 
 
-def test_docx_ondas_cabecalho_da_acao_com_depende_de_nomeado(tmp_path):
-    plano = ex.plano_com_ondas()
+def test_docx_fases_cabecalho_da_acao_com_depende_de_nomeado(tmp_path):
+    plano = ex.plano_com_fases()
     saida, _ = _gerar(plano, tmp_path)
     ps = _paragrafos(saida)
     cab = next(p for p in ps if p.startswith("Início e entrega: 02/11/2026 a 30/11/2026"))
@@ -286,8 +286,8 @@ def test_docx_ondas_cabecalho_da_acao_com_depende_de_nomeado(tmp_path):
     assert "Depende de: Ação 1 (Liberar os acessos)" in cab
 
 
-def test_docx_ondas_tabela_da_acao_com_6_rotulos_e_textos(tmp_path):
-    plano = ex.plano_com_ondas()
+def test_docx_fases_tabela_da_acao_com_6_rotulos_e_textos(tmp_path):
+    plano = ex.plano_com_fases()
     saida, _ = _gerar(plano, tmp_path)
     ps = _paragrafos(saida)
     acao = plano["horizontes"][0]["acoes"][0]
@@ -302,18 +302,18 @@ def test_docx_ondas_tabela_da_acao_com_6_rotulos_e_textos(tmp_path):
     assert xml.count("<w:tbl>") >= 7  # visão geral + decisões + 1 tabela por ação (6)
 
 
-def test_docx_ondas_checkpoint(tmp_path):
-    saida, _ = _gerar(ex.plano_com_ondas(), tmp_path)
+def test_docx_fases_checkpoint(tmp_path):
+    saida, _ = _gerar(ex.plano_com_fases(), tmp_path)
     ps = _paragrafos(saida)
     i = next(k for k, p in enumerate(ps) if p == "Checkpoint 1: 30/10/2026 (30 minutos)")
     assert ps[i + 1].startswith("• Pauta.") and "eventos de funil no GA4" in ps[i + 1]
-    assert ps[i + 2].startswith("• Para liberar a Onda 2.") and "Acessos entregues" in ps[i + 2]
+    assert ps[i + 2].startswith("• Para liberar a Fase 2.") and "Acessos entregues" in ps[i + 2]
     assert ps[i + 3].startswith("• Quem decide.") and "Gestor de projetos" in ps[i + 3]
-    assert sum(p.startswith("Checkpoint ") for p in ps) == 2  # a onda 3 não tem
+    assert sum(p.startswith("Checkpoint ") for p in ps) == 2  # a fase 3 não tem
 
 
-def test_docx_ondas_decisoes_do_cliente(tmp_path):
-    saida, _ = _gerar(ex.plano_com_ondas(), tmp_path)
+def test_docx_fases_decisoes_do_cliente(tmp_path):
+    saida, _ = _gerar(ex.plano_com_fases(), tmp_path)
     ps = _paragrafos(saida)
     i = ps.index("Decisões que dependem de Marca Teste")
     assert ps[i + 1:i + 4] == ["Ação", "Até", "Recomendação"]
@@ -326,16 +326,16 @@ def test_docx_ondas_decisoes_do_cliente(tmp_path):
     ]
 
 
-def test_docx_ondas_sem_decisoes_omite_a_secao(tmp_path):
-    plano = ex.plano_com_ondas()
+def test_docx_fases_sem_decisoes_omite_a_secao(tmp_path):
+    plano = ex.plano_com_fases()
     for _, a in c.acoes(plano):
         a.pop("decisao_cliente", None)
     saida, _ = _gerar(plano, tmp_path)
     assert "Decisões que dependem" not in _texto(saida)
 
 
-def test_docx_ondas_blocos_opcionais_ausentes_sao_omitidos(tmp_path):
-    saida, _ = _gerar(ex.plano_com_ondas(), tmp_path)
+def test_docx_fases_blocos_opcionais_ausentes_sao_omitidos(tmp_path):
+    saida, _ = _gerar(ex.plano_com_fases(), tmp_path)
     texto = _texto(saida)
     for titulo in ("Como este plano funciona", "primeiros meses", "Sessões não pagas",
                    "Como mudamos minimizando riscos", "KPIs de acompanhamento e limites"):
@@ -343,22 +343,22 @@ def test_docx_ondas_blocos_opcionais_ausentes_sao_omitidos(tmp_path):
     assert "Visão geral" in texto
 
 
-def test_docx_ondas_visao_geral(tmp_path):
-    plano = ex.plano_com_ondas()
+def test_docx_fases_visao_geral(tmp_path):
+    plano = ex.plano_com_fases()
     saida, _ = _gerar(plano, tmp_path)
     ps = _paragrafos(saida)
     i = ps.index("Visão geral")
-    assert ps[i + 1:i + 6] == ["Onda", "Janela", "Calendário de mídia", "Foco", "Ações"]
+    assert ps[i + 1:i + 6] == ["Fase", "Janela", "Calendário de mídia", "Foco", "Ações"]
     primeira = c.visao_geral(plano)[0]
     assert ps[i + 6:i + 11] == [
-        "Onda 1Contenção", "26/10/2026 a 01/11/2026", "Contenção", primeira["foco"], "2",
+        "Fase 1Contenção", "26/10/2026 a 01/11/2026", "Contenção", primeira["foco"], "2",
     ]
 
 
-def test_docx_ondas_blocos_opcionais_renderizados(tmp_path):
+def test_docx_fases_blocos_opcionais_renderizados(tmp_path):
     saida, _ = _gerar(_plano_completo(), tmp_path)
     ps = _paragrafos(saida)
-    assert "Horizontes. O plano tem 3 ondas." in ps
+    assert "Horizontes. O plano tem 3 fases." in ps
     assert "Dono. Todas as ações têm um responsável." in ps  # ponto final não duplica
     i = ps.index("Metas dos 2 primeiros meses")  # 2 linhas de mês, fora a de total
     assert ps[i + 1] == "Cenário: Realista"
@@ -373,7 +373,7 @@ def test_docx_ondas_blocos_opcionais_renderizados(tmp_path):
                                "Taxa de quebra", "25% até janeiro"]
 
 
-def test_docx_ondas_premissas_e_risco_como_lista(tmp_path):
+def test_docx_fases_premissas_e_risco_como_lista(tmp_path):
     plano = _plano_completo()
     plano["sessoes_nao_pagas"]["premissas"] = ["Base de 100 contatos.", "Crescimento de 1,5% ao mês."]
     plano["sessoes_nao_pagas"]["risco"] = ["Dependência de uma campanha.", "Sem teste de Google."]
@@ -385,12 +385,12 @@ def test_docx_ondas_premissas_e_risco_como_lista(tmp_path):
     assert ps[j + 1:j + 3] == ["• Dependência de uma campanha.", "• Sem teste de Google."]
 
 
-def test_docx_ondas_escapa_xml_e_remove_controles(tmp_path):
-    plano = ex.plano_com_ondas()
+def test_docx_fases_escapa_xml_e_remove_controles(tmp_path):
+    plano = ex.plano_com_fases()
     como = 'Verba R$ 20 & público <25 anos> "quentes"\x0b'
     plano["horizontes"][0]["acoes"][0]["como"] = como
     plano["horizontes"][0]["acoes"][0]["acao"] = 'Liberar & "ler" <acessos>'
-    plano["ondas"][0]["checkpoint"]["pauta"] = "Pauta <1> & \"2\""
+    plano["fases"][0]["checkpoint"]["pauta"] = "Pauta <1> & \"2\""
     saida, _ = _gerar(plano, tmp_path)
     with zipfile.ZipFile(saida) as z:
         assert z.testzip() is None
@@ -403,8 +403,8 @@ def test_docx_ondas_escapa_xml_e_remove_controles(tmp_path):
     assert 'Pauta <1> & "2"' in "".join(ps)
 
 
-def test_docx_ondas_total_de_acoes_e_modelo_preservado(tmp_path):
-    saida, resumo = _gerar(ex.plano_com_ondas(), tmp_path)
+def test_docx_fases_total_de_acoes_e_modelo_preservado(tmp_path):
+    saida, resumo = _gerar(ex.plano_com_fases(), tmp_path)
     assert resumo["total_acoes"] == 6
     with zipfile.ZipFile(MODELO_DOCX_PADRAO) as m, zipfile.ZipFile(saida) as s:
         assert s.namelist() == m.namelist()
@@ -419,13 +419,13 @@ def _paragrafo_xml_com(xml: str, trecho: str) -> str:
     raise AssertionError(f"parágrafo com {trecho!r} não encontrado")
 
 
-def test_docx_ondas_keep_with_next_nos_titulos_e_metadados(tmp_path):
+def test_docx_fases_keep_with_next_nos_titulos_e_metadados(tmp_path):
     plano = _plano_completo()
     saida, _ = _gerar(plano, tmp_path)
     xml = _xml(saida)
     parseString(xml)
     alvos = [
-        "AÇÃO 1", "Início e entrega:", "Onda 1 · Contenção", "Objetivo:", "Calendário de mídia:", "Checkpoint 1:",
+        "AÇÃO 1", "Início e entrega:", "Fase 1 · Contenção", "Objetivo:", "Calendário de mídia:", "Checkpoint 1:",
     ]
     for alvo in alvos:
         p = _paragrafo_xml_com(xml, alvo)
@@ -434,7 +434,7 @@ def test_docx_ondas_keep_with_next_nos_titulos_e_metadados(tmp_path):
     assert "<w:keepNext/>" not in _paragrafo_xml_com(xml, "Pauta.")
 
 
-def test_docx_ondas_metas_mensais_com_10_colunas_tem_larguras_fixas(tmp_path):
+def test_docx_fases_metas_mensais_com_10_colunas_tem_larguras_fixas(tmp_path):
     plano = _plano_completo()
     cabecalhos = ["Mês", "Check em", "Receita (R$)", "Invest. (R$)", "Ticket (R$)", "Conv.", "CPS (R$)", "% pagas", "Sessões", "Vendas"]
     plano["metas_mensais"] = {
@@ -448,4 +448,5 @@ def test_docx_ondas_metas_mensais_com_10_colunas_tem_larguras_fixas(tmp_path):
     assert sum(esperado) == 9029
     grade = f'<w:tblGrid>{"".join(f"<w:gridCol w:w={chr(34)}{w}{chr(34)}/>" for w in esperado)}</w:tblGrid>'
     assert grade in xml
-    assert "Metas dos 1 primeiros meses" in _paragrafos(saida)
+    assert "Metas do primeiro mês" in _paragrafos(saida)
+    assert "Metas dos 1 primeiros meses" not in _paragrafos(saida)
