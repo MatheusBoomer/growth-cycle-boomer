@@ -20,6 +20,7 @@ import { useVisualizador } from "@/components/trabalho/contexto-visualizador"
 import { api, mensagemDeErro, type AjusteMensagem } from "@/lib/api"
 import { renderizarAnotada } from "@/lib/anotacoes-canvas"
 import { separadorAntes } from "@/lib/citacao"
+import { textoParaPreencher, chaveDoTrecho } from "@/lib/ensaio"
 import { consultaDeMencao, textoParaAgente } from "@/lib/mencoes"
 import { descartarSuperadas, numerar } from "@/lib/referencias"
 import { faixaDeMarcacoes, numerosDaEtiqueta } from "@/lib/anotacoes"
@@ -43,6 +44,8 @@ export function Compositor({
   desabilitado,
   motivo,
   ativoAqui,
+  ensaio = false,
+  semTurno = false,
 }: {
   slug: string
   etapa: EtapaId
@@ -51,6 +54,10 @@ export function Compositor({
   desabilitado: boolean
   motivo: string | null
   ativoAqui: boolean
+  /** Cliente de teste em modo ensaiado: a caixa vem preenchida com o texto do trecho gravado. */
+  ensaio?: boolean
+  /** Nenhum turno ativo em nenhuma etapa do prospect. */
+  semTurno?: boolean
 }) {
   const [texto, setTexto] = useState("")
   const [enviando, setEnviando] = useState(false)
@@ -88,6 +95,33 @@ export function Compositor({
     if (totalReferencias > anterior.current) campo.current?.focus()
     anterior.current = totalReferencias
   }, [totalReferencias])
+
+  // Ensaio: com a caixa vazia e sem turno, busca o trecho que vem agora e preenche o texto gravado. A memória do que já
+  // foi preenchido zera quando um turno começa, então a caixa que o analista esvaziou não se enche de novo até o próximo trecho.
+  const textoAtual = useRef(texto)
+  textoAtual.current = texto
+  const preenchido = useRef<string | null>(null)
+  useEffect(() => {
+    if (!semTurno) preenchido.current = null
+  }, [semTurno])
+  const livre = ensaio && semTurno && !desabilitado
+  useEffect(() => {
+    if (!livre) return
+    let cancelado = false
+    api
+      .gatilhoEnsaio(slug, etapa)
+      .then((gatilho) => {
+        if (cancelado) return
+        const novo = textoParaPreencher({ ensaio: true, semTurno: true, textoAtual: textoAtual.current, etapa, gatilho, jaPreenchido: preenchido.current })
+        if (novo === null) return
+        preenchido.current = chaveDoTrecho(etapa, novo)
+        setTexto(novo)
+      })
+      .catch(() => {})
+    return () => {
+      cancelado = true
+    }
+  }, [livre, slug, etapa])
 
   // Referência não enviada se perde ao recarregar: o navegador avisa antes de sair.
   useEffect(() => {

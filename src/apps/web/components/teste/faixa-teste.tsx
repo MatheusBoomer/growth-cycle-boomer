@@ -1,11 +1,14 @@
 "use client"
 
-import { FlaskConicalIcon, RotateCcwIcon } from "lucide-react"
+import { FastForwardIcon, FlaskConicalIcon, RotateCcwIcon } from "lucide-react"
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 import type { EtapaId, RespostaEstado } from "@workspace/core/tipos"
+import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@workspace/ui/components/dialog"
 import { IconeModal } from "@/components/marca/icone-modal"
+import { api, mensagemDeErro } from "@/lib/api"
 import { DialogoReposicionar } from "./dialogo-reposicionar"
 import { PainelKit } from "./painel-kit"
 
@@ -14,6 +17,35 @@ export function FaixaTeste({ slug, dados, etapa }: { slug: string; dados: Respos
   const [reposicionando, setReposicionando] = useState(false)
   const [kitAberto, setKitAberto] = useState(false)
   const teste = dados.estado.teste
+  const ensaio = teste?.ensaio === true
+  const turnoAtivo = dados.turnoAtivo !== null
+  const trechosTocados = teste?.trechos?.[etapa] ?? 0
+  // Há trecho a tocar nesta etapa? Começa como "não" até a resposta chegar; `null` do servidor = roteiro acabou.
+  const [temTrecho, setTemTrecho] = useState(false)
+  const [avancando, setAvancando] = useState(false)
+
+  useEffect(() => {
+    if (!ensaio) return
+    let cancelado = false
+    api
+      .gatilhoEnsaio(slug, etapa)
+      .then((g) => !cancelado && setTemTrecho(g !== null))
+      .catch(() => !cancelado && setTemTrecho(false))
+    return () => {
+      cancelado = true
+    }
+  }, [ensaio, slug, etapa, turnoAtivo, trechosTocados])
+
+  async function avancar() {
+    setAvancando(true)
+    try {
+      await api.avancarEnsaio(slug, etapa)
+    } catch (e) {
+      toast.error(mensagemDeErro(e))
+    } finally {
+      setAvancando(false)
+    }
+  }
 
   // Logo depois de criar ou reposicionar (endereço com ?kit=1), o kit da etapa abre sozinho uma vez.
   useEffect(() => {
@@ -35,6 +67,7 @@ export function FaixaTeste({ slug, dados, etapa }: { slug: string; dados: Respos
       <span className="inline-flex items-center gap-1.5 rounded-full bg-aviso-fundo py-1 pr-2.75 pl-2.25 font-medium text-aviso [&_svg]:size-3.5">
         <FlaskConicalIcon /> Cliente de teste
       </span>
+      {ensaio && <Badge variant="outline">Ensaio</Badge>}
       <span className="text-muted-foreground">
         Dados fictícios.{" "}
         {inicio ? (
@@ -46,6 +79,11 @@ export function FaixaTeste({ slug, dados, etapa }: { slug: string; dados: Respos
         )}
       </span>
       <div className="ml-auto flex items-center gap-1.5">
+        {ensaio && (
+          <Button size="sm" onClick={() => void avancar()} disabled={turnoAtivo || !temTrecho || avancando}>
+            <FastForwardIcon /> Avançar ensaio
+          </Button>
+        )}
         <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setKitAberto(true)}>
           <FlaskConicalIcon /> Kit da etapa
         </Button>

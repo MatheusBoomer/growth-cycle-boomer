@@ -63,6 +63,12 @@ function multipart(arquivo: File): RequestInit {
   return { method: "POST", body: dados }
 }
 
+/** Trecho do roteiro de ensaio que a etapa toca agora (ver `gatilhoEnsaio` do serviço). */
+export interface GatilhoEnsaio {
+  gatilho: "mensagem" | "aprovar" | "ajuste" | "automatica"
+  textoPreenchido: string | null
+}
+
 const base = (slug: string) => `/api/prospects/${encodeURIComponent(slug)}`
 export type PessoaComProjetos = PessoaRegistrada & { projetos: number }
 export type ProjetoComMetricas = ResumoProspect & { metricas: MetricasProjeto }
@@ -111,13 +117,17 @@ export type AcaoEtapa = "iniciar" | "concluir" | "reabrir" | "confirmar" | "revi
 export const api = {
   criarProspect: (nome: string, site: string) => chamar<{ slug: string }>("/api/prospects", comJson("POST", { nome, site })),
   /** Cria o cliente de teste (modelo Verdeluz) já no início de `etapa`. */
-  criarClienteTeste: (etapa: EtapaId) => chamar<{ slug: string }>("/api/cliente-teste", comJson("POST", { etapa })),
+  criarClienteTeste: (etapa: EtapaId, ensaio = false) =>
+    chamar<{ slug: string }>("/api/cliente-teste", comJson("POST", { etapa, ensaio })),
   excluirProspect: (slug: string, confirmacao: string) => chamar(base(slug), comJson("DELETE", { confirmacao })),
   abrirPasta: (slug: string) => chamar(`${base(slug)}/abrir-pasta`, { method: "POST" }),
   mostrarNoFinder: (slug: string, caminho: string) => chamar(`${base(slug)}/abrir-pasta`, comJson("POST", { caminho })),
   /** Kit do analista no cliente de teste; sem `etapa`, o da etapa de partida. */
   kitTeste: (slug: string, etapa?: EtapaId) => chamar<RespostaTeste>(`${base(slug)}/teste${etapa ? `?etapa=${etapa}` : ""}`),
   reposicionarTeste: (slug: string, etapa: EtapaId) => chamar<{ ok: true }>(`${base(slug)}/teste/reposicionar`, comJson("POST", { etapa })),
+  gatilhoEnsaio: (slug: string, etapa: EtapaId) =>
+    chamar<GatilhoEnsaio | null>(`${base(slug)}/teste/ensaio?etapa=${etapa}`, { cache: "no-store" }),
+  avancarEnsaio: (slug: string, etapa: EtapaId) => chamar<{ ok: true }>(`${base(slug)}/teste/ensaio`, comJson("POST", { etapa })),
   acaoEtapa: (slug: string, etapa: EtapaId, acao: AcaoEtapa) => chamar(`${base(slug)}/etapas/${etapa}/acoes`, comJson("POST", { acao })),
   /** `ajustes`: entregáveis pendentes citados na mensagem; `imagem` é o PNG em base64 do gráfico com as marcações numeradas. */
   enviarMensagem: (slug: string, etapa: EtapaId, texto: string, ajustes?: AjusteMensagem[]) =>

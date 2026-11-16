@@ -11,11 +11,12 @@ const FIXTURE = "verdeluz"
 export async function POST(req: Request) {
   try {
     const usuario = await exigirAdmin()
-    const { etapa } = await lerJson<{ etapa?: unknown }>(req)
+    const { etapa, ensaio } = await lerJson<{ etapa?: unknown; ensaio?: unknown }>(req)
     if (typeof etapa !== "string" || !(ORDEM_ETAPAS as readonly string[]).includes(etapa)) {
       throw new ErroEntrada("Escolha a etapa em que o teste começa.")
     }
-    const slug = await servidor().servico.criarClienteTeste(FIXTURE, etapa as EtapaId, usuario.email)
+    if (ensaio !== undefined && typeof ensaio !== "boolean") throw new ErroEntrada("O modo ensaiado é ligado ou desligado.")
+    const slug = await servidor().servico.criarClienteTeste(FIXTURE, etapa as EtapaId, usuario.email, ensaio === true)
     return json({ slug }, 201)
   } catch (e) {
     return respostaDeErro(e)

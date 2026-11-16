@@ -25,13 +25,14 @@ export function DialogoClienteTeste({ etapas }: { etapas: EtapaParaEscolher[] })
   const [erro, setErro] = useState<string | null>(null)
   const [existente, setExistente] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
+  const [ensaio, setEnsaio] = useState(false)
 
   async function criar() {
     setErro(null)
     setExistente(null)
     setEnviando(true)
     try {
-      const { slug } = await api.criarClienteTeste(escolhida)
+      const { slug } = await api.criarClienteTeste(escolhida, ensaio)
       router.push(enderecoComKit(slug))
     } catch (e) {
       if (e instanceof ErroApi && e.codigo === "prospect_existente") setExistente(String(e.dados.slug))
@@ -59,6 +60,18 @@ export function DialogoClienteTeste({ etapas }: { etapas: EtapaParaEscolher[] })
           </DialogDescription>
         </DialogHeader>
         <EscolhaEtapa etapas={etapas} valor={escolhida} aoEscolher={setEscolhida} rotulo="Etapa de partida" />
+        <label className="flex cursor-pointer items-start gap-2.5 text-sm">
+          <input
+            type="checkbox"
+            checked={ensaio}
+            onChange={(ev) => setEnsaio(ev.target.checked)}
+            className="mt-0.5 size-4 shrink-0 cursor-pointer accent-primary"
+          />
+          <span className="grid gap-0.5">
+            <span className="font-medium">Modo ensaiado</span>
+            <span className="text-muted-foreground text-[12.5px]">O agente é substituído pela rodada gravada; nada chama o Claude.</span>
+          </span>
+        </label>
         {erro && <FieldError>{erro}</FieldError>}
         {existente && (
           <FieldError>
