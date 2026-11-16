@@ -744,6 +744,18 @@ describe("ferramentas do agente", () => {
       expect(estado.filaAutomatica).toHaveLength(0)
     })
 
+    it("troca valida da 03 seguida de upload invalido mantem a 04 em_andamento e a pendencia de aprovar de novo", async () => {
+      const slug = await quatroProntaComPdf()
+      expect((await enviarHistorico(slug)).ok).toBe(true)
+      expect((await servico.estado(slug)).etapas["04"].status).toBe("em_andamento")
+      proximaValidacao = { ok: false, problemas: ["12 meses"], avisos: [], resumo: null }
+      expect((await enviarHistorico(slug)).ok).toBe(false)
+      const estado = await servico.estado(slug)
+      expect(estado.insumos.find((i) => i.etapa === "03" && i.insumoId === "historico-mensal")).toMatchObject({ status: "invalido" })
+      expect(estado.etapas["04"].status).toBe("em_andamento")
+      expect(condicoesConcluir(estado, "04", catalogoReal())).toContain("Aprovar de novo, depois da troca de dados: Receita mensal")
+    })
+
     it("insumo da 03 recebido sem a 04 aberta nao enfileira nada", async () => {
       const slug = await prospectNaEtapa03()
       const e = await servico.estado(slug)

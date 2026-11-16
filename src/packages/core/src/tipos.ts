@@ -105,6 +105,8 @@ export interface EstadoInsumo {
   /** Relativo à pasta do prospect. */
   arquivo: string | null
   atualizadoEm: string
+  /** Quando o último envio válido passou; sobrevive a um envio inválido posterior (o arquivo bom continua no disco). Ausente em estados antigos. */
+  ultimoValidoEm?: string
   /** E-mail de quem enviou o insumo; ausente sem login ou em estados antigos. */
   enviadoPor?: string
 }

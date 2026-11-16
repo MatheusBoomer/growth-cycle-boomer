@@ -19,11 +19,15 @@ function aprovadosDoDocumento(estado: Estado): Entregavel[] {
   )
 }
 
-/** Troca de dados é um envio que passou na validação: um upload que terminou "invalido" não muda nada no documento. */
+/**
+ * Troca de dados é um envio que passou na validação. Um upload posterior que terminou "invalido" não é troca, mas também
+ * não apaga a anterior: vale `ultimoValidoEm` (em estados antigos, sem o campo, só um registro válido conta, por `atualizadoEm`).
+ */
 function trocasDeInsumo(estado: Estado, depoisDe: string, etapas: EtapaId[]): string[] {
   return estado.insumos
-    .filter((i) => i.status === "valido" && etapas.includes(i.etapa) && i.atualizadoEm > depoisDe)
-    .map((i) => i.atualizadoEm)
+    .filter((i) => etapas.includes(i.etapa))
+    .map((i) => i.ultimoValidoEm ?? (i.status === "valido" ? i.atualizadoEm : null))
+    .filter((em): em is string => em !== null && em > depoisDe)
 }
 
 /**

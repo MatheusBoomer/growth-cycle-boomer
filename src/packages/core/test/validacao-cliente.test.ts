@@ -191,6 +191,32 @@ describe("validação do cliente (núcleo)", () => {
     expect(() => registrarValidacaoGerada(e, T5)).not.toThrow()
   })
 
+  it("troca valida seguida de upload invalido continua listando o grafico desatualizado", () => {
+    let e = aprovado(base(), "03", "g1", "Receita mensal", T0)
+    e = registrarValidacaoGerada(e, T2)
+    e = insumo(e, "03", "historico-mensal", T3)
+    e = registrarInsumo(
+      e,
+      { etapa: "03", insumoId: "historico-mensal", status: "invalido", problemas: ["x"], avisos: [], resumo: null, arquivo: null },
+      T4,
+    )
+    expect(entregaveisAntesDaTroca(e).map((x) => x.titulo)).toEqual(["Receita mensal"])
+    expect(refezTresDepoisDoPdf(e)).toBe(true)
+    expect(pendenciasValidacao(e)).toContain("Aprovar de novo, depois da troca de dados: Receita mensal")
+    expect(() => registrarValidacaoGerada(e, T5)).toThrow(TransicaoInvalida)
+  })
+
+  it("registro antigo sem ultimoValidoEm so conta como troca quando esta valido", () => {
+    let e = aprovado(base(), "03", "g1", "Receita mensal", T0)
+    e = registrarValidacaoGerada(e, T2)
+    const legado = (status: "valido" | "invalido") => ({
+      ...e,
+      insumos: [{ etapa: "03" as const, insumoId: "historico-mensal", status, problemas: [], avisos: [], resumo: null, arquivo: null, atualizadoEm: T3 }],
+    })
+    expect(entregaveisAntesDaTroca(legado("valido")).map((x) => x.titulo)).toEqual(["Receita mensal"])
+    expect(entregaveisAntesDaTroca(legado("invalido"))).toEqual([])
+  })
+
   it("upload valido depois de um invalido volta a contar como troca de dados", () => {
     let e = aprovado(base(), "03", "g1", "Receita mensal", T0)
     e = registrarValidacaoGerada(e, T2)
