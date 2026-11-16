@@ -1,7 +1,8 @@
 import { access, mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { beforeEach, describe, expect, it } from "vitest"
-import { pastaEnsaio } from "../src/ensaio/roteiro"
+import { montarRoteiro } from "../src/ensaio/montar"
+import { pastaEnsaio, type ChamadaGravada } from "../src/ensaio/roteiro"
 import { FakeExecutor } from "../src/executor/fake"
 import { GravadorExecutor, type LinhaGravacao } from "../src/executor/gravador"
 import type { ContextoTurno, EventoExecutor, PedidoTurno } from "../src/executor/tipos"
@@ -68,14 +69,14 @@ describe("GravadorExecutor", () => {
     expect(linha.textoAnalista).toBe("Segue a planilha.")
     expect(linha.eventos.map((e) => e.evento.tipo)).toEqual(["sessao", "texto", "ferramenta", "ferramenta_resultado", "fim"])
     expect(linha.eventos.map((e) => e.tMs)).toEqual([10, 20, 30, 40, 50])
-    expect(await readFile(path.join(pasta, "arquivos/g.png"), "utf8")).toBe("png")
+    expect(await readFile(path.join(pasta, "arquivos/1-g.png"), "utf8")).toBe("png")
   })
 
   it("copia o rascunho também de propor_validacao_cliente", async () => {
     await prepararRascunho()
     const gravador = new GravadorExecutor(turnoComGrafico("mcp__planejamento__propor_validacao_cliente"), { raiz })
     await coletar(gravador.executar(pedido(contexto()), new AbortController().signal))
-    expect(await existe(path.join(pastaEnsaio(raiz, "mini", "03"), "arquivos/g.png"))).toBe(true)
+    expect(await existe(path.join(pastaEnsaio(raiz, "mini", "03"), "arquivos/1-g.png"))).toBe(true)
   })
 
   it("acrescenta uma linha por turno", async () => {
@@ -85,6 +86,37 @@ describe("GravadorExecutor", () => {
     await coletar(gravador.executar(pedido(contexto({ mensagemTurno: "Outra.", textoAnalista: "Outra." })), new AbortController().signal))
     const linhas = (await readFile(path.join(pastaEnsaio(raiz, "mini", "03"), "gravacao.jsonl"), "utf8")).trim().split("\n")
     expect(linhas.map((l) => (JSON.parse(l) as LinhaGravacao).mensagem)).toEqual(["Segue a planilha.", "Outra."])
+  })
+
+  it("rascunhos de mesmo nome em turnos diferentes ganham cópias distintas, e cada linha aponta para a sua", async () => {
+    const gravador = new GravadorExecutor(turnoComGrafico(), { raiz })
+    const pasta = pastaEnsaio(raiz, "mini", "03")
+    await mkdir(path.join(raiz, "clientes/acme/.app/rascunhos"), { recursive: true })
+    await writeFile(path.join(raiz, rascunho), "versao 1")
+    await coletar(gravador.executar(pedido(contexto()), new AbortController().signal))
+    await writeFile(path.join(raiz, rascunho), "versao 2")
+    // outra instância: o contador sai do que já está na pasta, não da memória
+    const eventos = await coletar(
+      new GravadorExecutor(turnoComGrafico(), { raiz }).executar(
+        pedido(contexto({ mensagemTurno: "AJUSTE no entregável “G”: troque a cor", textoAnalista: "troque a cor" })),
+        new AbortController().signal,
+      ),
+    )
+    expect(await readFile(path.join(pasta, "arquivos/1-g.png"), "utf8")).toBe("versao 1")
+    expect(await readFile(path.join(pasta, "arquivos/2-g.png"), "utf8")).toBe("versao 2")
+    // o evento repassado ao app segue com o caminho original
+    expect(eventos[2]).toMatchObject({ entrada: { arquivo_rascunho: rascunho } })
+
+    const linhas = (await readFile(path.join(pasta, "gravacao.jsonl"), "utf8")).trim().split("\n").map((l) => JSON.parse(l) as LinhaGravacao)
+    const rascunhosGravados = linhas.map((l) => {
+      const ev = l.eventos.find((e) => e.evento.tipo === "ferramenta")!.evento as Extract<EventoExecutor, { tipo: "ferramenta" }>
+      return (ev.entrada as { arquivo_rascunho: string }).arquivo_rascunho
+    })
+    expect(rascunhosGravados).toEqual(["clientes/acme/.app/rascunhos/1-g.png", "clientes/acme/.app/rascunhos/2-g.png"])
+
+    const roteiro = montarRoteiro("03", linhas)
+    const nomes = roteiro.trechos.map((t) => (t.passos.find((p) => "ferramenta" in p) as ChamadaGravada).entrada.arquivo_rascunho)
+    expect(nomes).toEqual(["1-g.png", "2-g.png"])
   })
 
   it("turno de abertura: mensagem vazia, automática e sem texto do analista", async () => {

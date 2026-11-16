@@ -1,4 +1,4 @@
-import { appendFile, copyFile, mkdir } from "node:fs/promises"
+import { appendFile, copyFile, mkdir, readdir } from "node:fs/promises"
 import path from "node:path"
 import { pastaEnsaio } from "../ensaio/roteiro"
 import type { EventoExecutor, Executor, PedidoTurno } from "./tipos"
@@ -24,7 +24,7 @@ const FERRAMENTAS_COM_RASCUNHO = new Set([`${PREFIXO_MCP}propor_entregavel`, `${
 
 /**
  * Embrulha o executor real durante uma execução de verdade de um cliente de teste comum (sem ensaio) e grava cada turno
- * em `<pastaEnsaio>/gravacao.jsonl`, mais uma cópia dos rascunhos propostos em `<pastaEnsaio>/arquivos/`. Os eventos
+ * em `<pastaEnsaio>/gravacao.jsonl`, mais uma cópia dos rascunhos propostos em `<pastaEnsaio>/arquivos/` (nome `<n>-<original>`, único por gravação). Os eventos
  * passam intactos; só grava quando o pedido traz fixture, o turno não é uma reprodução de ensaio, terminou com sucesso
  * e não foi abortado. Falha ao gravar nunca derruba o turno.
  */
@@ -50,11 +50,14 @@ export class GravadorExecutor implements Executor {
     const eventos: LinhaGravacao["eventos"] = []
     let terminouBem = false
     for await (const evento of this.interno.executar(pedido, sinal)) {
-      eventos.push({ tMs: this.agora() - inicio, evento })
+      let gravado = evento
       if (evento.tipo === "fim") terminouBem = evento.ok
       if (evento.tipo === "ferramenta" && FERRAMENTAS_COM_RASCUNHO.has(evento.nome)) {
-        await this.copiarRascunho(pedido, pasta, evento.entrada)
+        const entrada = await this.copiarRascunho(pedido, pasta, evento.entrada)
+        // O evento repassado fica intacto; só a gravação aponta para a cópia de nome único do pacote.
+        if (entrada) gravado = { ...evento, entrada }
       }
+      eventos.push({ tMs: this.agora() - inicio, evento: gravado })
       yield evento
     }
     if (!terminouBem || sinal.aborted) return
@@ -72,18 +75,29 @@ export class GravadorExecutor implements Executor {
     }
   }
 
-  /** Copia o rascunho citado (lido de `clientes/<slug>/`) para o pacote; arquivo ausente ou fora do prospect é ignorado. */
-  private async copiarRascunho(pedido: PedidoTurno, pasta: string, entrada: unknown): Promise<void> {
+  /**
+   * Copia o rascunho citado (lido de `clientes/<slug>/`) para `arquivos/<n>-<nome>`, com n único na gravação da etapa
+   * (sobrevive a turnos e reinícios, pois sai do que já está na pasta): o agente real reaproveita o nome do arquivo ao
+   * ajustar um gráfico, e a cópia nova não pode sobrescrever a anterior. Devolve a entrada com `arquivo_rascunho`
+   * apontando para a cópia; arquivo ausente ou fora do prospect devolve null.
+   */
+  private async copiarRascunho(pedido: PedidoTurno, pasta: string, entrada: unknown): Promise<Record<string, unknown> | null> {
     const citado = (entrada as { arquivo_rascunho?: unknown } | null)?.arquivo_rascunho
-    if (typeof citado !== "string" || !pedido.contexto) return
-    const pastaProspect = path.resolve(pedido.cwd, "clientes", pedido.contexto.slug)
+    if (typeof citado !== "string" || !pedido.contexto) return null
+    const slug = pedido.contexto.slug
+    const pastaProspect = path.resolve(pedido.cwd, "clientes", slug)
     const origem = path.resolve(pedido.cwd, citado)
-    if (!origem.startsWith(pastaProspect + path.sep)) return
+    if (!origem.startsWith(pastaProspect + path.sep)) return null
     try {
-      await mkdir(path.join(pasta, "arquivos"), { recursive: true })
-      await copyFile(origem, path.join(pasta, "arquivos", path.basename(origem)))
+      const pastaArquivos = path.join(pasta, "arquivos")
+      await mkdir(pastaArquivos, { recursive: true })
+      const usados = (await readdir(pastaArquivos)).map((nome) => Number(/^(\d+)-/.exec(nome)?.[1] ?? 0))
+      const nome = `${Math.max(0, ...usados) + 1}-${path.basename(origem)}`
+      await copyFile(origem, path.join(pastaArquivos, nome))
+      return { ...(entrada as Record<string, unknown>), arquivo_rascunho: `clientes/${slug}/.app/rascunhos/${nome}` }
     } catch (e) {
       console.error(`[ensaio] não consegui copiar o rascunho ${citado}:`, e)
+      return null
     }
   }
 }
