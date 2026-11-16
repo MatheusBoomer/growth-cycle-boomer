@@ -14,8 +14,15 @@ ajuste.
 ## O que você recebe
 
 Um pedido de uma das skills do processo (`03-diagnostico-performance`,
-`06-metas-e-cenarios`, `07-midia-paga`) especificando: qual arquivo de `dados/` usar, qual(is)
+`04-unidade-economica`, `06-metas-e-cenarios`, `07-midia-paga`) especificando: qual arquivo de `dados/` usar, qual(is)
 KPI(s) calcular ou gráfico(s) gerar, e qual padrão seguir.
+
+Também da Skill 04 (`04-unidade-economica`), só no laço de correção do
+documento de validação do cliente: refazer cálculo e gráfico do diagnóstico
+(etapas 03 e 04) quando o cliente aponta um número errado e o analista envia o
+arquivo corrigido. Siga o mesmo padrão e as mesmas conferências da Skill 03, e
+liste na resposta tudo o que depende do dado trocado para a skill propor de
+novo ao analista.
 
 Também da Skill 05 (`05-solucoes`): o cálculo do impacto, em R$ ou %, de cada
 problema do registro, a partir dos números já aprovados nas seções das Skills

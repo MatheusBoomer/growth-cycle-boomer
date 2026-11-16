@@ -13,6 +13,11 @@ describe("prompts", () => {
     for (const f of ["propor_entregavel", "solicitar_insumo", "registrar_insumo_anexado", "sinalizar_etapa_pronta"]) expect(s).toContain(f)
   })
 
+  it("explica a exceção da correção da validação do cliente na etapa 04", () => {
+    const s = systemPromptModoInterface({ slug: "iszi", etapa: etapaDoCatalogo(cat, "04") })
+    for (const t of ["propor_validacao_cliente", "etapa_origem", "resumo_decisoes_03"]) expect(s).toContain(t)
+  })
+
   it("chama o produto de Growth Cycle", () => {
     const s = systemPromptModoInterface({ slug: "iszi", etapa: etapaDoCatalogo(cat, "03") })
     expect(s).toContain("# Modo interface do Growth Cycle")
