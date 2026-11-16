@@ -290,6 +290,117 @@ describe("ferramentas do agente", () => {
     expect(await servico.retirarFila(slug)).toBeNull()
   })
 
+  describe("etapa_origem: a 04 propõe entregável da 03", () => {
+    const ctx04 = { slug: "iszi-cosmeticos", etapa: "04" as const }
+
+    /** 03 concluída e 04 em andamento, como na correção feita depois do diagnóstico. */
+    async function prospectNaEtapa04() {
+      const slug = await prospectNaEtapa03()
+      const e = await servico.estado(slug)
+      e.etapas["03"].status = "concluida"
+      e.etapas["04"].status = "liberada"
+      await writeFile(path.join(raiz, "clientes", slug, ".app/estado.json"), JSON.stringify(e))
+      await servico.iniciarEtapa(slug, "04")
+      return slug
+    }
+
+    const secao = (slug: string, extra: Record<string, unknown> = {}) => ({
+      tipo: "secao",
+      titulo: "Macro financeiro",
+      arquivo_rascunho: `clientes/${slug}/.app/rascunhos/s.md`,
+      nome_final: "macro-financeiro",
+      ...extra,
+    })
+
+    it("propor com etapa_origem 03 pela conversa da 04 cria entregavel da 03 com card na 04", async () => {
+      const slug = await prospectNaEtapa04()
+      await rascunho(slug, "s.md", "# Macro")
+      const r = await servico.ferramenta(ctx04, "propor_entregavel", secao(slug, { etapa_origem: "03" }))
+      expect(r.ok).toBe(true)
+      const estado = await servico.estado(slug)
+      expect(estado.entregaveis.at(-1)).toMatchObject({ etapa: "03", etapaConversa: "04", status: "pendente" })
+      expect((await servico.conversa(slug, "04")).at(-1)).toMatchObject({ tipo: "card_entregavel", entregavelId: "id1" })
+      expect((await servico.conversa(slug, "03")).some((ev) => ev.tipo === "card_entregavel")).toBe(false)
+      // a 03 continua concluída e a 04 passa a esperar a aprovação
+      expect(estado.etapas["03"].status).toBe("concluida")
+      expect(estado.etapas["04"].status).toBe("em_andamento")
+    })
+
+    it("aprovar entregavel de origem 03 grava em ativos-aprovados com o prefixo da 03 e enfileira na 04", async () => {
+      const slug = await prospectNaEtapa04()
+      await rascunho(slug, "s.md", "# Macro")
+      await servico.ferramenta(ctx04, "propor_entregavel", secao(slug, { etapa_origem: "03" }))
+      await servico.aprovarEntregavel(slug, "id1")
+      expect(existsSync(path.join(raiz, "clientes", slug, "entrega/ativos-aprovados/secoes/03-macro-financeiro.md"))).toBe(true)
+      expect(existsSync(path.join(raiz, "clientes", slug, "entrega/ativos-aprovados/secoes/04-macro-financeiro.md"))).toBe(false)
+      const fila = (await servico.estado(slug)).filaAutomatica
+      expect(fila.map((i) => i.etapa)).toEqual(["04"])
+      expect(await servico.retirarFila(slug)).toMatchObject({ etapa: "04", texto: expect.stringContaining("APROVOU") })
+      expect((await servico.estado(slug)).etapas["03"].status).toBe("concluida")
+    })
+
+    it("pedir ajuste de entregavel da 03 na 04 reabre a 04 sem erro", async () => {
+      const slug = await prospectNaEtapa04()
+      await rascunho(slug, "s.md", "# Macro")
+      await servico.ferramenta(ctx04, "propor_entregavel", secao(slug, { etapa_origem: "03" }))
+      expect((await servico.estado(slug)).entregaveis[0]).toMatchObject({ etapa: "03", etapaConversa: "04" })
+      await expect(servico.pedirAjuste(slug, "id1", "Troque o título")).resolves.toBeUndefined()
+      const estado = await servico.estado(slug)
+      expect(estado.etapas["04"].status).toBe("em_andamento")
+      expect(estado.etapas["03"].status).toBe("concluida")
+      expect(estado.filaAutomatica.map((i) => i.etapa)).toEqual(["04"])
+    })
+
+    it("pedirAjustes pelo chat da 04 aceita o entregavel da 03 e recusa o de outra conversa", async () => {
+      const slug = await prospectNaEtapa04()
+      await rascunho(slug, "s.md", "# Macro")
+      await servico.ferramenta(ctx04, "propor_entregavel", secao(slug, { etapa_origem: "03" }))
+      await expect(servico.pedirAjustes(slug, "04", "Ajuste", [{ entregavelId: "id1", marcas: [] }])).resolves.toBeDefined()
+      await expect(servico.pedirAjustes(slug, "03", "Ajuste", [{ entregavelId: "id1", marcas: [] }])).rejects.toBeInstanceOf(ErroEntrada)
+    })
+
+    it("etapa_origem 03 fora da 04 ou com a 04 concluida lanca ErroEntrada com mensagem em portugues", async () => {
+      const slug = await prospectNaEtapa04()
+      await rascunho(slug, "s.md", "# Macro")
+      // pela conversa da 03
+      const ctx03b = { slug, etapa: "03" as const }
+      const fora = await servico.ferramenta(ctx03b, "propor_entregavel", secao(slug, { etapa_origem: "03" }))
+      expect(fora).toMatchObject({ ok: false, mensagem: expect.stringContaining("etapa 04") })
+      // com a 04 concluída
+      const e = await servico.estado(slug)
+      e.etapas["04"].status = "concluida"
+      await writeFile(path.join(raiz, "clientes", slug, ".app/estado.json"), JSON.stringify(e))
+      const concluida = await servico.ferramenta(ctx04, "propor_entregavel", secao(slug, { etapa_origem: "03" }))
+      expect(concluida).toMatchObject({ ok: false, mensagem: expect.stringContaining("em andamento") })
+      expect((await servico.estado(slug)).entregaveis).toHaveLength(0)
+    })
+
+    it("etapa_origem 03 com a 03 ainda em andamento lanca ErroEntrada", async () => {
+      const slug = await prospectNaEtapa03()
+      await rascunho(slug, "s.md", "# Macro")
+      const r = await servico.ferramenta({ slug, etapa: "04" }, "propor_entregavel", secao(slug, { etapa_origem: "03" }))
+      expect(r).toMatchObject({ ok: false, mensagem: expect.stringContaining("concluída") })
+    })
+
+    it("etapa_origem invalida (05) lanca ErroEntrada", async () => {
+      const slug = await prospectNaEtapa04()
+      await rascunho(slug, "s.md", "# Macro")
+      const r = await servico.ferramenta(ctx04, "propor_entregavel", secao(slug, { etapa_origem: "05" }))
+      expect(r).toMatchObject({ ok: false, mensagem: expect.stringContaining("etapa_origem") })
+    })
+
+    it("etapa_origem 04 explicita ou ausente se comporta como antes", async () => {
+      const slug = await prospectNaEtapa04()
+      await rascunho(slug, "s.md", "# Macro")
+      await servico.ferramenta(ctx04, "propor_entregavel", secao(slug, { etapa_origem: "04" }))
+      await servico.ferramenta(ctx04, "propor_entregavel", secao(slug, { nome_final: "outra" }))
+      const [a, b] = (await servico.estado(slug)).entregaveis
+      expect(a).toMatchObject({ etapa: "04" })
+      expect(a).not.toHaveProperty("etapaConversa")
+      expect(b).toMatchObject({ etapa: "04" })
+    })
+  })
+
   it("editar seção pendente grava o rascunho e a aprovação avisa a IA da edição", async () => {
     const slug = await prospectNaEtapa03()
     await rascunho(slug, "s.md", "# Texto da IA")

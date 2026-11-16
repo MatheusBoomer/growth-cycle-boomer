@@ -29,6 +29,7 @@ import {
 } from "./entregaveis"
 import { ehErroDominio, ErroEntrada, ErroNaoEhTeste, ErroNaoEncontrado, ErroTurnoAtivo } from "./erros"
 import { carregarFixture } from "./fixture"
+import { etapaDaConversa } from "./validacao-cliente"
 import { destinoInsumo, extensao, extensaoAceita, nomeSeguro, registrarInsumo } from "./insumos"
 import * as me from "./maquina-estados"
 import { descreverMarcacoes, type MarcaAjuste } from "./marcacoes"
@@ -872,12 +873,12 @@ export class ServicoPlanejamento {
       let novo = comDecididoPor(aprovarEntregavel(e, id, this.agora()), id, autor)
       const destino = destinoAprovado(alvo)
       await this.arm.copiar(slug, alvo.arquivoRascunho, destino)
-      novo = me.reavaliarPronta(novo, alvo.etapa, this.catalogo, this.agora())
+      novo = me.reavaliarPronta(novo, etapaDaConversa(alvo), this.catalogo, this.agora())
       return { estado: novo, resultado: { ...alvo, destino } }
     })
     await this.enfileirar(
       slug,
-      aprovado.etapa,
+      etapaDaConversa(aprovado),
       mensagemAprovacao(aprovado.titulo, aprovado.nomeFinal, `clientes/${slug}/${aprovado.destino}`, aprovado.editadoEm !== undefined),
       autor,
     )
@@ -898,7 +899,7 @@ export class ServicoPlanejamento {
     const alvo = await this.mutar(slug, (e) => {
       const entregavel = encontrarEntregavel(e, id)
       let novo = comDecididoPor(pedirAjuste(e, id, texto, this.agora()), id, autor)
-      novo = me.registrarMensagemAnalista(novo, entregavel.etapa, this.agora())
+      novo = me.registrarMensagemAnalista(novo, etapaDaConversa(entregavel), this.agora())
       return { estado: novo, resultado: entregavel }
     })
     let caminhoImagem: string | undefined
@@ -908,7 +909,7 @@ export class ServicoPlanejamento {
       await this.arm.gravarBinario(slug, rel, imagem)
       caminhoImagem = `clientes/${slug}/${rel}`
     }
-    await this.enfileirar(slug, alvo.etapa, mensagemAjuste(alvo.titulo, alvo.nomeFinal, texto.trim(), caminhoImagem), autor)
+    await this.enfileirar(slug, etapaDaConversa(alvo), mensagemAjuste(alvo.titulo, alvo.nomeFinal, texto.trim(), caminhoImagem), autor)
   }
 
   /**
@@ -930,7 +931,7 @@ export class ServicoPlanejamento {
       let novo = e
       for (const a of ajustes) {
         const alvo = encontrarEntregavel(e, a.entregavelId)
-        if (alvo.etapa !== etapa) throw new ErroEntrada(`O entregável "${alvo.titulo}" não é desta etapa.`)
+        if (etapaDaConversa(alvo) !== etapa) throw new ErroEntrada(`O entregável "${alvo.titulo}" não é desta etapa.`)
         novo = comDecididoPor(pedirAjuste(novo, a.entregavelId, texto, this.agora()), a.entregavelId, autor)
       }
       const itens: Parameters<typeof mensagemAjustes>[1] = []
@@ -1141,11 +1142,36 @@ export class ServicoPlanejamento {
     }
   }
 
+  /**
+   * Etapa dona do entregável proposto. `etapa_origem` ausente ou igual à da conversa vale a própria conversa; "03" só vale
+   * quando a 04 corrige o diagnóstico já concluído (a 03 continua concluída, o card aparece na 04).
+   */
+  private async etapaDonaDaProposta(slug: string, conversa: EtapaId, origem: unknown): Promise<EtapaId> {
+    if (origem === undefined || origem === null || origem === "") return conversa
+    if (origem !== "03" && origem !== "04") {
+      throw new ErroEntrada(`etapa_origem "${String(origem)}" inválida. Use "03" ou "04".`)
+    }
+    if (origem === "04") return conversa
+    if (conversa !== "04") {
+      throw new ErroEntrada('etapa_origem "03" só vale na conversa da etapa 04. Nas outras etapas, omita etapa_origem.')
+    }
+    const estado = await this.estado(slug)
+    if (estado.etapas["03"].status !== "concluida") {
+      throw new ErroEntrada('etapa_origem "03" exige a etapa 03 concluída. Com a 03 aberta, o entregável dela se propõe na conversa da 03.')
+    }
+    const status04 = estado.etapas["04"].status
+    if (status04 !== "em_andamento" && status04 !== "pronta") {
+      throw new ErroEntrada(`etapa_origem "03" só vale com a etapa 04 em andamento ou pronta (agora: "${status04.replace("_", " ")}").`)
+    }
+    return "03"
+  }
+
   private async ferramentaPropor(slug: string, etapa: EtapaId, d: Record<string, unknown>): Promise<RespostaFerramenta> {
     const tipo = campoTexto(d.tipo, "tipo") as TipoEntregavel
     const titulo = campoTexto(d.titulo, "titulo")
     const arquivo = campoTexto(d.arquivo_rascunho, "arquivo_rascunho")
     const nomeFinal = campoTexto(d.nome_final, "nome_final")
+    const etapaDona = await this.etapaDonaDaProposta(slug, etapa, d.etapa_origem)
     if (!TIPOS_ENTREGAVEL.includes(tipo)) {
       throw new ErroEntrada(`tipo "${tipo}" inválido. Use um de: ${TIPOS_ENTREGAVEL.join(", ")}.`)
     }
@@ -1163,7 +1189,7 @@ export class ServicoPlanejamento {
     const id = this.gerarId()
     const copia = `.app/propostas/${id}${ext}`
     await this.mutar(slug, async (e) => {
-      const novo = proporEntregavel(e, { etapa, tipo, titulo, arquivoRascunho: copia, nomeFinal }, id, this.agora())
+      const novo = proporEntregavel(e, { etapa: etapaDona, etapaConversa: etapa, tipo, titulo, arquivoRascunho: copia, nomeFinal }, id, this.agora())
       await this.arm.copiar(slug, rel, copia)
       return { estado: me.reavaliarPronta(novo, etapa, this.catalogo, this.agora()), resultado: undefined }
     })

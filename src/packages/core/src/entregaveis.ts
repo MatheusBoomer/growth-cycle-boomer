@@ -51,7 +51,10 @@ export function destinoAprovado(e: Pick<Entregavel, "tipo" | "nomeFinal" | "etap
 }
 
 export interface DadosProposta {
+  /** Etapa dona do entregável: define o prefixo e o destino ao aprovar. */
   etapa: EtapaId
+  /** Etapa da conversa onde o card aparece, quando difere de `etapa` (ex.: a 04 propõe entregável da 03). */
+  etapaConversa?: EtapaId
   tipo: TipoEntregavel
   titulo: string
   arquivoRascunho: string
@@ -83,6 +86,7 @@ export function proporEntregavel(estado: Estado, dados: DadosProposta, id: strin
     ajustePedido: null,
     criadoEm: em,
     decididoEm: null,
+    ...(dados.etapaConversa && dados.etapaConversa !== dados.etapa ? { etapaConversa: dados.etapaConversa } : {}),
   })
   return { ...estado, entregaveis, atualizadoEm: em }
 }
