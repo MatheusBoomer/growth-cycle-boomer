@@ -10,6 +10,7 @@ import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader,
 import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
 import { api, mensagemDeErro } from "@/lib/api"
+import { dataDeGeracao } from "@/lib/data-geracao"
 import { passosValidacao } from "@/lib/passos-validacao"
 
 export interface PropsCardValidacaoCliente {
@@ -35,6 +36,7 @@ function Passo({ feito, rotulo }: { feito: boolean; rotulo: string }) {
 export function CardValidacaoCliente({ slug, etapa, validacao, defasado }: PropsCardValidacaoCliente) {
   const [ocupado, setOcupado] = useState(false)
   const passos = passosValidacao(validacao, defasado)
+  const geradoEm = validacao ? dataDeGeracao(validacao.geradoEm) : ""
 
   async function confirmar() {
     setOcupado(true)
@@ -51,6 +53,7 @@ export function CardValidacaoCliente({ slug, etapa, validacao, defasado }: Props
     <Card size="sm" className="max-w-xl">
       <CardHeader>
         <CardTitle>Documento de validação do cliente</CardTitle>
+        {geradoEm && <CardDescription>Gerado em {geradoEm}</CardDescription>}
         <CardAction>
           <Badge variant={passos.confirmado ? "sucesso" : defasado ? "aviso" : "outline"}>
             {passos.confirmado ? "Confirmado" : defasado ? "Desatualizado" : "Em validação"}
