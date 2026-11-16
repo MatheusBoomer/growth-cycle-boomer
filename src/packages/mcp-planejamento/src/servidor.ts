@@ -50,7 +50,7 @@ servidor.registerTool(
         .enum(["03", "04"])
         .optional()
         .describe(
-          'Só na conversa da etapa 04, na correção depois da validação do cliente: "03" propõe um gráfico, tabela ou seção da 03 já concluída (o card aparece na 04). Omita nos demais casos.',
+          'Só na conversa da etapa 04, com ela aberta (antes ou depois do documento de validação): "03" propõe um gráfico, tabela ou seção da 03 já concluída (o card aparece na 04). Omita nos demais casos.',
         ),
     },
   },
@@ -62,7 +62,7 @@ servidor.registerTool(
   {
     title: "Pedir um arquivo ao analista",
     description:
-      "Mostra ao analista o card de envio de um insumo do catálogo (com o modelo para baixar, quando existir). Use em vez de descrever caminhos de pasta. Ids: kickoff-transcricao, formulario-cliente, site, historico-mensal, produtos-curva-abc, clientes-historico, prints-campanhas. Na etapa 04, durante a correção da validação do cliente, também dá para pedir historico-mensal e produtos-curva-abc (insumos da 03).",
+      "Mostra ao analista o card de envio de um insumo do catálogo (com o modelo para baixar, quando existir). Use em vez de descrever caminhos de pasta. Ids: kickoff-transcricao, formulario-cliente, site, historico-mensal, produtos-curva-abc, clientes-historico, prints-campanhas. Na etapa 04, enquanto ela estiver aberta (antes ou depois do documento de validação), também dá para pedir historico-mensal e produtos-curva-abc (insumos da 03).",
     inputSchema: { insumo_id: z.string().describe("Id do insumo no catálogo da etapa atual") },
   },
   async (args) => chamarApp("solicitar_insumo", args),
@@ -73,7 +73,7 @@ servidor.registerTool(
   {
     title: "Registrar um anexo do chat como insumo da etapa",
     description:
-      "Use quando o analista anexou pelo clipe do chat um arquivo que, conferido o conteúdo, é um insumo do catálogo da etapa atual (ex.: a transcrição do kickoff). O app valida o arquivo como se tivesse sido enviado pelo card e passa a considerar o insumo entregue. Confira o conteúdo antes de chamar: só registre se for mesmo o documento esperado. Na etapa 04, durante a correção da validação do cliente, também dá para registrar historico-mensal e produtos-curva-abc (insumos da 03).",
+      "Use quando o analista anexou pelo clipe do chat um arquivo que, conferido o conteúdo, é um insumo do catálogo da etapa atual (ex.: a transcrição do kickoff). O app valida o arquivo como se tivesse sido enviado pelo card e passa a considerar o insumo entregue. Confira o conteúdo antes de chamar: só registre se for mesmo o documento esperado. Na etapa 04, enquanto ela estiver aberta (antes ou depois do documento de validação), também dá para registrar historico-mensal e produtos-curva-abc (insumos da 03).",
     inputSchema: {
       insumo_id: z.string().describe("Id do insumo no catálogo da etapa atual"),
       arquivo: z.string().describe("Caminho do anexo em clientes/<slug>/.app/anexos/<etapa>/"),
@@ -87,7 +87,7 @@ servidor.registerTool(
   {
     title: "Entregar o documento de validação do cliente",
     description:
-      "Só na etapa 04. Entrega ao analista o PDF de validação (gráficos e tabelas aprovados das etapas 03 e 04) já salvo em clientes/<slug>/.app/rascunhos/. O app guarda o arquivo, o analista baixa, leva ao cliente e confirma a validação na interface. Gere de novo o PDF sempre que algo aprovado mudar. Esta é a exceção à regra de encerrar depois de propor: se a etapa ainda não foi sinalizada, o resultado da ferramenta manda chamar sinalizar_etapa_pronta antes de encerrar a resposta; só depois espere a confirmação ou os ajustes.",
+      "Só na etapa 04. Entrega ao analista o PDF de validação (gráficos e tabelas aprovados das etapas 03 e 04) já salvo em clientes/<slug>/.app/rascunhos/. O app guarda o arquivo, o analista baixa, leva ao cliente e confirma a validação na interface. Gere de novo o PDF sempre que algo aprovado mudar: o app recusa um PDF mais antigo que a última aprovação ou troca de dados das etapas 03 e 04. Esta é a exceção à regra de encerrar depois de propor: se a etapa ainda não foi sinalizada, o resultado da ferramenta manda chamar sinalizar_etapa_pronta antes de encerrar a resposta; só depois espere a confirmação ou os ajustes.",
     inputSchema: {
       arquivo_rascunho: z.string().describe("Caminho do PDF em clientes/<slug>/.app/rascunhos/"),
     },
@@ -110,7 +110,7 @@ servidor.registerTool(
         .string()
         .optional()
         .describe(
-          "Só na etapa 04, quando a 03 foi refeita depois do PDF de validação: markdown com o resumo corrigido das decisões e números da 03. Obrigatório nesse caso; omita nos demais.",
+          "Só na etapa 04, quando a 03 foi refeita nesta conversa (insumo da 03 trocado ou peça com etapa_origem \"03\" aprovada), com ou sem documento de validação: markdown com o resumo corrigido das decisões e números da 03. Obrigatório nesse caso; omita nos demais.",
         ),
     },
   },

@@ -125,8 +125,8 @@ está rodando dentro da interface web, e estas regras substituem o jeito
 - **Encerramento (Regra 6):** não edite `contexto/status-planejamento.md`.
   Chame `sinalizar_etapa_pronta` com o resumo de decisões (markdown) e o
   mesmo texto de handoff do "Encerramento e handoff" da skill. Na etapa 04, se
-  qualquer peça ou insumo da 03 foi refeito depois do primeiro documento de
-  validação, envie também `resumo_decisoes_03` (o resumo da 03 corrigido, que
+  qualquer peça ou insumo da 03 foi refeito na conversa da 04 (antes ou depois
+  do documento de validação), envie também `resumo_decisoes_03` (o resumo da 03 corrigido, que
   o substitui): sem ele o app recusa o sinal, e vale de novo em cada sinal
   seguinte.
 - A pasta `.app/` pertence ao app: fora de `.app/rascunhos/`, não escreva nela.

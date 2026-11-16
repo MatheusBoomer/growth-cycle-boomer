@@ -19,10 +19,12 @@ import {
   documentoDefasado,
   entregaveisAntesDaTroca,
   etapaDaConversa,
+  pendenciaDoAgente,
   pendenciasValidacao,
-  refezTresDepoisDoPdf,
   registrarDownloadValidacao,
   registrarValidacaoGerada,
+  tresRefeitaPelaQuatro,
+  ultimaMudancaDoDocumento,
 } from "../src/validacao-cliente"
 import { catalogoReal } from "./ajuda"
 
@@ -164,14 +166,6 @@ describe("validação do cliente (núcleo)", () => {
     expect(etapaDaConversa({ etapa: "03" })).toBe("03")
   })
 
-  it("refezTresDepoisDoPdf verdadeiro para insumo da 03 trocado depois do PDF e falso antes", () => {
-    const antes = registrarValidacaoGerada(insumo(base(), "03", "historico-mensal", T0), T2)
-    expect(refezTresDepoisDoPdf(antes)).toBe(false)
-    const depois = insumo(antes, "03", "historico-mensal", T3)
-    expect(refezTresDepoisDoPdf(depois)).toBe(true)
-    expect(refezTresDepoisDoPdf(base())).toBe(false)
-  })
-
   it("upload invalido depois do PDF nao conta como troca de dados", () => {
     let e = aprovado(base(), "03", "g1", "Receita mensal", T0)
     e = registrarValidacaoGerada(e, T2)
@@ -186,7 +180,6 @@ describe("validação do cliente (núcleo)", () => {
       T4,
     )
     expect(entregaveisAntesDaTroca(e)).toEqual([])
-    expect(refezTresDepoisDoPdf(e)).toBe(false)
     expect(pendenciasValidacao(e).some((p) => p.startsWith("Aprovar de novo"))).toBe(false)
     expect(() => registrarValidacaoGerada(e, T5)).not.toThrow()
   })
@@ -201,7 +194,6 @@ describe("validação do cliente (núcleo)", () => {
       T4,
     )
     expect(entregaveisAntesDaTroca(e).map((x) => x.titulo)).toEqual(["Receita mensal"])
-    expect(refezTresDepoisDoPdf(e)).toBe(true)
     expect(pendenciasValidacao(e)).toContain("Aprovar de novo, depois da troca de dados: Receita mensal")
     expect(() => registrarValidacaoGerada(e, T5)).toThrow(TransicaoInvalida)
   })
@@ -226,15 +218,118 @@ describe("validação do cliente (núcleo)", () => {
       T3,
     )
     e = insumo(e, "03", "historico-mensal", T4)
-    expect(refezTresDepoisDoPdf(e)).toBe(true)
     expect(entregaveisAntesDaTroca(e).map((x) => x.titulo)).toEqual(["Receita mensal"])
   })
 
-  it("refezTresDepoisDoPdf verdadeiro para entregável aprovado da 03 depois do PDF", () => {
-    const e = registrarValidacaoGerada(base(), T2)
-    expect(refezTresDepoisDoPdf(aprovado(e, "03", "g1", "G", T1))).toBe(false)
-    expect(refezTresDepoisDoPdf(aprovado(e, "03", "g1", "G", T3))).toBe(true)
-    expect(refezTresDepoisDoPdf(aprovado(e, "04", "g1", "G", T3))).toBe(false)
+  describe("tresRefeitaPelaQuatro (não depende do PDF)", () => {
+    /** 03 concluída em T1 e 04 em andamento, sem documento de validação. */
+    function tresConcluida(concluidaEm: string | null = T1): Estado {
+      return comEtapa(base(), "03", { status: "concluida", concluidaEm }, T1)
+    }
+
+    /** Peça da 03 proposta e aprovada na conversa da 04 (etapa_origem "03"). */
+    function aprovadoPelaQuatro(e: Estado, id: string, em: string): Estado {
+      const p = proporEntregavel(
+        e,
+        { etapa: "03", etapaConversa: "04", tipo: "grafico", titulo: "Receita refeita", arquivoRascunho: `.app/propostas/${id}.png`, nomeFinal: `grafico-${id}` },
+        id,
+        em,
+      )
+      return aprovarEntregavel(p, id, em)
+    }
+
+    it("nenhum gatilho: falso", () => {
+      expect(tresRefeitaPelaQuatro(tresConcluida())).toBe(false)
+      // insumo e peça da 03 de antes da conclusão da 03 não contam
+      expect(tresRefeitaPelaQuatro(insumo(tresConcluida(), "03", "historico-mensal", T0))).toBe(false)
+      expect(tresRefeitaPelaQuatro(aprovado(tresConcluida(), "03", "g0", "G", T0))).toBe(false)
+    })
+
+    it("insumo da 03 válido depois da conclusão da 03, antes de qualquer PDF: verdadeiro", () => {
+      const e = insumo(tresConcluida(), "03", "historico-mensal", T2)
+      expect(e.validacaoCliente).toBeUndefined()
+      expect(tresRefeitaPelaQuatro(e)).toBe(true)
+      // insumo da 04 não é refazer a 03
+      expect(tresRefeitaPelaQuatro(insumo(tresConcluida(), "04", "clientes-historico", T2))).toBe(false)
+    })
+
+    it("peça da 03 aprovada pela 04 depois da conclusão da 03, antes de qualquer PDF: verdadeiro", () => {
+      expect(tresRefeitaPelaQuatro(aprovadoPelaQuatro(tresConcluida(), "p1", T2))).toBe(true)
+      // aprovada antes da conclusão, ou peça da 04, ou ainda pendente: falso
+      expect(tresRefeitaPelaQuatro(aprovadoPelaQuatro(tresConcluida(T3), "p1", T2))).toBe(false)
+      expect(tresRefeitaPelaQuatro(aprovado(tresConcluida(), "04", "g4", "G", T2))).toBe(false)
+      const pendente = proporEntregavel(
+        tresConcluida(),
+        { etapa: "03", etapaConversa: "04", tipo: "grafico", titulo: "R", arquivoRascunho: ".app/propostas/p2.png", nomeFinal: "r" },
+        "p2",
+        T2,
+      )
+      expect(tresRefeitaPelaQuatro(pendente)).toBe(false)
+    })
+
+    it("upload inválido não conta; válido seguido de inválido continua contando", () => {
+      const invalido = (e: Estado, em: string) =>
+        registrarInsumo(
+          e,
+          { etapa: "03", insumoId: "historico-mensal", status: "invalido", problemas: ["x"], avisos: [], resumo: null, arquivo: null },
+          em,
+        )
+      expect(tresRefeitaPelaQuatro(invalido(tresConcluida(), T2))).toBe(false)
+      expect(tresRefeitaPelaQuatro(invalido(insumo(tresConcluida(), "03", "historico-mensal", T2), T3))).toBe(true)
+    })
+
+    it("03 que não está concluída: falso, mesmo com insumo novo", () => {
+      const aberta = comEtapa(insumo(tresConcluida(), "03", "historico-mensal", T2), "03", { status: "em_andamento", concluidaEm: null }, T3)
+      expect(tresRefeitaPelaQuatro(aberta)).toBe(false)
+    })
+
+    it("03 concluída sem data (importada do terminal): qualquer troca ou peça refeita conta", () => {
+      expect(tresRefeitaPelaQuatro(tresConcluida(null))).toBe(false)
+      expect(tresRefeitaPelaQuatro(insumo(tresConcluida(null), "03", "historico-mensal", T2))).toBe(true)
+      expect(tresRefeitaPelaQuatro(aprovadoPelaQuatro(tresConcluida(null), "p1", T2))).toBe(true)
+    })
+  })
+
+  describe("ultimaMudancaDoDocumento", () => {
+    it("sem aprovado nem insumo do documento: null", () => {
+      expect(ultimaMudancaDoDocumento(base())).toBeNull()
+    })
+
+    it("a mais recente entre aprovações de gráfico, tabela ou seção e trocas válidas de insumo de 03 e 04", () => {
+      let e = aprovado(base(), "03", "g1", "G", T1)
+      e = insumo(e, "04", "clientes-historico", T2)
+      expect(ultimaMudancaDoDocumento(e)).toBe(T2)
+      e = aprovado(e, "04", "g2", "G2", T3)
+      expect(ultimaMudancaDoDocumento(e)).toBe(T3)
+    })
+
+    it("ignora etapa fora do documento, tipo fora do documento, pendente e upload inválido", () => {
+      let e = aprovado(base(), "03", "g1", "G", T1)
+      e = aprovado(e, "05", "g5", "G5", T5)
+      const planilha = proporEntregavel(e, { etapa: "04", tipo: "planilha", titulo: "P", arquivoRascunho: ".app/propostas/p.xlsx", nomeFinal: "p" }, "p", T5)
+      e = aprovarEntregavel(planilha, "p", T5)
+      e = proporEntregavel(e, { etapa: "04", tipo: "grafico", titulo: "Pend", arquivoRascunho: ".app/propostas/q.png", nomeFinal: "q" }, "q", T6)
+      e = registrarInsumo(
+        e,
+        { etapa: "03", insumoId: "historico-mensal", status: "invalido", problemas: ["x"], avisos: [], resumo: null, arquivo: null },
+        T7,
+      )
+      e = insumo(e, "05", "outro", T9)
+      expect(ultimaMudancaDoDocumento(e)).toBe(T1)
+    })
+  })
+
+  it("pendenciaDoAgente separa o que o agente faz do que o analista faz", () => {
+    for (const p of [
+      "Gerar o documento de validação do cliente",
+      "Gerar de novo o documento de validação: os gráficos mudaram depois dele",
+      "Aprovar de novo, depois da troca de dados: Receita mensal",
+    ]) {
+      expect(pendenciaDoAgente(p)).toBe(true)
+    }
+    for (const p of ["Baixar o documento de validação", "Confirmar que o cliente validou os dados", "Aprovar: Receita refeita", "Enviar: Histórico mensal"]) {
+      expect(pendenciaDoAgente(p)).toBe(false)
+    }
   })
 
   it("04_reaberta_sem_validacao_antiga_exige_o_pdf", () => {

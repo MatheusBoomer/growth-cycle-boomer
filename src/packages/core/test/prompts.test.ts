@@ -18,6 +18,19 @@ describe("prompts", () => {
     for (const t of ["propor_validacao_cliente", "etapa_origem", "resumo_decisoes_03"]) expect(s).toContain(t)
   })
 
+  it("na 04, insumos e peças da 03 valem com a etapa aberta, não só depois do documento", () => {
+    const s = systemPromptModoInterface({ slug: "iszi", etapa: etapaDoCatalogo(cat, "04") })
+    expect(s).not.toContain("(depois do documento de validação)")
+    expect(s).toContain("enquanto ela estiver aberta")
+  })
+
+  it("na 04, o script gera o PDF e a ferramenta entrega; gerar e propor antes de sinalizar, mesmo numa etapa já pronta", () => {
+    const s = systemPromptModoInterface({ slug: "iszi", etapa: etapaDoCatalogo(cat, "04") })
+    expect(s).not.toContain("gerar o PDF com `propor_validacao_cliente`")
+    expect(s).toContain("scripts/gerar_documento_validacao.py")
+    expect(s).toContain("mesmo que a etapa já estivesse")
+  })
+
   it("chama o produto de Growth Cycle", () => {
     const s = systemPromptModoInterface({ slug: "iszi", etapa: etapaDoCatalogo(cat, "03") })
     expect(s).toContain("# Modo interface do Growth Cycle")

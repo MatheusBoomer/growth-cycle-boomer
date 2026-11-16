@@ -102,6 +102,16 @@ describe("GET /api/prospects/[slug]/validacao-cliente/download", () => {
     expect(await r.json()).toMatchObject({ erro: "O documento de validação ainda não foi gerado.", codigo: "nao_encontrado" })
   })
 
+  it("baixar com o documento registrado mas o arquivo apagado devolve 404 dizendo que o arquivo sumiu", async () => {
+    await prospectNaEtapa04()
+    await gerarDocumento()
+    await rm(path.join(raiz, "clientes", SLUG, PDF))
+    const r = await baixar()
+    expect(r.status).toBe(404)
+    expect(await r.json()).toMatchObject({ erro: "O arquivo do documento sumiu. Peça ao agente para gerar de novo.", codigo: "nao_encontrado" })
+    expect((await servico.estado(SLUG)).validacaoCliente?.baixadoEm).toBeNull()
+  })
+
   it("baixar devolve application/pdf, attachment e registra baixadoEm", async () => {
     await prospectNaEtapa04()
     await gerarDocumento("%PDF-1.4 conteudo")

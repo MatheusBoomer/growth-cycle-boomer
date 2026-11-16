@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto"
 import { existsSync } from "node:fs"
-import { copyFile, mkdtemp, rm } from "node:fs/promises"
+import { copyFile, mkdtemp, rm, stat } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import type { FsArmazenamento } from "./armazenamento"
@@ -34,9 +34,12 @@ import {
   confirmarValidacaoCliente,
   documentoDefasado,
   etapaDaConversa,
-  refezTresDepoisDoPdf,
+  pendenciaDeAprovarDeNovo,
+  pendenciaDoAgente,
   registrarDownloadValidacao,
   registrarValidacaoGerada,
+  tresRefeitaPelaQuatro,
+  ultimaMudancaDoDocumento,
 } from "./validacao-cliente"
 import { destinoInsumo, extensao, extensaoAceita, nomeSeguro, registrarInsumo } from "./insumos"
 import * as me from "./maquina-estados"
@@ -95,6 +98,8 @@ export interface DependenciasServico {
   validar: Validar
   agora?: () => string
   gerarId?: () => string
+  /** Hora de modificação (ms) de um arquivo do disco; padrão `stat().mtimeMs`. Os testes simulam, porque o relógio deles é falso. */
+  mtimeDoArquivo?: (absoluto: string) => Promise<number>
 }
 
 export interface ConexaoTurnos {
@@ -185,6 +190,29 @@ function comEnviadoPor(estado: Estado, etapa: EtapaId, insumoId: string, autor: 
   }
 }
 
+/**
+ * Resposta de `sinalizar_etapa_pronta` quando ainda falta algo. Gerar o PDF de validação e propor de novo o que foi aprovado
+ * antes da troca de dados são trabalho do agente; baixar, confirmar, aprovar e enviar são do analista.
+ */
+function mensagemFaltando(faltando: string[]): string {
+  const doAgente = faltando.filter(pendenciaDoAgente)
+  const doAnalista = faltando.filter((f) => !pendenciaDoAgente(f))
+  if (doAgente.length === 0) {
+    return `Sinal registrado, mas a etapa ainda não pode ser concluída. Falta: ${faltando.join("; ")}. Aprovações e envios dependem do analista: avise o que falta em uma frase e encerre.`
+  }
+  const passos: string[] = []
+  if (doAgente.some(pendenciaDeAprovarDeNovo)) {
+    passos.push(
+      "Proponha de novo, com propor_entregavel, cada item listado em \"Aprovar de novo\" (as peças da 03 com etapa_origem \"03\"); o PDF só pode ser gerado depois de todos aprovados.",
+    )
+  }
+  passos.push(
+    "Gere o PDF pelo passo \"Documento de validação do cliente\" da skill (scripts/gerar_documento_validacao.py) e entregue com propor_validacao_cliente.",
+  )
+  const analista = doAnalista.length > 0 ? ` Depois disso, fica com o analista: ${doAnalista.join("; ")}.` : ""
+  return `Sinal registrado, mas a etapa ainda não pode ser concluída. Falta fazer, e é trabalho seu, não do analista: ${doAgente.join("; ")}. ${passos.join(" ")}${analista}`
+}
+
 export class ServicoPlanejamento {
   private readonly arm: FsArmazenamento
   private readonly catalogo: Catalogo
@@ -192,6 +220,7 @@ export class ServicoPlanejamento {
   private readonly validar: Validar
   private readonly agora: () => string
   private readonly gerarId: () => string
+  private readonly mtimeDoArquivo: (absoluto: string) => Promise<number>
   private readonly exclusoes = new Map<string, Promise<unknown>>()
   private turnos: ConexaoTurnos = { aoEnfileirar: () => {}, estaOcupado: () => false }
   private readonly pacotePainel = new CacheCurto<PacotePainel>(PRAZO_CACHE_PAINEL_MS)
@@ -203,6 +232,7 @@ export class ServicoPlanejamento {
     this.validar = d.validar
     this.agora = d.agora ?? (() => new Date().toISOString())
     this.gerarId = d.gerarId ?? (() => randomUUID())
+    this.mtimeDoArquivo = d.mtimeDoArquivo ?? (async (absoluto) => (await stat(absoluto)).mtimeMs)
   }
 
   /**
@@ -890,8 +920,9 @@ export class ServicoPlanejamento {
   /** Registra que o analista baixou o PDF e devolve o caminho dele na pasta do prospect. */
   async registrarDownloadValidacao(slug: string, autor: string | null): Promise<string> {
     return this.mutar(slug, async (e) => {
-      if (!e.validacaoCliente || !(await this.arm.existeArquivo(slug, e.validacaoCliente.arquivo))) {
-        throw new ErroNaoEncontrado("O documento de validação ainda não foi gerado.")
+      if (!e.validacaoCliente) throw new ErroNaoEncontrado("O documento de validação ainda não foi gerado.")
+      if (!(await this.arm.existeArquivo(slug, e.validacaoCliente.arquivo))) {
+        throw new ErroNaoEncontrado("O arquivo do documento sumiu. Peça ao agente para gerar de novo.")
       }
       const novo = me.reavaliarPronta(registrarDownloadValidacao(e, autor, this.agora()), "04", this.catalogo, this.agora())
       return { estado: novo, resultado: ARQUIVO_VALIDACAO }
@@ -1282,7 +1313,15 @@ export class ServicoPlanejamento {
     if (extensao(rel) !== ".pdf") {
       throw new ErroEntrada(`O documento de validação precisa ser um PDF (recebido: ${extensao(rel) || "sem extensão"}).`)
     }
+    const modificadoEm = await this.mtimeDoArquivo(this.arm.caminhoAbsoluto(slug, rel))
     const jaSinalizada = await this.mutar(slug, async (e) => {
+      // O nome do rascunho é fixo, então o PDF de uma geração anterior continua lá: só vale o gerado depois da última mudança.
+      const ultima = ultimaMudancaDoDocumento(e)
+      if (ultima !== null && modificadoEm < Date.parse(ultima)) {
+        throw new ErroEntrada(
+          "Este PDF é anterior à última aprovação ou troca de dados das etapas 03 e 04, então pode trazer gráfico velho. Rode scripts/gerar_documento_validacao.py de novo e chame propor_validacao_cliente com o PDF novo.",
+        )
+      }
       const novo = registrarValidacaoGerada(e, this.agora())
       await this.arm.copiar(slug, rel, ARQUIVO_VALIDACAO)
       return { estado: me.reavaliarPronta(novo, "04", this.catalogo, this.agora()), resultado: novo.etapas["04"].sinalizada }
@@ -1355,29 +1394,31 @@ export class ServicoPlanejamento {
     const resumoDecisoes = campoTexto(d.resumo_decisoes, "resumo_decisoes")
     const handoff = semAberturaDeConclusao(campoTexto(d.handoff_proxima, "handoff_proxima"))
     const resumoTres = typeof d.resumo_decisoes_03 === "string" && d.resumo_decisoes_03.trim() ? d.resumo_decisoes_03.trim() : null
-    const resultado = await this.mutar<{ recusado: boolean; faltando: string[] }>(slug, async (e) => {
-      // Depois de refazer a 03 na correção, o dossiê das próximas etapas não pode seguir com o resumo velho dela.
-      const refezTres = etapa === "04" && refezTresDepoisDoPdf(e)
-      if (refezTres && !resumoTres) return { estado: e, resultado: { recusado: true, faltando: [] } }
-      const base = refezTres && resumoTres ? me.comEtapa(e, "03", { resumoDecisoes: resumoTres }, this.agora()) : e
+    const resultado = await this.mutar<{ recusa: string | null; faltando: string[] }>(slug, async (e) => {
+      const recusar = (recusa: string) => ({ estado: e, resultado: { recusa, faltando: [] } })
+      if (resumoTres && etapa !== "04") {
+        return recusar("resumo_decisoes_03 só vale na etapa 04. Chame sinalizar_etapa_pronta de novo sem esse campo.")
+      }
+      if (resumoTres && e.etapas["03"].status !== "concluida") {
+        // Nunca sobrescrever o resumo de uma 03 aberta ou reaberta: ele é registrado na conversa dela.
+        return recusar(
+          `A etapa 03 não está concluída (agora: "${e.etapas["03"].status.replace("_", " ")}"), então resumo_decisoes_03 não vale aqui: o resumo da 03 se registra na conversa dela. Chame sinalizar_etapa_pronta de novo sem esse campo.`,
+        )
+      }
+      // A 03 refeita pela 04 (com ou sem PDF) muda o resumo dela: o dossiê das próximas etapas não pode seguir com o velho.
+      if (etapa === "04" && tresRefeitaPelaQuatro(e) && !resumoTres) {
+        return recusar(
+          "A etapa 03 foi refeita nesta conversa (insumo da 03 trocado ou peça da 03 aprovada aqui), então o resumo dela mudou. Chame sinalizar_etapa_pronta de novo com o campo resumo_decisoes_03 (markdown com as decisões e números corrigidos da 03).",
+        )
+      }
+      const base = resumoTres ? me.comEtapa(e, "03", { resumoDecisoes: resumoTres }, this.agora()) : e
       const r = me.sinalizarPronta(base, etapa, { resumoDecisoes, handoff }, this.catalogo, this.agora())
-      if (refezTres) await this.gravarDecisoes(slug, "03", resumoTres)
-      return { estado: r.estado, resultado: { recusado: false, faltando: r.faltando } }
+      if (resumoTres) await this.gravarDecisoes(slug, "03", resumoTres)
+      return { estado: r.estado, resultado: { recusa: null, faltando: r.faltando } }
     })
-    if (resultado.recusado) {
-      return {
-        ok: false,
-        mensagem:
-          "A 03 foi refeita depois do PDF de validação, então o resumo dela mudou. Chame sinalizar_etapa_pronta de novo com o campo resumo_decisoes_03 (markdown com as decisões e números corrigidos da 03).",
-      }
-    }
+    if (resultado.recusa) return { ok: false, mensagem: resultado.recusa }
     const faltando = resultado.faltando
-    if (faltando.length > 0) {
-      return {
-        ok: true,
-        mensagem: `Sinal registrado, mas a etapa ainda não pode ser concluída. Falta: ${faltando.join("; ")}. Aprovações e envios dependem do analista: avise o que falta em uma frase e encerre.`,
-      }
-    }
+    if (faltando.length > 0) return { ok: true, mensagem: mensagemFaltando(faltando) }
     await this.registrarConversa(slug, etapa, {
       tipo: "aviso",
       nivel: "info",

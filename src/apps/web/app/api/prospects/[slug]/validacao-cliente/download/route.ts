@@ -15,7 +15,8 @@ export async function GET(_req: Request, ctx: RouteContext<"/api/prospects/[slug
     try {
       dados = await readFile(armazenamento.caminhoAbsoluto(slug, rel))
     } catch {
-      throw new ErroNaoEncontrado("O documento de validação ainda não foi gerado.")
+      // O serviço já confere o arquivo; isto cobre ele sumir entre a conferência e a leitura.
+      throw new ErroNaoEncontrado("O arquivo do documento sumiu. Peça ao agente para gerar de novo.")
     }
     return new Response(new Uint8Array(dados), {
       headers: {

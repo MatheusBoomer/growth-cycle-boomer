@@ -23,6 +23,12 @@ export function decidirEscrita(caminho: string, cwd: string, pastaProspect: stri
       motivo: "Escrita bloqueada: entrega/ativos-aprovados/ é gravada só pelo app quando o analista aprova. Salve em .app/rascunhos/ e chame propor_entregavel.",
     }
   }
+  if (rel.startsWith("entrega/validacao-cliente/")) {
+    return {
+      permitir: false,
+      motivo: "Escrita bloqueada: entrega/validacao-cliente/ é gravada só pelo app. Gere o PDF em .app/rascunhos/ e chame propor_validacao_cliente.",
+    }
+  }
   if (rel.startsWith(".app/") && !rel.startsWith(".app/rascunhos/")) {
     return {
       permitir: false,

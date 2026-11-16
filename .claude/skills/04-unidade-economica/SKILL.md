@@ -102,12 +102,16 @@ agregadas.
    deixa PDF parcial.
 3. **Propor o documento:** chame `propor_validacao_cliente` com o caminho do
    PDF. O app copia o arquivo e mostra no chat o card com o botão de baixar e,
-   depois do download, o de confirmar. Se algum gráfico, tabela ou leitura de
-   03 ou 04 foi aprovado depois da troca de um insumo (ver "Correções pedidas
-   pelo cliente"), é esta chamada que é recusada, com a lista dos títulos a
-   aprovar de novo: refaça os itens listados e chame de novo. O `Concluir` da
-   etapa fica bloqueado até o analista baixar o PDF e confirmar a validação do
-   cliente: essa regra está no app, não depende de você.
+   depois do download, o de confirmar. O app recusa um PDF mais antigo que a
+   última aprovação ou troca de dados das etapas 03 e 04 (o rascunho tem nome
+   fixo, então pode ser o de uma geração anterior): rode o script de novo e
+   proponha o PDF novo. Se um insumo foi trocado depois de um PDF já gerado e
+   algum gráfico, tabela ou leitura de 03 ou 04 foi aprovado **antes** dessa
+   troca (ver "Correções pedidas pelo cliente"), a chamada também é recusada,
+   com a lista dos títulos a aprovar de novo: refaça os itens listados e chame
+   de novo. O `Concluir` da etapa fica bloqueado até o analista baixar o PDF e
+   confirmar a validação do cliente: essa regra está no app, não depende de
+   você.
 4. **Sinalizar a etapa pronta antes de encerrar o turno.** Esta é a única
    exceção à regra de encerrar a resposta logo depois de propor: assim que
    `propor_validacao_cliente` der certo, chame `sinalizar_etapa_pronta`
@@ -179,6 +183,13 @@ sinalizar a etapa pronta de novo.
 
 Uma mensagem nova do analista depois da confirmação desfaz a confirmação: o
 analista confirma de novo no card quando o cliente validar o PDF novo.
+
+**Antes do primeiro PDF vale o mesmo.** Pedir ou registrar insumo da 03
+(`historico-mensal`, `produtos-curva-abc`) e propor peça da 03 com
+`etapa_origem: "03"` valem a qualquer momento com a etapa 04 aberta, não só
+depois do documento. Se o analista trocar um insumo da 03, ou você refizer uma
+peça da 03 nesta conversa, siga os passos 3 e 4 acima e envie
+`resumo_decisoes_03` ao sinalizar: sem ele o app recusa o sinal.
 
 ## Restrições
 
