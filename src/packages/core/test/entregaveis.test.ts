@@ -128,6 +128,17 @@ const html = (id: string, over: Partial<Entregavel> = {}): Entregavel => ({
   ...over,
 })
 
+describe("etapaConversa da proposta", () => {
+  it("só grava etapaConversa quando a conversa é de outra etapa que a dona", () => {
+    const igual = proporEntregavel(base(), { ...proposta(), etapaConversa: "03" }, "p1", EM)
+    expect(igual.entregaveis[0]).not.toHaveProperty("etapaConversa")
+    const sem = proporEntregavel(base(), proposta(), "p1", EM)
+    expect(sem.entregaveis[0]).not.toHaveProperty("etapaConversa")
+    const outra = proporEntregavel(base(), { ...proposta(), etapaConversa: "04" }, "p1", EM)
+    expect(outra.entregaveis[0]).toMatchObject({ etapa: "03", etapaConversa: "04" })
+  })
+})
+
 describe("entregável visível no visualizador", () => {
   it("mostra a versão não substituída mais recente", () => {
     const lista = [html("e1", { status: "substituido" }), html("e2", { status: "aprovado" }), html("e3")]

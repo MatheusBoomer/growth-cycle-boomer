@@ -50,9 +50,9 @@
       "titulo": "Unidade econômica",
       "rotuloStatus": "04 · Unidade econômica",
       "descricao": "Calcula CAC, LTV histórico e a relação LTV/CAC a partir do histórico de vendas por cliente.",
-      "oQueEsperar": "O agente calcula o CAC, o LTV histórico e a relação LTV/CAC a partir do histórico de vendas por cliente, e confere o resultado contra a plataforma de origem. Antes de enviar a planilha, apague CPF, e-mail, telefone, endereço e dados de cartão: só ID ou nome do cliente, número de pedidos e valor gasto.",
+      "oQueEsperar": "O agente calcula o CAC, o LTV histórico e a relação LTV/CAC a partir do histórico de vendas por cliente, e confere o resultado contra a plataforma de origem. Antes de enviar a planilha, apague CPF, e-mail, telefone, endereço e dados de cartão: só ID ou nome do cliente, número de pedidos e valor gasto. No fim, ele gera um PDF com o histórico do diagnóstico para você baixar e mandar ao cliente conferir. Se o cliente apontar algum número errado, conte aqui no chat e o agente corrige e gera o PDF de novo. A etapa só conclui depois que você baixa o PDF e confirma que o cliente validou.",
       "skill": "04-unidade-economica",
-      "subagentes": [],
+      "subagentes": ["analista-dados"],
       "insumos": [{ "id": "clientes-historico", "obrigatorio": true }]
     },
     {

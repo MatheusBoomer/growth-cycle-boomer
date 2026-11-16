@@ -4,6 +4,7 @@ import { AtSignIcon, CheckIcon } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import { destinoAprovado } from "@workspace/core/entregaveis"
+import { etapaDaConversa } from "@workspace/core/validacao-cliente"
 import type { Entregavel, StatusEntregavel, TipoEntregavel } from "@workspace/core/tipos"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
@@ -33,7 +34,7 @@ export const ROTULO_STATUS_ENTREGAVEL: Record<StatusEntregavel, string> = { pend
 export function CardEntregavel({ slug, entregavel: e, anterior = null }: { slug: string; entregavel: Entregavel; anterior?: Entregavel | null }) {
   const { abrir, abrirSecao, abrirPlanilha, abrirArquivo, mencionar } = useVisualizador()
   const [ocupado, setOcupado] = useState(false)
-  const refs = useReferencias(e.etapa)
+  const refs = useReferencias(etapaDaConversa(e))
   const nomeNaApresentacao = destinoAprovado(e).split("/").pop()
   // Com ajuste pedido, a versão atual está superada: só a nova versão do agente libera a aprovação.
   const aguardandoNovaVersao = e.status === "pendente" && !!e.ajustePedido

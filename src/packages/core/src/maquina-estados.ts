@@ -1,5 +1,6 @@
 import { etapaAnterior, etapaDoCatalogo, insumoDoCatalogo } from "./catalogo"
 import { TransicaoInvalida } from "./erros"
+import { etapaDaConversa, limparConfirmacaoValidacao, pendenciasValidacao } from "./validacao-cliente"
 import { ORDEM_ETAPAS, type Catalogo, type Estado, type EstadoEtapa, type EtapaId, type StatusEtapa } from "./tipos"
 
 export function etapaVazia(status: StatusEtapa): EstadoEtapa {
@@ -75,9 +76,10 @@ export function condicoesConcluir(estado: Estado, id: EtapaId, catalogo: Catalog
     if (recebido?.status !== "valido") faltando.push(`Enviar: ${insumoDoCatalogo(catalogo, ref.id).nome}`)
   }
   for (const e of estado.entregaveis) {
-    if (e.etapa === id && e.status === "pendente") faltando.push(`Aprovar: ${e.titulo}`)
+    if (etapaDaConversa(e) === id && e.status === "pendente") faltando.push(`Aprovar: ${e.titulo}`)
   }
   if (!estado.etapas[id].sinalizada) faltando.push("O agente ainda não sinalizou que a etapa está completa")
+  if (id === "04") faltando.push(...pendenciasValidacao(estado))
   return faltando
 }
 
@@ -108,7 +110,8 @@ export function sinalizarPronta(
 
 export function registrarMensagemAnalista(estado: Estado, id: EtapaId, em: string): Estado {
   exigir(estado, id, ["em_andamento", "pronta"], "enviar mensagem para")
-  return comEtapa(estado, id, { status: "em_andamento", sinalizada: false }, em)
+  const novo = comEtapa(estado, id, { status: "em_andamento", sinalizada: false }, em)
+  return id === "04" ? limparConfirmacaoValidacao(novo, em) : novo
 }
 
 export function concluirEtapa(estado: Estado, id: EtapaId, catalogo: Catalogo, em: string): Estado {

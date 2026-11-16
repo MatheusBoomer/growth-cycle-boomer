@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs"
-import { mkdir, readFile, writeFile } from "node:fs/promises"
+import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { FsArmazenamento } from "../src/armazenamento"
@@ -21,7 +21,9 @@ import { MemoriaArmazem, MemoriaRepositorio } from "../src/nuvem/memoria"
 import { Mesa } from "../src/nuvem/mesa"
 import type { UsuarioComPapel } from "../src/papeis"
 import { ServicoPlanejamento } from "../src/servico-planejamento"
-import type { EtapaId, EventoTempoReal, ResultadoValidacao } from "../src/tipos"
+import { condicoesConcluir } from "../src/maquina-estados"
+import type { Estado, EtapaId, EventoTempoReal, ResultadoValidacao } from "../src/tipos"
+import { confirmarValidacaoCliente, registrarDownloadValidacao, registrarValidacaoGerada } from "../src/validacao-cliente"
 import { pastaDoFixture } from "../src/fixture"
 import { catalogoReal, raizTemporaria } from "./ajuda"
 import { criarFixtureMinimo } from "./fixture-minimo"
@@ -34,6 +36,8 @@ let enfileirados: string[]
 let ocupado: boolean
 let proximaValidacao: ResultadoValidacao
 let contador: number
+/** Hora de modificação simulada do rascunho do PDF de validação (null: a real, do disco). */
+let mtimeRascunho: number | null
 
 beforeEach(async () => {
   raiz = await raizTemporaria()
@@ -42,6 +46,7 @@ beforeEach(async () => {
   enfileirados = []
   ocupado = false
   contador = 0
+  mtimeRascunho = null
   proximaValidacao = {
     ok: true,
     problemas: [],
@@ -55,6 +60,7 @@ beforeEach(async () => {
     validar: async () => proximaValidacao,
     agora: () => "2026-09-28T10:00:00.000Z",
     gerarId: () => `id${++contador}`,
+    mtimeDoArquivo: async (absoluto) => mtimeRascunho ?? (await stat(absoluto)).mtimeMs,
   })
   servico.conectarTurnos({
     aoEnfileirar: (s) => enfileirados.push(s),
@@ -428,6 +434,117 @@ describe("ferramentas do agente", () => {
     })
   })
 
+  describe("etapa_origem: a 04 propõe entregável da 03", () => {
+    const ctx04 = { slug: "iszi-cosmeticos", etapa: "04" as const }
+
+    /** 03 concluída e 04 em andamento, como na correção feita depois do diagnóstico. */
+    async function prospectNaEtapa04() {
+      const slug = await prospectNaEtapa03()
+      const e = await servico.estado(slug)
+      e.etapas["03"].status = "concluida"
+      e.etapas["04"].status = "liberada"
+      await writeFile(path.join(raiz, "clientes", slug, ".app/estado.json"), JSON.stringify(e))
+      await servico.iniciarEtapa(slug, "04")
+      return slug
+    }
+
+    const secao = (slug: string, extra: Record<string, unknown> = {}) => ({
+      tipo: "secao",
+      titulo: "Macro financeiro",
+      arquivo_rascunho: `clientes/${slug}/.app/rascunhos/s.md`,
+      nome_final: "macro-financeiro",
+      ...extra,
+    })
+
+    it("propor com etapa_origem 03 pela conversa da 04 cria entregavel da 03 com card na 04", async () => {
+      const slug = await prospectNaEtapa04()
+      await rascunho(slug, "s.md", "# Macro")
+      const r = await servico.ferramenta(ctx04, "propor_entregavel", secao(slug, { etapa_origem: "03" }))
+      expect(r.ok).toBe(true)
+      const estado = await servico.estado(slug)
+      expect(estado.entregaveis.at(-1)).toMatchObject({ etapa: "03", etapaConversa: "04", status: "pendente" })
+      expect((await servico.conversa(slug, "04")).at(-1)).toMatchObject({ tipo: "card_entregavel", entregavelId: "id1" })
+      expect((await servico.conversa(slug, "03")).some((ev) => ev.tipo === "card_entregavel")).toBe(false)
+      // a 03 continua concluída e a 04 passa a esperar a aprovação
+      expect(estado.etapas["03"].status).toBe("concluida")
+      expect(estado.etapas["04"].status).toBe("em_andamento")
+    })
+
+    it("aprovar entregavel de origem 03 grava em ativos-aprovados com o prefixo da 03 e enfileira na 04", async () => {
+      const slug = await prospectNaEtapa04()
+      await rascunho(slug, "s.md", "# Macro")
+      await servico.ferramenta(ctx04, "propor_entregavel", secao(slug, { etapa_origem: "03" }))
+      await servico.aprovarEntregavel(slug, "id1")
+      expect(existsSync(path.join(raiz, "clientes", slug, "entrega/ativos-aprovados/secoes/03-macro-financeiro.md"))).toBe(true)
+      expect(existsSync(path.join(raiz, "clientes", slug, "entrega/ativos-aprovados/secoes/04-macro-financeiro.md"))).toBe(false)
+      const fila = (await servico.estado(slug)).filaAutomatica
+      expect(fila.map((i) => i.etapa)).toEqual(["04"])
+      expect(await servico.retirarFila(slug)).toMatchObject({ etapa: "04", texto: expect.stringContaining("APROVOU") })
+      expect((await servico.estado(slug)).etapas["03"].status).toBe("concluida")
+    })
+
+    it("pedir ajuste de entregavel da 03 na 04 reabre a 04 sem erro", async () => {
+      const slug = await prospectNaEtapa04()
+      await rascunho(slug, "s.md", "# Macro")
+      await servico.ferramenta(ctx04, "propor_entregavel", secao(slug, { etapa_origem: "03" }))
+      expect((await servico.estado(slug)).entregaveis[0]).toMatchObject({ etapa: "03", etapaConversa: "04" })
+      await expect(servico.pedirAjuste(slug, "id1", "Troque o título")).resolves.toBeUndefined()
+      const estado = await servico.estado(slug)
+      expect(estado.etapas["04"].status).toBe("em_andamento")
+      expect(estado.etapas["03"].status).toBe("concluida")
+      expect(estado.filaAutomatica.map((i) => i.etapa)).toEqual(["04"])
+    })
+
+    it("pedirAjustes pelo chat da 04 aceita o entregavel da 03 e recusa o de outra conversa", async () => {
+      const slug = await prospectNaEtapa04()
+      await rascunho(slug, "s.md", "# Macro")
+      await servico.ferramenta(ctx04, "propor_entregavel", secao(slug, { etapa_origem: "03" }))
+      await expect(servico.pedirAjustes(slug, "04", "Ajuste", [{ entregavelId: "id1", marcas: [] }])).resolves.toBeDefined()
+      await expect(servico.pedirAjustes(slug, "03", "Ajuste", [{ entregavelId: "id1", marcas: [] }])).rejects.toBeInstanceOf(ErroEntrada)
+    })
+
+    it("etapa_origem 03 fora da 04 ou com a 04 concluida lanca ErroEntrada com mensagem em portugues", async () => {
+      const slug = await prospectNaEtapa04()
+      await rascunho(slug, "s.md", "# Macro")
+      // pela conversa da 03
+      const ctx03b = { slug, etapa: "03" as const }
+      const fora = await servico.ferramenta(ctx03b, "propor_entregavel", secao(slug, { etapa_origem: "03" }))
+      expect(fora).toMatchObject({ ok: false, mensagem: expect.stringContaining("etapa 04") })
+      // com a 04 concluída
+      const e = await servico.estado(slug)
+      e.etapas["04"].status = "concluida"
+      await writeFile(path.join(raiz, "clientes", slug, ".app/estado.json"), JSON.stringify(e))
+      const concluida = await servico.ferramenta(ctx04, "propor_entregavel", secao(slug, { etapa_origem: "03" }))
+      expect(concluida).toMatchObject({ ok: false, mensagem: expect.stringContaining("em andamento") })
+      expect((await servico.estado(slug)).entregaveis).toHaveLength(0)
+    })
+
+    it("etapa_origem 03 com a 03 ainda em andamento lanca ErroEntrada", async () => {
+      const slug = await prospectNaEtapa03()
+      await rascunho(slug, "s.md", "# Macro")
+      const r = await servico.ferramenta({ slug, etapa: "04" }, "propor_entregavel", secao(slug, { etapa_origem: "03" }))
+      expect(r).toMatchObject({ ok: false, mensagem: expect.stringContaining("concluída") })
+    })
+
+    it("etapa_origem invalida (05) lanca ErroEntrada", async () => {
+      const slug = await prospectNaEtapa04()
+      await rascunho(slug, "s.md", "# Macro")
+      const r = await servico.ferramenta(ctx04, "propor_entregavel", secao(slug, { etapa_origem: "05" }))
+      expect(r).toMatchObject({ ok: false, mensagem: expect.stringContaining("etapa_origem") })
+    })
+
+    it("etapa_origem 04 explicita ou ausente se comporta como antes", async () => {
+      const slug = await prospectNaEtapa04()
+      await rascunho(slug, "s.md", "# Macro")
+      await servico.ferramenta(ctx04, "propor_entregavel", secao(slug, { etapa_origem: "04" }))
+      await servico.ferramenta(ctx04, "propor_entregavel", secao(slug, { nome_final: "outra" }))
+      const [a, b] = (await servico.estado(slug)).entregaveis
+      expect(a).toMatchObject({ etapa: "04" })
+      expect(a).not.toHaveProperty("etapaConversa")
+      expect(b).toMatchObject({ etapa: "04" })
+    })
+  })
+
   it("editar seção pendente grava o rascunho e a aprovação avisa a IA da edição", async () => {
     const slug = await prospectNaEtapa03()
     await rascunho(slug, "s.md", "# Texto da IA")
@@ -629,6 +746,572 @@ describe("ferramentas do agente", () => {
     expect(r.ok).toBe(false)
     const outraEtapa = await servico.salvarAnexo(slug, "02", "H.xlsx", new Uint8Array([1]))
     expect((await servico.ferramenta(ctx03, "registrar_insumo_anexado", { insumo_id: "historico-mensal", arquivo: outraEtapa })).ok).toBe(false)
+  })
+
+  describe("insumos da 03 pedidos e recebidos pela conversa da 04", () => {
+    const ctx04 = { slug: "iszi-cosmeticos", etapa: "04" as const }
+
+    async function gravarEstado(slug: string, e: Estado) {
+      await writeFile(path.join(raiz, "clientes", slug, ".app/estado.json"), JSON.stringify(e))
+    }
+
+    /** 03 concluída e 04 em andamento, como na correção feita depois do diagnóstico. */
+    async function prospectNaEtapa04() {
+      const slug = await prospectNaEtapa03()
+      const e = await servico.estado(slug)
+      e.etapas["03"].status = "concluida"
+      e.etapas["03"].concluidaEm = "2026-09-27T08:00:00.000Z"
+      e.etapas["04"].status = "liberada"
+      await gravarEstado(slug, e)
+      await servico.iniciarEtapa(slug, "04")
+      return slug
+    }
+
+    async function enviarHistorico(slug: string, nome = "hist.xlsx") {
+      const temp = path.join(raiz, "upload.xlsx")
+      await writeFile(temp, "x")
+      return servico.receberInsumoArquivo(slug, "03", "historico-mensal", temp, nome)
+    }
+
+    it("solicitar_insumo da 03 pela 04 mostra card com etapaInsumo 03", async () => {
+      const slug = await prospectNaEtapa04()
+      const r = await servico.ferramenta(ctx04, "solicitar_insumo", { insumo_id: "historico-mensal" })
+      expect(r.ok).toBe(true)
+      expect((await servico.conversa(slug, "04")).at(-1)).toMatchObject({
+        tipo: "card_insumo",
+        insumoId: "historico-mensal",
+        etapaInsumo: "03",
+      })
+      // insumo da própria 04 não carrega etapaInsumo
+      await servico.ferramenta(ctx04, "solicitar_insumo", { insumo_id: "clientes-historico" })
+      const proprio = (await servico.conversa(slug, "04")).at(-1)
+      expect(proprio).toMatchObject({ tipo: "card_insumo", insumoId: "clientes-historico" })
+      expect(proprio).not.toHaveProperty("etapaInsumo")
+    })
+
+    it("solicitar_insumo de insumo de outra etapa fora da 04 continua recusado", async () => {
+      const slug = await prospectNaEtapa04()
+      // conversa da 03 não pede insumo da 04
+      expect((await servico.ferramenta(ctx03, "solicitar_insumo", { insumo_id: "clientes-historico" })).ok).toBe(false)
+      // a 04 só empresta insumo da 03, não de outras etapas
+      expect((await servico.ferramenta(ctx04, "solicitar_insumo", { insumo_id: "site" })).ok).toBe(false)
+      // com a 04 concluída não há correção em andamento
+      const e = await servico.estado(slug)
+      e.etapas["04"].status = "concluida"
+      await gravarEstado(slug, e)
+      const r = await servico.ferramenta(ctx04, "solicitar_insumo", { insumo_id: "historico-mensal" })
+      expect(r).toMatchObject({ ok: false, mensagem: expect.stringContaining("não pertence a esta etapa") })
+      expect((await servico.conversa(slug, "04")).some((ev) => ev.tipo === "card_insumo")).toBe(false)
+    })
+
+    it("registrar anexo como historico-mensal pela 04 grava dados/historico-mensal.xlsx e o insumo na etapa 03", async () => {
+      const slug = await prospectNaEtapa04()
+      const anexo = await servico.salvarAnexo(slug, "04", "Histórico.xlsx", new Uint8Array([120]))
+      const r = await servico.ferramenta(ctx04, "registrar_insumo_anexado", { insumo_id: "historico-mensal", arquivo: anexo })
+      expect(r.ok).toBe(true)
+      expect(r.mensagem).toContain("registrado")
+      const estado = await servico.estado(slug)
+      const reg = estado.insumos.find((i) => i.etapa === "03" && i.insumoId === "historico-mensal")
+      expect(reg).toMatchObject({ status: "valido", atualizadoEm: "2026-09-28T10:00:00.000Z" })
+      expect(estado.insumos.some((i) => i.etapa === "04" && i.insumoId === "historico-mensal")).toBe(false)
+      expect(existsSync(path.join(raiz, "clientes", slug, "dados/historico-mensal.xlsx"))).toBe(true)
+      expect(existsSync(path.join(raiz, anexo))).toBe(true)
+      // anexo registrado pelo chat não enfileira mensagem automática
+      expect(estado.filaAutomatica.filter((i) => i.texto.includes("passou na validação"))).toHaveLength(0)
+    })
+
+    it("registrar anexo pela 04 de insumo de outra etapa continua recusado", async () => {
+      const slug = await prospectNaEtapa04()
+      const anexo = await servico.salvarAnexo(slug, "04", "S.xlsx", new Uint8Array([1]))
+      expect((await servico.ferramenta(ctx04, "registrar_insumo_anexado", { insumo_id: "site", arquivo: anexo })).ok).toBe(false)
+    })
+
+    /** 04 pronta: PDF gerado, baixado e confirmado, gráfico da 03 (aprovado na própria 03) anterior à troca de dados. */
+    async function quatroProntaComPdf() {
+      const slug = await prospectNaEtapa04()
+      let e = await servico.estado(slug)
+      e.insumos.push({
+        etapa: "04",
+        insumoId: "clientes-historico",
+        status: "valido",
+        problemas: [],
+        avisos: [],
+        resumo: "ok",
+        arquivo: "dados/clientes-historico.xlsx",
+        atualizadoEm: "2026-09-27T09:00:00.000Z",
+      })
+      e.entregaveis.push({
+        id: "g1",
+        etapa: "03",
+        tipo: "grafico",
+        titulo: "Receita mensal",
+        arquivoRascunho: ".app/propostas/g1.png",
+        nomeFinal: "receita-mensal",
+        status: "aprovado",
+        ajustePedido: null,
+        criadoEm: "2026-09-27T07:30:00.000Z",
+        decididoEm: "2026-09-27T07:45:00.000Z",
+      })
+      e = registrarValidacaoGerada(e, "2026-09-27T12:00:00.000Z")
+      e = registrarDownloadValidacao(e, null, "2026-09-27T12:30:00.000Z")
+      e = confirmarValidacaoCliente(e, null, "2026-09-27T13:00:00.000Z")
+      e.etapas["04"].sinalizada = true
+      e.etapas["04"].status = "pronta"
+      expect(condicoesConcluir(e, "04", catalogoReal())).toEqual([])
+      await gravarEstado(slug, e)
+      return slug
+    }
+
+    it("troca de insumo da 03 com a 04 pronta volta a 04 para em_andamento e enfileira na 04", async () => {
+      const slug = await quatroProntaComPdf()
+      expect((await servico.estado(slug)).etapas["04"].status).toBe("pronta")
+      const r = await enviarHistorico(slug)
+      expect(r.ok).toBe(true)
+      const estado = await servico.estado(slug)
+      expect(estado.etapas["04"].status).toBe("em_andamento")
+      expect(estado.etapas["03"].status).toBe("concluida")
+      expect(estado.insumos.find((i) => i.etapa === "03" && i.insumoId === "historico-mensal")).toMatchObject({ status: "valido" })
+      expect(estado.filaAutomatica.map((i) => i.etapa)).toEqual(["04"])
+      expect(enfileirados).toContain(slug)
+      expect(await servico.retirarFila(slug)).toMatchObject({ etapa: "04", texto: expect.stringContaining("passou na validação") })
+    })
+
+    it("upload invalido da 03 com a 04 pronta nao reabre a 04 nem enfileira", async () => {
+      const slug = await quatroProntaComPdf()
+      proximaValidacao = { ok: false, problemas: ["12 meses"], avisos: [], resumo: null }
+      const r = await enviarHistorico(slug)
+      expect(r.ok).toBe(false)
+      const estado = await servico.estado(slug)
+      expect(estado.etapas["04"].status).toBe("pronta")
+      expect(estado.filaAutomatica).toHaveLength(0)
+    })
+
+    it("troca valida da 03 seguida de upload invalido mantem a 04 em_andamento e a pendencia de aprovar de novo", async () => {
+      const slug = await quatroProntaComPdf()
+      expect((await enviarHistorico(slug)).ok).toBe(true)
+      expect((await servico.estado(slug)).etapas["04"].status).toBe("em_andamento")
+      proximaValidacao = { ok: false, problemas: ["12 meses"], avisos: [], resumo: null }
+      expect((await enviarHistorico(slug)).ok).toBe(false)
+      const estado = await servico.estado(slug)
+      expect(estado.insumos.find((i) => i.etapa === "03" && i.insumoId === "historico-mensal")).toMatchObject({ status: "invalido" })
+      expect(estado.etapas["04"].status).toBe("em_andamento")
+      expect(condicoesConcluir(estado, "04", catalogoReal())).toContain("Aprovar de novo, depois da troca de dados: Receita mensal")
+    })
+
+    it("insumo da 03 recebido sem a 04 aberta nao enfileira nada", async () => {
+      const slug = await prospectNaEtapa03()
+      const e = await servico.estado(slug)
+      e.etapas["03"].status = "concluida"
+      e.etapas["04"].status = "liberada"
+      await gravarEstado(slug, e)
+      const r = await enviarHistorico(slug)
+      expect(r.ok).toBe(true)
+      const estado = await servico.estado(slug)
+      expect(estado.filaAutomatica).toHaveLength(0)
+      expect(estado.etapas["04"].status).toBe("liberada")
+      expect(estado.insumos.find((i) => i.etapa === "03" && i.insumoId === "historico-mensal")).toMatchObject({ status: "valido" })
+    })
+
+    it("troca de insumo da 03 enfileira na 04 a mensagem propria, que cita etapa_origem e resumo_decisoes_03", async () => {
+      const slug = await quatroProntaComPdf()
+      expect((await enviarHistorico(slug)).ok).toBe(true)
+      const item = await servico.retirarFila(slug)
+      expect(item?.etapa).toBe("04")
+      expect(item?.texto).toContain("etapa_origem")
+      expect(item?.texto).toContain("resumo_decisoes_03")
+      expect(item?.texto).toContain("propor_validacao_cliente")
+    })
+
+    describe("documento de validacao do cliente", () => {
+      const PDF = "entrega/validacao-cliente/documento-validacao.pdf"
+      const proporPdf = (slug: string, arquivo = ".app/rascunhos/validacao.pdf") =>
+        servico.ferramenta(ctx04, "propor_validacao_cliente", { arquivo_rascunho: `clientes/${slug}/${arquivo}` })
+
+      /** 04 em andamento, com o insumo obrigatório da 04 e o agente já tendo sinalizado; só falta o gate. */
+      async function quatroSemPdf() {
+        const slug = await prospectNaEtapa04()
+        const e = await servico.estado(slug)
+        e.insumos.push({
+          etapa: "04",
+          insumoId: "clientes-historico",
+          status: "valido",
+          problemas: [],
+          avisos: [],
+          resumo: "ok",
+          arquivo: "dados/clientes-historico.xlsx",
+          atualizadoEm: "2026-09-27T09:00:00.000Z",
+        })
+        e.etapas["04"].sinalizada = true
+        await gravarEstado(slug, e)
+        await rascunho(slug, "validacao.pdf", "%PDF-1.4")
+        return slug
+      }
+
+      it("propor_validacao_cliente copia o pdf para entrega/validacao-cliente e registra validacaoCliente", async () => {
+        const slug = await quatroSemPdf()
+        const r = await proporPdf(slug)
+        expect(r.ok).toBe(true)
+        expect(await readFile(path.join(raiz, "clientes", slug, PDF), "utf8")).toBe("%PDF-1.4")
+        const estado = await servico.estado(slug)
+        expect(estado.validacaoCliente).toMatchObject({
+          arquivo: PDF,
+          geradoEm: "2026-09-28T10:00:00.000Z",
+          primeiraGeracaoEm: "2026-09-28T10:00:00.000Z",
+          baixadoEm: null,
+          confirmadoEm: null,
+        })
+        expect((await servico.conversa(slug, "04")).at(-1)).toMatchObject({ tipo: "card_validacao_cliente", em: "2026-09-28T10:00:00.000Z" })
+        // o gate ainda cobra o download e a confirmação
+        expect(estado.etapas["04"].status).toBe("em_andamento")
+      })
+
+      it("a mensagem de propor_validacao_cliente manda sinalizar antes de encerrar quando a 04 nao esta sinalizada", async () => {
+        const slug = await quatroSemPdf()
+        const e = await servico.estado(slug)
+        e.etapas["04"].sinalizada = false
+        await gravarEstado(slug, e)
+        const r = await proporPdf(slug)
+        expect(r.ok).toBe(true)
+        expect(r.mensagem).toContain("sinalizar_etapa_pronta")
+        expect(r.mensagem).toContain("resumo_decisoes_03")
+        expect(r.mensagem).toContain("antes de encerrar")
+      })
+
+      it("a mensagem de propor_validacao_cliente so manda encerrar quando a 04 ja esta sinalizada", async () => {
+        const slug = await quatroSemPdf()
+        const r = await proporPdf(slug)
+        expect(r.ok).toBe(true)
+        expect(r.mensagem).toContain("Encerre sua resposta")
+        expect(r.mensagem).not.toContain("sinalizar_etapa_pronta")
+      })
+
+      it("propor_validacao_cliente fora da 04 ou com arquivo que nao e pdf devolve ok false", async () => {
+        const slug = await quatroSemPdf()
+        await rascunho(slug, "g.png")
+        const fora = await servico.ferramenta(ctx03, "propor_validacao_cliente", { arquivo_rascunho: `clientes/${slug}/.app/rascunhos/validacao.pdf` })
+        expect(fora).toMatchObject({ ok: false, mensagem: expect.stringContaining("etapa 04") })
+        expect(await proporPdf(slug, ".app/rascunhos/g.png")).toMatchObject({ ok: false, mensagem: expect.stringContaining("PDF") })
+        expect(await proporPdf(slug, ".app/rascunhos/nao-existe.pdf")).toMatchObject({ ok: false, mensagem: expect.stringContaining("não encontrado") })
+        await mkdir(path.join(raiz, "clientes", slug, "dados"), { recursive: true })
+        await writeFile(path.join(raiz, "clientes", slug, "dados/fora.pdf"), "x")
+        expect(await proporPdf(slug, "dados/fora.pdf")).toMatchObject({ ok: false, mensagem: expect.stringContaining(".app/rascunhos/") })
+        expect((await servico.estado(slug)).validacaoCliente).toBeUndefined()
+        expect(existsSync(path.join(raiz, "clientes", slug, PDF))).toBe(false)
+        // com a 04 concluída também recusa
+        const e = await servico.estado(slug)
+        e.etapas["04"].status = "concluida"
+        await gravarEstado(slug, e)
+        expect((await proporPdf(slug)).ok).toBe(false)
+      })
+
+      it("propor_validacao_cliente apos troca de insumo lista os itens a refazer", async () => {
+        const slug = await quatroProntaComPdf()
+        expect((await enviarHistorico(slug)).ok).toBe(true)
+        await rascunho(slug, "validacao.pdf", "%PDF-nova")
+        const r = await proporPdf(slug)
+        expect(r.ok).toBe(false)
+        expect(r.mensagem).toContain("Receita mensal")
+        // o pdf antigo segue valendo: nada foi copiado nem registrado
+        expect(existsSync(path.join(raiz, "clientes", slug, PDF))).toBe(false)
+      })
+
+      it("registrarDownloadValidacao sem documento lanca ErroNaoEncontrado", async () => {
+        const slug = await quatroSemPdf()
+        await expect(servico.registrarDownloadValidacao(slug, "ana@boomer.com.br")).rejects.toBeInstanceOf(ErroNaoEncontrado)
+        await expect(servico.registrarDownloadValidacao(slug, null)).rejects.toThrow("O documento de validação ainda não foi gerado.")
+      })
+
+      it("registrarDownloadValidacao com o documento registrado mas o arquivo apagado diz que o arquivo sumiu", async () => {
+        const slug = await quatroSemPdf()
+        expect((await proporPdf(slug)).ok).toBe(true)
+        await rm(path.join(raiz, "clientes", slug, PDF))
+        const tentativa = servico.registrarDownloadValidacao(slug, "ana@boomer.com.br")
+        await expect(tentativa).rejects.toBeInstanceOf(ErroNaoEncontrado)
+        await expect(servico.registrarDownloadValidacao(slug, null)).rejects.toThrow(
+          "O arquivo do documento sumiu. Peça ao agente para gerar de novo.",
+        )
+        expect((await servico.estado(slug)).validacaoCliente?.baixadoEm).toBeNull()
+      })
+
+      it("registrarDownloadValidacao com documento grava baixadoEm e baixadoPor, devolve o caminho e publica estado", async () => {
+        const slug = await quatroSemPdf()
+        await proporPdf(slug)
+        eventos.length = 0
+        barramento.assinar(slug, (ev) => eventos.push(ev))
+        expect(await servico.registrarDownloadValidacao(slug, "ana@boomer.com.br")).toBe(PDF)
+        const v = (await servico.estado(slug)).validacaoCliente
+        expect(v).toMatchObject({ baixadoEm: "2026-09-28T10:00:00.000Z", baixadoPor: "ana@boomer.com.br" })
+        expect(eventos).toContainEqual({ tipo: "estado" })
+      })
+
+      it("confirmarValidacaoCliente exige download", async () => {
+        const slug = await quatroSemPdf()
+        await proporPdf(slug)
+        await expect(servico.confirmarValidacaoCliente(slug, "ana@boomer.com.br")).rejects.toBeInstanceOf(TransicaoInvalida)
+        expect((await servico.estado(slug)).validacaoCliente?.confirmadoEm).toBeNull()
+      })
+
+      it("fluxo completo: gerar, baixar e confirmar libera concluirEtapa da 04; antes ela falha com a pendencia", async () => {
+        const slug = await quatroSemPdf()
+        await proporPdf(slug)
+        await expect(servico.concluirEtapa(slug, "04")).rejects.toThrow(/Ainda falta|Não dá para concluir/)
+        await servico.registrarDownloadValidacao(slug, "ana@boomer.com.br")
+        // baixou mas ainda não confirmou: a etapa não está pronta, e a pendência é a confirmação
+        expect(condicoesConcluir(await servico.estado(slug), "04", catalogoReal())).toEqual(["Confirmar que o cliente validou os dados"])
+        expect((await servico.estado(slug)).etapas["04"].status).toBe("em_andamento")
+        await servico.confirmarValidacaoCliente(slug, "ana@boomer.com.br")
+        const estado = await servico.estado(slug)
+        expect(estado.validacaoCliente).toMatchObject({ confirmadoEm: "2026-09-28T10:00:00.000Z", confirmadoPor: "ana@boomer.com.br" })
+        expect(estado.etapas["04"].status).toBe("pronta")
+        await servico.concluirEtapa(slug, "04")
+        expect((await servico.estado(slug)).etapas["04"].status).toBe("concluida")
+      })
+
+      it("antes do download concluirEtapa da 04 falha citando 'Baixar o documento de validação'", async () => {
+        const slug = await quatroSemPdf()
+        await proporPdf(slug)
+        const e = await servico.estado(slug)
+        e.etapas["04"].status = "pronta" // força o status para testar a mensagem do gate
+        await gravarEstado(slug, e)
+        await expect(servico.concluirEtapa(slug, "04")).rejects.toThrow(/Ainda falta:.*Baixar o documento de validação/)
+      })
+
+      const resumo03 = "- Receita corrigida: R$ 1,2 mi"
+      const sinal = (extra: Record<string, unknown> = {}) => ({
+        resumo_decisoes: "- LTV/CAC 3,1x",
+        handoff_proxima: "Me manda o que falta.",
+        ...extra,
+      })
+
+      it("sinalizar na 04 apos refazer a 03 sem resumo_decisoes_03 devolve ok false e nao sinaliza", async () => {
+        const slug = await quatroProntaComPdf()
+        expect((await enviarHistorico(slug)).ok).toBe(true)
+        let e = await servico.estado(slug)
+        e.etapas["04"].sinalizada = false
+        e.etapas["03"].resumoDecisoes = "- resumo antigo da 03"
+        await gravarEstado(slug, e)
+        const r = await servico.ferramenta(ctx04, "sinalizar_etapa_pronta", sinal())
+        expect(r).toMatchObject({ ok: false, mensagem: expect.stringContaining("resumo_decisoes_03") })
+        e = await servico.estado(slug)
+        expect(e.etapas["04"].sinalizada).toBe(false)
+        expect(e.etapas["04"].resumoDecisoes).not.toBe("- LTV/CAC 3,1x")
+        expect(e.etapas["03"].resumoDecisoes).toBe("- resumo antigo da 03")
+        // campo em branco conta como ausente
+        expect((await servico.ferramenta(ctx04, "sinalizar_etapa_pronta", sinal({ resumo_decisoes_03: "   " }))).ok).toBe(false)
+      })
+
+      it("sinalizar na 04 apos refazer a 03 com resumo_decisoes_03 troca o resumo da 03 e regrava o arquivo de decisoes", async () => {
+        const slug = await quatroProntaComPdf()
+        expect((await enviarHistorico(slug)).ok).toBe(true)
+        const r = await servico.ferramenta(ctx04, "sinalizar_etapa_pronta", sinal({ resumo_decisoes_03: resumo03 }))
+        expect(r.ok).toBe(true)
+        const estado = await servico.estado(slug)
+        expect(estado.etapas["03"].resumoDecisoes).toBe(resumo03)
+        expect(estado.etapas["03"].status).toBe("concluida")
+        expect(estado.etapas["04"].sinalizada).toBe(true)
+        expect(estado.etapas["04"].resumoDecisoes).toBe("- LTV/CAC 3,1x")
+        const arquivo = await readFile(path.join(raiz, "clientes", slug, "contexto/decisoes/03-diagnostico-performance.md"), "utf8")
+        expect(arquivo).toContain("# Decisões da etapa 03 · Diagnóstico de performance")
+        expect(arquivo).toContain(resumo03)
+      })
+
+      it("sinalizar na 04 sem correcao nao exige resumo_decisoes_03", async () => {
+        const slug = await quatroProntaComPdf()
+        const r = await servico.ferramenta(ctx04, "sinalizar_etapa_pronta", sinal())
+        expect(r.ok).toBe(true)
+        expect((await servico.estado(slug)).etapas["04"].resumoDecisoes).toBe("- LTV/CAC 3,1x")
+        // sem o campo, o resumo da 03 e o arquivo de decisões não são tocados
+        expect(existsSync(path.join(raiz, "clientes", slug, "contexto/decisoes/03-diagnostico-performance.md"))).toBe(false)
+      })
+
+      it("estado() expoe validacaoDefasada", async () => {
+        const slug = await quatroSemPdf()
+        expect((await servico.respostaEstado(slug, null)).validacaoDefasada).toBe(false)
+        await proporPdf(slug)
+        expect((await servico.respostaEstado(slug, null)).validacaoDefasada).toBe(false)
+        // um gráfico aprovado depois do pdf deixa o documento defasado
+        const e = await servico.estado(slug)
+        e.entregaveis.push({
+          id: "g9",
+          etapa: "04",
+          tipo: "grafico",
+          titulo: "LTV por coorte",
+          arquivoRascunho: ".app/propostas/g9.png",
+          nomeFinal: "ltv-por-coorte",
+          status: "aprovado",
+          ajustePedido: null,
+          criadoEm: "2026-09-28T10:00:00.000Z",
+          decididoEm: "2026-09-28T11:00:00.000Z",
+        })
+        await gravarEstado(slug, e)
+        expect((await servico.respostaEstado(slug, null)).validacaoDefasada).toBe(true)
+      })
+
+      describe("rascunho do PDF mais antigo que a última aprovação ou troca de dados", () => {
+        /** Gráfico da 04 aprovado às 09:00 do dia 28 (depois do insumo da 04, de 27/09 09:00). */
+        async function comAprovacaoAs9h(slug: string) {
+          const e = await servico.estado(slug)
+          e.entregaveis.push({
+            id: "g4",
+            etapa: "04",
+            tipo: "grafico",
+            titulo: "CAC mensal",
+            arquivoRascunho: ".app/propostas/g4.png",
+            nomeFinal: "cac-mensal",
+            status: "aprovado",
+            ajustePedido: null,
+            criadoEm: "2026-09-28T08:30:00.000Z",
+            decididoEm: "2026-09-28T09:00:00.000Z",
+          })
+          await gravarEstado(slug, e)
+        }
+
+        it("rascunho anterior a uma aprovação é recusado e nada é copiado nem registrado", async () => {
+          const slug = await quatroSemPdf()
+          await comAprovacaoAs9h(slug)
+          mtimeRascunho = Date.parse("2026-09-28T08:00:00.000Z")
+          const r = await proporPdf(slug)
+          expect(r).toMatchObject({ ok: false, mensagem: expect.stringContaining("gerar_documento_validacao.py") })
+          expect(r.mensagem).toContain("propor_validacao_cliente")
+          expect((await servico.estado(slug)).validacaoCliente).toBeUndefined()
+          expect(existsSync(path.join(raiz, "clientes", slug, PDF))).toBe(false)
+          expect((await servico.conversa(slug, "04")).some((ev) => ev.tipo === "card_validacao_cliente")).toBe(false)
+        })
+
+        it("rascunho anterior a uma troca válida de insumo também é recusado", async () => {
+          const slug = await quatroSemPdf()
+          // o insumo da 04 é de 27/09 09:00
+          mtimeRascunho = Date.parse("2026-09-27T08:59:00.000Z")
+          expect((await proporPdf(slug)).ok).toBe(false)
+          expect(existsSync(path.join(raiz, "clientes", slug, PDF))).toBe(false)
+        })
+
+        it("rascunho posterior à última aprovação é aceito", async () => {
+          const slug = await quatroSemPdf()
+          await comAprovacaoAs9h(slug)
+          mtimeRascunho = Date.parse("2026-09-28T09:30:00.000Z")
+          expect((await proporPdf(slug)).ok).toBe(true)
+          expect(existsSync(path.join(raiz, "clientes", slug, PDF))).toBe(true)
+        })
+
+        it("sem aprovação nem insumo do documento, qualquer rascunho é aceito", async () => {
+          const slug = await prospectNaEtapa04()
+          await rascunho(slug, "validacao.pdf", "%PDF-1.4")
+          mtimeRascunho = 0
+          expect((await proporPdf(slug)).ok).toBe(true)
+          expect((await servico.estado(slug)).validacaoCliente?.arquivo).toBe(PDF)
+        })
+      })
+
+      describe("mensagem de sinalizar_etapa_pronta quando falta algo do gate", () => {
+        it("04 sem PDF: manda o agente gerar e propor o documento, não esperar o analista", async () => {
+          const slug = await quatroSemPdf()
+          const e = await servico.estado(slug)
+          e.etapas["04"].sinalizada = false
+          await gravarEstado(slug, e)
+          const r = await servico.ferramenta(ctx04, "sinalizar_etapa_pronta", sinal())
+          expect(r.ok).toBe(true)
+          expect(r.mensagem).toContain("Gerar o documento de validação do cliente")
+          expect(r.mensagem).toContain("gerar_documento_validacao.py")
+          expect(r.mensagem).toContain("propor_validacao_cliente")
+          expect(r.mensagem).not.toContain("Aprovações e envios dependem do analista")
+          expect(r.mensagem).not.toContain("\u2014")
+          expect((await servico.estado(slug)).etapas["04"].sinalizada).toBe(true)
+        })
+
+        it("04 com PDF gerado e não baixado: o que falta é do analista, avisar e encerrar", async () => {
+          const slug = await quatroSemPdf()
+          expect((await proporPdf(slug)).ok).toBe(true)
+          const r = await servico.ferramenta(ctx04, "sinalizar_etapa_pronta", sinal())
+          expect(r.ok).toBe(true)
+          expect(r.mensagem).toContain("Baixar o documento de validação")
+          expect(r.mensagem).toContain("Aprovações e envios dependem do analista")
+          expect(r.mensagem).not.toContain("propor_validacao_cliente")
+        })
+
+        it("itens a aprovar de novo depois da troca de dados: manda o agente propor de novo", async () => {
+          const slug = await quatroProntaComPdf()
+          expect((await enviarHistorico(slug)).ok).toBe(true)
+          const r = await servico.ferramenta(ctx04, "sinalizar_etapa_pronta", sinal({ resumo_decisoes_03: resumo03 }))
+          expect(r.ok).toBe(true)
+          expect(r.mensagem).toContain("Aprovar de novo, depois da troca de dados: Receita mensal")
+          expect(r.mensagem).toContain("propor_entregavel")
+          expect(r.mensagem).not.toContain("Aprovações e envios dependem do analista")
+        })
+      })
+
+      describe("03 refeita pela 04 antes do primeiro PDF", () => {
+        it("sinalizar exige resumo_decisoes_03; com ele, o resumo, o arquivo de decisões e o dossiê da 05 mudam", async () => {
+          const slug = await quatroSemPdf()
+          let e = await servico.estado(slug)
+          e.etapas["04"].sinalizada = false
+          e.etapas["03"].resumoDecisoes = "- resumo antigo da 03"
+          await gravarEstado(slug, e)
+          // o analista troca o histórico mensal e o agente refaz uma peça da 03 pela 04, sem PDF nenhum ainda
+          expect((await enviarHistorico(slug)).ok).toBe(true)
+          await rascunho(slug, "receita.png")
+          const proposta = await servico.ferramenta(ctx04, "propor_entregavel", {
+            tipo: "grafico",
+            titulo: "Receita mensal",
+            arquivo_rascunho: `clientes/${slug}/.app/rascunhos/receita.png`,
+            nome_final: "receita-mensal",
+            etapa_origem: "03",
+          })
+          expect(proposta.ok).toBe(true)
+          const id = (await servico.estado(slug)).entregaveis.find((x) => x.titulo === "Receita mensal")!.id
+          await servico.aprovarEntregavel(slug, id)
+          expect((await servico.estado(slug)).validacaoCliente).toBeUndefined()
+
+          const sem = await servico.ferramenta(ctx04, "sinalizar_etapa_pronta", sinal())
+          expect(sem).toMatchObject({ ok: false, mensagem: expect.stringContaining("resumo_decisoes_03") })
+          e = await servico.estado(slug)
+          expect(e.etapas["04"].sinalizada).toBe(false)
+          expect(e.etapas["03"].resumoDecisoes).toBe("- resumo antigo da 03")
+
+          const com = await servico.ferramenta(ctx04, "sinalizar_etapa_pronta", sinal({ resumo_decisoes_03: resumo03 }))
+          expect(com.ok).toBe(true)
+          e = await servico.estado(slug)
+          expect(e.etapas["03"].resumoDecisoes).toBe(resumo03)
+          expect(e.etapas["03"].status).toBe("concluida")
+          expect(e.etapas["04"].sinalizada).toBe(true)
+          const arquivo = await readFile(path.join(raiz, "clientes", slug, "contexto/decisoes/03-diagnostico-performance.md"), "utf8")
+          expect(arquivo).toContain(resumo03)
+          const dossie = await servico.dossie(slug, "05")
+          expect(dossie).toContain(resumo03)
+          expect(dossie).not.toContain("resumo antigo da 03")
+        })
+
+        it("só a troca de insumo da 03, sem peça refeita, já exige resumo_decisoes_03", async () => {
+          const slug = await quatroSemPdf()
+          expect((await enviarHistorico(slug)).ok).toBe(true)
+          const r = await servico.ferramenta(ctx04, "sinalizar_etapa_pronta", sinal())
+          expect(r).toMatchObject({ ok: false, mensagem: expect.stringContaining("resumo_decisoes_03") })
+        })
+
+        it("resumo_decisoes_03 com a 03 aberta é recusado e não toca o resumo dela", async () => {
+          const slug = await quatroSemPdf()
+          const e = await servico.estado(slug)
+          e.etapas["03"].status = "em_andamento"
+          e.etapas["03"].concluidaEm = null
+          e.etapas["03"].resumoDecisoes = "- resumo da 03 aberta"
+          e.etapas["04"].sinalizada = false
+          await gravarEstado(slug, e)
+          const r = await servico.ferramenta(ctx04, "sinalizar_etapa_pronta", sinal({ resumo_decisoes_03: resumo03 }))
+          expect(r).toMatchObject({ ok: false, mensagem: expect.stringContaining("resumo_decisoes_03") })
+          const depois = await servico.estado(slug)
+          expect(depois.etapas["03"].resumoDecisoes).toBe("- resumo da 03 aberta")
+          expect(depois.etapas["04"].sinalizada).toBe(false)
+          expect(existsSync(path.join(raiz, "clientes", slug, "contexto/decisoes/03-diagnostico-performance.md"))).toBe(false)
+        })
+
+        it("resumo_decisoes_03 fora da etapa 04 é recusado", async () => {
+          const slug = await prospectNaEtapa03()
+          const r = await servico.ferramenta(ctx03, "sinalizar_etapa_pronta", sinal({ resumo_decisoes_03: resumo03 }))
+          expect(r).toMatchObject({ ok: false, mensagem: expect.stringContaining("resumo_decisoes_03") })
+          expect((await servico.estado(slug)).etapas["03"].sinalizada).toBe(false)
+        })
+      })
+    })
   })
 
   it("sinalizar lista o que falta; concluir grava o arquivo de decisões e libera a 04", async () => {

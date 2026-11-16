@@ -90,7 +90,8 @@ grava esse arquivo; no modo interface (Regra 7), quem grava é o app, com o
 ## 7. Modo interface
 
 Quando as ferramentas do MCP `planejamento` estiverem disponíveis
-(`propor_entregavel`, `solicitar_insumo`, `sinalizar_etapa_pronta`), a skill
+(`propor_entregavel`, `solicitar_insumo`, `sinalizar_etapa_pronta`, e na etapa
+04 também `propor_validacao_cliente`), a skill
 está rodando dentro da interface web, e estas regras substituem o jeito
 "terminal" de fazer as Regras 1, 2 e 6:
 
@@ -100,6 +101,13 @@ está rodando dentro da interface web, e estas regras substituem o jeito
   `entrega/ativos-aprovados/` — o app copia para lá quando o analista clica em
   Aprovar. Depois de propor, encerre a resposta; a decisão chega como nova
   mensagem ("APROVOU" ou "AJUSTE").
+- **Correção da 03 a partir da 04:** só na conversa da etapa 04 e enquanto ela
+  está aberta, `propor_entregavel` aceita `etapa_origem: "03"` (padrão é a
+  etapa da conversa; também existe `"04"`). A peça fica registrada como da 03
+  (leituras em `secoes/03-...`, gráficos sobrescrevem pelo mesmo `nome_final`),
+  e o card aparece no chat da 04. Nessa etapa, `solicitar_insumo` e
+  `registrar_insumo_anexado` também aceitam `historico-mensal` e
+  `produtos-curva-abc`, que continuam registrados na 03.
 - **Insumos:** peça arquivos com `solicitar_insumo` (ids em
   `.claude/skills/_shared/etapas.json`), não descrevendo caminhos de pasta.
   Se o analista anexar pelo clipe do chat um arquivo que é um insumo da etapa,
@@ -116,7 +124,11 @@ está rodando dentro da interface web, e estas regras substituem o jeito
   deve virar uma linha por problema).
 - **Encerramento (Regra 6):** não edite `contexto/status-planejamento.md`.
   Chame `sinalizar_etapa_pronta` com o resumo de decisões (markdown) e o
-  mesmo texto de handoff do "Encerramento e handoff" da skill.
+  mesmo texto de handoff do "Encerramento e handoff" da skill. Na etapa 04, se
+  qualquer peça ou insumo da 03 foi refeito na conversa da 04 (antes ou depois
+  do documento de validação), envie também `resumo_decisoes_03` (o resumo da 03 corrigido, que
+  o substitui): sem ele o app recusa o sinal, e vale de novo em cada sinal
+  seguinte.
 - A pasta `.app/` pertence ao app: fora de `.app/rascunhos/`, não escreva nela.
 - Scripts que geram arquivo recebem a saída apontando para
   `.app/rascunhos/` (`preencher_projecao_xlsx.py` com `--output`;
@@ -151,3 +163,28 @@ com o que falta:
    justificativa, e vira aviso).
 4. **Cada solução vira item do plano**, com dono, prazo e frente. Garantido
    por `scripts/validar_plano_acao.py` na Skill 08.
+
+## 9. Validação do cliente ao fim do diagnóstico
+
+Ao fim da etapa 04, o cliente confere o histórico do diagnóstico antes de
+qualquer meta ou solução. A skill gera um PDF com os gráficos já aprovados das
+etapas 03 e 04, com observações sobre picos e vales (Skill 04, "Documento de
+validação do cliente"), e o analista o baixa e leva ao cliente.
+
+- **A trava está no código, não na skill.** No modo interface, o `Concluir` da
+  etapa 04 fica bloqueado até o analista baixar o PDF e confirmar que o
+  cliente validou. O agente propõe o PDF com `propor_validacao_cliente` e
+  sinaliza a etapa pronta em seguida; ele não consegue pular a validação. Se um
+  gráfico, tabela ou leitura da 03 ou da 04 for aprovado depois do PDF, o
+  documento fica desatualizado e precisa ser gerado de novo. No terminal não há
+  trava: a skill pede a confirmação por escrito no chat.
+- **Correções ficam no chat da 04.** O que o cliente apontar é corrigido na
+  própria etapa 04, mesmo quando nasceu na 03 (que não é reaberta): o agente
+  acha a origem, refaz o que depende do dado, propõe as peças (da 03, com
+  `etapa_origem: "03"`), gera o PDF novo e sinaliza a etapa pronta de novo, com
+  `resumo_decisoes_03` quando algo da 03 mudou. O resumo da 04 registra as
+  "Correções pedidas pelo cliente".
+- **O PDF fica fora de `entrega/ativos-aprovados/`.** Ele é gravado em
+  `entrega/validacao-cliente/documento-validacao.pdf` (nome estável, o novo
+  sobrescreve o anterior) e não entra na apresentação final. Nunca leva dado de
+  cliente final (PII).

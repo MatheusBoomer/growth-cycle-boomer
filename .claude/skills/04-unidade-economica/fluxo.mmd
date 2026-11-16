@@ -15,7 +15,20 @@ flowchart TD
   P6["Análise: CAC, novos x recorrentes, LTV, LTV/CAC"]
   C5{"Analista aprova?"}
   E1["Entrega: análise salva nas seções aprovadas"]
-  H1["Handoff para a 05: lembrar o que o prospect já tentou"]
+  V1["Montar o JSON com seções, observações e limitações a partir dos gráficos aprovados"]
+  V2["Gerar o PDF de validação para o cliente"]
+  V3["Propor o documento no chat (propor_validacao_cliente)"]
+  V3B["Sinalizar a etapa pronta, antes de encerrar o turno"]
+  V3C["Mensagem de encerramento: baixar o PDF, levar ao cliente e voltar"]
+  V4["Analista baixa o PDF e leva ao cliente"]
+  C6{"Analista aprova?"}
+  X1["Achar a origem de cada erro: arquivo, gráfico, leitura ou cálculo"]
+  X2["Pedir o arquivo novo, se o erro está num dado de origem"]
+  X3["analista-dados: refazer o que mudou e tudo o que depende (etapas 03 e 04)"]
+  C7{"Analista aprova?"}
+  X4["Registrar as correções no resumo da 04 e o resumo corrigido da 03"]
+  E2["Entrega: PDF de validação confirmado pelo cliente"]
+  H1["Handoff para a 05: só o texto da próxima etapa (o que o prospect já tentou)"]
 
   I1 --> D1
   D1 -->|"sim"| R1
@@ -38,10 +51,26 @@ flowchart TD
   P6 --> C5
   C5 -->|"sim"| E1
   C5 -->|"não, ajustar"| P6
-  E1 --> H1
+  E1 --> V1
+  V1 --> V2
+  V2 --> V3
+  V3 --> V3B
+  V3B --> V3C
+  V3C --> V4
+  V4 --> C6
+  C6 -->|"sim"| E2
+  C6 -->|"não, ajustar"| X1
+  X1 --> X2
+  X2 --> X3
+  X3 --> C7
+  C7 -->|"sim"| X4
+  C7 -->|"não, ajustar"| X3
+  X4 --> V2
+  E2 --> H1
 
-  class C1,C2,C3,C4,C5 checkpoint
-  class E1,H1 entrega
+  class C1,C2,C3,C4,C5,C6,C7 checkpoint
+  class X3 subagente
+  class E1,E2,H1 entrega
   classDef checkpoint fill:#fff1e6,stroke:#e8803a,color:#7a3d0c
   classDef subagente fill:#e8f0fd,stroke:#1f4fa8,color:#173a7a
   classDef entrega fill:#e6f6ec,stroke:#16743b,color:#0f4f28

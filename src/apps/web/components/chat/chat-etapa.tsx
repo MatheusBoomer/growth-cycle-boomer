@@ -21,6 +21,7 @@ import {
 import { Markdown } from "@/components/markdown"
 import { useEmailDaConta } from "@/components/marca/conta-contexto"
 import { api, mensagemDeErro } from "@/lib/api"
+import { entregaveisDaConversa } from "@/lib/entregaveis-da-conversa"
 import {
   agruparProcesso,
   cardsDepoisDaResposta,
@@ -83,8 +84,8 @@ export function ChatEtapa({
     -1
   )
 
-  const pendentes = dados.estado.entregaveis
-    .filter((e) => e.etapa === etapa && e.status === "pendente")
+  const pendentes = entregaveisDaConversa(dados.estado.entregaveis, etapa)
+    .filter((e) => e.status === "pendente")
     .map((e) => e.id)
 
   const tentarDeNovo = () =>

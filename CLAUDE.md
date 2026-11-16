@@ -90,7 +90,7 @@ quando existirem — a regra padrão é não ter nenhum.
 
 ## Subagentes disponíveis
 
-- **`analista-dados`** — cálculo de KPIs, geração de gráficos, motor de projeção (`scripts/projecao.py`). Usado pelas Skills 03, 05, 06 e 07.
+- **`analista-dados`** — cálculo de KPIs, geração de gráficos, motor de projeção (`scripts/projecao.py`). Usado pelas Skills 03, 04 (só nas correções do cliente), 05, 06 e 07.
 - **`pesquisador-benchmark`** — pesquisa de mercado e referências via Firecrawl. Usado pela Skill 07 (e pontualmente pelas 02 e 05).
 - **`designer-apresentacao`** — desativado; a apresentação final é gerada pela Skill 09 (.pptx no molde da agência).
 

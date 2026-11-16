@@ -23,6 +23,7 @@ import {
   type EtapaId,
   type Estado,
   type StatusEtapa,
+  type TipoEntregavel,
 } from "@workspace/core/tipos"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
@@ -51,6 +52,7 @@ import { ProvedorReferencias } from "@/components/chat/contexto-referencias"
 import { useAreaDeTrabalho } from "@/hooks/use-area-de-trabalho"
 import { useBiblioteca } from "@/hooks/use-biblioteca"
 import { totalVisivel } from "@/lib/biblioteca"
+import { visualizadorAbertoNaConversa } from "@/lib/entregaveis-da-conversa"
 import {
   CHAVE_COLUNA_DIREITA,
   chaveColunas,
@@ -122,8 +124,13 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   const larguraPainel = useRef(22)
   const etapa =
     selecionada ?? (dados ? escolherEtapaInicial(dados.estado) : null)
+  // O visualizador guarda a etapa dona do arquivo; ele abre na conversa onde o card do entregável aparece (pode ser a 04 para um da 03).
+  const tiposDoVisualizador: TipoEntregavel[] | undefined = visualizador?.secao ? ["secao"] : visualizador?.planilha ? ["planilha"] : undefined
   const visualizadorAberto =
-    visualizador !== null && visualizador.etapa === etapa
+    visualizador !== null &&
+    etapa !== null &&
+    dados !== null &&
+    visualizadorAbertoNaConversa(dados.estado.entregaveis, { ...visualizador, tipos: tiposDoVisualizador }, etapa)
   const [arquivoAberto, setArquivoAberto] = useState<string | null>(null)
   const colunaDireitaRef = useGroupRef()
   const inserirNoCompositor = useRef<((texto: string) => void) | null>(null)
@@ -376,16 +383,7 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
       salvarLayout(chaveColunas(visualizadorAberto), layout)
   }
   const aberto = visualizadorAberto
-    ? entregavelVisivel(
-        dados.estado.entregaveis,
-        etapa,
-        visualizador.nomeFinal,
-        visualizador.secao
-          ? ["secao"]
-          : visualizador.planilha
-            ? ["planilha"]
-            : undefined
-      )
+    ? entregavelVisivel(dados.estado.entregaveis, visualizador.etapa, visualizador.nomeFinal, tiposDoVisualizador)
     : null
   const Visualizador = visualizador?.secao
     ? VisualizadorSecao

@@ -9,3 +9,6 @@ numpy==2.3.4
 matplotlib==3.10.7
 # Usado pelo gerador do cliente de teste (scripts/fixture_verdeluz) e útil ao agente para ler .docx.
 python-docx==1.2.0
+# Gera o PDF do documento de validação do cliente (scripts/gerar_documento_validacao.py, etapa 04).
+# Python puro, com wheel universal (amd64 e arm64); a série 4.x é a mais recente antes da 5.
+reportlab==4.5.1

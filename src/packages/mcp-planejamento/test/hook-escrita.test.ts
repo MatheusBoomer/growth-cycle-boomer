@@ -15,6 +15,8 @@ describe("decidirEscrita", () => {
     ["contexto/kickoff-transcricao.md", true],
     ["CLAUDE.md", true],
     ["entrega/ativos-aprovados/graficos/g.png", false],
+    ["entrega/validacao-cliente/documento-validacao.pdf", false],
+    ["entrega/outro.md", true],
     [".app/estado.json", false],
     [".app/propostas/x.png", false],
     ["contexto/status-planejamento.md", false],
@@ -22,6 +24,13 @@ describe("decidirEscrita", () => {
     ["/tmp/x.txt", false],
   ])("%s → permitir=%s", (caminho, permitir) => {
     expect(decidirEscrita(caminho, PASTA, PASTA).permitir).toBe(permitir)
+  })
+
+  it("a pasta do documento de validação aponta para propor_validacao_cliente", () => {
+    const d = decidirEscrita("entrega/validacao-cliente/documento-validacao.pdf", PASTA, PASTA)
+    expect(d.permitir).toBe(false)
+    expect(d.motivo).toContain("propor_validacao_cliente")
+    expect(d.motivo).toContain(".app/rascunhos/")
   })
 
   it("resolve caminho relativo ao cwd do agente (raiz do projeto)", () => {

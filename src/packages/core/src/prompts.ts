@@ -12,6 +12,8 @@ Você está rodando dentro da interface web do Growth Cycle, não no terminal. O
 - Responda sempre em português do Brasil, inclusive nas frases curtas entre uma ferramenta e outra.
 - Não use travessão (\u2014) no meio das frases, nem no chat nem nos textos que gravar: use vírgula, dois-pontos, parênteses ou ponto. O travessão só vale para indicar intervalo entre números (ex.: 10\u201420).
 - Prospect: \`${slug}\`, pasta \`${pasta}\`. Etapa atual: ${etapa.rotuloStatus} (${trabalho}). Trabalhe só nesta etapa.
+- Exceção, só na etapa 04 e enquanto ela estiver aberta (antes ou depois do documento de validação): você pode pedir insumos da etapa 03 com \`solicitar_insumo\`, propor peças da 03 com \`propor_entregavel\` e \`etapa_origem: "03"\` e, ao sinalizar a etapa pronta, enviar \`resumo_decisoes_03\` quando algo da 03 mudou (insumo da 03 trocado ou peça da 03 aprovada nesta conversa). Fora isso, não mexa em outras etapas.
+- Na etapa 04, o último passo antes de sinalizar é o documento de validação do cliente: gere o PDF com \`scripts/gerar_documento_validacao.py\` e entregue com \`propor_validacao_cliente\`, mesmo que a etapa já estivesse "pronta" numa sessão anterior. Sem esse PDF a etapa não conclui.
 - Salve todo gráfico, tabela, texto ou arquivo que precisa de aprovação em \`${pasta}.app/rascunhos/\` e chame \`propor_entregavel\`. Nunca grave em \`entrega/ativos-aprovados/\`: o app faz isso quando o analista aprova. Depois de propor, encerre a resposta e espere: a decisão chega como nova mensagem.
 - Não peça "ok" ou "aprovado" em texto para gráficos e seções: o card substitui isso. Perguntas estratégicas e de esclarecimento continuam normais no chat.
 - Para pedir um arquivo ao analista, chame \`solicitar_insumo\` com o id do catálogo, em vez de descrever caminho de pasta.
@@ -120,6 +122,14 @@ export function mensagemAjustes(texto: string, itens: ItemAjusteMensagem[]): str
 
 export function mensagemInsumoRecebido(nome: string, arquivo: string, resumo: string | null): string {
   return `O analista enviou “${nome}” e o arquivo passou na validação: \`${arquivo}\`${resumo ? ` (${resumo})` : ""}. Pode seguir.`
+}
+
+/**
+ * Troca de um insumo da etapa 03 (já concluída) feita pelo analista na correção da validação do cliente, na conversa da 04:
+ * o agente refaz o que dependia do arquivo, gera o PDF de novo e devolve o resumo corrigido da 03.
+ */
+export function mensagemInsumoDaTresRecebido(nome: string, arquivo: string, resumo: string | null): string {
+  return `O analista trocou “${nome}”, um arquivo da etapa 03, durante a correção da validação do cliente, e o novo arquivo passou na validação: \`${arquivo}\`${resumo ? ` (${resumo})` : ""}. Refaça os gráficos, tabelas e leituras da 03 e da 04 que dependem dele e proponha cada um de novo (os da 03 com \`etapa_origem: "03"\` em \`propor_entregavel\`). Depois gere um novo PDF de validação com \`propor_validacao_cliente\`. Ao chamar \`sinalizar_etapa_pronta\`, envie também \`resumo_decisoes_03\` com o resumo corrigido das decisões da 03.`
 }
 
 export function mensagemEtapaAnteriorAlterada(rotulo: string): string {

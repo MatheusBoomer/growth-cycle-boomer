@@ -1,0 +1,169 @@
+import { TransicaoInvalida } from "./erros"
+import type { Entregavel, Estado, EtapaId, ValidacaoCliente } from "./tipos"
+
+/** Onde o PDF de validação fica na pasta do prospect; sempre o mesmo caminho, uma nova geração sobrescreve. */
+export const ARQUIVO_VALIDACAO = "entrega/validacao-cliente/documento-validacao.pdf"
+
+const ETAPAS_DO_DOCUMENTO: EtapaId[] = ["03", "04"]
+const TIPOS_DO_DOCUMENTO: Entregavel["tipo"][] = ["grafico", "tabela", "secao"]
+
+/** Etapa do chat onde o card do entregável aparece. */
+export function etapaDaConversa(e: Pick<Entregavel, "etapa" | "etapaConversa">): EtapaId {
+  return e.etapaConversa ?? e.etapa
+}
+
+/** Aprovados que entram no documento de validação: gráfico, tabela ou seção das etapas 03 e 04. */
+function aprovadosDoDocumento(estado: Estado): Entregavel[] {
+  return estado.entregaveis.filter(
+    (e) => e.status === "aprovado" && ETAPAS_DO_DOCUMENTO.includes(e.etapa) && TIPOS_DO_DOCUMENTO.includes(e.tipo),
+  )
+}
+
+/**
+ * Troca de dados é um envio que passou na validação. Um upload posterior que terminou "invalido" não é troca, mas também
+ * não apaga a anterior: vale `ultimoValidoEm` (em estados antigos, sem o campo, só um registro válido conta, por `atualizadoEm`).
+ */
+function trocasDeInsumo(estado: Estado, depoisDe: string, etapas: EtapaId[]): string[] {
+  return estado.insumos
+    .filter((i) => etapas.includes(i.etapa))
+    .map((i) => i.ultimoValidoEm ?? (i.status === "valido" ? i.atualizadoEm : null))
+    .filter((em): em is string => em !== null && em > depoisDe)
+}
+
+function maisRecente(datas: string[]): string | null {
+  return datas.reduce<string | null>((a, b) => (a === null || b > a ? b : a), null)
+}
+
+/**
+ * Última mudança que o PDF precisa refletir: a aprovação mais recente de gráfico, tabela ou seção de 03 ou 04, ou a troca
+ * válida de insumo de 03 ou 04 mais recente. Nula quando não há nenhuma. Um rascunho do PDF anterior a ela está velho.
+ */
+export function ultimaMudancaDoDocumento(estado: Estado): string | null {
+  const aprovacoes = aprovadosDoDocumento(estado)
+    .map((e) => e.decididoEm)
+    .filter((em): em is string => em !== null)
+  return maisRecente([...aprovacoes, ...trocasDeInsumo(estado, "", ETAPAS_DO_DOCUMENTO)])
+}
+
+/**
+ * Aprovados do documento que são anteriores à última troca de insumo (03 ou 04) feita depois da primeira geração do PDF.
+ * Trocas de insumo antes do primeiro PDF não contam: é o fluxo normal da 04.
+ */
+export function entregaveisAntesDaTroca(estado: Estado): Entregavel[] {
+  const v = estado.validacaoCliente
+  if (!v) return []
+  const trocas = trocasDeInsumo(estado, v.primeiraGeracaoEm, ETAPAS_DO_DOCUMENTO)
+  if (trocas.length === 0) return []
+  const ultima = trocas.reduce((a, b) => (a > b ? a : b))
+  return aprovadosDoDocumento(estado).filter((e) => e.decididoEm !== null && e.decididoEm < ultima)
+}
+
+/** Alguém aprovou gráfico, tabela ou seção depois que o PDF foi gerado: o documento não reflete mais o que foi aprovado. */
+export function documentoDefasado(estado: Estado): boolean {
+  const v = estado.validacaoCliente
+  if (!v) return false
+  return aprovadosDoDocumento(estado).some((e) => e.decididoEm !== null && e.decididoEm > v.geradoEm)
+}
+
+/**
+ * A 03 concluída foi refeita pela conversa da 04, com ou sem PDF: insumo da 03 trocado (envio válido) ou peça da 03
+ * aprovada na 04 (`etapa_origem: "03"`) depois da conclusão da 03. 03 concluída sem data (importada do terminal) conta
+ * qualquer troca ou peça refeita.
+ */
+export function tresRefeitaPelaQuatro(estado: Estado): boolean {
+  const tres = estado.etapas["03"]
+  if (tres.status !== "concluida") return false
+  const desde = tres.concluidaEm ?? ""
+  const insumoNovo = trocasDeInsumo(estado, desde, ["03"]).length > 0
+  const pecaNova = estado.entregaveis.some(
+    (e) => e.status === "aprovado" && e.etapa === "03" && e.etapaConversa === "04" && e.decididoEm !== null && e.decididoEm > desde,
+  )
+  return insumoNovo || pecaNova
+}
+
+function exigirQuatroAberta(estado: Estado, acao: string): void {
+  const status = estado.etapas["04"].status
+  if (status !== "em_andamento" && status !== "pronta") {
+    throw new TransicaoInvalida(`Não dá para ${acao} agora: a etapa 04 está "${status.replace("_", " ")}".`)
+  }
+}
+
+function exigirDocumento(estado: Estado, acao: string): ValidacaoCliente {
+  if (!estado.validacaoCliente) {
+    throw new TransicaoInvalida(`Não dá para ${acao}: o documento de validação ainda não foi gerado.`)
+  }
+  return estado.validacaoCliente
+}
+
+export function registrarValidacaoGerada(estado: Estado, em: string): Estado {
+  exigirQuatroAberta(estado, "gerar o documento de validação")
+  const antes = entregaveisAntesDaTroca(estado)
+  if (antes.length > 0) {
+    throw new TransicaoInvalida(
+      `Antes de gerar o documento, aprove de novo o que foi aprovado antes da troca de dados: ${antes.map((e) => e.titulo).join("; ")}.`,
+    )
+  }
+  const validacaoCliente: ValidacaoCliente = {
+    arquivo: ARQUIVO_VALIDACAO,
+    primeiraGeracaoEm: estado.validacaoCliente?.primeiraGeracaoEm ?? em,
+    geradoEm: em,
+    baixadoEm: null,
+    baixadoPor: null,
+    confirmadoEm: null,
+    confirmadoPor: null,
+  }
+  return { ...estado, validacaoCliente, atualizadoEm: em }
+}
+
+export function registrarDownloadValidacao(estado: Estado, autor: string | null, em: string): Estado {
+  const v = exigirDocumento(estado, "registrar o download")
+  return { ...estado, validacaoCliente: { ...v, baixadoEm: em, baixadoPor: autor }, atualizadoEm: em }
+}
+
+export function confirmarValidacaoCliente(estado: Estado, autor: string | null, em: string): Estado {
+  const v = exigirDocumento(estado, "confirmar a validação do cliente")
+  if (v.confirmadoEm) return estado
+  exigirQuatroAberta(estado, "confirmar a validação do cliente")
+  if (!v.baixadoEm) {
+    throw new TransicaoInvalida("Baixe o documento de validação antes de confirmar que o cliente validou os dados.")
+  }
+  if (documentoDefasado(estado)) {
+    throw new TransicaoInvalida("O documento de validação está desatualizado: gere de novo antes de confirmar.")
+  }
+  return { ...estado, validacaoCliente: { ...v, confirmadoEm: em, confirmadoPor: autor }, atualizadoEm: em }
+}
+
+/** Mantém o download e desfaz só a confirmação (nova mensagem do analista na 04 reabre a conversa). */
+export function limparConfirmacaoValidacao(estado: Estado, em: string): Estado {
+  const v = estado.validacaoCliente
+  if (!v || !v.confirmadoEm) return estado
+  return { ...estado, validacaoCliente: { ...v, confirmadoEm: null, confirmadoPor: null }, atualizadoEm: em }
+}
+
+const GERAR_DOCUMENTO = "Gerar o documento de validação do cliente"
+const GERAR_DE_NOVO = "Gerar de novo o documento de validação: os gráficos mudaram depois dele"
+const APROVAR_DE_NOVO = "Aprovar de novo, depois da troca de dados: "
+
+/** Pendência que o agente resolve sozinho (gerar o PDF, propor de novo); o resto (baixar, confirmar, aprovar, enviar) é do analista. */
+export function pendenciaDoAgente(pendencia: string): boolean {
+  return pendencia === GERAR_DOCUMENTO || pendencia === GERAR_DE_NOVO || pendencia.startsWith(APROVAR_DE_NOVO)
+}
+
+/** Pendência que pede ao agente propor de novo um item aprovado antes da troca de dados. */
+export function pendenciaDeAprovarDeNovo(pendencia: string): boolean {
+  return pendencia.startsWith(APROVAR_DE_NOVO)
+}
+
+/** O que ainda impede a 04 de concluir por causa do gate de validação, na ordem em que o analista resolve. */
+export function pendenciasValidacao(estado: Estado): string[] {
+  const v = estado.validacaoCliente
+  if (!v) return [GERAR_DOCUMENTO]
+  const faltando: string[] = []
+  if (documentoDefasado(estado)) faltando.push(GERAR_DE_NOVO)
+  for (const e of entregaveisAntesDaTroca(estado)) {
+    faltando.push(`${APROVAR_DE_NOVO}${e.titulo}`)
+  }
+  if (!v.baixadoEm) faltando.push("Baixar o documento de validação")
+  if (!v.confirmadoEm) faltando.push("Confirmar que o cliente validou os dados")
+  return faltando
+}

@@ -89,6 +89,8 @@ export interface Entregavel {
   editadoEm?: string
   /** E-mail de quem aprovou ou pediu ajuste; ausente sem login ou em estados antigos. */
   decididoPor?: string
+  /** Etapa do chat onde o card vive, quando difere de `etapa` (ex.: gráfico da 03 refeito na conversa da 04). */
+  etapaConversa?: EtapaId
 }
 
 export type StatusInsumo = "pendente" | "invalido" | "valido"
@@ -103,6 +105,8 @@ export interface EstadoInsumo {
   /** Relativo à pasta do prospect. */
   arquivo: string | null
   atualizadoEm: string
+  /** Quando o último envio válido passou; sobrevive a um envio inválido posterior (o arquivo bom continua no disco). Ausente em estados antigos. */
+  ultimoValidoEm?: string
   /** E-mail de quem enviou o insumo; ausente sem login ou em estados antigos. */
   enviadoPor?: string
 }
@@ -156,7 +160,23 @@ export interface Estado {
   filaAutomatica: ItemFila[]
   /** Só em cliente de teste: de qual fixture ele veio e em qual etapa começou o último reposicionamento. */
   teste?: { fixture: string; etapaInicial: EtapaId }
+  /** Gate da etapa 04: documento de validação gerado, baixado e confirmado pelo analista. Ausente em estado antigo. */
+  validacaoCliente?: ValidacaoCliente
   atualizadoEm: string
+}
+
+/** Documento de validação do cliente (PDF) e as duas confirmações do analista; datas ISO, `null` até acontecerem. */
+export interface ValidacaoCliente {
+  /** Relativo à pasta do prospect. */
+  arquivo: string
+  /** Primeira vez que o documento foi gerado; não muda quando ele é gerado de novo. */
+  primeiraGeracaoEm: string
+  /** Última geração do documento. */
+  geradoEm: string
+  baixadoEm: string | null
+  baixadoPor: string | null
+  confirmadoEm: string | null
+  confirmadoPor: string | null
 }
 
 /** Entregável citado numa mensagem do analista (pedido de ajuste); `primeiraMarcacao` segue contínua entre referências. */
@@ -173,8 +193,11 @@ export type EventoConversa =
   | { tipo: "texto_agente"; texto: string; em: string }
   | { tipo: "atividade"; nome: string; detalhe: string; em: string }
   | { tipo: "card_entregavel"; entregavelId: string; em: string }
-  | { tipo: "card_insumo"; insumoId: string; em: string }
+  /** `etapaInsumo` só aparece quando o insumo é de outra etapa que a da conversa (a 04 pedindo um insumo da 03). */
+  | { tipo: "card_insumo"; insumoId: string; etapaInsumo?: EtapaId; em: string }
   | { tipo: "card_perguntas"; conjuntoId: string; em: string }
+  /** O agente gerou o documento de validação do cliente; o card lê o estado atual (`estado.validacaoCliente`). */
+  | { tipo: "card_validacao_cliente"; em: string }
   | { tipo: "aviso"; nivel: "info" | "alerta" | "erro"; texto: string; em: string }
   | { tipo: "turno_fim"; status: "ok" | "interrompido" | "erro"; detalhe: string | null; em: string }
 
@@ -220,4 +243,6 @@ export interface RespostaEstado {
   modelosDisponiveis: string[]
   /** Arquivos em entrega/ativos-aprovados/ sem entregável aprovado pela interface (terminal ou escrita direta). */
   aprovadosForaDaInterface: string[]
+  /** Algo foi aprovado depois de o documento de validação do cliente ser gerado: ele precisa ser gerado de novo. */
+  validacaoDefasada: boolean
 }

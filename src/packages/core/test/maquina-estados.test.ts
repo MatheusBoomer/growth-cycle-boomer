@@ -15,7 +15,7 @@ import {
   sinalizarPronta,
 } from "../src/maquina-estados"
 import { ORDEM_ETAPAS, type Estado, type EtapaId } from "../src/tipos"
-import { catalogoReal } from "./ajuda"
+import { catalogoReal, comValidacaoConfirmada } from "./ajuda"
 
 const EM = "2026-09-28T10:00:00.000Z"
 const cat = catalogoReal()
@@ -38,6 +38,7 @@ function concluir(e: Estado, etapa: EtapaId): Estado {
   let r = e.etapas[etapa].status === "liberada" ? iniciarEtapa(e, etapa, EM) : e
   r = comInsumosObrigatorios(r, etapa)
   r = sinalizarPronta(r, etapa, { resumoDecisoes: `decisões ${etapa}`, handoff: `handoff ${etapa}` }, cat, EM).estado
+  if (etapa === "04") r = comValidacaoConfirmada(r)
   return concluirEtapa(r, etapa, cat, EM)
 }
 

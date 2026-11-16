@@ -11,8 +11,12 @@ export interface DadosInsumo {
 }
 
 export function registrarInsumo(estado: Estado, dados: DadosInsumo, em: string): Estado {
-  const outros = estado.insumos.filter((i) => !(i.etapa === dados.etapa && i.insumoId === dados.insumoId))
-  return { ...estado, insumos: [...outros, { ...dados, atualizadoEm: em }], atualizadoEm: em }
+  const mesmo = (i: { etapa: EtapaId; insumoId: string }) => i.etapa === dados.etapa && i.insumoId === dados.insumoId
+  const anterior = estado.insumos.find(mesmo)
+  // Um envio inválido não apaga a marca do último válido: o arquivo bom continua na pasta e a troca de dados já aconteceu.
+  const ultimoValidoEm = dados.status === "valido" ? em : anterior?.ultimoValidoEm
+  const registro = { ...dados, atualizadoEm: em, ...(ultimoValidoEm ? { ultimoValidoEm } : {}) }
+  return { ...estado, insumos: [...estado.insumos.filter((i) => !mesmo(i)), registro], atualizadoEm: em }
 }
 
 export function extensao(nome: string): string {
