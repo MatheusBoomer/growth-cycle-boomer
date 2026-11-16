@@ -104,7 +104,7 @@ describe("varredura de app: toda rota confere o acesso", () => {
   it("a regra de quem exige o quê alcança as rotas esperadas (não ficou vazia por erro de caminho)", () => {
     const por = (e: Exigencia | undefined) => rotas.filter((r) => !ehIsenta(r) && exigenciaDaRota(r) === e)
     expect(por("admin")).toEqual(expect.arrayContaining(["api/cliente-teste/route.ts", "api/sistema/route.ts", "api/uso/route.ts", "api/prospects/[slug]/teste/route.ts", "api/prospects/[slug]/teste/reposicionar/route.ts"]))
-    expect(por("prospect")).toHaveLength(19)
+    expect(por("prospect")).toHaveLength(20)
     expect(por("prospect")).not.toContain("api/prospects/[slug]/teste/route.ts")
     expect(por(undefined)).toEqual(["api/modelos/[insumoId]/route.ts", "api/prospects/route.ts"])
   })

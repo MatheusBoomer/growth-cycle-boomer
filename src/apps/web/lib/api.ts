@@ -97,7 +97,7 @@ export interface CorpoPresenca {
   visivel: boolean
   segundosSemInteracao: number
 }
-export type AcaoEtapa = "iniciar" | "concluir" | "reabrir" | "confirmar" | "revisar" | "parar"
+export type AcaoEtapa = "iniciar" | "concluir" | "reabrir" | "confirmar" | "revisar" | "parar" | "confirmar-validacao-cliente"
 
 export const api = {
   criarProspect: (nome: string, site: string) => chamar<{ slug: string }>("/api/prospects", comJson("POST", { nome, site })),

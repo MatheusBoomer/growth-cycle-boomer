@@ -26,6 +26,9 @@ export async function POST(req: Request, ctx: RouteContext<"/api/prospects/[slug
       case "revisar":
         await servico.revisarEtapa(slug, etapa)
         break
+      case "confirmar-validacao-cliente":
+        await servico.confirmarValidacaoCliente(slug, usuario.email)
+        break
       case "parar":
         turnos.parar(slug)
         break
