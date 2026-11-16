@@ -122,6 +122,14 @@ export function mensagemInsumoRecebido(nome: string, arquivo: string, resumo: st
   return `O analista enviou “${nome}” e o arquivo passou na validação: \`${arquivo}\`${resumo ? ` (${resumo})` : ""}. Pode seguir.`
 }
 
+/**
+ * Troca de um insumo da etapa 03 (já concluída) feita pelo analista na correção da validação do cliente, na conversa da 04:
+ * o agente refaz o que dependia do arquivo, gera o PDF de novo e devolve o resumo corrigido da 03.
+ */
+export function mensagemInsumoDaTresRecebido(nome: string, arquivo: string, resumo: string | null): string {
+  return `O analista trocou “${nome}”, um arquivo da etapa 03, durante a correção da validação do cliente, e o novo arquivo passou na validação: \`${arquivo}\`${resumo ? ` (${resumo})` : ""}. Refaça os gráficos, tabelas e leituras da 03 e da 04 que dependem dele e proponha cada um de novo (os da 03 com \`etapa_origem: "03"\` em \`propor_entregavel\`). Depois gere um novo PDF de validação com \`propor_validacao_cliente\`. Ao chamar \`sinalizar_etapa_pronta\`, envie também \`resumo_decisoes_03\` com o resumo corrigido das decisões da 03.`
+}
+
 export function mensagemEtapaAnteriorAlterada(rotulo: string): string {
   return `Aviso do app: a etapa ${rotulo} foi reaberta pelo analista. O que for aprovado lá pode mudar as bases desta etapa; releia \`contexto/decisoes/\` e os ativos aprovados antes de seguir.`
 }

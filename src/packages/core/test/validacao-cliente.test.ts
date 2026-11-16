@@ -64,7 +64,7 @@ function aprovado(e: Estado, etapa: EtapaId, id: string, titulo: string, em: str
 
 describe("validação do cliente (núcleo)", () => {
   it("sem_documento_a_pendencia_e_gerar", () => {
-    expect(pendenciasValidacao(base())[0]).toBe("Gerar o documento de validação do cliente")
+    expect(pendenciasValidacao(base())).toEqual(["Gerar o documento de validação do cliente"])
   })
 
   it("fluxo_normal_nao_marca_grafico_da_03_como_desatualizado", () => {

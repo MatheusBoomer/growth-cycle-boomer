@@ -46,6 +46,12 @@ servidor.registerTool(
       nome_final: z
         .string()
         .describe("Nome estável, em kebab-case e sem versão (ex.: investimento-total-mensal). Seções recebem o prefixo da etapa automaticamente."),
+      etapa_origem: z
+        .enum(["03", "04"])
+        .optional()
+        .describe(
+          'Só na conversa da etapa 04, na correção depois da validação do cliente: "03" propõe um gráfico, tabela ou seção da 03 já concluída (o card aparece na 04). Omita nos demais casos.',
+        ),
     },
   },
   async (args) => chamarApp("propor_entregavel", args),
@@ -56,7 +62,7 @@ servidor.registerTool(
   {
     title: "Pedir um arquivo ao analista",
     description:
-      "Mostra ao analista o card de envio de um insumo do catálogo (com o modelo para baixar, quando existir). Use em vez de descrever caminhos de pasta. Ids: kickoff-transcricao, formulario-cliente, site, historico-mensal, produtos-curva-abc, clientes-historico, prints-campanhas.",
+      "Mostra ao analista o card de envio de um insumo do catálogo (com o modelo para baixar, quando existir). Use em vez de descrever caminhos de pasta. Ids: kickoff-transcricao, formulario-cliente, site, historico-mensal, produtos-curva-abc, clientes-historico, prints-campanhas. Na etapa 04, durante a correção da validação do cliente, também dá para pedir historico-mensal e produtos-curva-abc (insumos da 03).",
     inputSchema: { insumo_id: z.string().describe("Id do insumo no catálogo da etapa atual") },
   },
   async (args) => chamarApp("solicitar_insumo", args),
@@ -67,13 +73,26 @@ servidor.registerTool(
   {
     title: "Registrar um anexo do chat como insumo da etapa",
     description:
-      "Use quando o analista anexou pelo clipe do chat um arquivo que, conferido o conteúdo, é um insumo do catálogo da etapa atual (ex.: a transcrição do kickoff). O app valida o arquivo como se tivesse sido enviado pelo card e passa a considerar o insumo entregue. Confira o conteúdo antes de chamar: só registre se for mesmo o documento esperado.",
+      "Use quando o analista anexou pelo clipe do chat um arquivo que, conferido o conteúdo, é um insumo do catálogo da etapa atual (ex.: a transcrição do kickoff). O app valida o arquivo como se tivesse sido enviado pelo card e passa a considerar o insumo entregue. Confira o conteúdo antes de chamar: só registre se for mesmo o documento esperado. Na etapa 04, durante a correção da validação do cliente, também dá para registrar historico-mensal e produtos-curva-abc (insumos da 03).",
     inputSchema: {
       insumo_id: z.string().describe("Id do insumo no catálogo da etapa atual"),
       arquivo: z.string().describe("Caminho do anexo em clientes/<slug>/.app/anexos/<etapa>/"),
     },
   },
   async (args) => chamarApp("registrar_insumo_anexado", args),
+)
+
+servidor.registerTool(
+  "propor_validacao_cliente",
+  {
+    title: "Entregar o documento de validação do cliente",
+    description:
+      "Só na etapa 04. Entrega ao analista o PDF de validação (gráficos e tabelas aprovados das etapas 03 e 04) já salvo em clientes/<slug>/.app/rascunhos/. O app guarda o arquivo, o analista baixa, leva ao cliente e confirma a validação na interface. Gere de novo o PDF sempre que algo aprovado mudar. Depois de chamar, encerre a resposta e espere.",
+    inputSchema: {
+      arquivo_rascunho: z.string().describe("Caminho do PDF em clientes/<slug>/.app/rascunhos/"),
+    },
+  },
+  async (args) => chamarApp("propor_validacao_cliente", args),
 )
 
 servidor.registerTool(
@@ -87,6 +106,12 @@ servidor.registerTool(
       handoff_proxima: z
         .string()
         .describe("Texto ao analista dizendo o que preparar para a próxima etapa, sem citar caminhos de arquivo"),
+      resumo_decisoes_03: z
+        .string()
+        .optional()
+        .describe(
+          "Só na etapa 04, quando a 03 foi refeita depois do PDF de validação: markdown com o resumo corrigido das decisões e números da 03. Obrigatório nesse caso; omita nos demais.",
+        ),
     },
   },
   async (args) => chamarApp("sinalizar_etapa_pronta", args),

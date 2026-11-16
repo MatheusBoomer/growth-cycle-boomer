@@ -196,6 +196,8 @@ export type EventoConversa =
   /** `etapaInsumo` só aparece quando o insumo é de outra etapa que a da conversa (a 04 pedindo um insumo da 03). */
   | { tipo: "card_insumo"; insumoId: string; etapaInsumo?: EtapaId; em: string }
   | { tipo: "card_perguntas"; conjuntoId: string; em: string }
+  /** O agente gerou o documento de validação do cliente; o card lê o estado atual (`estado.validacaoCliente`). */
+  | { tipo: "card_validacao_cliente"; em: string }
   | { tipo: "aviso"; nivel: "info" | "alerta" | "erro"; texto: string; em: string }
   | { tipo: "turno_fim"; status: "ok" | "interrompido" | "erro"; detalhe: string | null; em: string }
 
@@ -241,4 +243,6 @@ export interface RespostaEstado {
   modelosDisponiveis: string[]
   /** Arquivos em entrega/ativos-aprovados/ sem entregável aprovado pela interface (terminal ou escrita direta). */
   aprovadosForaDaInterface: string[]
+  /** Algo foi aprovado depois de o documento de validação do cliente ser gerado: ele precisa ser gerado de novo. */
+  validacaoDefasada: boolean
 }

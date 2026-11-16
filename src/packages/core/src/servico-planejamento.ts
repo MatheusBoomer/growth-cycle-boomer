@@ -29,11 +29,19 @@ import {
 } from "./entregaveis"
 import { ehErroDominio, ErroEntrada, ErroNaoEhTeste, ErroNaoEncontrado, ErroTurnoAtivo } from "./erros"
 import { carregarFixture } from "./fixture"
-import { etapaDaConversa } from "./validacao-cliente"
+import {
+  ARQUIVO_VALIDACAO,
+  confirmarValidacaoCliente,
+  documentoDefasado,
+  etapaDaConversa,
+  refezTresDepoisDoPdf,
+  registrarDownloadValidacao,
+  registrarValidacaoGerada,
+} from "./validacao-cliente"
 import { destinoInsumo, extensao, extensaoAceita, nomeSeguro, registrarInsumo } from "./insumos"
 import * as me from "./maquina-estados"
 import { descreverMarcacoes, type MarcaAjuste } from "./marcacoes"
-import { mensagemAjuste, mensagemAjustes, mensagemAprovacao, mensagemEtapaAnteriorAlterada, mensagemInsumoRecebido } from "./prompts"
+import { mensagemAjuste, mensagemAjustes, mensagemAprovacao, mensagemEtapaAnteriorAlterada, mensagemInsumoDaTresRecebido, mensagemInsumoRecebido } from "./prompts"
 import { CacheCurto } from "./metricas/cache-curto"
 import { custoDoTurno, custoPorEtapa } from "./metricas/custo"
 import { agregarPainel, type EntradaProjeto, type FiltroPainel, type PainelMetricas } from "./metricas/painel"
@@ -631,7 +639,16 @@ export class ServicoPlanejamento {
       estado.entregaveis.filter((e) => e.status === "aprovado").map((e) => destinoAprovado(e)),
     )
     const aprovadosForaDaInterface = (await this.arm.listarAprovados(slug)).filter((a) => !aprovadosPelaInterface.has(a))
-    return { estado, catalogo: this.catalogo, condicoes, turnoAtivo, turnoPor, modelosDisponiveis, aprovadosForaDaInterface }
+    return {
+      estado,
+      catalogo: this.catalogo,
+      condicoes,
+      turnoAtivo,
+      turnoPor,
+      modelosDisponiveis,
+      aprovadosForaDaInterface,
+      validacaoDefasada: documentoDefasado(estado),
+    }
   }
 
   /** Só os prospects que `usuario` pode ver; o dono vem de um único `listarDonos`. */
@@ -831,13 +848,16 @@ export class ServicoPlanejamento {
   async concluirEtapa(slug: string, etapa: EtapaId): Promise<void> {
     await this.mutar(slug, async (e) => {
       const novo = me.concluirEtapa(e, etapa, this.catalogo, this.agora())
-      const cat = etapaDoCatalogo(this.catalogo, etapa)
-      const resumo = novo.etapas[etapa].resumoDecisoes
-      if (resumo && cat.skill) {
-        await this.arm.gravarTexto(slug, `contexto/decisoes/${cat.skill}.md`, `# Decisões da etapa ${cat.rotuloStatus}\n\n${resumo.trim()}\n`)
-      }
+      await this.gravarDecisoes(slug, etapa, novo.etapas[etapa].resumoDecisoes)
       return { estado: novo, resultado: undefined }
     })
+  }
+
+  /** `contexto/decisoes/<skill>.md`: o resumo aprovado da etapa, que o dossiê das próximas etapas lê. */
+  private async gravarDecisoes(slug: string, etapa: EtapaId, resumo: string | null): Promise<void> {
+    const cat = etapaDoCatalogo(this.catalogo, etapa)
+    if (!resumo || !cat.skill) return
+    await this.arm.gravarTexto(slug, `contexto/decisoes/${cat.skill}.md`, `# Decisões da etapa ${cat.rotuloStatus}\n\n${resumo.trim()}\n`)
   }
 
   async reabrirEtapa(slug: string, etapa: EtapaId): Promise<void> {
@@ -863,6 +883,27 @@ export class ServicoPlanejamento {
 
   async revisarEtapa(slug: string, etapa: EtapaId): Promise<void> {
     await this.mutar(slug, (e) => ({ estado: me.revisarEtapa(e, etapa, this.agora()), resultado: undefined }))
+  }
+
+  // ---------- validação do cliente (gate da etapa 04) ----------
+
+  /** Registra que o analista baixou o PDF e devolve o caminho dele na pasta do prospect. */
+  async registrarDownloadValidacao(slug: string, autor: string | null): Promise<string> {
+    return this.mutar(slug, async (e) => {
+      if (!e.validacaoCliente || !(await this.arm.existeArquivo(slug, e.validacaoCliente.arquivo))) {
+        throw new ErroNaoEncontrado("O documento de validação ainda não foi gerado.")
+      }
+      const novo = me.reavaliarPronta(registrarDownloadValidacao(e, autor, this.agora()), "04", this.catalogo, this.agora())
+      return { estado: novo, resultado: ARQUIVO_VALIDACAO }
+    })
+  }
+
+  /** O analista confirma que o cliente validou os dados do documento; exige o download e o documento em dia. */
+  async confirmarValidacaoCliente(slug: string, autor: string | null): Promise<void> {
+    await this.mutar(slug, (e) => ({
+      estado: me.reavaliarPronta(confirmarValidacaoCliente(e, autor, this.agora()), "04", this.catalogo, this.agora()),
+      resultado: undefined,
+    }))
   }
 
   // ---------- entregáveis ----------
@@ -1078,7 +1119,9 @@ export class ServicoPlanejamento {
       return { estado: novo, resultado: null }
     })
     if (resultado.ok && destino && aberta && notificarAgente) {
-      await this.enfileirar(slug, aberta, mensagemInsumoRecebido(insumo.nome, `clientes/${slug}/${destino}`, resultado.resumo), autor)
+      // Insumo da 03 concluída roteado para a 04: o agente da 04 precisa refazer a 03 e devolver o resumo dela.
+      const mensagem = etapa === "03" && aberta === "04" ? mensagemInsumoDaTresRecebido : mensagemInsumoRecebido
+      await this.enfileirar(slug, aberta, mensagem(insumo.nome, `clientes/${slug}/${destino}`, resultado.resumo), autor)
     }
   }
 
@@ -1151,6 +1194,7 @@ export class ServicoPlanejamento {
     try {
       const dados = (entrada && typeof entrada === "object" ? entrada : {}) as Record<string, unknown>
       if (nome === "propor_entregavel") return await this.ferramentaPropor(ctx.slug, ctx.etapa, dados)
+      if (nome === "propor_validacao_cliente") return await this.ferramentaProporValidacao(ctx.slug, ctx.etapa, dados)
       if (nome === "solicitar_insumo") return await this.ferramentaSolicitar(ctx.slug, ctx.etapa, dados)
       if (nome === "registrar_insumo_anexado") return await this.ferramentaRegistrarAnexo(ctx.slug, ctx.etapa, dados)
       if (nome === "sinalizar_etapa_pronta") return await this.ferramentaSinalizar(ctx.slug, ctx.etapa, dados)
@@ -1219,6 +1263,38 @@ export class ServicoPlanejamento {
     }
   }
 
+  /**
+   * O agente da 04 gerou o PDF de validação do cliente em `.app/rascunhos/`. Quem grava o arquivo final é o app: a cópia vai
+   * para `ARQUIVO_VALIDACAO` (sempre o mesmo caminho) e o gate passa a cobrar download e confirmação.
+   */
+  private async ferramentaProporValidacao(slug: string, etapa: EtapaId, d: Record<string, unknown>): Promise<RespostaFerramenta> {
+    if (etapa !== "04") {
+      throw new ErroEntrada("O documento de validação do cliente só se gera na conversa da etapa 04.")
+    }
+    const arquivo = campoTexto(d.arquivo_rascunho, "arquivo_rascunho")
+    const rel = this.arm.relativoAoProspect(slug, arquivo)
+    if (!rel.startsWith(".app/rascunhos/")) {
+      throw new ErroEntrada(`Salve o PDF em clientes/${slug}/.app/rascunhos/ antes de propor (recebido: ${arquivo}).`)
+    }
+    if (!(await this.arm.existeArquivo(slug, rel))) {
+      throw new ErroEntrada(`Arquivo não encontrado: clientes/${slug}/${rel}. Gere o PDF antes de propor.`)
+    }
+    if (extensao(rel) !== ".pdf") {
+      throw new ErroEntrada(`O documento de validação precisa ser um PDF (recebido: ${extensao(rel) || "sem extensão"}).`)
+    }
+    await this.mutar(slug, async (e) => {
+      const novo = registrarValidacaoGerada(e, this.agora())
+      await this.arm.copiar(slug, rel, ARQUIVO_VALIDACAO)
+      return { estado: me.reavaliarPronta(novo, "04", this.catalogo, this.agora()), resultado: undefined }
+    })
+    await this.registrarConversa(slug, etapa, { tipo: "card_validacao_cliente", em: this.agora() })
+    return {
+      ok: true,
+      mensagem:
+        "Documento de validação enviado ao analista, que baixa o PDF, leva ao cliente e confirma a validação na interface. Encerre sua resposta agora e aguarde: a confirmação ou os ajustes chegam como nova mensagem.",
+    }
+  }
+
   private async ferramentaSolicitar(slug: string, etapa: EtapaId, d: Record<string, unknown>): Promise<RespostaFerramenta> {
     const insumoId = campoTexto(d.insumo_id, "insumo_id")
     const dono = this.donoDoInsumo(etapa, insumoId, await this.estado(slug))
@@ -1276,10 +1352,24 @@ export class ServicoPlanejamento {
   private async ferramentaSinalizar(slug: string, etapa: EtapaId, d: Record<string, unknown>): Promise<RespostaFerramenta> {
     const resumoDecisoes = campoTexto(d.resumo_decisoes, "resumo_decisoes")
     const handoff = semAberturaDeConclusao(campoTexto(d.handoff_proxima, "handoff_proxima"))
-    const faltando = await this.mutar(slug, (e) => {
-      const r = me.sinalizarPronta(e, etapa, { resumoDecisoes, handoff }, this.catalogo, this.agora())
-      return { estado: r.estado, resultado: r.faltando }
+    const resumoTres = typeof d.resumo_decisoes_03 === "string" && d.resumo_decisoes_03.trim() ? d.resumo_decisoes_03.trim() : null
+    const resultado = await this.mutar<{ recusado: boolean; faltando: string[] }>(slug, async (e) => {
+      // Depois de refazer a 03 na correção, o dossiê das próximas etapas não pode seguir com o resumo velho dela.
+      const refezTres = etapa === "04" && refezTresDepoisDoPdf(e)
+      if (refezTres && !resumoTres) return { estado: e, resultado: { recusado: true, faltando: [] } }
+      const base = refezTres && resumoTres ? me.comEtapa(e, "03", { resumoDecisoes: resumoTres }, this.agora()) : e
+      const r = me.sinalizarPronta(base, etapa, { resumoDecisoes, handoff }, this.catalogo, this.agora())
+      if (refezTres) await this.gravarDecisoes(slug, "03", resumoTres)
+      return { estado: r.estado, resultado: { recusado: false, faltando: r.faltando } }
     })
+    if (resultado.recusado) {
+      return {
+        ok: false,
+        mensagem:
+          "A 03 foi refeita depois do PDF de validação, então o resumo dela mudou. Chame sinalizar_etapa_pronta de novo com o campo resumo_decisoes_03 (markdown com as decisões e números corrigidos da 03).",
+      }
+    }
+    const faltando = resultado.faltando
     if (faltando.length > 0) {
       return {
         ok: true,
