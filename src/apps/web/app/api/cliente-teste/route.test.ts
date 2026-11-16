@@ -24,7 +24,21 @@ describe("POST /api/cliente-teste", () => {
     const resposta = await chamar({ etapa: "03" })
     expect(resposta.status).toBe(201)
     expect(await resposta.json()).toEqual({ slug: "verdeluz-teste" })
-    expect(servico.criarClienteTeste).toHaveBeenCalledWith("verdeluz", "03", "bia.lima@boomer.com.br")
+    expect(servico.criarClienteTeste).toHaveBeenCalledWith("verdeluz", "03", "bia.lima@boomer.com.br", false)
+  })
+
+  it("com ensaio true, cria o cliente em modo ensaiado", async () => {
+    const resposta = await chamar({ etapa: "03", ensaio: true })
+    expect(resposta.status).toBe(201)
+    expect(servico.criarClienteTeste).toHaveBeenCalledWith("verdeluz", "03", "bia.lima@boomer.com.br", true)
+  })
+
+  it("recusa ensaio que não seja booleano sem criar nada", async () => {
+    for (const ensaio of ["sim", 1, null]) {
+      const resposta = await chamar({ etapa: "03", ensaio })
+      expect(resposta.status).toBe(400)
+    }
+    expect(servico.criarClienteTeste).not.toHaveBeenCalled()
   })
 
   it("recusa etapa desconhecida sem criar nada", async () => {

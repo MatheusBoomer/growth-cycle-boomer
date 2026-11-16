@@ -67,6 +67,12 @@ export function destinoAprovado(e: Pick<Entregavel, "tipo" | "nomeFinal" | "etap
 
 const pastaDe = (rel: string) => (rel.includes("/") ? rel.slice(0, rel.lastIndexOf("/") + 1) : "")
 
+/** Nomes dos JSONs que acompanham o documento do plano; vazio para qualquer outro entregável. */
+export function nomesAcompanhantes(e: Pick<Entregavel, "tipo" | "etapa" | "nomeFinal">): string[] {
+  if (e.tipo !== "documento") return []
+  return ACOMPANHANTES_DO_DOCUMENTO[`${e.etapa}:${e.nomeFinal}`] ?? []
+}
+
 /**
  * Arquivos gerados junto do documento do plano (mesma pasta do rascunho) que também vão para a pasta do
  * documento aprovado. Só `documento`; vazio para qualquer outro entregável.
@@ -74,8 +80,7 @@ const pastaDe = (rel: string) => (rel.includes("/") ? rel.slice(0, rel.lastIndex
 export function acompanhantes(
   e: Pick<Entregavel, "tipo" | "etapa" | "nomeFinal" | "arquivoRascunho">,
 ): { origem: string; destino: string }[] {
-  if (e.tipo !== "documento") return []
-  const nomes = ACOMPANHANTES_DO_DOCUMENTO[`${e.etapa}:${e.nomeFinal}`] ?? []
+  const nomes = nomesAcompanhantes(e)
   const pastaOrigem = pastaDe(e.arquivoRascunho)
   const pastaDestino = pastaDe(destinoAprovado(e))
   return nomes.map((nome) => ({ origem: `${pastaOrigem}${nome}`, destino: `${pastaDestino}${nome}` }))

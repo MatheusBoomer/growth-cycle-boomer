@@ -63,6 +63,67 @@ describe("criarClienteTeste", () => {
   })
 })
 
+describe("modo ensaiado", () => {
+  it("criarClienteTeste com o 4º argumento marca estado.teste.ensaio", async () => {
+    const slug = await servico.criarClienteTeste("mini", "03", null, true)
+    expect((await servico.estado(slug)).teste?.ensaio).toBe(true)
+  })
+
+  it("sem o 4º argumento o ensaio fica ausente ou falso", async () => {
+    const slug = await servico.criarClienteTeste("mini", "03")
+    expect((await servico.estado(slug)).teste?.ensaio ?? false).toBe(false)
+  })
+
+  it("consumirTrechoEnsaio devolve 0, 1, 2 e grava o índice por etapa", async () => {
+    const slug = await servico.criarClienteTeste("mini", "03", null, true)
+    expect(await servico.consumirTrechoEnsaio(slug, "03")).toBe(0)
+    expect(await servico.consumirTrechoEnsaio(slug, "03")).toBe(1)
+    expect(await servico.consumirTrechoEnsaio(slug, "03")).toBe(2)
+    const teste = (await servico.estado(slug)).teste
+    expect(teste?.trechos?.["03"]).toBe(3)
+    expect(await servico.consumirTrechoEnsaio(slug, "02")).toBe(0)
+  })
+
+  it("reposicionarTeste zera os trechos e o avancando e mantém o ensaio", async () => {
+    const slug = await servico.criarClienteTeste("mini", "03", null, true)
+    await servico.consumirTrechoEnsaio(slug, "03")
+    await servico.consumirTrechoEnsaio(slug, "03")
+    await servico.reposicionarTeste(slug, "03")
+    expect(await servico.consumirTrechoEnsaio(slug, "03")).toBe(0)
+    const teste = (await servico.estado(slug)).teste
+    expect(teste?.avancando ?? null).toBeNull()
+    expect(teste?.ensaio).toBe(true)
+  })
+
+  it("reposicionar zera só a etapa escolhida e as seguintes", async () => {
+    const slug = await servico.criarClienteTeste("mini", "01", null, true)
+    await servico.consumirTrechoEnsaio(slug, "01")
+    await servico.consumirTrechoEnsaio(slug, "03")
+    await servico.reposicionarTeste(slug, "03")
+    expect(await servico.consumirTrechoEnsaio(slug, "01")).toBe(1)
+    expect(await servico.consumirTrechoEnsaio(slug, "03")).toBe(0)
+  })
+
+  it("gatilhoEnsaio devolve o trecho do índice atual e null quando o roteiro acaba", async () => {
+    const slug = await servico.criarClienteTeste("mini", "03", null, true)
+    expect(await servico.gatilhoEnsaio(slug, "03")).toEqual({ gatilho: "mensagem", textoPreenchido: "Segue a planilha." })
+    await servico.consumirTrechoEnsaio(slug, "03")
+    expect(await servico.gatilhoEnsaio(slug, "03")).toEqual({ gatilho: "aprovar", textoPreenchido: null })
+    await servico.consumirTrechoEnsaio(slug, "03")
+    expect(await servico.gatilhoEnsaio(slug, "03")).toBeNull()
+  })
+
+  it("gatilhoEnsaio devolve null em cliente de teste comum (sem ensaio)", async () => {
+    const slug = await servico.criarClienteTeste("mini", "03")
+    expect(await servico.gatilhoEnsaio(slug, "03")).toBeNull()
+  })
+
+  it("gatilhoEnsaio devolve null em etapa sem roteiro", async () => {
+    const slug = await servico.criarClienteTeste("mini", "03", null, true)
+    expect(await servico.gatilhoEnsaio(slug, "02")).toBeNull()
+  })
+})
+
 describe("reposicionarTeste", () => {
   it("move para a etapa escolhida, regera o status-planejamento.md e publica evento de estado", async () => {
     const slug = await servico.criarClienteTeste("mini", "01")

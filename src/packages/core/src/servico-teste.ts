@@ -102,6 +102,16 @@ export async function reposicionarNoFixture(
 
   arm.agendarSincronizacao(slug)
 
+  // O ensaio continua ligado; os trechos consumidos voltam a zero da etapa escolhida em diante.
+  const trechos: Partial<Record<EtapaId, number>> = {}
+  for (const [id, n] of Object.entries(atual.teste?.trechos ?? {}) as [EtapaId, number][]) {
+    if (antesDe(id, etapa)) trechos[id] = n
+  }
+  const teste: NonNullable<Estado["teste"]> = { fixture: fixture.id, etapaInicial: etapa }
+  if (atual.teste?.ensaio !== undefined) teste.ensaio = atual.teste.ensaio
+  if (Object.keys(trechos).length > 0) teste.trechos = trechos
+  if (atual.teste?.ensaio) teste.avancando = null
+
   const completo = fixture.estadoCompleto
   return {
     ...estadoInicial(atual.prospect, agora),
@@ -111,7 +121,7 @@ export async function reposicionarNoFixture(
     insumos: completo.insumos.filter((i) => antesDe((i.arquivo && etapaDoArquivo(fixture, i.arquivo)) || i.etapa, etapa)),
     perguntas: [],
     filaAutomatica: [],
-    teste: { fixture: fixture.id, etapaInicial: etapa },
+    teste,
     atualizadoEm: agora,
   }
 }

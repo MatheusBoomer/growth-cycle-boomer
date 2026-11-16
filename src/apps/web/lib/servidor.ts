@@ -7,7 +7,9 @@ import { carregarCatalogo } from "@workspace/core/catalogo"
 import { AgentSdkExecutor } from "@workspace/core/executor/agent-sdk"
 import { ambienteDoAgente } from "@workspace/core/executor/ambiente-agente"
 import { ClaudeCliExecutor } from "@workspace/core/executor/claude-cli"
+import { criarExecutorEnsaio } from "@workspace/core/executor/ensaio"
 import { criarExecutorDemo } from "@workspace/core/executor/fake"
+import { GravadorExecutor } from "@workspace/core/executor/gravador"
 import { consultarModelosSdk } from "@workspace/core/executor/modelos-sdk"
 import { criarCacheDeModelos, type ListaDeModelos } from "@workspace/core/modelos"
 import { NuvemArmazenamento } from "@workspace/core/nuvem/armazenamento-nuvem"
@@ -145,16 +147,22 @@ export function servidor(): Servidor {
   const comentarios = new ServicoComentarios({ armazenamento, planejamento: servico, previa: criarPreviaPython(raiz) })
   // "demo" = respostas de mentira; "sdk" = Agent SDK com ANTHROPIC_API_KEY (cobrança por uso); padrão = CLI com a assinatura.
   const modoExecutor = executorDoAmbiente(process.env)
-  const executor = modoExecutor === "demo" ? criarExecutorDemo() : modoExecutor === "sdk" ? new AgentSdkExecutor() : new ClaudeCliExecutor()
+  const executorReal = modoExecutor === "demo" ? criarExecutorDemo() : modoExecutor === "sdk" ? new AgentSdkExecutor() : new ClaudeCliExecutor()
+  // PLANEJAMENTO_GRAVAR_ENSAIO=1: embrulha só o executor real para gravar os turnos de um cliente de teste comum (nunca o de ensaio).
+  const gravarEnsaio = process.env.PLANEJAMENTO_GRAVAR_ENSAIO === "1"
+  const executor = gravarEnsaio ? new GravadorExecutor(executorReal, { raiz }) : executorReal
   console.info(
     `[planejamento] executor: ${process.env.PLANEJAMENTO_EXECUTOR || "cli (assinatura)"}` +
       ` | ANTHROPIC_API_KEY ${process.env.ANTHROPIC_API_KEY ? "definida" : "NÃO definida"}` +
-      ` | dados: ${dados}`,
+      ` | dados: ${dados}` +
+      (gravarEnsaio ? " | gravando turnos de ensaio" : ""),
   )
   const pastaMcp = path.join(raiz, "src/packages/mcp-planejamento/src")
   const turnos = new ServicoTurnos({
     servico,
     executor,
+    // Cliente de teste com Modo ensaiado reproduz o roteiro gravado, sem chamar o Claude.
+    executorEnsaio: criarExecutorEnsaio({}),
     barramento,
     catalogo,
     memoria: nuvem?.memoria,

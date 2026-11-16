@@ -73,6 +73,17 @@ export async function criarFixtureMinimo(pasta: string): Promise<void> {
     arquivos: arquivos.map(({ caminho, etapa }) => ({ caminho, etapa })),
     kit: { "01": ["contexto/brutos/kickoff-transcricao-bruta.md"], "03": ["dados/historico-mensal.xlsx"] },
   }
+  // Roteiro de ensaio da etapa 03, com 2 trechos, para testar o índice de trechos do cliente de teste.
+  const passo = (texto: string) => ({ dtMs: 0, evento: { tipo: "texto", texto } })
+  const roteiro03 = {
+    versao: 1,
+    etapa: "03",
+    trechos: [
+      { gatilho: "mensagem", textoPreenchido: "Segue a planilha.", passos: [passo("Recebi a planilha.")] },
+      { gatilho: "aprovar", textoPreenchido: null, passos: [passo("Aprovado.")] },
+    ],
+  }
+  await gravar(pasta, "ensaio/03/roteiro.json", JSON.stringify(roteiro03, null, 2))
   await gravar(pasta, "manifesto.json", JSON.stringify(manifesto, null, 2))
   await gravar(pasta, "estado-completo.json", JSON.stringify(estadoCompletoMinimo(), null, 2))
 }

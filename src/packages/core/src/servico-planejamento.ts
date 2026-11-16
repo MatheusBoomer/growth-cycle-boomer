@@ -28,7 +28,8 @@ import {
   pedirAjuste,
   proporEntregavel,
 } from "./entregaveis"
-import { ehErroDominio, ErroEntrada, ErroNaoEhTeste, ErroNaoEncontrado, ErroTurnoAtivo } from "./erros"
+import { ehErroDominio, ErroEntrada, ErroFixture, ErroNaoEhTeste, ErroNaoEncontrado, ErroTurnoAtivo } from "./erros"
+import { carregarRoteiro, type TipoGatilho } from "./ensaio/roteiro"
 import { carregarFixture } from "./fixture"
 import {
   ARQUIVO_VALIDACAO,
@@ -93,6 +94,8 @@ const CONTEXTO_PERSISTIDO = [
 ]
 const ARQUIVO_STATUS = "contexto/status-planejamento.md"
 const ARQUIVO_BIBLIOTECA = ".app/biblioteca.json"
+/** Mensagem automática do Avançar ensaio quando a etapa não tem entregável pendente para aprovar. */
+const MENSAGEM_SEGUIR_ENSAIO = "Siga para o próximo passo."
 
 export interface DependenciasServico {
   armazenamento: FsArmazenamento
@@ -843,14 +846,101 @@ export class ServicoPlanejamento {
   // ---------- cliente de teste ----------
 
   /** Cria o cliente de teste a partir de clientes/_fixtures/<id>/ já posicionado em `etapaInicial`. */
-  async criarClienteTeste(fixtureId: string, etapaInicial: EtapaId = "01", autor: string | null = null): Promise<string> {
+  async criarClienteTeste(fixtureId: string, etapaInicial: EtapaId = "01", autor: string | null = null, ensaio = false): Promise<string> {
     const fixture = await carregarFixture(this.arm.raiz, fixtureId)
     const slug = await this.criarProspect(fixture.manifesto.prospect.nome, fixture.manifesto.prospect.site, autor)
     const claudeMd = await this.arm.lerTexto(slug, "CLAUDE.md")
     if (claudeMd) await this.arm.gravarTexto(slug, "CLAUDE.md", aplicarOverrides(claudeMd, fixture.manifesto.overrides))
-    await this.mutar(slug, (e) => ({ estado: { ...e, teste: { fixture: fixtureId, etapaInicial } }, resultado: undefined }))
+    await this.mutar(slug, (e) => ({
+      estado: { ...e, teste: ensaio ? { fixture: fixtureId, etapaInicial, ensaio: true } : { fixture: fixtureId, etapaInicial } },
+      resultado: undefined,
+    }))
     await this.reposicionarTeste(slug, etapaInicial)
     return slug
+  }
+
+  /** Índice do trecho do roteiro de ensaio que o próximo turno da etapa vai reproduzir; grava o seguinte. */
+  consumirTrechoEnsaio(slug: string, etapa: EtapaId): Promise<number> {
+    return this.mutar(slug, (e) => {
+      if (!e.teste) throw new ErroNaoEhTeste()
+      const atual = e.teste.trechos?.[etapa] ?? 0
+      return { estado: { ...e, teste: { ...e.teste, trechos: { ...e.teste.trechos, [etapa]: atual + 1 } } }, resultado: atual }
+    })
+  }
+
+  /** Trecho do roteiro no índice atual da etapa; `null` se o cliente não é de ensaio, a etapa não tem roteiro ou ele já acabou. */
+  async gatilhoEnsaio(slug: string, etapa: EtapaId): Promise<{ gatilho: TipoGatilho; textoPreenchido: string | null } | null> {
+    const teste = (await this.estado(slug)).teste
+    if (!teste?.ensaio) return null
+    let roteiro
+    try {
+      roteiro = await carregarRoteiro(this.arm.raiz, teste.fixture, etapa)
+    } catch (e) {
+      if (e instanceof ErroFixture) return null
+      throw e
+    }
+    const trecho = roteiro.trechos[teste.trechos?.[etapa] ?? 0]
+    return trecho ? { gatilho: trecho.gatilho, textoPreenchido: trecho.textoPreenchido } : null
+  }
+
+  /**
+   * Um passo do Avançar ensaio: marca a etapa como em avanço e aprova o entregável pendente mais antigo dela.
+   * Sem pendente, enfileira a mensagem automática que toca o trecho seguinte. Nunca confirma a validação do
+   * cliente nem conclui a etapa. O fim de cada turno de ensaio chama `continuarEnsaio`, que repete o passo.
+   * Recusa (ErroEntrada) quando o avanço da etapa já está em curso ou quando o roteiro dela acabou.
+   */
+  async avancarEnsaio(slug: string, etapa: EtapaId, autor: string | null): Promise<void> {
+    if (this.turnos.estaOcupado(slug)) throw new ErroTurnoAtivo()
+    const teste = (await this.estado(slug)).teste
+    if (!teste?.ensaio) throw new ErroNaoEhTeste()
+    if (teste.avancando === etapa) throw new ErroEntrada("O ensaio já está avançando nesta etapa.")
+    if ((await this.gatilhoEnsaio(slug, etapa)) === null) throw new ErroEntrada("O ensaio desta etapa terminou.")
+    await this.passoEnsaio(slug, etapa, autor, true)
+  }
+
+  /**
+   * Aprova o pendente mais antigo da etapa (ou enfileira a mensagem automática) com o avanço marcado nela.
+   * `inicio`: pedido do analista, recusado se outro avanço da etapa já começou. Falha devolve `avancando` a null.
+   */
+  private async passoEnsaio(slug: string, etapa: EtapaId, autor: string | null, inicio: boolean): Promise<void> {
+    const pendente = await this.mutar(slug, (e) => {
+      if (!e.teste?.ensaio) throw new ErroNaoEhTeste()
+      if (inicio && e.teste.avancando === etapa) throw new ErroEntrada("O ensaio já está avançando nesta etapa.")
+      const maisAntigo =
+        e.entregaveis
+          .filter((x) => x.status === "pendente" && etapaDaConversa(x) === etapa)
+          .sort((x, y) => x.criadoEm.localeCompare(y.criadoEm))[0] ?? null
+      return { estado: { ...e, teste: { ...e.teste, avancando: etapa } }, resultado: maisAntigo?.id ?? null }
+    })
+    try {
+      if (pendente) await this.aprovarEntregavel(slug, pendente, autor)
+      else await this.enfileirar(slug, etapa, MENSAGEM_SEGUIR_ENSAIO, autor)
+    } catch (e) {
+      await this.mutar(slug, (x) => ({ estado: x.teste ? { ...x, teste: { ...x.teste, avancando: null } } : x, resultado: undefined }))
+      throw e
+    }
+  }
+
+  /**
+   * Fim de um turno de ensaio da `etapa`: se o avanço está nela, o turno terminou bem, a etapa não ficou
+   * pronta e o roteiro ainda tem trecho, dá o próximo passo. Em qualquer outro caso encerra o avanço.
+   */
+  async continuarEnsaio(slug: string, etapa: EtapaId, turnoOk: boolean, autor: string | null): Promise<void> {
+    const estado = await this.estado(slug)
+    const avancando = estado.teste?.avancando
+    if (!avancando) return
+    const seguir =
+      turnoOk && avancando === etapa && estado.etapas[etapa].status !== "pronta" && (await this.gatilhoEnsaio(slug, etapa)) !== null
+    if (seguir) {
+      try {
+        if (this.turnos.estaOcupado(slug)) throw new ErroTurnoAtivo()
+        await this.passoEnsaio(slug, etapa, autor, false)
+        return
+      } catch (e) {
+        console.error(`Não consegui seguir o ensaio de "${slug}" na etapa ${etapa}:`, e)
+      }
+    }
+    await this.mutar(slug, (e) => ({ estado: e.teste ? { ...e, teste: { ...e.teste, avancando: null } } : e, resultado: undefined }))
   }
 
   /** Apaga o trabalho feito no cliente de teste e o devolve ao início de `etapa`. Nada é apagado se a checagem falhar. */

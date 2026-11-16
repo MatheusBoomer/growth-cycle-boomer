@@ -3,20 +3,22 @@ import path from "node:path"
 import { descreverAtividade } from "./atividade"
 import type { Barramento } from "./barramento"
 import { etapaDoCatalogo } from "./catalogo"
-import { ErroReiniciando, ErroTurnoAtivo } from "./erros"
-import type { DefinicaoAgente, Executor, PedidoTurno } from "./executor/tipos"
+import { carregarRoteiro, classificarGatilho } from "./ensaio/roteiro"
+import { ErroFixture, ErroReiniciando, ErroTurnoAtivo } from "./erros"
+import type { ContextoTurno, DefinicaoAgente, Executor, PedidoTurno } from "./executor/tipos"
 import { lerDefinicaoSubagente } from "./executor/subagentes"
 import type { MemoriaDeSessao } from "./nuvem/memoria-sessao"
 import type { EntradaUsoTurno } from "./nuvem/tipos"
 import { promptInicialEtapa, promptRetomadaEtapa, systemPromptModoInterface } from "./prompts"
 import type { AjusteEnvio, ServicoPlanejamento } from "./servico-planejamento"
-import type { Catalogo, EtapaId, EventoConversa } from "./tipos"
+import type { Catalogo, Estado, EtapaId, EventoConversa } from "./tipos"
 import { RegistroUso, type UsoAssinatura } from "./uso-assinatura"
 
 const AVISO_SINCRONIZACAO_ANTES = "Não consegui baixar os arquivos do prospect. Tente de novo."
 const AVISO_RETOMADA = "Retomei a etapa a partir do histórico."
 const AVISO_SINCRONIZACAO_DEPOIS =
   "Os arquivos desta resposta ainda não foram salvos na nuvem. Vou tentar de novo na próxima ação."
+const AVISO_FORA_DO_ROTEIRO = "Fora do roteiro: use Avançar ensaio ou reinicie a etapa."
 
 /** Tudo o que o agente pode usar sem pedir permissão (o modo -p não pergunta). */
 export const FERRAMENTAS_PERMITIDAS = [
@@ -60,6 +62,8 @@ export interface ConfigTurnos {
 export interface DependenciasTurnos {
   servico: ServicoPlanejamento
   executor: Executor
+  /** Reproduz o roteiro gravado no cliente de teste com `teste.ensaio`. Sem ele, todo prospect usa `executor`. */
+  executorEnsaio?: Executor
   barramento: Barramento
   catalogo: Catalogo
   config: ConfigTurnos
@@ -107,6 +111,12 @@ function detalheDoErro(erro: string | null, modelo: string | undefined): string 
   return `O modelo ${modelo} foi recusado. Ajuste em Administração → Modelos. ${erro}`
 }
 
+/** Como o turno terminou, para o Avançar ensaio decidir se segue. */
+interface ResultadoTurno {
+  ensaio: boolean
+  ok: boolean
+}
+
 function horario(resetsAt: number | null): string {
   return resetsAt ? new Date(resetsAt * 1000).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : ""
 }
@@ -114,6 +124,7 @@ function horario(resetsAt: number | null): string {
 export class ServicoTurnos {
   private readonly servico: ServicoPlanejamento
   private readonly executor: Executor
+  private readonly executorEnsaio: Executor | undefined
   private readonly barramento: Barramento
   private readonly catalogo: Catalogo
   private readonly config: ConfigTurnos
@@ -145,6 +156,7 @@ export class ServicoTurnos {
   constructor(d: DependenciasTurnos) {
     this.servico = d.servico
     this.executor = d.executor
+    this.executorEnsaio = d.executorEnsaio
     this.barramento = d.barramento
     this.catalogo = d.catalogo
     this.config = d.config
@@ -327,21 +339,45 @@ export class ServicoTurnos {
     this.acompanhar(
       slug,
       this.executarTurno(slug, etapa, texto, controle.signal, autor)
-        .catch((e) => console.error(`Turno do prospect ${slug} falhou:`, e))
+        .catch((e): ResultadoTurno | null => {
+          console.error(`Turno do prospect ${slug} falhou:`, e)
+          return null
+        })
         .finally(() => {
           this.liberar(slug, controle)
           this.barramento.publicar(slug, { tipo: "turno", etapa, ativo: false })
         })
+        // Fora da vaga: o passo seguinte do Avançar ensaio aprova e enfileira, e a fila abre o próximo turno.
+        .then((r) => this.continuarEnsaio(slug, etapa, r, autor))
         // o próximo turno (se houver fila) é registrado em `pendentes` antes deste sair de lá
         .then(() => this.processarFila(slug)),
     )
   }
 
-  /** Um turno completo: sincroniza antes, roda o agente e sincroniza de novo no fim (mesmo se interrompido ou com erro). */
-  private async executarTurno(slug: string, etapa: EtapaId, texto: string | null, sinal: AbortSignal, autor: string | null): Promise<void> {
-    if (!(await this.prepararTurno(slug, etapa))) return
+  /**
+   * Depois de um turno: segue ou encerra o Avançar ensaio. Turno que se sabe não ser de ensaio não lê nada;
+   * resultado desconhecido (null) conta como turno com falha. Erro aqui só vai para o console.
+   */
+  private async continuarEnsaio(slug: string, etapa: EtapaId, r: ResultadoTurno | null, autor: string | null): Promise<void> {
+    if (r && !r.ensaio) return
     try {
-      await this.rodarTurno(slug, etapa, texto, sinal, autor)
+      await this.servico.continuarEnsaio(slug, etapa, r?.ok === true && !this.drenando, autor)
+    } catch (e) {
+      console.error(`Não consegui continuar o ensaio de "${slug}":`, e)
+    }
+  }
+
+  /** Um turno completo: sincroniza antes, roda o agente e sincroniza de novo no fim (mesmo se interrompido ou com erro). */
+  private async executarTurno(
+    slug: string,
+    etapa: EtapaId,
+    texto: string | null,
+    sinal: AbortSignal,
+    autor: string | null,
+  ): Promise<ResultadoTurno | null> {
+    if (!(await this.prepararTurno(slug, etapa))) return null
+    try {
+      return await this.rodarTurno(slug, etapa, texto, sinal, autor)
     } finally {
       await this.encerrarTurno(slug, etapa)
     }
@@ -392,11 +428,18 @@ export class ServicoTurnos {
   private async salvarSessao(slug: string, etapa: EtapaId): Promise<void> {
     if (!this.memoria) return
     try {
-      const sessionId = (await this.servico.estado(slug)).etapas[etapa].sessionId
+      const estado = await this.servico.estado(slug)
+      if (this.ehEnsaio(estado)) return
+      const sessionId = estado.etapas[etapa].sessionId
       if (sessionId) await this.memoria.salvar(slug, sessionId)
     } catch (e) {
       console.error(`Falha ao salvar a sessão do agente de "${slug}":`, e)
     }
+  }
+
+  /** O turno deste prospect toca o roteiro de ensaio em vez de chamar o agente. */
+  private ehEnsaio(estado: Estado): boolean {
+    return estado.teste?.ensaio === true && this.executorEnsaio !== undefined
   }
 
   /** Confere se o .jsonl da sessão está no disco; se não der para restaurar, devolve false (a etapa recomeça pelo histórico). */
@@ -439,17 +482,70 @@ export class ServicoTurnos {
     return extra
   }
 
-  private async rodarTurno(slug: string, etapa: EtapaId, texto: string | null, sinal: AbortSignal, autor: string | null): Promise<void> {
+  /**
+   * Escolhe o trecho do roteiro que o turno de ensaio vai tocar e o põe em `contexto`. Roteiro ausente ou inválido:
+   * registra o erro e fecha o turno sem consumir o índice (devolve false). Gatilho diferente do esperado: avisa e segue
+   * (menos durante o Avançar ensaio da etapa).
+   */
+  private async prepararEnsaio(
+    slug: string,
+    etapa: EtapaId,
+    mensagem: string,
+    automatica: boolean,
+    avancando: boolean,
+    contexto: ContextoTurno,
+  ): Promise<boolean> {
+    let roteiro
+    try {
+      roteiro = await carregarRoteiro(this.config.raiz, contexto.fixture!, etapa)
+    } catch (e) {
+      if (!(e instanceof ErroFixture)) throw e
+      await this.registrar(slug, etapa, { tipo: "aviso", nivel: "erro", texto: e.message, em: this.agora() })
+      await this.registrar(slug, etapa, { tipo: "turno_fim", status: "erro", detalhe: e.message, em: this.agora() })
+      return false
+    }
+    const indice = await this.servico.consumirTrechoEnsaio(slug, etapa)
+    const trecho = roteiro.trechos[indice] ?? null
+    contexto.trecho = trecho
+    // Durante o Avançar ensaio a mensagem é sempre a do avanço: o gatilho diferente não é desvio do analista.
+    if (trecho && !avancando && trecho.gatilho !== classificarGatilho(mensagem, automatica)) {
+      await this.registrar(slug, etapa, { tipo: "aviso", nivel: "alerta", texto: AVISO_FORA_DO_ROTEIRO, em: this.agora() })
+    }
+    return true
+  }
+
+  private async rodarTurno(
+    slug: string,
+    etapa: EtapaId,
+    texto: string | null,
+    sinal: AbortSignal,
+    autor: string | null,
+  ): Promise<ResultadoTurno> {
     const estado = await this.servico.estado(slug)
+    const ensaio = this.ehEnsaio(estado)
+    // Última mensagem do analista na conversa: diz se o turno é automático e qual texto o analista escreveu.
+    // O turno de abertura (texto null) não tem mensagem própria: conta como automático e sem texto. Só o cliente
+    // de teste (ensaio e gravador) usa isso; prospect real não lê a conversa e segue com os valores padrão.
+    const ultimaMensagem =
+      texto === null || !estado.teste
+        ? undefined
+        : [...(await this.servico.conversa(slug, etapa))]
+            .reverse()
+            .find((e): e is Extract<EventoConversa, { tipo: "mensagem_analista" }> => e.tipo === "mensagem_analista")
+    const automatica = estado.teste ? (ultimaMensagem ? ultimaMensagem.automatica === true : true) : texto === null
+    const textoAnalista = ultimaMensagem && !automatica ? ultimaMensagem.texto : null
     const etapaCat = etapaDoCatalogo(this.catalogo, etapa)
-    let sessionId = estado.etapas[etapa].sessionId
+    // O turno de ensaio não tem sessão do agente: nada a restaurar, retomar nem guardar.
+    let sessionId = ensaio ? null : estado.etapas[etapa].sessionId
     let retomada = false
     if (sessionId && !(await this.restaurarSessao(slug, sessionId))) {
       sessionId = null
       retomada = true
     }
     let mensagem: string
-    if (sessionId) {
+    if (ensaio) {
+      mensagem = texto ?? "Continue de onde parou."
+    } else if (sessionId) {
       mensagem = texto ?? "Continue de onde parou."
     } else if (retomada) {
       let historico = await this.servico.conversa(slug, etapa)
@@ -466,6 +562,9 @@ export class ServicoTurnos {
         .join("\n\n---\n\n")
     }
 
+    const contexto: ContextoTurno = { slug, etapa, fixture: estado.teste?.fixture ?? null, trecho: null, textoAnalista, mensagemTurno: texto, automatica }
+    const executor = ensaio ? this.executorEnsaio! : this.executor
+
     const token = randomUUID()
     this.tokens.set(token, { slug, etapa })
     const pedido: PedidoTurno = {
@@ -477,6 +576,7 @@ export class ServicoTurnos {
       settings: montarSettingsHook(this.config, path.join(this.config.raiz, "clientes", slug)),
       allowedTools: FERRAMENTAS_PERMITIDAS,
       ...(await this.configuracaoDaEtapa(etapa)),
+      contexto,
     }
 
     // Conversa que já existia antes deste turno (e que o SDK continua): o custo dela já tem linhas anteriores.
@@ -485,9 +585,13 @@ export class ServicoTurnos {
     await this.registrar(slug, etapa, { tipo: "turno_inicio", em: inicio })
     if (retomada) await this.registrar(slug, etapa, { tipo: "aviso", nivel: "info", texto: AVISO_RETOMADA, em: this.agora() })
     let terminou = false
+    let ok = false
     try {
-      for await (const ev of this.executor.executar(pedido, sinal)) {
-        if (ev.tipo === "sessao" && ev.sessionId !== sessionId) {
+      const avancando = estado.teste?.avancando === etapa
+      if (ensaio && !(await this.prepararEnsaio(slug, etapa, texto ?? "", automatica, avancando, contexto))) return { ensaio, ok }
+      for await (const ev of executor.executar(pedido, sinal)) {
+        if (ev.tipo === "sessao") {
+          if (ensaio || ev.sessionId === sessionId) continue
           sessionId = ev.sessionId
           await this.servico.definirSessao(slug, etapa, ev.sessionId)
         } else if (ev.tipo === "texto_delta") {
@@ -515,8 +619,9 @@ export class ServicoTurnos {
           })
         } else if (ev.tipo === "fim") {
           terminou = true
-          if (ev.sessionId && ev.sessionId !== sessionId) await this.servico.definirSessao(slug, etapa, ev.sessionId)
+          if (!ensaio && ev.sessionId && ev.sessionId !== sessionId) await this.servico.definirSessao(slug, etapa, ev.sessionId)
           const status = sinal.aborted ? "interrompido" : ev.ok ? "ok" : "erro"
+          ok = status === "ok"
           const fim = this.agora()
           const detalhe = ev.ok ? null : detalheDoErro(ev.erro, pedido.modelo)
           await this.registrar(slug, etapa, { tipo: "turno_fim", status, detalhe, em: fim })
@@ -547,6 +652,7 @@ export class ServicoTurnos {
         })
       }
     } catch (e) {
+      ok = false
       await this.registrar(slug, etapa, {
         tipo: "turno_fim",
         status: sinal.aborted ? "interrompido" : "erro",
@@ -556,5 +662,6 @@ export class ServicoTurnos {
     } finally {
       this.tokens.delete(token)
     }
+    return { ensaio, ok }
   }
 }

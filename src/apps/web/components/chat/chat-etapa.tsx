@@ -203,6 +203,8 @@ export function ChatEtapa({
         desabilitado={somenteLeitura || ativoOutra || ativoAqui}
         motivo={motivo}
         ativoAqui={ativoAqui}
+        ensaio={dados.estado.teste?.ensaio === true}
+        semTurno={dados.turnoAtivo === null}
       />
     </div>
   )
