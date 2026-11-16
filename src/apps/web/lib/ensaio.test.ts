@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { chaveDoTrecho, textoParaPreencher } from "./ensaio"
+import { avancarEnsaioLiberado, chaveDoTrecho, textoParaPreencher } from "./ensaio"
 
 const base = {
   ensaio: true,
@@ -39,5 +39,27 @@ describe("textoParaPreencher", () => {
   it("preenche o trecho seguinte, de outra etapa ou de outro texto", () => {
     expect(textoParaPreencher({ ...base, jaPreenchido: chaveDoTrecho("03", "Outro texto.") })).toBe("Os dados estão corretos.")
     expect(textoParaPreencher({ ...base, jaPreenchido: chaveDoTrecho("04", "Os dados estão corretos.") })).toBe("Os dados estão corretos.")
+  })
+})
+
+describe("avancarEnsaioLiberado", () => {
+  const livre = { etapa: "03" as const, turnoAtivo: false, temTrecho: true, enviando: false, avancandoNoServidor: null }
+
+  it("libera com trecho a tocar, sem turno, sem envio e sem avanço em curso", () => {
+    expect(avancarEnsaioLiberado(livre)).toBe(true)
+  })
+
+  it("bloqueia enquanto o servidor avança a etapa aberta, mesmo entre turnos", () => {
+    expect(avancarEnsaioLiberado({ ...livre, avancandoNoServidor: "03" })).toBe(false)
+  })
+
+  it("avanço em curso em outra etapa não bloqueia esta", () => {
+    expect(avancarEnsaioLiberado({ ...livre, avancandoNoServidor: "04" })).toBe(true)
+  })
+
+  it("bloqueia com turno ativo, sem trecho ou com o pedido ainda em envio", () => {
+    expect(avancarEnsaioLiberado({ ...livre, turnoAtivo: true })).toBe(false)
+    expect(avancarEnsaioLiberado({ ...livre, temTrecho: false })).toBe(false)
+    expect(avancarEnsaioLiberado({ ...livre, enviando: true })).toBe(false)
   })
 })

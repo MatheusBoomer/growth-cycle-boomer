@@ -9,6 +9,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@workspace/ui/components/dialog"
 import { IconeModal } from "@/components/marca/icone-modal"
 import { api, mensagemDeErro } from "@/lib/api"
+import { avancarEnsaioLiberado } from "@/lib/ensaio"
 import { DialogoReposicionar } from "./dialogo-reposicionar"
 import { PainelKit } from "./painel-kit"
 
@@ -27,6 +28,7 @@ export function FaixaTeste({ slug, dados, etapa }: { slug: string; dados: Respos
   useEffect(() => {
     if (!ensaio) return
     let cancelado = false
+    setTemTrecho(false)
     api
       .gatilhoEnsaio(slug, etapa)
       .then((g) => !cancelado && setTemTrecho(g !== null))
@@ -80,7 +82,11 @@ export function FaixaTeste({ slug, dados, etapa }: { slug: string; dados: Respos
       </span>
       <div className="ml-auto flex items-center gap-1.5">
         {ensaio && (
-          <Button size="sm" onClick={() => void avancar()} disabled={turnoAtivo || !temTrecho || avancando}>
+          <Button
+            size="sm"
+            onClick={() => void avancar()}
+            disabled={!avancarEnsaioLiberado({ etapa, turnoAtivo, temTrecho, enviando: avancando, avancandoNoServidor: teste?.avancando })}
+          >
             <FastForwardIcon /> Avançar ensaio
           </Button>
         )}

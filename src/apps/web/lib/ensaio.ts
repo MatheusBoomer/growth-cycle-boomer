@@ -23,3 +23,17 @@ export function textoParaPreencher(p: {
   if (!texto) return null
   return p.jaPreenchido === chaveDoTrecho(p.etapa, texto) ? null : texto
 }
+
+/**
+ * O botão Avançar ensaio só fica ativo com trecho a tocar, sem turno, sem pedido em envio e sem avanço da etapa aberta
+ * em curso no servidor (entre um turno e o passo seguinte o turno some, mas o avanço continua).
+ */
+export function avancarEnsaioLiberado(p: {
+  etapa: EtapaId
+  turnoAtivo: boolean
+  temTrecho: boolean
+  enviando: boolean
+  avancandoNoServidor: EtapaId | null | undefined
+}): boolean {
+  return !p.turnoAtivo && p.temTrecho && !p.enviando && p.avancandoNoServidor !== p.etapa
+}
