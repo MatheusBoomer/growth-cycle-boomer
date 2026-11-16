@@ -94,6 +94,8 @@ const CONTEXTO_PERSISTIDO = [
 ]
 const ARQUIVO_STATUS = "contexto/status-planejamento.md"
 const ARQUIVO_BIBLIOTECA = ".app/biblioteca.json"
+/** Mensagem automática do Avançar ensaio quando a etapa não tem entregável pendente para aprovar. */
+const MENSAGEM_SEGUIR_ENSAIO = "Siga para o próximo passo."
 
 export interface DependenciasServico {
   armazenamento: FsArmazenamento
@@ -879,6 +881,46 @@ export class ServicoPlanejamento {
     }
     const trecho = roteiro.trechos[teste.trechos?.[etapa] ?? 0]
     return trecho ? { gatilho: trecho.gatilho, textoPreenchido: trecho.textoPreenchido } : null
+  }
+
+  /**
+   * Um passo do Avançar ensaio: marca a etapa como em avanço e aprova o entregável pendente mais antigo dela.
+   * Sem pendente, enfileira a mensagem automática que toca o trecho seguinte. Nunca confirma a validação do
+   * cliente nem conclui a etapa. O fim de cada turno de ensaio chama `continuarEnsaio`, que repete o passo.
+   */
+  async avancarEnsaio(slug: string, etapa: EtapaId, autor: string | null): Promise<void> {
+    if (this.turnos.estaOcupado(slug)) throw new ErroTurnoAtivo()
+    const pendente = await this.mutar(slug, (e) => {
+      if (!e.teste?.ensaio) throw new ErroNaoEhTeste()
+      const maisAntigo =
+        e.entregaveis
+          .filter((x) => x.status === "pendente" && etapaDaConversa(x) === etapa)
+          .sort((x, y) => x.criadoEm.localeCompare(y.criadoEm))[0] ?? null
+      return { estado: { ...e, teste: { ...e.teste, avancando: etapa } }, resultado: maisAntigo?.id ?? null }
+    })
+    if (pendente) await this.aprovarEntregavel(slug, pendente, autor)
+    else await this.enfileirar(slug, etapa, MENSAGEM_SEGUIR_ENSAIO, autor)
+  }
+
+  /**
+   * Fim de um turno de ensaio da `etapa`: se o avanço está nela, o turno terminou bem, a etapa não ficou
+   * pronta e o roteiro ainda tem trecho, dá o próximo passo. Em qualquer outro caso encerra o avanço.
+   */
+  async continuarEnsaio(slug: string, etapa: EtapaId, turnoOk: boolean, autor: string | null): Promise<void> {
+    const estado = await this.estado(slug)
+    const avancando = estado.teste?.avancando
+    if (!avancando) return
+    const seguir =
+      turnoOk && avancando === etapa && estado.etapas[etapa].status !== "pronta" && (await this.gatilhoEnsaio(slug, etapa)) !== null
+    if (seguir) {
+      try {
+        await this.avancarEnsaio(slug, etapa, autor)
+        return
+      } catch (e) {
+        console.error(`Não consegui seguir o ensaio de "${slug}" na etapa ${etapa}:`, e)
+      }
+    }
+    await this.mutar(slug, (e) => ({ estado: e.teste ? { ...e, teste: { ...e.teste, avancando: null } } : e, resultado: undefined }))
   }
 
   /** Apaga o trabalho feito no cliente de teste e o devolve ao início de `etapa`. Nada é apagado se a checagem falhar. */

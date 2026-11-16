@@ -3,7 +3,7 @@ import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { FsArmazenamento } from "../src/armazenamento"
 import { Barramento } from "../src/barramento"
-import { ErroReiniciando, ErroTurnoAtivo } from "../src/erros"
+import { ErroNaoEhTeste, ErroReiniciando, ErroTurnoAtivo } from "../src/erros"
 import { FakeExecutor, roteiroSimples, type Roteiro } from "../src/executor/fake"
 import type { PedidoTurno } from "../src/executor/tipos"
 import { pastaDoFixture } from "../src/fixture"
@@ -1250,6 +1250,131 @@ describe("modo ensaiado: o executor é escolhido por prospect", () => {
     expect(conversa.at(-1)).toMatchObject({ tipo: "turno_fim", status: "erro" })
     expect((await servico.estado(slug)).teste?.trechos?.["03"]).toBeUndefined()
     await expect(t.enviarMensagem(slug, "03", "de novo")).resolves.toBeUndefined()
+    await t.aguardarOcioso(slug)
+  })
+})
+
+describe("modo ensaiado: avançar ensaio", () => {
+  const passo = (texto: string) => ({ dtMs: 0, evento: { tipo: "texto", texto } })
+
+  beforeEach(async () => {
+    await criarFixtureMinimo(pastaDoFixture(raiz, "mini"))
+  })
+
+  async function gravarRoteiro03(gatilhos: string[]) {
+    const trechos = gatilhos.map((gatilho, i) => ({ gatilho, textoPreenchido: null, passos: [passo(`trecho ${i}`)] }))
+    await writeFile(path.join(pastaDoFixture(raiz, "mini"), "ensaio/03/roteiro.json"), JSON.stringify({ versao: 1, etapa: "03", trechos }))
+  }
+
+  async function proporDois(slug: string): Promise<[string, string]> {
+    await mkdir(path.join(raiz, "clientes", slug, ".app/rascunhos"), { recursive: true })
+    for (const nome of ["primeiro", "segundo"]) {
+      await writeFile(path.join(raiz, "clientes", slug, `.app/rascunhos/${nome}.md`), `# ${nome}`)
+      await servico.ferramenta({ slug, etapa: "03" }, "propor_entregavel", {
+        tipo: "secao",
+        titulo: `Seção ${nome}`,
+        arquivo_rascunho: `clientes/${slug}/.app/rascunhos/${nome}.md`,
+        nome_final: nome,
+      })
+    }
+    const [a, b] = (await servico.estado(slug)).entregaveis.filter((e) => e.etapa === "03")
+    return [a!.id, b!.id]
+  }
+
+  const statusDe = async (slug: string, id: string) => (await servico.estado(slug)).entregaveis.find((e) => e.id === id)!.status
+
+  it("aprova só o mais antigo; o segundo só depois que o turno da primeira aprovação termina", async () => {
+    await gravarRoteiro03(["aprovar", "aprovar", "automatica"])
+    let soltar: () => void = () => {}
+    const portao = new Promise<void>((r) => (soltar = r))
+    let turnosEnsaio = 0
+    const executorEnsaio = new FakeExecutor(async function* () {
+      turnosEnsaio++
+      if (turnosEnsaio === 1) await portao
+      yield { tipo: "texto", texto: "tocado" }
+      yield { tipo: "fim", ok: true, erro: null, sessionId: null }
+    })
+    const t = new ServicoTurnos({ servico, executor: new FakeExecutor(roteiroSimples("principal")), executorEnsaio, barramento, catalogo: catalogoReal(), config })
+    const slug = await servico.criarClienteTeste("mini", "03", null, true)
+    await servico.iniciarEtapa(slug, "03")
+    const [a, b] = await proporDois(slug)
+
+    await servico.avancarEnsaio(slug, "03", null)
+    expect((await servico.estado(slug)).teste?.avancando).toBe("03")
+    expect(await statusDe(slug, a)).toBe("aprovado")
+    await vi.waitFor(() => expect(executorEnsaio.pedidos).toHaveLength(1))
+    expect(await statusDe(slug, b)).toBe("pendente")
+
+    soltar()
+    await t.aguardarOcioso(slug)
+    expect(await statusDe(slug, b)).toBe("aprovado")
+    expect(executorEnsaio.pedidos).toHaveLength(3)
+    expect(executorEnsaio.pedidos[0]!.mensagem).toContain("Seção primeiro")
+    expect(executorEnsaio.pedidos[1]!.mensagem).toContain("Seção segundo")
+    expect(executorEnsaio.pedidos[2]!.mensagem).toContain("Siga para o próximo passo.")
+    expect((await servico.estado(slug)).teste?.avancando).toBeNull()
+  })
+
+  it("quando o último trecho toca, avancando volta a null e nenhuma aprovação nova acontece", async () => {
+    await gravarRoteiro03(["aprovar"])
+    const executorEnsaio = new FakeExecutor(roteiroSimples("ensaio"))
+    const t = new ServicoTurnos({ servico, executor: new FakeExecutor(roteiroSimples("principal")), executorEnsaio, barramento, catalogo: catalogoReal(), config })
+    const slug = await servico.criarClienteTeste("mini", "03", null, true)
+    await servico.iniciarEtapa(slug, "03")
+    const [a, b] = await proporDois(slug)
+    await servico.avancarEnsaio(slug, "03", null)
+    await t.aguardarOcioso(slug)
+    expect(executorEnsaio.pedidos).toHaveLength(1)
+    expect(await statusDe(slug, a)).toBe("aprovado")
+    expect(await statusDe(slug, b)).toBe("pendente")
+    expect((await servico.estado(slug)).teste?.avancando).toBeNull()
+  })
+
+  it("turno de ensaio com erro interrompe o avanço", async () => {
+    await gravarRoteiro03(["aprovar", "aprovar"])
+    const executorEnsaio = new FakeExecutor(async function* () {
+      yield { tipo: "fim", ok: false, erro: "falhou", sessionId: null }
+    })
+    const t = new ServicoTurnos({ servico, executor: new FakeExecutor(roteiroSimples("principal")), executorEnsaio, barramento, catalogo: catalogoReal(), config })
+    const slug = await servico.criarClienteTeste("mini", "03", null, true)
+    await servico.iniciarEtapa(slug, "03")
+    const [, b] = await proporDois(slug)
+    await servico.avancarEnsaio(slug, "03", null)
+    await t.aguardarOcioso(slug)
+    expect(executorEnsaio.pedidos).toHaveLength(1)
+    expect(await statusDe(slug, b)).toBe("pendente")
+    expect((await servico.estado(slug)).teste?.avancando).toBeNull()
+  })
+
+  it("sem pendente, enfileira a mensagem automática para tocar o trecho seguinte", async () => {
+    await gravarRoteiro03(["automatica"])
+    const executorEnsaio = new FakeExecutor(roteiroSimples("ensaio"))
+    const t = new ServicoTurnos({ servico, executor: new FakeExecutor(roteiroSimples("principal")), executorEnsaio, barramento, catalogo: catalogoReal(), config })
+    const slug = await servico.criarClienteTeste("mini", "03", null, true)
+    await servico.iniciarEtapa(slug, "03")
+    await servico.avancarEnsaio(slug, "03", null)
+    await t.aguardarOcioso(slug)
+    expect(executorEnsaio.pedidos).toHaveLength(1)
+    expect(executorEnsaio.pedidos[0]!.mensagem).toContain("Siga para o próximo passo.")
+    const conversa = await servico.conversa(slug, "03")
+    expect(conversa.some((e) => e.tipo === "mensagem_analista" && e.automatica && e.texto === "Siga para o próximo passo.")).toBe(true)
+  })
+
+  it("prospect sem ensaio lança ErroNaoEhTeste; com turno ativo, ErroTurnoAtivo", async () => {
+    let soltar: () => void = () => {}
+    const portao = new Promise<void>((r) => (soltar = r))
+    const executorEnsaio = new FakeExecutor(async function* () {
+      await portao
+      yield { tipo: "fim", ok: true, erro: null, sessionId: null }
+    })
+    const t = new ServicoTurnos({ servico, executor: new FakeExecutor(roteiroSimples("principal")), executorEnsaio, barramento, catalogo: catalogoReal(), config })
+    const comum = await servico.criarProspect("Iszi", null)
+    await expect(servico.avancarEnsaio(comum, "03", null)).rejects.toBeInstanceOf(ErroNaoEhTeste)
+    const slug = await servico.criarClienteTeste("mini", "03", null, true)
+    await servico.iniciarEtapa(slug, "03")
+    await t.enviarMensagem(slug, "03", "oi")
+    await expect(servico.avancarEnsaio(slug, "03", null)).rejects.toBeInstanceOf(ErroTurnoAtivo)
+    soltar()
     await t.aguardarOcioso(slug)
   })
 })
