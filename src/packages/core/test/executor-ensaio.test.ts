@@ -23,7 +23,7 @@ function pedido(trecho: TrechoEnsaio | null): PedidoTurno {
     mcpConfig: "{}",
     settings: "{}",
     allowedTools: [],
-    contexto: { slug: "acme", etapa: "03", fixture: "mini", trecho, textoAnalista: null },
+    contexto: { slug: "acme", etapa: "03", fixture: "mini", trecho, textoAnalista: null, mensagemTurno: null, automatica: true },
   }
 }
 

@@ -511,7 +511,7 @@ export class ServicoTurnos {
         .join("\n\n---\n\n")
     }
 
-    const contexto: ContextoTurno = { slug, etapa, fixture: estado.teste?.fixture ?? null, trecho: null, textoAnalista }
+    const contexto: ContextoTurno = { slug, etapa, fixture: estado.teste?.fixture ?? null, trecho: null, textoAnalista, mensagemTurno: texto, automatica }
     const ensaio = estado.teste?.ensaio === true && this.executorEnsaio !== undefined
     const executor = ensaio ? this.executorEnsaio! : this.executor
 

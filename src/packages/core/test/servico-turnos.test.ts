@@ -1170,7 +1170,7 @@ describe("modo ensaiado: o executor é escolhido por prospect", () => {
     await t.aguardarOcioso(slug)
     expect(executorEnsaio.pedidos).toHaveLength(0)
     expect(executor.pedidos).toHaveLength(1)
-    expect(executor.pedidos[0]!.contexto).toEqual({ slug, etapa: "03", fixture: "mini", trecho: null, textoAnalista: "oi" })
+    expect(executor.pedidos[0]!.contexto).toEqual({ slug, etapa: "03", fixture: "mini", trecho: null, textoAnalista: "oi", mensagemTurno: "oi", automatica: false })
     expect((await servico.estado(slug)).teste?.trechos?.["03"]).toBeUndefined()
   })
 
@@ -1179,7 +1179,7 @@ describe("modo ensaiado: o executor é escolhido por prospect", () => {
     const slug = await servico.criarProspect("Iszi", null)
     await t.iniciar(slug, "01")
     await t.aguardarOcioso(slug)
-    expect(executor.pedidos[0]!.contexto).toEqual({ slug, etapa: "01", fixture: null, trecho: null, textoAnalista: null })
+    expect(executor.pedidos[0]!.contexto).toEqual({ slug, etapa: "01", fixture: null, trecho: null, textoAnalista: null, mensagemTurno: null, automatica: true })
   })
 
   it("prospect com ensaio toca o trecho 0 e, no turno seguinte, o trecho 1", async () => {
@@ -1199,6 +1199,8 @@ describe("modo ensaiado: o executor é escolhido por prospect", () => {
       fixture: "mini",
       trecho: trechos[0],
       textoAnalista: "Segue a planilha.",
+      mensagemTurno: "Segue a planilha.",
+      automatica: false,
     })
     expect(executorEnsaio.pedidos[1]!.contexto?.trecho).toEqual(trechos[1])
     const conversa = await servico.conversa(slug, "03")

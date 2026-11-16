@@ -57,6 +57,10 @@ export interface ContextoTurno {
   fixture: string | null
   trecho: TrechoEnsaio | null
   textoAnalista: string | null
+  /** Texto bruto do turno (sem o prompt de abertura); null no turno de abertura. O gravador de ensaio classifica por ele. */
+  mensagemTurno: string | null
+  /** Turno disparado pelo app, não por texto do analista (o turno de abertura sem texto conta como automático). */
+  automatica: boolean
 }
 
 /** Fronteira trocável: v1 é o CLI headless; a Fase 2 troca por Agent SDK sem mexer no resto. */
