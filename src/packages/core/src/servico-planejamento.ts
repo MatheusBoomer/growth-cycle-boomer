@@ -887,19 +887,38 @@ export class ServicoPlanejamento {
    * Um passo do Avançar ensaio: marca a etapa como em avanço e aprova o entregável pendente mais antigo dela.
    * Sem pendente, enfileira a mensagem automática que toca o trecho seguinte. Nunca confirma a validação do
    * cliente nem conclui a etapa. O fim de cada turno de ensaio chama `continuarEnsaio`, que repete o passo.
+   * Recusa (ErroEntrada) quando o avanço da etapa já está em curso ou quando o roteiro dela acabou.
    */
   async avancarEnsaio(slug: string, etapa: EtapaId, autor: string | null): Promise<void> {
     if (this.turnos.estaOcupado(slug)) throw new ErroTurnoAtivo()
+    const teste = (await this.estado(slug)).teste
+    if (!teste?.ensaio) throw new ErroNaoEhTeste()
+    if (teste.avancando === etapa) throw new ErroEntrada("O ensaio já está avançando nesta etapa.")
+    if ((await this.gatilhoEnsaio(slug, etapa)) === null) throw new ErroEntrada("O ensaio desta etapa terminou.")
+    await this.passoEnsaio(slug, etapa, autor, true)
+  }
+
+  /**
+   * Aprova o pendente mais antigo da etapa (ou enfileira a mensagem automática) com o avanço marcado nela.
+   * `inicio`: pedido do analista, recusado se outro avanço da etapa já começou. Falha devolve `avancando` a null.
+   */
+  private async passoEnsaio(slug: string, etapa: EtapaId, autor: string | null, inicio: boolean): Promise<void> {
     const pendente = await this.mutar(slug, (e) => {
       if (!e.teste?.ensaio) throw new ErroNaoEhTeste()
+      if (inicio && e.teste.avancando === etapa) throw new ErroEntrada("O ensaio já está avançando nesta etapa.")
       const maisAntigo =
         e.entregaveis
           .filter((x) => x.status === "pendente" && etapaDaConversa(x) === etapa)
           .sort((x, y) => x.criadoEm.localeCompare(y.criadoEm))[0] ?? null
       return { estado: { ...e, teste: { ...e.teste, avancando: etapa } }, resultado: maisAntigo?.id ?? null }
     })
-    if (pendente) await this.aprovarEntregavel(slug, pendente, autor)
-    else await this.enfileirar(slug, etapa, MENSAGEM_SEGUIR_ENSAIO, autor)
+    try {
+      if (pendente) await this.aprovarEntregavel(slug, pendente, autor)
+      else await this.enfileirar(slug, etapa, MENSAGEM_SEGUIR_ENSAIO, autor)
+    } catch (e) {
+      await this.mutar(slug, (x) => ({ estado: x.teste ? { ...x, teste: { ...x.teste, avancando: null } } : x, resultado: undefined }))
+      throw e
+    }
   }
 
   /**
@@ -914,7 +933,8 @@ export class ServicoPlanejamento {
       turnoOk && avancando === etapa && estado.etapas[etapa].status !== "pronta" && (await this.gatilhoEnsaio(slug, etapa)) !== null
     if (seguir) {
       try {
-        await this.avancarEnsaio(slug, etapa, autor)
+        if (this.turnos.estaOcupado(slug)) throw new ErroTurnoAtivo()
+        await this.passoEnsaio(slug, etapa, autor, false)
         return
       } catch (e) {
         console.error(`Não consegui seguir o ensaio de "${slug}" na etapa ${etapa}:`, e)

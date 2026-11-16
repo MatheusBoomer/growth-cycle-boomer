@@ -11,7 +11,7 @@ import type { MemoriaDeSessao } from "./nuvem/memoria-sessao"
 import type { EntradaUsoTurno } from "./nuvem/tipos"
 import { promptInicialEtapa, promptRetomadaEtapa, systemPromptModoInterface } from "./prompts"
 import type { AjusteEnvio, ServicoPlanejamento } from "./servico-planejamento"
-import type { Catalogo, EtapaId, EventoConversa } from "./tipos"
+import type { Catalogo, Estado, EtapaId, EventoConversa } from "./tipos"
 import { RegistroUso, type UsoAssinatura } from "./uso-assinatura"
 
 const AVISO_SINCRONIZACAO_ANTES = "Não consegui baixar os arquivos do prospect. Tente de novo."
@@ -428,11 +428,18 @@ export class ServicoTurnos {
   private async salvarSessao(slug: string, etapa: EtapaId): Promise<void> {
     if (!this.memoria) return
     try {
-      const sessionId = (await this.servico.estado(slug)).etapas[etapa].sessionId
+      const estado = await this.servico.estado(slug)
+      if (this.ehEnsaio(estado)) return
+      const sessionId = estado.etapas[etapa].sessionId
       if (sessionId) await this.memoria.salvar(slug, sessionId)
     } catch (e) {
       console.error(`Falha ao salvar a sessão do agente de "${slug}":`, e)
     }
+  }
+
+  /** O turno deste prospect toca o roteiro de ensaio em vez de chamar o agente. */
+  private ehEnsaio(estado: Estado): boolean {
+    return estado.teste?.ensaio === true && this.executorEnsaio !== undefined
   }
 
   /** Confere se o .jsonl da sessão está no disco; se não der para restaurar, devolve false (a etapa recomeça pelo histórico). */
@@ -477,13 +484,15 @@ export class ServicoTurnos {
 
   /**
    * Escolhe o trecho do roteiro que o turno de ensaio vai tocar e o põe em `contexto`. Roteiro ausente ou inválido:
-   * registra o erro e fecha o turno sem consumir o índice (devolve false). Gatilho diferente do esperado: avisa e segue.
+   * registra o erro e fecha o turno sem consumir o índice (devolve false). Gatilho diferente do esperado: avisa e segue
+   * (menos durante o Avançar ensaio da etapa).
    */
   private async prepararEnsaio(
     slug: string,
     etapa: EtapaId,
     mensagem: string,
     automatica: boolean,
+    avancando: boolean,
     contexto: ContextoTurno,
   ): Promise<boolean> {
     let roteiro
@@ -498,7 +507,8 @@ export class ServicoTurnos {
     const indice = await this.servico.consumirTrechoEnsaio(slug, etapa)
     const trecho = roteiro.trechos[indice] ?? null
     contexto.trecho = trecho
-    if (trecho && trecho.gatilho !== classificarGatilho(mensagem, automatica)) {
+    // Durante o Avançar ensaio a mensagem é sempre a do avanço: o gatilho diferente não é desvio do analista.
+    if (trecho && !avancando && trecho.gatilho !== classificarGatilho(mensagem, automatica)) {
       await this.registrar(slug, etapa, { tipo: "aviso", nivel: "alerta", texto: AVISO_FORA_DO_ROTEIRO, em: this.agora() })
     }
     return true
@@ -512,25 +522,30 @@ export class ServicoTurnos {
     autor: string | null,
   ): Promise<ResultadoTurno> {
     const estado = await this.servico.estado(slug)
+    const ensaio = this.ehEnsaio(estado)
     // Última mensagem do analista na conversa: diz se o turno é automático e qual texto o analista escreveu.
-    // O turno de abertura (texto null) não tem mensagem própria: conta como automático e sem texto.
+    // O turno de abertura (texto null) não tem mensagem própria: conta como automático e sem texto. Só o cliente
+    // de teste (ensaio e gravador) usa isso; prospect real não lê a conversa e segue com os valores padrão.
     const ultimaMensagem =
-      texto === null
+      texto === null || !estado.teste
         ? undefined
         : [...(await this.servico.conversa(slug, etapa))]
             .reverse()
             .find((e): e is Extract<EventoConversa, { tipo: "mensagem_analista" }> => e.tipo === "mensagem_analista")
-    const automatica = ultimaMensagem ? ultimaMensagem.automatica === true : true
+    const automatica = estado.teste ? (ultimaMensagem ? ultimaMensagem.automatica === true : true) : texto === null
     const textoAnalista = ultimaMensagem && !automatica ? ultimaMensagem.texto : null
     const etapaCat = etapaDoCatalogo(this.catalogo, etapa)
-    let sessionId = estado.etapas[etapa].sessionId
+    // O turno de ensaio não tem sessão do agente: nada a restaurar, retomar nem guardar.
+    let sessionId = ensaio ? null : estado.etapas[etapa].sessionId
     let retomada = false
     if (sessionId && !(await this.restaurarSessao(slug, sessionId))) {
       sessionId = null
       retomada = true
     }
     let mensagem: string
-    if (sessionId) {
+    if (ensaio) {
+      mensagem = texto ?? "Continue de onde parou."
+    } else if (sessionId) {
       mensagem = texto ?? "Continue de onde parou."
     } else if (retomada) {
       let historico = await this.servico.conversa(slug, etapa)
@@ -548,7 +563,6 @@ export class ServicoTurnos {
     }
 
     const contexto: ContextoTurno = { slug, etapa, fixture: estado.teste?.fixture ?? null, trecho: null, textoAnalista, mensagemTurno: texto, automatica }
-    const ensaio = estado.teste?.ensaio === true && this.executorEnsaio !== undefined
     const executor = ensaio ? this.executorEnsaio! : this.executor
 
     const token = randomUUID()
@@ -573,9 +587,11 @@ export class ServicoTurnos {
     let terminou = false
     let ok = false
     try {
-      if (ensaio && !(await this.prepararEnsaio(slug, etapa, texto ?? "", automatica, contexto))) return { ensaio, ok }
+      const avancando = estado.teste?.avancando === etapa
+      if (ensaio && !(await this.prepararEnsaio(slug, etapa, texto ?? "", automatica, avancando, contexto))) return { ensaio, ok }
       for await (const ev of executor.executar(pedido, sinal)) {
-        if (ev.tipo === "sessao" && ev.sessionId !== sessionId) {
+        if (ev.tipo === "sessao") {
+          if (ensaio || ev.sessionId === sessionId) continue
           sessionId = ev.sessionId
           await this.servico.definirSessao(slug, etapa, ev.sessionId)
         } else if (ev.tipo === "texto_delta") {
@@ -603,7 +619,7 @@ export class ServicoTurnos {
           })
         } else if (ev.tipo === "fim") {
           terminou = true
-          if (ev.sessionId && ev.sessionId !== sessionId) await this.servico.definirSessao(slug, etapa, ev.sessionId)
+          if (!ensaio && ev.sessionId && ev.sessionId !== sessionId) await this.servico.definirSessao(slug, etapa, ev.sessionId)
           const status = sinal.aborted ? "interrompido" : ev.ok ? "ok" : "erro"
           ok = status === "ok"
           const fim = this.agora()

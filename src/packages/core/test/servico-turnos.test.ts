@@ -3,7 +3,7 @@ import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { FsArmazenamento } from "../src/armazenamento"
 import { Barramento } from "../src/barramento"
-import { ErroNaoEhTeste, ErroReiniciando, ErroTurnoAtivo } from "../src/erros"
+import { ErroEntrada, ErroNaoEhTeste, ErroReiniciando, ErroTurnoAtivo } from "../src/erros"
 import { FakeExecutor, roteiroSimples, type Roteiro } from "../src/executor/fake"
 import type { PedidoTurno } from "../src/executor/tipos"
 import { pastaDoFixture } from "../src/fixture"
@@ -1254,6 +1254,74 @@ describe("modo ensaiado: o executor é escolhido por prospect", () => {
   })
 })
 
+describe("modo ensaiado: sessão, leitura da conversa e aviso", () => {
+  const RETOMADA = "Retomei a etapa a partir do histórico."
+
+  beforeEach(async () => {
+    await criarFixtureMinimo(pastaDoFixture(raiz, "mini"))
+  })
+
+  it("turno de ensaio não restaura sessão nem avisa retomada, mesmo com memória que não restaura", async () => {
+    const chamadas: string[] = []
+    const memoria: MemoriaDeSessao = {
+      restaurar: async (s, id) => {
+        chamadas.push(`restaurar ${s} ${id}`)
+        return false
+      },
+      salvar: async (s, id) => void chamadas.push(`salvar ${s} ${id}`),
+    }
+    const executorEnsaio = new FakeExecutor(async function* (p) {
+      const id = `ensaio-${p.contexto!.slug}-${p.contexto!.etapa}`
+      yield { tipo: "sessao", sessionId: id }
+      yield { tipo: "texto", texto: "tocado" }
+      yield { tipo: "fim", ok: true, erro: null, sessionId: id }
+    })
+    const t = new ServicoTurnos({ servico, executor: new FakeExecutor(roteiroSimples("principal")), executorEnsaio, barramento, catalogo: catalogoReal(), config, memoria })
+    const slug = await servico.criarClienteTeste("mini", "03", null, true)
+    await servico.iniciarEtapa(slug, "03")
+    await t.enviarMensagem(slug, "03", "Segue a planilha.")
+    await t.aguardarOcioso(slug)
+    await t.enviarMensagem(slug, "03", "O analista APROVOU o entregável “X” (x). Siga.")
+    await t.aguardarOcioso(slug)
+    expect(executorEnsaio.pedidos).toHaveLength(2)
+    const conversa = await servico.conversa(slug, "03")
+    expect(conversa.some((e) => e.tipo === "aviso" && e.texto === RETOMADA)).toBe(false)
+    expect(chamadas).toEqual([])
+  })
+
+  it("turno de prospect comum não lê a conversa e segue com automática por abertura e sem texto do analista", async () => {
+    const executor = new FakeExecutor(roteiroSimples("ok"))
+    const t = new ServicoTurnos({ servico, executor, barramento, catalogo: catalogoReal(), config })
+    const slug = await servico.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    const espiao = vi.spyOn(servico, "conversa")
+    try {
+      await t.enviarMensagem(slug, "01", "segue")
+      await t.aguardarOcioso(slug)
+      expect(espiao).not.toHaveBeenCalled()
+    } finally {
+      espiao.mockRestore()
+    }
+    expect(executor.pedidos[1]!.contexto).toMatchObject({ fixture: null, automatica: false, textoAnalista: null })
+    expect(executor.pedidos[0]!.contexto).toMatchObject({ fixture: null, automatica: true, textoAnalista: null })
+  })
+
+  it("Avançar ensaio sobre um trecho de mensagem não registra o aviso de fora do roteiro", async () => {
+    const trechos = [{ gatilho: "mensagem", textoPreenchido: "Oi", passos: [{ dtMs: 0, evento: { tipo: "texto", texto: "t0" } }] }]
+    await writeFile(path.join(pastaDoFixture(raiz, "mini"), "ensaio/03/roteiro.json"), JSON.stringify({ versao: 1, etapa: "03", trechos }))
+    const executorEnsaio = new FakeExecutor(roteiroSimples("ensaio"))
+    const t = new ServicoTurnos({ servico, executor: new FakeExecutor(roteiroSimples("principal")), executorEnsaio, barramento, catalogo: catalogoReal(), config })
+    const slug = await servico.criarClienteTeste("mini", "03", null, true)
+    await servico.iniciarEtapa(slug, "03")
+    await servico.avancarEnsaio(slug, "03", null)
+    await t.aguardarOcioso(slug)
+    expect(executorEnsaio.pedidos).toHaveLength(1)
+    const conversa = await servico.conversa(slug, "03")
+    expect(conversa.some((e) => e.tipo === "aviso" && e.texto === "Fora do roteiro: use Avançar ensaio ou reinicie a etapa.")).toBe(false)
+  })
+})
+
 describe("modo ensaiado: avançar ensaio", () => {
   const passo = (texto: string) => ({ dtMs: 0, evento: { tipo: "texto", texto } })
 
@@ -1376,5 +1444,58 @@ describe("modo ensaiado: avançar ensaio", () => {
     await expect(servico.avancarEnsaio(slug, "03", null)).rejects.toBeInstanceOf(ErroTurnoAtivo)
     soltar()
     await t.aguardarOcioso(slug)
+  })
+
+  it("falha ao aprovar devolve avancando a null e repassa o erro", async () => {
+    await gravarRoteiro03(["aprovar"])
+    new ServicoTurnos({ servico, executor: new FakeExecutor(roteiroSimples("principal")), executorEnsaio: new FakeExecutor(roteiroSimples("ensaio")), barramento, catalogo: catalogoReal(), config })
+    const slug = await servico.criarClienteTeste("mini", "03", null, true)
+    await servico.iniciarEtapa(slug, "03")
+    await proporDois(slug)
+    const espiao = vi.spyOn(servico, "aprovarEntregavel").mockRejectedValue(new Error("disco cheio"))
+    try {
+      await expect(servico.avancarEnsaio(slug, "03", null)).rejects.toThrow("disco cheio")
+    } finally {
+      espiao.mockRestore()
+    }
+    expect((await servico.estado(slug)).teste?.avancando).toBeNull()
+  })
+
+  it("um segundo pedido enquanto o avanço da etapa está em curso é recusado", async () => {
+    await gravarRoteiro03(["aprovar", "aprovar"])
+    new ServicoTurnos({ servico, executor: new FakeExecutor(roteiroSimples("principal")), executorEnsaio: new FakeExecutor(roteiroSimples("ensaio")), barramento, catalogo: catalogoReal(), config })
+    const slug = await servico.criarClienteTeste("mini", "03", null, true)
+    await servico.iniciarEtapa(slug, "03")
+    const [a] = await proporDois(slug)
+    let soltar: () => void = () => {}
+    const portao = new Promise<void>((r) => (soltar = r))
+    const espiao = vi.spyOn(servico, "aprovarEntregavel").mockImplementation(() => portao)
+    try {
+      const primeiro = servico.avancarEnsaio(slug, "03", null)
+      await vi.waitFor(() => expect(espiao).toHaveBeenCalledTimes(1))
+      const segundo = servico.avancarEnsaio(slug, "03", null)
+      await expect(segundo).rejects.toBeInstanceOf(ErroEntrada)
+      await expect(segundo).rejects.toThrow("O ensaio já está avançando nesta etapa.")
+      expect(espiao).toHaveBeenCalledTimes(1)
+      soltar()
+      await primeiro
+    } finally {
+      espiao.mockRestore()
+    }
+    expect(await statusDe(slug, a)).toBe("pendente")
+  })
+
+  it("roteiro já tocado até o fim: recusa sem aprovar nada", async () => {
+    await gravarRoteiro03(["aprovar"])
+    new ServicoTurnos({ servico, executor: new FakeExecutor(roteiroSimples("principal")), executorEnsaio: new FakeExecutor(roteiroSimples("ensaio")), barramento, catalogo: catalogoReal(), config })
+    const slug = await servico.criarClienteTeste("mini", "03", null, true)
+    await servico.iniciarEtapa(slug, "03")
+    const [a] = await proporDois(slug)
+    await servico.consumirTrechoEnsaio(slug, "03")
+    const pedido = servico.avancarEnsaio(slug, "03", null)
+    await expect(pedido).rejects.toBeInstanceOf(ErroEntrada)
+    await expect(pedido).rejects.toThrow("O ensaio desta etapa terminou.")
+    expect(await statusDe(slug, a)).toBe("pendente")
+    expect((await servico.estado(slug)).teste?.avancando ?? null).toBeNull()
   })
 })

@@ -1,6 +1,6 @@
 import { access, mkdir, writeFile } from "node:fs/promises"
 import path from "node:path"
-import { beforeEach, describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { pastaEnsaio, type TrechoEnsaio } from "../src/ensaio/roteiro"
 import { criarExecutorEnsaio, FATOR_TEMPO, ESPERA_MAXIMA_MS } from "../src/executor/ensaio"
 import type { EventoExecutor, PedidoTurno } from "../src/executor/tipos"
@@ -139,6 +139,50 @@ describe("criarExecutorEnsaio", () => {
     const resultado = eventos.find((e) => e.tipo === "ferramenta_resultado") as Extract<EventoExecutor, { tipo: "ferramenta_resultado" }>
     expect(resultado.erro).toBe(true)
     expect(eventos[eventos.length - 1]).toMatchObject({ tipo: "fim", ok: true })
+  })
+
+  it("loga no console a recusa quando a chamada da ferramenta falha", async () => {
+    await gravarArquivoDoPacote("grafico.png")
+    const erro = vi.spyOn(console, "error").mockImplementation(() => {})
+    try {
+      const executor = criarExecutorEnsaio({
+        dormir: async () => {},
+        chamarFerramenta: async () => {
+          throw new Error("Arquivo não encontrado: x.png")
+        },
+      })
+      await coletar(executor.executar(pedido(trechoComChamada), new AbortController().signal))
+      expect(erro).toHaveBeenCalledWith(expect.stringContaining("Arquivo não encontrado: x.png"))
+    } finally {
+      erro.mockRestore()
+    }
+  })
+
+  it("documento do plano: restaura o JSON acompanhante com o nome que a aprovação espera antes de chamar a ferramenta", async () => {
+    const pacote = path.join(pastaEnsaio(raiz, "mini", "08"), "arquivos")
+    await mkdir(pacote, { recursive: true })
+    await writeFile(path.join(pacote, "3-plano.docx"), "docx")
+    await writeFile(path.join(pacote, "3-plano-de-acao-estrategico.json"), "{}")
+    const trecho: TrechoEnsaio = {
+      gatilho: "mensagem",
+      textoPreenchido: null,
+      passos: [
+        { dtMs: 0, ferramenta: "propor_entregavel", entrada: { tipo: "documento", nome_final: "plano-de-acao-estrategico", arquivo_rascunho: "3-plano.docx" } },
+      ],
+    }
+    const acompanhante = path.join(raiz, "clientes/acme/.app/rascunhos/plano-de-acao-estrategico.json")
+    let existiaNaChamada = false
+    const executor = criarExecutorEnsaio({
+      dormir: async () => {},
+      chamarFerramenta: async () => {
+        await access(acompanhante).then(() => (existiaNaChamada = true))
+        return "ok"
+      },
+    })
+    const base = pedido(trecho)
+    const eventos = await coletar(executor.executar({ ...base, contexto: { ...base.contexto!, etapa: "08" } }, new AbortController().signal))
+    expect(existiaNaChamada).toBe(true)
+    expect(eventos.at(-1)).toMatchObject({ tipo: "fim", ok: true })
   })
 
   it("sem contexto de ensaio, termina com erro explicativo", async () => {

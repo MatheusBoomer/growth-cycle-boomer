@@ -1,9 +1,10 @@
 import { readFile } from "node:fs/promises"
 import path from "node:path"
+import { nomesAcompanhantes, normalizarNomeFinal } from "../entregaveis"
 import { ErroFixture } from "../erros"
 import type { EventoExecutor } from "../executor/tipos"
 import { pastaDoFixture } from "../fixture"
-import type { EtapaId } from "../tipos"
+import type { EtapaId, TipoEntregavel } from "../tipos"
 
 /** O que disparou o trecho: texto do analista, aprovação, pedido de ajuste ou mensagem automática do app. */
 export type TipoGatilho = "mensagem" | "aprovar" | "ajuste" | "automatica"
@@ -68,4 +69,19 @@ export function classificarGatilho(mensagem: string, automatica: boolean): TipoG
   if (mensagem.startsWith("O analista APROVOU")) return "aprovar"
   if (mensagem.includes("AJUSTE no entregável")) return "ajuste"
   return automatica ? "automatica" : "mensagem"
+}
+
+/**
+ * JSONs que acompanham o documento citado numa chamada de `propor_entregavel` (como a aprovação os procura, ao lado do
+ * rascunho). `etapa` é a da conversa; `etapa_origem`, quando vem, manda. Entrada que não é documento do plano: vazio.
+ */
+export function acompanhantesDaProposta(entrada: Record<string, unknown>, etapa: EtapaId): string[] {
+  if (entrada.tipo !== "documento" || typeof entrada.nome_final !== "string") return []
+  const dona = (typeof entrada.etapa_origem === "string" ? entrada.etapa_origem : etapa) as EtapaId
+  try {
+    const nomeFinal = normalizarNomeFinal(entrada.tipo as TipoEntregavel, entrada.nome_final, dona)
+    return nomesAcompanhantes({ tipo: "documento", etapa: dona, nomeFinal })
+  } catch {
+    return []
+  }
 }

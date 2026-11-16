@@ -1,6 +1,6 @@
 import { copyFile, mkdir } from "node:fs/promises"
 import path from "node:path"
-import { pastaEnsaio, type ChamadaGravada, type EventoGravado } from "../ensaio/roteiro"
+import { acompanhantesDaProposta, pastaEnsaio, type ChamadaGravada, type EventoGravado } from "../ensaio/roteiro"
 import { chamarFerramentaDoApp } from "./fake"
 import type { EventoExecutor, Executor, PedidoTurno } from "./tipos"
 
@@ -82,6 +82,15 @@ export function criarExecutorEnsaio(opcoes: OpcoesExecutorEnsaio = {}): Executor
             return
           }
           entrada = { ...entrada, arquivo_rascunho: relativo }
+          // JSONs do documento do plano: gravados como `<n>-<nome>`, voltam ao lado do rascunho com o nome que a aprovação procura.
+          const prefixo = /^\d+-/.exec(nomeArquivo)?.[0] ?? ""
+          for (const acompanhante of acompanhantesDaProposta(passo.entrada, contexto.etapa)) {
+            try {
+              await copyFile(path.join(pacote, "arquivos", `${prefixo}${acompanhante}`), path.join(pedido.cwd, path.dirname(relativo), acompanhante))
+            } catch {
+              // acompanhante ausente no pacote vira aviso na aprovação, como numa execução real
+            }
+          }
         }
 
         contador += 1
@@ -90,8 +99,9 @@ export function criarExecutorEnsaio(opcoes: OpcoesExecutorEnsaio = {}): Executor
         let erro = false
         try {
           await chamarFerramenta(pedido, passo.ferramenta, entrada)
-        } catch {
+        } catch (e) {
           erro = true
+          console.error(`[ensaio] a ferramenta ${passo.ferramenta} recusou a chamada: ${e instanceof Error ? e.message : String(e)}`)
         }
         yield { tipo: "ferramenta_resultado", id, erro }
       }

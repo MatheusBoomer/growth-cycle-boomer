@@ -1,4 +1,4 @@
-import { access, mkdir, readFile, writeFile } from "node:fs/promises"
+import { access, mkdir, readdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { beforeEach, describe, expect, it } from "vitest"
 import { montarRoteiro } from "../src/ensaio/montar"
@@ -153,6 +153,54 @@ describe("GravadorExecutor", () => {
     abortado.abort()
     await coletar(new GravadorExecutor(turnoComGrafico("Read"), { raiz }).executar(pedido(contexto()), abortado.signal))
     expect(await existe(path.join(pastaEnsaio(raiz, "mini", "03"), "gravacao.jsonl"))).toBe(false)
+  })
+
+  it("documento do plano: copia também o JSON acompanhante com o mesmo prefixo numerado", async () => {
+    const pastaRascunhos = path.join(raiz, "clientes/acme/.app/rascunhos")
+    await mkdir(pastaRascunhos, { recursive: true })
+    await writeFile(path.join(pastaRascunhos, "plano.docx"), "docx")
+    await writeFile(path.join(pastaRascunhos, "plano-de-acao-estrategico.json"), "{\"itens\":[]}")
+    const documento = new FakeExecutor(async function* () {
+      yield {
+        tipo: "ferramenta",
+        id: "t1",
+        nome: "mcp__planejamento__propor_entregavel",
+        entrada: { tipo: "documento", nome_final: "plano-de-acao-estrategico", arquivo_rascunho: "clientes/acme/.app/rascunhos/plano.docx" },
+      }
+      yield { tipo: "fim", ok: true, erro: null, sessionId: null }
+    })
+    await coletar(new GravadorExecutor(documento, { raiz }).executar(pedido(contexto({ etapa: "08" })), new AbortController().signal))
+    const arquivos = path.join(pastaEnsaio(raiz, "mini", "08"), "arquivos")
+    expect((await readdir(arquivos)).sort()).toEqual(["1-plano-de-acao-estrategico.json", "1-plano.docx"])
+    expect(await readFile(path.join(arquivos, "1-plano-de-acao-estrategico.json"), "utf8")).toBe("{\"itens\":[]}")
+  })
+
+  it("turno de abertura com gravação anterior: guarda a antiga com data e começa do zero", async () => {
+    await prepararRascunho()
+    const pasta = pastaEnsaio(raiz, "mini", "03")
+    await mkdir(path.join(pasta, "arquivos"), { recursive: true })
+    await writeFile(path.join(pasta, "gravacao.jsonl"), "linha antiga\n")
+    await writeFile(path.join(pasta, "arquivos/1-velho.png"), "velho")
+    const agora = Date.parse("2026-11-16T12:00:00.000Z")
+    const gravador = new GravadorExecutor(turnoComGrafico(), { raiz, agora: () => agora })
+    await coletar(gravador.executar(pedido(contexto({ mensagemTurno: null, textoAnalista: null, automatica: true })), new AbortController().signal))
+    const sufixo = "2026-11-16T12-00-00-000Z"
+    expect(await readFile(path.join(pasta, `gravacao-${sufixo}.jsonl`), "utf8")).toBe("linha antiga\n")
+    expect(await readFile(path.join(pasta, `arquivos-${sufixo}/1-velho.png`), "utf8")).toBe("velho")
+    const linhas = (await readFile(path.join(pasta, "gravacao.jsonl"), "utf8")).trim().split("\n")
+    expect(linhas).toHaveLength(1)
+    expect((JSON.parse(linhas[0]!) as LinhaGravacao).mensagem).toBe("")
+    expect(await readdir(path.join(pasta, "arquivos"))).toEqual(["1-g.png"])
+  })
+
+  it("turno que não é de abertura acrescenta à gravação existente sem mexer nela", async () => {
+    await prepararRascunho()
+    const pasta = pastaEnsaio(raiz, "mini", "03")
+    await mkdir(pasta, { recursive: true })
+    await writeFile(path.join(pasta, "gravacao.jsonl"), "linha antiga\n")
+    await coletar(new GravadorExecutor(turnoComGrafico(), { raiz }).executar(pedido(contexto()), new AbortController().signal))
+    expect((await readdir(pasta)).filter((n) => n.startsWith("gravacao"))).toEqual(["gravacao.jsonl"])
+    expect((await readFile(path.join(pasta, "gravacao.jsonl"), "utf8")).startsWith("linha antiga\n")).toBe(true)
   })
 
   it("rascunho que não existe ou que está fora da pasta do prospect não derruba o turno nem é copiado", async () => {
