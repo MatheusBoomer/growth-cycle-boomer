@@ -89,6 +89,8 @@ export interface Entregavel {
   editadoEm?: string
   /** E-mail de quem aprovou ou pediu ajuste; ausente sem login ou em estados antigos. */
   decididoPor?: string
+  /** Etapa do chat onde o card vive, quando difere de `etapa` (ex.: gráfico da 03 refeito na conversa da 04). */
+  etapaConversa?: EtapaId
 }
 
 export type StatusInsumo = "pendente" | "invalido" | "valido"
@@ -156,7 +158,23 @@ export interface Estado {
   filaAutomatica: ItemFila[]
   /** Só em cliente de teste: de qual fixture ele veio e em qual etapa começou o último reposicionamento. */
   teste?: { fixture: string; etapaInicial: EtapaId }
+  /** Gate da etapa 04: documento de validação gerado, baixado e confirmado pelo analista. Ausente em estado antigo. */
+  validacaoCliente?: ValidacaoCliente
   atualizadoEm: string
+}
+
+/** Documento de validação do cliente (PDF) e as duas confirmações do analista; datas ISO, `null` até acontecerem. */
+export interface ValidacaoCliente {
+  /** Relativo à pasta do prospect. */
+  arquivo: string
+  /** Primeira vez que o documento foi gerado; não muda quando ele é gerado de novo. */
+  primeiraGeracaoEm: string
+  /** Última geração do documento. */
+  geradoEm: string
+  baixadoEm: string | null
+  baixadoPor: string | null
+  confirmadoEm: string | null
+  confirmadoPor: string | null
 }
 
 /** Entregável citado numa mensagem do analista (pedido de ajuste); `primeiraMarcacao` segue contínua entre referências. */

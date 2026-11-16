@@ -75,7 +75,15 @@ describe("fixture real da Verdeluz", () => {
 
     const faltando = condicoesConcluir({ ...estado, etapas: { ...estado.etapas, [etapa]: { ...estado.etapas[etapa], status: "pronta" } } }, etapa, catalogoReal())
     expect(faltando.filter((f) => f.startsWith("Aprovar:")), "nenhum entregável pendente").toEqual([])
-    expect(faltando.every((f) => f.startsWith("Enviar:") || f.startsWith("O agente ainda não sinalizou"))).toBe(true)
+    // Na 04 o gate de validação do cliente também pende, já que o documento ainda não foi gerado.
+    expect(
+      faltando.every(
+        (f) =>
+          f.startsWith("Enviar:") ||
+          f.startsWith("O agente ainda não sinalizou") ||
+          (etapa === "04" && f === "Gerar o documento de validação do cliente"),
+      ),
+    ).toBe(true)
 
     const dossie = await servico.dossie(slug, etapa)
     for (const m of dossie.matchAll(/`clientes\/[^/`]+\/([^`]+)`/g)) {
