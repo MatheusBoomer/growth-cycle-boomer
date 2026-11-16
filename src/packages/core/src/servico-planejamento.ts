@@ -28,7 +28,8 @@ import {
   pedirAjuste,
   proporEntregavel,
 } from "./entregaveis"
-import { ehErroDominio, ErroEntrada, ErroNaoEhTeste, ErroNaoEncontrado, ErroTurnoAtivo } from "./erros"
+import { ehErroDominio, ErroEntrada, ErroFixture, ErroNaoEhTeste, ErroNaoEncontrado, ErroTurnoAtivo } from "./erros"
+import { carregarRoteiro, type TipoGatilho } from "./ensaio/roteiro"
 import { carregarFixture } from "./fixture"
 import {
   ARQUIVO_VALIDACAO,
@@ -843,14 +844,41 @@ export class ServicoPlanejamento {
   // ---------- cliente de teste ----------
 
   /** Cria o cliente de teste a partir de clientes/_fixtures/<id>/ já posicionado em `etapaInicial`. */
-  async criarClienteTeste(fixtureId: string, etapaInicial: EtapaId = "01", autor: string | null = null): Promise<string> {
+  async criarClienteTeste(fixtureId: string, etapaInicial: EtapaId = "01", autor: string | null = null, ensaio = false): Promise<string> {
     const fixture = await carregarFixture(this.arm.raiz, fixtureId)
     const slug = await this.criarProspect(fixture.manifesto.prospect.nome, fixture.manifesto.prospect.site, autor)
     const claudeMd = await this.arm.lerTexto(slug, "CLAUDE.md")
     if (claudeMd) await this.arm.gravarTexto(slug, "CLAUDE.md", aplicarOverrides(claudeMd, fixture.manifesto.overrides))
-    await this.mutar(slug, (e) => ({ estado: { ...e, teste: { fixture: fixtureId, etapaInicial } }, resultado: undefined }))
+    await this.mutar(slug, (e) => ({
+      estado: { ...e, teste: ensaio ? { fixture: fixtureId, etapaInicial, ensaio: true } : { fixture: fixtureId, etapaInicial } },
+      resultado: undefined,
+    }))
     await this.reposicionarTeste(slug, etapaInicial)
     return slug
+  }
+
+  /** Índice do trecho do roteiro de ensaio que o próximo turno da etapa vai reproduzir; grava o seguinte. */
+  consumirTrechoEnsaio(slug: string, etapa: EtapaId): Promise<number> {
+    return this.mutar(slug, (e) => {
+      if (!e.teste) throw new ErroNaoEhTeste()
+      const atual = e.teste.trechos?.[etapa] ?? 0
+      return { estado: { ...e, teste: { ...e.teste, trechos: { ...e.teste.trechos, [etapa]: atual + 1 } } }, resultado: atual }
+    })
+  }
+
+  /** Trecho do roteiro no índice atual da etapa; `null` se o cliente não é de ensaio, a etapa não tem roteiro ou ele já acabou. */
+  async gatilhoEnsaio(slug: string, etapa: EtapaId): Promise<{ gatilho: TipoGatilho; textoPreenchido: string | null } | null> {
+    const teste = (await this.estado(slug)).teste
+    if (!teste?.ensaio) return null
+    let roteiro
+    try {
+      roteiro = await carregarRoteiro(this.arm.raiz, teste.fixture, etapa)
+    } catch (e) {
+      if (e instanceof ErroFixture) return null
+      throw e
+    }
+    const trecho = roteiro.trechos[teste.trechos?.[etapa] ?? 0]
+    return trecho ? { gatilho: trecho.gatilho, textoPreenchido: trecho.textoPreenchido } : null
   }
 
   /** Apaga o trabalho feito no cliente de teste e o devolve ao início de `etapa`. Nada é apagado se a checagem falhar. */

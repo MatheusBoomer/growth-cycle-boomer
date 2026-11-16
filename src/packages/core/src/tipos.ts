@@ -158,8 +158,13 @@ export interface Estado {
   insumos: EstadoInsumo[]
   perguntas: ConjuntoPerguntas[]
   filaAutomatica: ItemFila[]
-  /** Só em cliente de teste: de qual fixture ele veio e em qual etapa começou o último reposicionamento. */
-  teste?: { fixture: string; etapaInicial: EtapaId }
+  /**
+   * Só em cliente de teste: de qual fixture ele veio e em qual etapa começou o último reposicionamento.
+   * `ensaio`: o agente é substituído pela reprodução de um roteiro gravado; `trechos`: quantos trechos do roteiro
+   * de cada etapa já foram consumidos; `avancando`: etapa que o avanço automático do ensaio está processando.
+   * Estado salvo antes do ensaio não tem esses três campos.
+   */
+  teste?: { fixture: string; etapaInicial: EtapaId; ensaio?: boolean; trechos?: Partial<Record<EtapaId, number>>; avancando?: EtapaId | null }
   /** Gate da etapa 04: documento de validação gerado, baixado e confirmado pelo analista. Ausente em estado antigo. */
   validacaoCliente?: ValidacaoCliente
   atualizadoEm: string
