@@ -1282,16 +1282,18 @@ export class ServicoPlanejamento {
     if (extensao(rel) !== ".pdf") {
       throw new ErroEntrada(`O documento de validação precisa ser um PDF (recebido: ${extensao(rel) || "sem extensão"}).`)
     }
-    await this.mutar(slug, async (e) => {
+    const jaSinalizada = await this.mutar(slug, async (e) => {
       const novo = registrarValidacaoGerada(e, this.agora())
       await this.arm.copiar(slug, rel, ARQUIVO_VALIDACAO)
-      return { estado: me.reavaliarPronta(novo, "04", this.catalogo, this.agora()), resultado: undefined }
+      return { estado: me.reavaliarPronta(novo, "04", this.catalogo, this.agora()), resultado: novo.etapas["04"].sinalizada }
     })
     await this.registrarConversa(slug, etapa, { tipo: "card_validacao_cliente", em: this.agora() })
+    const enviado = "Documento de validação enviado ao analista, que baixa o PDF, leva ao cliente e confirma a validação na interface."
     return {
       ok: true,
-      mensagem:
-        "Documento de validação enviado ao analista, que baixa o PDF, leva ao cliente e confirma a validação na interface. Encerre sua resposta agora e aguarde: a confirmação ou os ajustes chegam como nova mensagem.",
+      mensagem: jaSinalizada
+        ? `${enviado} Encerre sua resposta agora e aguarde: a confirmação ou os ajustes chegam como nova mensagem.`
+        : `${enviado} A etapa ainda não está sinalizada: chame sinalizar_etapa_pronta agora, antes de encerrar (se refez algo da etapa 03, inclua resumo_decisoes_03). Depois encerre a resposta e aguarde: a confirmação ou os ajustes chegam como nova mensagem.`,
     }
   }
 

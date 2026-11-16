@@ -823,6 +823,26 @@ describe("ferramentas do agente", () => {
         expect(estado.etapas["04"].status).toBe("em_andamento")
       })
 
+      it("a mensagem de propor_validacao_cliente manda sinalizar antes de encerrar quando a 04 nao esta sinalizada", async () => {
+        const slug = await quatroSemPdf()
+        const e = await servico.estado(slug)
+        e.etapas["04"].sinalizada = false
+        await gravarEstado(slug, e)
+        const r = await proporPdf(slug)
+        expect(r.ok).toBe(true)
+        expect(r.mensagem).toContain("sinalizar_etapa_pronta")
+        expect(r.mensagem).toContain("resumo_decisoes_03")
+        expect(r.mensagem).toContain("antes de encerrar")
+      })
+
+      it("a mensagem de propor_validacao_cliente so manda encerrar quando a 04 ja esta sinalizada", async () => {
+        const slug = await quatroSemPdf()
+        const r = await proporPdf(slug)
+        expect(r.ok).toBe(true)
+        expect(r.mensagem).toContain("Encerre sua resposta")
+        expect(r.mensagem).not.toContain("sinalizar_etapa_pronta")
+      })
+
       it("propor_validacao_cliente fora da 04 ou com arquivo que nao e pdf devolve ok false", async () => {
         const slug = await quatroSemPdf()
         await rascunho(slug, "g.png")

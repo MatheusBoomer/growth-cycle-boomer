@@ -54,7 +54,7 @@ cliente confere antes de qualquer meta ou solução.
    `regras-de-validacao.md`.
 5. **LTV/CAC** — calcular a relação usando LTV histórico e CAC do último mês
    do diagnóstico. Classificar pela faixa de LTV/CAC em `benchmarks-kpi.md`.
-6. **Documento de validação do cliente** — com a análise acima aprovada, gerar
+6. **Documento de validação do cliente**: com a análise acima aprovada, gerar
    o PDF com o histórico do diagnóstico (etapas 03 e 04) para o cliente
    conferir. Ver a seção "Documento de validação do cliente" abaixo.
 
@@ -99,20 +99,29 @@ agregadas.
    PDF na mão), passando `--input`, `--pasta-prospect clientes/<slug>` e
    `--output clientes/<slug>/.app/rascunhos/documento-validacao.pdf`. O script
    recusa e-mail, CPF e telefone nos textos e gráfico que não existe, e não
-   deixa PDF parcial. Se a geração for recusada por itens desatualizados (ver
-   "Correções pedidas pelo cliente"), refaça os itens listados antes.
+   deixa PDF parcial.
 3. **Propor o documento:** chame `propor_validacao_cliente` com o caminho do
    PDF. O app copia o arquivo e mostra no chat o card com o botão de baixar e,
-   depois do download, o de confirmar. O `Concluir` da etapa fica bloqueado
-   até o analista baixar o PDF e confirmar a validação do cliente: essa regra
-   está no app, não depende de você.
-4. **Sinalizar a etapa pronta** com `sinalizar_etapa_pronta` logo em seguida
-   (resumo das decisões e handoff, como em "Encerramento e handoff"). Não
-   espere a confirmação do cliente para sinalizar.
-5. **Encerrar o turno** dizendo ao analista, em linguagem natural, o que falta:
-   baixar o PDF pelo card, mandar ao cliente, e voltar a esta conversa com as
-   correções que o cliente apontar ou, se não houve nenhuma, confirmar no card
-   que o cliente validou sem alterações. Nunca cite caminho de arquivo.
+   depois do download, o de confirmar. Se algum gráfico, tabela ou leitura de
+   03 ou 04 foi aprovado depois da troca de um insumo (ver "Correções pedidas
+   pelo cliente"), é esta chamada que é recusada, com a lista dos títulos a
+   aprovar de novo: refaça os itens listados e chame de novo. O `Concluir` da
+   etapa fica bloqueado até o analista baixar o PDF e confirmar a validação do
+   cliente: essa regra está no app, não depende de você.
+4. **Sinalizar a etapa pronta antes de encerrar o turno.** Esta é a única
+   exceção à regra de encerrar a resposta logo depois de propor: assim que
+   `propor_validacao_cliente` der certo, chame `sinalizar_etapa_pronta`
+   (`resumo_decisoes` e `handoff_proxima`, como em "Encerramento e handoff") e só
+   então escreva a mensagem de encerramento do passo 5. Não espere a confirmação
+   do cliente para sinalizar. O resultado da ferramenta diz se a etapa ainda
+   precisa ser sinalizada.
+5. **Mensagem de encerramento do turno (só no chat):** diga ao analista, em
+   linguagem natural, o que falta: baixar o PDF pelo card, mandar ao cliente, e
+   voltar a esta conversa com as correções que o cliente apontar ou, se não
+   houve nenhuma, confirmar no card que o cliente validou sem alterações. Nunca
+   cite caminho de arquivo. Esse pedido do PDF fica só nesta mensagem do chat:
+   o `handoff_proxima` e o "Próximo passo" do status trazem apenas o texto da
+   próxima etapa.
 
 **Modo terminal (sem as ferramentas do MCP):** gere o PDF direto em
 `entrega/validacao-cliente/documento-validacao.pdf` (mesmo script, `--output`
@@ -149,20 +158,24 @@ sinalizar a etapa pronta de novo.
 4. **Refazer tudo o que depende do dado trocado**, não só o item apontado.
    Depois de trocar uma planilha, o app trata como desatualizado todo gráfico,
    tabela e leitura de 03 e 04 aprovado antes da troca, e recusa gerar o PDF
-   enquanto houver algum. Proponha de novo cada item da lista que o app
+   enquanto houver algum (quem recusa é `propor_validacao_cliente`, que lista
+   os títulos a aprovar de novo). Proponha de novo cada item da lista que o app
    devolver (mesmo os que não mudaram de valor) e avise o analista, em lista
    curta, o que foi refeito e por quê.
-5. **Gerar o PDF novo**, propor com `propor_validacao_cliente` e sinalizar
-   a etapa pronta de novo. Se qualquer peça ou insumo da 03 foi refeito, o
-   sinal exige também `resumo_decisoes_03`: o resumo das decisões da 03
+5. **Gerar o PDF novo**, propor com `propor_validacao_cliente` e, antes de
+   encerrar o turno, sinalizar a etapa pronta de novo (a mensagem do analista
+   reabriu a etapa, então o sinal é preciso outra vez). Se qualquer peça ou
+   insumo da 03 foi refeito, o sinal exige também `resumo_decisoes_03`: o resumo das decisões da 03
    **corrigido** (ele substitui o da 03 no dossiê das etapas seguintes). Inclua
    o campo em todo sinal depois de uma correção da 03, não só no primeiro.
 6. **Registrar no resumo da 04** uma seção "Correções pedidas pelo cliente":
    o que o cliente apontou e o que mudou (números antes e depois, quando
    couber), para a Skill 05 e as seguintes saberem que os números mudaram
    depois da primeira aprovação.
-7. Encerre dizendo ao analista que o PDF novo está no card, para baixar e
-   levar ao cliente de novo, e que a confirmação é feita outra vez ao fim.
+7. Só depois de sinalizar, escreva a mensagem de encerramento do turno: o PDF
+   novo está no card, para baixar e levar ao cliente de novo, e a confirmação é
+   feita outra vez ao fim. Esse pedido do PDF fica só nesta mensagem do chat;
+   o `handoff_proxima` continua sendo apenas o texto da próxima etapa.
 
 Uma mensagem nova do analista depois da confirmação desfaz a confirmação: o
 analista confirma de novo no card quando o cliente validar o PDF novo.
@@ -195,21 +208,32 @@ Ao concluir, marque "04 · Unidade econômica" como ✅ em
 `contexto/status-planejamento.md` e converse com o analista em linguagem
 natural, sem citar caminho de arquivo. A mensagem começa com "Nesta sessão, ..."
 e nunca diz "Etapa concluída": a etapa só é concluída quando o analista clica
-em Concluir (Regra 6). Como o documento de validação é parte da etapa, o
-encerramento cobre os dois assuntos, o que falta fazer com o PDF e o que vem na
-próxima etapa:
+em Concluir (Regra 6).
+
+São dois textos diferentes, que não se misturam:
+
+**1. Handoff para a 05** (é o `handoff_proxima` e o "Próximo passo" do status;
+só fala da próxima etapa, porque é o que continua valendo depois da validação):
+
+"Nesta sessão, a unidade econômica ficou fechada e não preciso de arquivo
+novo agora. Na próxima etapa vou
+abrir cada problema que encontramos no diagnóstico em hipóteses, soluções e
+impacto em reais; vale lembrar o que o prospect já tentou para resolver cada
+um.
+
+Quando estiver pronto, rode `/05-solucoes`."
+
+No modo interface, envie esse texto em `handoff_proxima` (sem a última linha, o
+comando `/05-solucoes`, que é do terminal). Reescreva também o bloco "Próximo
+passo" de `contexto/status-planejamento.md` com esse mesmo aviso (só no terminal;
+no modo interface o app grava o status).
+
+**2. Mensagem de encerramento do turno do PDF** (só no chat, nunca no
+`handoff_proxima` nem no "Próximo passo"): vem depois de propor o documento e
+de sinalizar a etapa, e pede o que falta da validação:
 
 "Nesta sessão, a unidade econômica ficou fechada e o documento de validação
 está pronto. Falta você baixar o PDF, mandar para o cliente conferir o
 histórico e voltar aqui: se ele apontar algum número errado, me conta e eu
 corrijo e gero o PDF de novo; se estiver tudo certo, é só confirmar que o
-cliente validou, sem alterações, e concluir a etapa. Não preciso de arquivo
-novo agora. Na próxima etapa vou abrir cada problema que encontramos no
-diagnóstico em hipóteses, soluções e impacto em reais; vale lembrar o que o
-prospect já tentou para resolver cada um.
-
-Quando estiver pronto, rode `/05-solucoes`."
-
-Reescreva também o bloco "Próximo passo" de `contexto/status-planejamento.md`
-com esse mesmo aviso. No modo interface, esse mesmo texto vai no
-`handoff_proxima` de `sinalizar_etapa_pronta`, e o app grava o resumo.
+cliente validou, sem alterações, e concluir a etapa."

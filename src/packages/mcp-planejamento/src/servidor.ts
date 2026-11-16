@@ -87,7 +87,7 @@ servidor.registerTool(
   {
     title: "Entregar o documento de validação do cliente",
     description:
-      "Só na etapa 04. Entrega ao analista o PDF de validação (gráficos e tabelas aprovados das etapas 03 e 04) já salvo em clientes/<slug>/.app/rascunhos/. O app guarda o arquivo, o analista baixa, leva ao cliente e confirma a validação na interface. Gere de novo o PDF sempre que algo aprovado mudar. Depois de chamar, encerre a resposta e espere.",
+      "Só na etapa 04. Entrega ao analista o PDF de validação (gráficos e tabelas aprovados das etapas 03 e 04) já salvo em clientes/<slug>/.app/rascunhos/. O app guarda o arquivo, o analista baixa, leva ao cliente e confirma a validação na interface. Gere de novo o PDF sempre que algo aprovado mudar. Esta é a exceção à regra de encerrar depois de propor: se a etapa ainda não foi sinalizada, o resultado da ferramenta manda chamar sinalizar_etapa_pronta antes de encerrar a resposta; só depois espere a confirmação ou os ajustes.",
     inputSchema: {
       arquivo_rascunho: z.string().describe("Caminho do PDF em clientes/<slug>/.app/rascunhos/"),
     },

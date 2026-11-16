@@ -17,7 +17,9 @@ flowchart TD
   E1["Entrega: análise salva nas seções aprovadas"]
   V1["Montar o JSON com seções, observações e limitações a partir dos gráficos aprovados"]
   V2["Gerar o PDF de validação para o cliente"]
-  V3["Propor o documento no chat e sinalizar a etapa pronta"]
+  V3["Propor o documento no chat (propor_validacao_cliente)"]
+  V3B["Sinalizar a etapa pronta, antes de encerrar o turno"]
+  V3C["Mensagem de encerramento: baixar o PDF, levar ao cliente e voltar"]
   V4["Analista baixa o PDF e leva ao cliente"]
   C6{"Analista aprova?"}
   X1["Achar a origem de cada erro: arquivo, gráfico, leitura ou cálculo"]
@@ -26,7 +28,7 @@ flowchart TD
   C7{"Analista aprova?"}
   X4["Registrar as correções no resumo da 04 e o resumo corrigido da 03"]
   E2["Entrega: PDF de validação confirmado pelo cliente"]
-  H1["Handoff para a 05: lembrar o que o prospect já tentou"]
+  H1["Handoff para a 05: só o texto da próxima etapa (o que o prospect já tentou)"]
 
   I1 --> D1
   D1 -->|"sim"| R1
@@ -52,7 +54,9 @@ flowchart TD
   E1 --> V1
   V1 --> V2
   V2 --> V3
-  V3 --> V4
+  V3 --> V3B
+  V3B --> V3C
+  V3C --> V4
   V4 --> C6
   C6 -->|"sim"| E2
   C6 -->|"não, ajustar"| X1
