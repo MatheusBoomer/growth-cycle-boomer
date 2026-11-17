@@ -1416,6 +1416,36 @@ describe("modo ensaiado: avançar ensaio", () => {
     expect((await servico.estado(slug)).teste?.avancando).toBeNull()
   })
 
+  async function proporGraficos(slug: string, nomes: string[]): Promise<string[]> {
+    await mkdir(path.join(raiz, "clientes", slug, ".app/rascunhos"), { recursive: true })
+    for (const nome of nomes) {
+      await writeFile(path.join(raiz, "clientes", slug, `.app/rascunhos/${nome}.png`), "png")
+      await servico.ferramenta({ slug, etapa: "03" }, "propor_entregavel", {
+        tipo: "grafico",
+        titulo: `Gráfico ${nome}`,
+        arquivo_rascunho: `clientes/${slug}/.app/rascunhos/${nome}.png`,
+        nome_final: nome,
+      })
+    }
+    return (await servico.estado(slug)).entregaveis.filter((e) => e.etapa === "03" && e.tipo === "grafico").map((e) => e.id)
+  }
+
+  it("gráficos pendentes (aprovação silenciosa): aprova todos de uma vez e um só turno toca o trecho seguinte", async () => {
+    await gravarRoteiro03(["mensagem", "automatica"])
+    const executorEnsaio = new FakeExecutor(roteiroSimples("ensaio"))
+    const t = new ServicoTurnos({ servico, executor: new FakeExecutor(roteiroSimples("principal")), executorEnsaio, barramento, catalogo: catalogoReal(), config })
+    const slug = await servico.criarClienteTeste("mini", "03", null, true)
+    await servico.iniciarEtapa(slug, "03")
+    const ids = await proporGraficos(slug, ["investimento", "roas", "sessoes"])
+
+    await servico.avancarEnsaio(slug, "03", null)
+    for (const id of ids) expect(await statusDe(slug, id)).toBe("aprovado")
+    await t.aguardarOcioso(slug)
+    expect(executorEnsaio.pedidos[0]!.mensagem).toContain("Siga para o próximo passo.")
+    expect(executorEnsaio.pedidos).toHaveLength(2)
+    expect((await servico.estado(slug)).teste?.avancando).toBeNull()
+  })
+
   it("quando o último trecho toca, avancando volta a null e nenhuma aprovação nova acontece", async () => {
     await gravarRoteiro03(["aprovar"])
     const executorEnsaio = new FakeExecutor(roteiroSimples("ensaio"))

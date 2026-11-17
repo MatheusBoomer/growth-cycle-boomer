@@ -907,22 +907,26 @@ export class ServicoPlanejamento {
   }
 
   /**
-   * Aprova o pendente mais antigo da etapa (ou enfileira a mensagem automática) com o avanço marcado nela.
+   * Aprova o pendente mais antigo da etapa (todos os gráficos pendentes, se ele for gráfico) e, quando a aprovação
+   * não chama o agente, enfileira a mensagem automática; tudo com o avanço marcado na etapa.
    * `inicio`: pedido do analista, recusado se outro avanço da etapa já começou. Falha devolve `avancando` a null.
    */
   private async passoEnsaio(slug: string, etapa: EtapaId, autor: string | null, inicio: boolean): Promise<void> {
-    const pendente = await this.mutar(slug, (e) => {
+    const aAprovar = await this.mutar(slug, (e) => {
       if (!e.teste?.ensaio) throw new ErroNaoEhTeste()
       if (inicio && e.teste.avancando === etapa) throw new ErroEntrada("O ensaio já está avançando nesta etapa.")
-      const maisAntigo =
-        e.entregaveis
-          .filter((x) => x.status === "pendente" && etapaDaConversa(x) === etapa)
-          .sort((x, y) => x.criadoEm.localeCompare(y.criadoEm))[0] ?? null
-      return { estado: { ...e, teste: { ...e.teste, avancando: etapa } }, resultado: maisAntigo?.id ?? null }
+      const pendentes = e.entregaveis
+        .filter((x) => x.status === "pendente" && etapaDaConversa(x) === etapa)
+        .sort((x, y) => x.criadoEm.localeCompare(y.criadoEm))
+      const maisAntigo = pendentes[0]
+      // Gráfico é aprovado em silêncio (não chama o agente): aprova todos os gráficos pendentes juntos e uma só
+      // mensagem automática toca o trecho seguinte, como o analista faria aprovando vários e escrevendo no chat.
+      const ids = !maisAntigo ? [] : maisAntigo.tipo === "grafico" ? pendentes.filter((x) => x.tipo === "grafico").map((x) => x.id) : [maisAntigo.id]
+      return { estado: { ...e, teste: { ...e.teste, avancando: etapa } }, resultado: { ids, silencioso: maisAntigo?.tipo === "grafico" } }
     })
     try {
-      if (pendente) await this.aprovarEntregavel(slug, pendente, autor)
-      else await this.enfileirar(slug, etapa, MENSAGEM_SEGUIR_ENSAIO, autor)
+      for (const id of aAprovar.ids) await this.aprovarEntregavel(slug, id, autor)
+      if (aAprovar.ids.length === 0 || aAprovar.silencioso) await this.enfileirar(slug, etapa, MENSAGEM_SEGUIR_ENSAIO, autor)
     } catch (e) {
       await this.mutar(slug, (x) => ({ estado: x.teste ? { ...x, teste: { ...x.teste, avancando: null } } : x, resultado: undefined }))
       throw e
