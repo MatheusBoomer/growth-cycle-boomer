@@ -231,11 +231,14 @@ export class ServicoTurnos {
 
   async enviarMensagem(slug: string, etapa: EtapaId, texto: string, autor: string | null = null): Promise<void> {
     const controle = this.reservar(slug, etapa, autor)
+    let textoAgente = texto
     await this.comReserva(slug, controle, async () => {
       await this.servico.registrarMensagemAnalista(slug, etapa)
+      const resumo = await this.servico.resumoParaMensagem(slug, etapa)
+      if (resumo) textoAgente = `${texto}\n\n${resumo}`
       await this.registrar(slug, etapa, { tipo: "mensagem_analista", texto, automatica: false, ...(autor ? { autor } : {}), em: this.agora() })
     })
-    this.emSegundoPlano(slug, etapa, texto, controle, autor)
+    this.emSegundoPlano(slug, etapa, textoAgente, controle, autor)
   }
 
   /** Mensagem do chat que cita entregáveis pendentes: o balão mostra o texto do analista e as referências; o agente recebe a mensagem composta. */
@@ -251,6 +254,8 @@ export class ServicoTurnos {
     await this.comReserva(slug, controle, async () => {
       const envio = await this.servico.pedirAjustes(slug, etapa, texto, ajustes, autor)
       textoAgente = envio.textoAgente
+      const resumo = await this.servico.resumoParaMensagem(slug, etapa, ajustes.map((a) => a.entregavelId))
+      if (resumo) textoAgente = `${textoAgente}\n\n${resumo}`
       await this.servico.registrarMensagemAnalista(slug, etapa)
       await this.registrar(slug, etapa, {
         tipo: "mensagem_analista",

@@ -115,6 +115,9 @@ export function CardEntregavel({ slug, entregavel: e, anterior = null }: { slug:
         {!ajusteNaImagem && (e.tipo === "grafico" || e.tipo === "tabela") && e.status === "pendente" && (
           <p className="text-sm">Confirme se os valores representados no gráfico correspondem exatamente aos dados enviados.</p>
         )}
+        {e.tipo === "grafico" && e.status === "aprovado" && e.avisoPendente && (
+          <p className="text-muted-foreground text-sm">Aprovado. O agente só é avisado quando você escrever no chat, depois de decidir todos os gráficos.</p>
+        )}
         {e.ajustePedido && e.status === "pendente" && (
           <p className="text-muted-foreground text-sm whitespace-pre-line">Ajuste pedido: “{e.ajustePedido}”. Aguardando a nova versão do agente.</p>
         )}

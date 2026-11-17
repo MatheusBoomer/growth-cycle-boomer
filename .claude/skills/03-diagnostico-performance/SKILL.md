@@ -6,7 +6,8 @@ description: Analisa o histórico de 12 meses de mídia paga, receita, sessões,
 # Skill 03 — Diagnóstico de Performance
 
 Skill 3 de 10. Corresponde aos Prompts 2 (Macro Financeiro) e 3 (Aquisição,
-Dependência e Conversão) do processo original. Ainda estamos no Diagnóstico
+Dependência e Conversão, mais a Curva ABC de produtos) do processo original,
+organizados em três fases. Ainda estamos no Diagnóstico
 Atual — **não proponha metas, plano de mídia ou soluções nesta etapa.**
 
 Delega todo cálculo e geração de gráfico ao subagente `analista-dados`. Esta
@@ -18,7 +19,7 @@ skill orquestra e interpreta; não faz conta diretamente.
       meses, com investimento, receita, ROAS,
       sessões e conversão já quebrados por Google e Meta
 - [ ] `dados/produtos-curva-abc.xlsx` anexado — relatório de produtos
-      vendidos no ano (necessário só para a Curva ABC, etapa 4)
+      vendidos no ano (necessário só para a Curva ABC, Fase 3)
 - [ ] Conferir manualmente cada gráfico e benchmark gerado antes de deixar a
       skill avançar — ver `regras-de-validacao.md`
 
@@ -36,14 +37,17 @@ Analisar, nesta ordem obrigatória:
 4. **ROAS** — Global e por plataforma (Google, Meta): tendência, estabilidade,
    compressão em escala, diferença entre plataformas.
 
-Para cada KPI: gerar gráfico mês a mês seguindo `padrao-visual.md`, incluir
-linha de média do período e benchmark quando aplicável, então **parar e pedir
-checagem manual** antes de escrever a análise (ver `regras-de-validacao.md`).
+Para cada KPI: gerar gráfico mês a mês seguindo `padrao-visual.md` (com o
+valor escrito em cada ponto), incluir linha de média do período e benchmark
+quando aplicável. Gere **todos os gráficos da fase de uma vez** e proponha-os
+juntos, depois **pare e espere a checagem manual** antes de escrever a análise
+(ver `regras-de-validacao.md`, "Gráficos em lote" na Regra 7).
 
 ## Fase 2 — Aquisição, Dependência e Conversão
 
-Usar a mesma planilha de dados gerais já enviada; não repedir. Analisar, nesta
-ordem:
+Usar a mesma planilha de dados gerais já enviada; não repedir. Esta fase tem só
+os gráficos de mês a mês (sessões, dependência e conversão); os de produto ficam
+na Fase 3. Analisar, nesta ordem:
 
 1. **Sessões** — globais e por plataforma, tendência, sazonalidade,
    concentração por canal, crescimento orgânico vs pago. Gerar um gráfico de linha com a conclusão incluindo sessões totais e por plataforma (Google e Meta).
@@ -53,13 +57,21 @@ ordem:
 3. **Taxa de conversão**: Global, Google e Meta, cada uma comparada à sua
    faixa de `benchmarks-kpi.md`. Plataformas acima ou abaixo da faixa, indícios
    estruturais. Gerar um gráfico para cada levantamento de benchmark.
-4. **Curva ABC** — usar `dados/produtos-curva-abc.xlsx`. Gerar: gráfico de
-   barras com faturamento acumulado por Curva A/B/C; gráfico de barras com
-   Top 10 produtos por faturamento; Tabela com os produtos por curva A/B/C.
+
+## Fase 3 — Produtos (Curva ABC)
+
+Abra esta fase só depois de fechar a Fase 2. Usar `dados/produtos-curva-abc.xlsx`
+(se ainda não estiver anexado, peça agora). Gerar, todos juntos:
+
+1. Gráfico de barras com faturamento acumulado por Curva A/B/C.
+2. Gráfico de barras com Top 10 produtos por faturamento.
+3. Tabela com os produtos por curva A/B/C.
+
+Qualquer outro gráfico sobre produto também entra aqui, nunca na Fase 2.
 
 ### Conectar os KPIs
 
-Ao final, conectar explicitamente: Sessões → Conversão → Receita; Dependência
+Ao final da Fase 3, conectar explicitamente: Sessões → Conversão → Receita; Dependência
 paga → Sustentabilidade; Curva ABC → Capacidade real de escalar. Sem essa
 conexão causal, a etapa não está concluída.
 

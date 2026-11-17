@@ -294,7 +294,7 @@ describe("ferramentas do agente", () => {
     })
   })
 
-  it("aprovar copia para ativos-aprovados e enfileira a mensagem ao agente", async () => {
+  it("aprovar gráfico copia para ativos-aprovados e NÃO chama o agente", async () => {
     const slug = await prospectNaEtapa03()
     await rascunho(slug, "g.png")
     await servico.ferramenta(ctx03, "propor_entregavel", {
@@ -314,9 +314,74 @@ describe("ferramentas do agente", () => {
         )
       )
     ).toBe(true)
+    expect(enfileirados).toEqual([])
+    expect(await servico.retirarFila(slug)).toBeNull()
+    expect((await servico.estado(slug)).entregaveis[0]).toMatchObject({ status: "aprovado", avisoPendente: true })
+  })
+
+  it("aprovar seção continua enfileirando a mensagem ao agente", async () => {
+    const slug = await prospectNaEtapa03()
+    await rascunho(slug, "s.md", "# Macro")
+    await servico.ferramenta(ctx03, "propor_entregavel", {
+      tipo: "secao",
+      titulo: "Macro",
+      arquivo_rascunho: `clientes/${slug}/.app/rascunhos/s.md`,
+      nome_final: "macro-financeiro",
+    })
+    await servico.aprovarEntregavel(slug, "id1")
     expect(enfileirados).toEqual([slug])
     expect((await servico.retirarFila(slug))?.texto).toContain("APROVOU")
-    expect(await servico.retirarFila(slug)).toBeNull()
+  })
+
+  describe("resumoParaMensagem: gráficos decididos em silêncio", () => {
+    async function tresGraficos() {
+      const slug = await prospectNaEtapa03()
+      for (const [i, nome] of ["investimento", "receita", "roas"].entries()) {
+        await rascunho(slug, `g${i}.png`)
+        await servico.ferramenta(ctx03, "propor_entregavel", {
+          tipo: "grafico",
+          titulo: `Gráfico ${nome}`,
+          arquivo_rascunho: `clientes/${slug}/.app/rascunhos/g${i}.png`,
+          nome_final: nome,
+        })
+      }
+      return slug
+    }
+
+    it("lista os aprovados e os sem decisão, e só avisa os aprovados uma vez", async () => {
+      const slug = await tresGraficos()
+      await servico.aprovarEntregavel(slug, "id1")
+      await servico.aprovarEntregavel(slug, "id2")
+      const resumo = await servico.resumoParaMensagem(slug, "03")
+      expect(resumo).toContain("APROVADOS")
+      expect(resumo).toContain("“Gráfico investimento” (investimento)")
+      expect(resumo).toContain("“Gráfico receita” (receita)")
+      expect(resumo).toContain("AINDA SEM DECISÃO")
+      expect(resumo).toContain("“Gráfico roas” (roas)")
+      const depois = await servico.resumoParaMensagem(slug, "03")
+      expect(depois).not.toContain("APROVADOS")
+      expect(depois).toContain("“Gráfico roas”")
+      expect((await servico.estado(slug)).entregaveis.some((x) => x.avisoPendente)).toBe(false)
+    })
+
+    it("gráfico citado como ajuste não entra em 'sem decisão'", async () => {
+      const slug = await tresGraficos()
+      await servico.aprovarEntregavel(slug, "id1")
+      await servico.aprovarEntregavel(slug, "id2")
+      const resumo = await servico.resumoParaMensagem(slug, "03", ["id3"])
+      expect(resumo).not.toContain("AINDA SEM DECISÃO")
+      expect(resumo).not.toContain("roas")
+    })
+
+    it("fica vazio sem gráficos para contar e ignora gráficos de outra conversa", async () => {
+      const slug = await tresGraficos()
+      expect(await servico.resumoParaMensagem(slug, "04")).toBe("")
+      await servico.aprovarEntregavel(slug, "id1")
+      await servico.aprovarEntregavel(slug, "id2")
+      await servico.aprovarEntregavel(slug, "id3")
+      await servico.resumoParaMensagem(slug, "03")
+      expect(await servico.resumoParaMensagem(slug, "03")).toBe("")
+    })
   })
 
   describe("JSONs que acompanham o documento do plano", () => {
@@ -1679,7 +1744,7 @@ describe("autoria", () => {
   const ANA = "ana.souza@boomer.com.br"
 
   /** Prospect na etapa 03 com um gráfico pendente; `nome` distinto cria outro prospect no mesmo serviço. */
-  async function graficoPendente(nome?: string) {
+  async function graficoPendente(nome?: string, tipo: "grafico" | "secao" = "grafico") {
     let slug: string
     if (!nome) {
       slug = await prospectNaEtapa03()
@@ -1692,11 +1757,12 @@ describe("autoria", () => {
       await writeFile(path.join(raiz, "clientes", slug, ".app/estado.json"), JSON.stringify(e))
       await servico.iniciarEtapa(slug, "03")
     }
-    await rascunho(slug, "g.png")
+    const arquivo = tipo === "grafico" ? "g.png" : "s.md"
+    await rascunho(slug, arquivo, "# Texto")
     await servico.ferramenta({ slug, etapa: "03" }, "propor_entregavel", {
-      tipo: "grafico",
+      tipo,
       titulo: "Investimento",
-      arquivo_rascunho: `clientes/${slug}/.app/rascunhos/g.png`,
+      arquivo_rascunho: `clientes/${slug}/.app/rascunhos/${arquivo}`,
       nome_final: "investimento-total-mensal",
     })
     const id = (await servico.estado(slug)).entregaveis[0]!.id
@@ -1786,12 +1852,12 @@ describe("autoria", () => {
     const fila = async (slug: string) => (await servico.estado(slug)).filaAutomatica
 
     it("aprovar com autor enfileira o item com esse autor; sem autor a chave não aparece", async () => {
-      const com = await graficoPendente()
+      const com = await graficoPendente(undefined, "secao")
       await servico.aprovarEntregavel(com.slug, com.id, ANA)
       expect((await fila(com.slug))[0]).toMatchObject({ etapa: "03", autor: ANA })
       expect(await servico.retirarFila(com.slug)).toMatchObject({ etapa: "03", autor: ANA })
 
-      const sem = await graficoPendente("Outro Prospect")
+      const sem = await graficoPendente("Outro Prospect", "secao")
       await servico.aprovarEntregavel(sem.slug, sem.id)
       expect((await fila(sem.slug))[0]).not.toHaveProperty("autor")
       expect(await servico.retirarFila(sem.slug)).toMatchObject({ etapa: "03", autor: null })
