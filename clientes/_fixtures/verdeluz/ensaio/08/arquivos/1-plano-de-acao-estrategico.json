@@ -1,0 +1,1350 @@
+{
+  "versao": 2,
+  "prospect": "Verdeluz Cosméticos Veganos",
+  "data_referencia": "18/11/2026",
+  "janela_prova": {
+    "inicio": "23/11/2026",
+    "fim": "22/02/2027"
+  },
+  "fim_ciclo": "30/09/2027",
+  "empresa_agencia": "Agência",
+  "agencia_parceira": null,
+  "como_funciona": [
+    {
+      "titulo": "Lógica do plano",
+      "texto": "Este plano organiza o ciclo de 12 meses do cenário Realista (OUT/26 a SET/27) em 6 fases, seguindo o calendário estratégico de mídia (07). OUT/26 e boa parte de NOV/26 já passaram, então o plano começa em 23/11/2026. A lógica é simples: primeiro blindar a Black Friday e destravar a regra de verba, o estoque do sérum e a medição; depois ligar pagamento e CRM; só então escalar a mídia. Cada fase termina em um checkpoint com data, pauta, o que libera a próxima fase e quem decide."
+    },
+    {
+      "titulo": "Data-base",
+      "texto": "A data-base é 18/11/2026 e a primeira ação começa em 23/11/2026, na segunda-feira seguinte. A Black Friday é em 27/11/2026, quatro dias depois. A janela de prova vai de 23/11/2026 a 22/02/2027 e o ciclo termina em 30/09/2027. Outras datas-âncora: o lote do sérum pedido até 25/11 chega em cerca de 09/01/2027, o Dia das Mães é em 09/05/2027 e a Black Friday de 2027 é em 26/11/2027."
+    },
+    {
+      "titulo": "Plano mínimo",
+      "texto": "Se a medição da quebra (Ação 6) ou os acessos (Ação 11) não ficarem prontos na fase 1, vale o plano mínimo: o teto de CAC e a regra de verba (Ações 1 e 2), a regra de pausa do sérum (Ação 5) e a oferta da Black Friday (Ação 7). Tudo o mais desliza para depois de 30/11/2026, sem mudar a janela de prova."
+    },
+    {
+      "titulo": "Horizontes",
+      "texto": "Imediato vai de 23/11 a 29/11/2026, a primeira semana de execução. Curto prazo vai de 30/11 a 31/12/2026, até o primeiro marco de Escala do calendário (DEZ/26). Médio prazo vai de 04/01 a 30/09/2027. As ações que movem os KPIs da meta começam e terminam dentro da janela de prova, até 22/02/2027."
+    },
+    {
+      "titulo": "Dono",
+      "texto": "Cada ação tem uma disciplina e uma empresa responsável, Agência ou Cliente. A mídia é da Agência, com o gestor de tráfego freelancer executando sob a coordenação dela. Do lado do Cliente: Direção (decisões de verba, desconto e fornecedor), Finanças e operações (estoque, laboratório e margem), Time de e-commerce (Nuvemshop, pagamento, frete e kits) e Conteúdo e marketing. A Expedição informa o saldo de estoque, mas não recebe ação nova na semana da Black Friday."
+    },
+    {
+      "titulo": "Frentes",
+      "texto": "Mídia Paga / Canal Principal, Eficiência Operacional, Produto / Mix / Portfólio, Redução de Dependências e Monitoramento e Governança."
+    },
+    {
+      "titulo": "Como ler cada ação",
+      "texto": "O título diz o que fazer; o ACHADO mostra de onde nasce; o COMO traz passos e valores; a EVIDÊNCIA prova que foi feito; o KPI E META diz de quanto para quanto; o GATILHO diz o que acontece se a meta não vier. Toda decisão que cabe ao Cliente vem com a recomendação da Agência e a data-limite."
+    }
+  ],
+  "abertura": {
+    "cenario": "Realista",
+    "metas": [
+      {
+        "kpi": "Receita captada do mês",
+        "de": "R$ 75.514 (FEV/26)",
+        "para": "R$ 97.899 (FEV/27)",
+        "ate": "22/02/2027",
+        "fonte": "06 · Realista, FEV/27"
+      },
+      {
+        "kpi": "Taxa de conversão global",
+        "de": "1,25% (FEV/26)",
+        "para": "1,32% (FEV/27)",
+        "ate": "22/02/2027",
+        "fonte": "06 · Realista, FEV/27"
+      },
+      {
+        "kpi": "Ticket médio",
+        "de": "R$ 197,68 (FEV/26)",
+        "para": "R$ 201,24 (FEV/27)",
+        "ate": "22/02/2027",
+        "fonte": "06 · Realista, FEV/27"
+      },
+      {
+        "kpi": "ROAS global",
+        "de": "5,23x (FEV/26, com metade da verba)",
+        "para": "3,45x (FEV/27)",
+        "ate": "22/02/2027",
+        "fonte": "06 · Realista, FEV/27, e 07 · ROAS esperado"
+      },
+      {
+        "kpi": "Custo por sessão paga",
+        "de": "R$ 1,21 (FEV/26)",
+        "para": "no máximo R$ 1,72 (FEV/27)",
+        "ate": "22/02/2027",
+        "fonte": "06 · Realista, FEV/27"
+      },
+      {
+        "kpi": "Dependência de mídia paga",
+        "de": "38,9% (FEV/26)",
+        "para": "no máximo 44,9% (FEV/27)",
+        "ate": "22/02/2027",
+        "fonte": "06 · Realista, FEV/27"
+      },
+      {
+        "kpi": "CAC",
+        "de": "R$ 112,7 (SET/26)",
+        "para": "até R$ 103,9 (teto de LTV/CAC 3x)",
+        "ate": "22/02/2027",
+        "fonte": "05 · P1.S1, e 07 · regras de gestão"
+      },
+      {
+        "kpi": "Taxa de quebra",
+        "de": "7,1% (SET/26)",
+        "para": "6,2% (média do ciclo)",
+        "ate": "22/02/2027",
+        "fonte": "06 · Realista, quebra média do ciclo"
+      }
+    ],
+    "cabe_nos_3_meses": [
+      "Receita captada do Realista de R$ 211,7 mil em NOV/26, R$ 143,3 mil em DEZ/26, R$ 93,0 mil em JAN/27 e R$ 97,9 mil em FEV/27 (R$ 545,9 mil no período).",
+      "A estrutura das alavancas da meta no ar e medida: teto de CAC e portão de verba, regra de pausa do sérum, pedido de reposição e chegada do lote, medição e recuperação da quebra, régua de reposição e reativação.",
+      "Quebra caindo de 7,1% para a média de 6,2% do Realista e CAC dentro do teto de R$ 103,9 nos fechamentos quinzenais."
+    ],
+    "nao_cabe": [
+      "Os +40% das sócias (Otimista, R$ 1.708.647) são teto, não compromisso destes 3 meses: dependem de P1.S2, P2.S2, P3.S3 e P4.S3 com efeito pleno e de custo por sessão 12,5% menor, e esse efeito amadurece depois de FEV/27.",
+      "O crescimento de +53% em MAR e ABR depende de o estoque de 60 dias do sérum estar no lugar, o que só acontece depois da chegada do lote, em cerca de 09/01/2027.",
+      "A dependência de 52% é meta de SET/27; em FEV/27 o compromisso é no máximo 44,9%. O efeito pleno da recompra se mede em 12 meses, e na janela só se vê o primeiro disparo e a primeira leitura."
+    ],
+    "premissas": [
+      "Verba de mídia aprovada conforme o plano de 07: R$ 56.076 em NOV/26, R$ 42.910 em DEZ/26, R$ 28.529 em JAN/27 e R$ 28.409 em FEV/27 (R$ 155.924 no período), com NOV já em curso.",
+      "Pedido de reposição do sérum feito até 25/11/2026, com prazo de 45 dias do laboratório; até o lote chegar, a regra de pausa protege a verba.",
+      "Margem por SKU da Curva A enviada até 30/11/2026; até lá vale a margem de contribuição de 20%.",
+      "Nuvemshop mantida (sem troca de plataforma) e consentimento do WhatsApp registrado antes de qualquer disparo.",
+      "O gestor de tráfego freelancer segue como executor, sob a coordenação da Agência, nos 12 meses.",
+      "O ROAS global do Realista (3,45x) fica abaixo dos pisos de empate da primeira compra (5,0x sobre a receita aprovada e cerca de 5,3x sobre a captada). O plano fecha pela recompra: o LTV de R$ 311,7 contra o ticket de R$ 191,8. O piso é gatilho de referência, não meta."
+    ],
+    "margem_contribuicao": 0.2,
+    "taxa_quebra": 0.062
+  },
+  "fases": [
+    {
+      "numero": 1,
+      "nome": "Blindar a Black Friday e destravar regras, estoque e medição",
+      "inicio": "23/11/2026",
+      "fim": "30/11/2026",
+      "calendario_midia": "Pico (nov/26)",
+      "objetivo": "Fixar o teto de CAC e os degraus de verba, pedir a reposição do sérum e ligar o estoque à mídia, fechar a oferta da Black Friday, liberar os acessos, medir a quebra e pedir a margem por SKU.",
+      "acoes": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "checkpoint": {
+        "data": "26/11/2026",
+        "duracao": "30 minutos",
+        "pauta": "Prontidão da Black Friday: teto de CAC e degraus aprovados (Ações 1 e 2), pedido do sérum enviado (Ação 4), regra de pausa ativa (Ação 5), oferta fechada (Ação 7), lista de espera no ar (Ação 8), acessos liberados (Ação 11) e backup feito (Ação 10).",
+        "para_liberar": "Mídia da Black Friday liberada (Ação 3) com teto de CAC valendo, regra de pausa do sérum ativa e oferta de até 20% com brinde aprovada.",
+        "quem_decide": "Direção do Cliente, com a coordenação de mídia e o analista de dados da Agência"
+      }
+    },
+    {
+      "numero": 2,
+      "nome": "Fechar a Black Friday e ligar pagamento e CRM",
+      "inicio": "01/12/2026",
+      "fim": "31/12/2026",
+      "calendario_midia": "Escala (dez/26)",
+      "objetivo": "Fechar o balanço da Black Friday, rodar o portão quinzenal de verba, recuperar o PIX expirado, proteger o Kit Presente de Natal, fixar a fonte de receita da medição e deixar a régua de reposição pronta.",
+      "acoes": [
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "checkpoint": {
+        "data": "30/12/2026",
+        "duracao": "45 minutos",
+        "pauta": "Balanço da Black Friday contra a meta de NOV (Ação 18), portões de 07/12 e 21/12 (Ação 13), recuperação de PIX no ar (Ação 14), fonte de receita e tolerância do GA4 (Ação 20) e régua de reposição pronta (Ação 17).",
+        "para_liberar": "Verba de JAN (R$ 28.529) liberada com o CAC dentro do teto e régua de reposição pronta para entrar no ar com a chegada do lote do sérum.",
+        "quem_decide": "Direção do Cliente, com o estrategista de mídia e o estrategista de CRM da Agência"
+      }
+    },
+    {
+      "numero": 3,
+      "nome": "Provar a janela de 3 meses",
+      "inicio": "04/01/2027",
+      "fim": "28/02/2027",
+      "calendario_midia": "Contenção (jan e fev/27)",
+      "objetivo": "Receber o lote do sérum, ligar a régua de reposição e a reativação, revisar antifraude, separar as campanhas do Meta, montar os kits e fechar a leitura dos 3 meses contra as metas mensais.",
+      "acoes": [
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32
+      ],
+      "checkpoint": {
+        "data": "22/02/2027",
+        "duracao": "60 minutos",
+        "pauta": "Fim da janela de prova: metas de FEV/27 (receita de R$ 97,9 mil, conversão de 1,32%, ticket de R$ 201,24, ROAS de 3,45x, CAC até R$ 103,9) contra o realizado (Ação 32), cobertura do sérum em 60 dias (Ação 22), régua e reativação no ar (Ações 26 e 27) e quebra (Ações 14 e 24).",
+        "para_liberar": "Leitura dos 3 meses fechada e gatilhos revistos, para liberar a verba de MAR e ABR e o preparo do Dia das Mães.",
+        "quem_decide": "Direção do Cliente, com a equipe da Agência"
+      }
+    },
+    {
+      "numero": 4,
+      "nome": "Preparar o pico de maio",
+      "inicio": "01/03/2027",
+      "fim": "30/04/2027",
+      "calendario_midia": "Manutenção (mar/27) e Escala (abr/27)",
+      "objetivo": "Pedir o estoque do pico de MAI, ler o teste de incrementalidade do Meta, decidir o destino dos 17 produtos de menor venda e recalcular o teto de CAC com a margem por SKU.",
+      "acoes": [
+        33,
+        34,
+        35,
+        36,
+        37
+      ],
+      "checkpoint": {
+        "data": "29/04/2027",
+        "duracao": "45 minutos",
+        "pauta": "Pedido do lote dos três líderes feito (Ação 34), resultado do teste de incrementalidade do Meta (Ação 33), decisão dos 17 produtos (Ação 35) e novo teto de CAC e pisos de ROAS (Ação 37).",
+        "para_liberar": "Verba de MAI (R$ 50.495) liberada com o estoque confirmado para 03/05 e o teto de CAC revisado.",
+        "quem_decide": "Direção do Cliente, com o estrategista de mídia e o analista de dados da Agência"
+      }
+    },
+    {
+      "numero": 5,
+      "nome": "Operar o pico de maio",
+      "inicio": "03/05/2027",
+      "fim": "31/05/2027",
+      "calendario_midia": "Pico (mai/27)",
+      "objetivo": "Rodar a mídia do Dia das Mães dentro do teto e do portão e fechar o balanço do pico.",
+      "acoes": [
+        38,
+        39
+      ],
+      "checkpoint": {
+        "data": "27/05/2027",
+        "duracao": "30 minutos",
+        "pauta": "Receita e CAC de MAI contra a meta de R$ 188,4 mil e o teto (Ação 39), cobertura do sérum e uso da regra de pausa (Ação 38).",
+        "para_liberar": "Verba de JUN a SET liberada nos degraus do plano de mídia, com o balanço do pico fechado.",
+        "quem_decide": "Direção do Cliente, com o gestor de tráfego e o estrategista de mídia da Agência"
+      }
+    },
+    {
+      "numero": 6,
+      "nome": "Manter e escalar até o fim do ciclo",
+      "inicio": "01/06/2027",
+      "fim": "30/09/2027",
+      "calendario_midia": "Manutenção (jun a ago/27) e Escala (set/27)",
+      "objetivo": "Rodar a mídia de JUN a SET dentro do teto, pedir o estoque de SET, fechar a leitura da dependência de mídia paga e o balanço dos 12 meses.",
+      "acoes": [
+        40,
+        41,
+        42,
+        43
+      ],
+      "checkpoint": {
+        "data": "28/09/2027",
+        "duracao": "60 minutos",
+        "pauta": "Balanço do ciclo de 12 meses contra o Realista (Ação 43) e dependência de mídia paga de SET/27 contra a meta de 52% (Ação 42).",
+        "para_liberar": "Leitura final dos 12 meses fechada, com o que ficou fora do Realista e o ponto de partida do ciclo seguinte.",
+        "quem_decide": "Direção do Cliente, com a equipe da Agência"
+      }
+    }
+  ],
+  "protocolo_mudanca": {
+    "intro": "Mudança de verba, de oferta ou de estrutura só entra com regra escrita e registro. A ideia é errar pequeno, medir cedo e poder voltar atrás.",
+    "regras": [
+      "Uma mudança por vez, anotada no registro de mudanças: data, quem, o quê, por quê, como desfazer e resultado.",
+      "Backup antes de mudar: exportar o contêiner do GTM, registrar a estrutura das campanhas e salvar o tema da Nuvemshop (Ação 10).",
+      "Testar antes de publicar, e esperar de 48 a 72 horas entre mudanças no mesmo sistema.",
+      "Nada na sexta à tarde nem no fim de semana.",
+      "Congelamento de estrutura de campanha, site e checkout de 27/11 a 30/11/2026 (Black Friday) e de 04/05 a 10/05/2027 (Dia das Mães, 09/05): nesses dias só se ajusta verba dentro do degrau aprovado.",
+      "A verba só sobe pelo portão quinzenal: CAC dentro do teto de R$ 103,9 (mensal até R$ 112) e ROAS acima do piso da plataforma. Acima do teto mensal, o aumento congela na quinzena seguinte."
+    ]
+  },
+  "kpis_acompanhamento": [
+    {
+      "kpi": "Receita captada do mês",
+      "meta_limite": "Meta do Realista: R$ 211,7 mil (NOV), R$ 143,3 mil (DEZ), R$ 93,0 mil (JAN) e R$ 97,9 mil (FEV). Abaixo da meta em 2 fechamentos seguidos, replanejar a verba na reunião mensal."
+    },
+    {
+      "kpi": "CAC",
+      "meta_limite": "Teto de R$ 103,9, média do ciclo até R$ 94,8 e teto mensal de R$ 112 (era R$ 112,7 em SET/26). Acima do teto mensal por 2 portões seguidos, reverter o último degrau de verba."
+    },
+    {
+      "kpi": "ROAS global",
+      "meta_limite": "Média de 3,45x no ciclo (3,78x em NOV e 3,45x em FEV; era 3,06x em SET/26). Referência de empate da primeira compra: 5,0x sobre a receita aprovada e cerca de 5,3x sobre a captada, usada como gatilho e não como meta."
+    },
+    {
+      "kpi": "ROAS por plataforma",
+      "meta_limite": "Pisos na Curva A: Google 1,5x e Meta 0,8x. Pisos na Curva B: Google 1,8x e Meta 1,0x. Abaixo do piso por 2 semanas, cortar a verba da campanha no portão."
+    },
+    {
+      "kpi": "Taxa de conversão global",
+      "meta_limite": "Média de 1,54% no ciclo e 1,32% em FEV/27 (era 1,25% em FEV/26). Abaixo da meta em 2 fechamentos seguidos, revisar o funil e o estoque do sérum."
+    },
+    {
+      "kpi": "Ticket médio",
+      "meta_limite": "R$ 170,9 em NOV, R$ 215,1 em DEZ, R$ 201,3 em JAN e R$ 201,2 em FEV (Realista). Abaixo de R$ 165 por 2 dias na Black Friday, trocar desconto adicional por brinde."
+    },
+    {
+      "kpi": "Custo por sessão paga",
+      "meta_limite": "Até R$ 1,72 em média no ciclo (era R$ 1,67 em SET/26). A deriva histórica é de cerca de R$ 0,06 por mês e o teto de CAC existe para contê-la."
+    },
+    {
+      "kpi": "Dependência de mídia paga",
+      "meta_limite": "Até 44,9% em FEV/27, média de 51,9% no ciclo e meta de 52% em SET/27 (era 54,7% em SET/26; Realista sem ação adicional chega a 58%)."
+    },
+    {
+      "kpi": "Taxa de quebra",
+      "meta_limite": "6,2% em média no ciclo (era 7,1% em SET/26). Acima de 7,1% em um mês, revisar o lembrete de PIX e o antifraude."
+    },
+    {
+      "kpi": "Cobertura do sérum",
+      "meta_limite": "Mínimo de 60 dias (hoje cerca de 7). Abaixo do limite de pausa da Ação 5, o anúncio do sérum é pausado no mesmo dia."
+    }
+  ],
+  "sessoes_nao_pagas": {
+    "colunas": [
+      "Mês",
+      "Sessões totais",
+      "% de sessões pagas",
+      "Sessões não pagas"
+    ],
+    "linhas": [
+      [
+        "Nov/26",
+        "60.422",
+        "52,5%",
+        "28.729"
+      ],
+      [
+        "Dez/26",
+        "41.637",
+        "58,4%",
+        "17.329"
+      ],
+      [
+        "Jan/27",
+        "35.974",
+        "45,7%",
+        "19.517"
+      ],
+      [
+        "Fev/27",
+        "36.925",
+        "44,9%",
+        "20.362"
+      ],
+      [
+        "Set/27 (Realista)",
+        "44.553",
+        "58,0%",
+        "18.697"
+      ],
+      [
+        "Set/27 (meta de 07)",
+        "49.753",
+        "52,0%",
+        "23.897"
+      ]
+    ],
+    "premissas": [
+      "As linhas de NOV/26 a SET/27 (Realista) vêm da projeção aprovada em 06, com a régua de recompra (P3) já incluída.",
+      "A linha de SET/27 (meta de 07) soma 5,2 mil sessões não pagas às do Realista, para a dependência cair de 58% para 52%. Esse volume extra vem do WhatsApp com consentimento (Ações 28 e 29), de orgânico e SEO (Ação 31) e de influenciadoras com medição (Ação 30).",
+      "Nenhuma dessas ações tem volume por canal definido: a divisão do volume será medida nos primeiros 90 dias do plano, como combinado em 07."
+    ],
+    "risco": "Se os canais adicionais não entregarem as 5,2 mil sessões extras, a dependência de mídia paga chega a 58% em SET/27 e cada 10% de alta no custo por sessão custa R$ 46 mil no ano."
+  },
+  "horizontes": [
+    {
+      "nome": "Imediato",
+      "titulo": "HORIZONTE 1 · IMEDIATO (23/11 a 29/11/2026)",
+      "intro": "Primeira semana de execução: o que destrava o resto (regra de verba, estoque do sérum, oferta da Black Friday, acessos, medição e margem).",
+      "acoes": [
+        {
+          "numero": 1,
+          "frente": "Mídia Paga / Canal Principal",
+          "acao": "Publicar a regra de teto de CAC de R$ 103,9 e de ROAS mínimo por plataforma",
+          "achado_origem": "04 · CAC: de R$ 49,5 (OUT/25) para R$ 112,7 (SET/26), +127%, e LTV/CAC de 2,77 em SET/26, abaixo de 3",
+          "alavanca": "CAC",
+          "alavanca_da_meta": true,
+          "como": "Escrever a regra em uma página: teto de CAC de R$ 103,9 (o valor que dá LTV/CAC de 3x), média do ciclo até R$ 94,8 e teto mensal de R$ 112 (07). Pisos de ROAS atribuído por plataforma: Curva A com Google 1,5x e Meta 0,8x; Curva B com Google 1,8x e Meta 1,0x. A regra diz que o degrau seguinte de verba só é liberado com o CAC dentro do teto e o ROAS acima do piso, e que acima do teto mensal o aumento congela na quinzena seguinte. O gestor de tráfego aplica a regra nas campanhas.",
+          "dono": "Estrategista de mídia · Agência",
+          "inicio": "24/11/2026",
+          "entrega": "25/11/2026",
+          "depende_de": [
+            11
+          ],
+          "evidencia": "Página da regra aprovada pela Direção e cópia anexada ao painel de KPIs",
+          "kpi_meta": "CAC de R$ 112,7 (SET/26) para até R$ 103,9 até 22/02/2027, com média do ciclo de até R$ 94,8",
+          "gatilho": "Se o CAC do mês passar de R$ 112 (8% acima do teto), então congelar o aumento de verba na quinzena seguinte",
+          "solucoes": [
+            "P1.S1"
+          ]
+        },
+        {
+          "numero": 2,
+          "frente": "Mídia Paga / Canal Principal",
+          "acao": "Definir os degraus de verba de NOV a FEV e travar qualquer aumento fora deles",
+          "achado_origem": "03 · Macro financeiro: investimento +127% de OUT a SET e receita captada só +7,3%; ROAS global de 6,5x para 3,1x",
+          "alavanca": "Investimento e CAC",
+          "alavanca_da_meta": true,
+          "como": "Degraus do Realista (07): NOV R$ 56.076, DEZ R$ 42.910, JAN R$ 28.529 e FEV R$ 28.409 (R$ 155.924 no período). Nenhum aumento de verba fora desses degraus. O degrau de DEZ só é liberado no portão de 07/12, com o CAC dentro do teto de R$ 103,9 e o ROAS acima do piso (Ação 13). A decisão da Direção é a aprovação dos degraus.",
+          "dono": "Estrategista de mídia · Agência",
+          "inicio": "23/11/2026",
+          "entrega": "24/11/2026",
+          "depende_de": [],
+          "evidencia": "Planilha de degraus de verba por mês e por plataforma, aprovada pela Direção",
+          "kpi_meta": "Verba de R$ 262 mil no ano atual para R$ 460,5 mil no ciclo, em degraus, com R$ 155.924 de NOV a FEV e nenhum aumento fora dos degraus até 22/02/2027",
+          "gatilho": "Se os degraus não forem aprovados até 24/11, então a verba de NOV fica no ritmo atual e não sobe na Black Friday até a aprovação",
+          "solucoes": [
+            "P1.S3"
+          ],
+          "decisao_cliente": {
+            "ate": "24/11/2026",
+            "recomendacao": "Aprovar os degraus do Realista de 07. Critério: cada degrau segue o plano financeiro e só sobe com o CAC dentro do teto; NOV (R$ 56 mil) é o maior degrau do período e DEZ só é liberado no portão de 07/12, depois de a Black Friday mostrar o CAC real."
+          }
+        },
+        {
+          "numero": 3,
+          "frente": "Mídia Paga / Canal Principal",
+          "acao": "Rodar a mídia da Black Friday no degrau aprovado e dentro do teto de CAC",
+          "achado_origem": "03 · ROAS por plataforma: Meta de 2,0x para 0,8x (abaixo de 1x desde JUL/26) e Google de 3,7x para 2,0x",
+          "alavanca": "ROAS e CAC",
+          "alavanca_da_meta": true,
+          "como": "De 26/11 a 30/11 a mídia roda sem mudança de estrutura (congelamento de 27/11 a 30/11); só se ajusta verba dentro do degrau de NOV (R$ 56.076). Curva A: Shopping e Performance Max no Google, catálogo e remarketing no Meta, sem anúncio de produto fora de estoque (Ação 5). O CAC e o ROAS atribuído são lidos todo dia contra os pisos: Meta 0,8x e Google 1,5x.",
+          "dono": "Gestor de tráfego · Agência",
+          "inicio": "26/11/2026",
+          "entrega": "30/11/2026",
+          "depende_de": [
+            1,
+            2,
+            5,
+            7
+          ],
+          "evidencia": "Relatório diário da Black Friday com CAC e ROAS por plataforma, no painel",
+          "kpi_meta": "ROAS global de NOV de 3,78x (07 · ROAS esperado) e CAC de NOV até R$ 103,9, até 30/11/2026",
+          "gatilho": "Se o ROAS atribuído do Meta ficar abaixo de 0,8x por 2 dias seguidos, então mover a verba da prospecção do Meta para o Google (Shopping e Performance Max) até o fim da Black Friday",
+          "solucoes": [
+            "P1.S1",
+            "P1.S3"
+          ]
+        },
+        {
+          "numero": 4,
+          "frente": "Eficiência Operacional",
+          "acao": "Fazer o pedido de reposição do sérum ao laboratório para o estoque de 60 dias",
+          "achado_origem": "03 · Curva ABC: o sérum faz 22% da receita e tem cerca de 7 dias de cobertura; em MAR e ABR a conversão foi de 1,05% e 1,00%",
+          "alavanca": "Taxa de conversão (ruptura do sérum)",
+          "alavanca_da_meta": true,
+          "como": "Finanças e operações calcula a venda diária do sérum (relatório de produtos e vendas de NOV) e define o pedido como a demanda dos 45 dias do prazo do laboratório mais os 60 dias de estoque de segurança, descontado o saldo atual. Pede o lote com prioridade para o sérum, que o laboratório topou dar (02). O lote deve chegar em cerca de 09/01/2027; até lá a cobertura é protegida pela regra de pausa (Ação 5).",
+          "dono": "Finanças e operações · Cliente",
+          "inicio": "23/11/2026",
+          "entrega": "25/11/2026",
+          "depende_de": [],
+          "evidencia": "Pedido de compra enviado ao laboratório, com quantidade, data de entrega prevista e a planilha de cálculo",
+          "kpi_meta": "Cobertura do sérum de cerca de 7 dias para 60 dias até 22/02/2027, com o pedido feito até 25/11/2026",
+          "gatilho": "Se o pedido não estiver enviado até 25/11, então o sérum sai da prospecção da Black Friday e o anúncio dele fica pausado até o pedido sair",
+          "solucoes": [
+            "P2.S1"
+          ],
+          "decisao_cliente": {
+            "ate": "24/11/2026",
+            "recomendacao": "Aprovar a quantidade e o caixa do pedido. Recomendação: pedir o que cobre 60 dias de venda no ritmo do Realista mais os 45 dias do prazo do laboratório. Critério: o sérum faz 22% da receita e a ruptura de MAR e ABR custou até R$ 65 mil de receita captada por ocorrência (05), mais que o custo de manter estoque."
+          }
+        },
+        {
+          "numero": 5,
+          "frente": "Eficiência Operacional",
+          "acao": "Ativar a regra de pausa e reativação do anúncio do sérum por cobertura",
+          "achado_origem": "03 · Curva ABC e conexão dos KPIs: a mídia seguiu rodando em MAR e ABR com o sérum em ruptura, e o produto ficou um dia a mais no Google Shopping (kickoff)",
+          "alavanca": "Taxa de conversão (ruptura do sérum)",
+          "alavanca_da_meta": true,
+          "como": "A Expedição e Finanças e operações enviam o saldo do sérum todo dia útil ao gestor de tráfego. Cobertura em dias = saldo ÷ venda diária. Pausar os anúncios do sérum (Shopping, Performance Max e catálogo) e retirá-lo do feed do Merchant no mesmo dia em que a cobertura ficar abaixo de 5 dias; reativar quando passar de 10 dias. Os kits que incluem o sérum seguem a mesma regra.",
+          "dono": "Gestor de tráfego · Agência",
+          "inicio": "24/11/2026",
+          "entrega": "25/11/2026",
+          "depende_de": [
+            11
+          ],
+          "evidencia": "Regra escrita, planilha de cobertura em uso e print das campanhas do sérum com o gatilho de pausa configurado",
+          "kpi_meta": "Zero dias com anúncio do sérum ativo sem estoque até 22/02/2027 (em MAR e ABR foram cerca de 2 semanas e 1,5 semana)",
+          "gatilho": "Se o saldo do sérum não chegar ao gestor de tráfego por 2 dias úteis seguidos, então o anúncio do sérum fica pausado até o saldo chegar",
+          "solucoes": [
+            "P2.S3"
+          ]
+        },
+        {
+          "numero": 6,
+          "frente": "Eficiência Operacional",
+          "acao": "Passar a medir a quebra por meio de pagamento e por motivo de recusa",
+          "achado_origem": "03 · Macro financeiro: quebra média de 6,3% (6,5% ponderada), acima de 5% em 11 dos 12 meses, R$ 79,3 mil perdidos; cartão recusado e PIX expirado sem medição",
+          "alavanca": "Taxa de quebra",
+          "alavanca_da_meta": true,
+          "como": "Exportar do Mercado Pago e da Nuvemshop os pedidos dos últimos 12 meses e montar a planilha mensal de pedidos criados, aprovados, recusados e expirados por meio de pagamento (cartão, PIX e boleto) e, no cartão, por motivo de recusa. A exportação se repete todo mês no painel (Ação 12). A leitura dá a causa para a Ação 14 (PIX) e para a Ação 24 (antifraude e retentativa).",
+          "dono": "Analista de dados · Agência",
+          "inicio": "24/11/2026",
+          "entrega": "29/11/2026",
+          "depende_de": [
+            11
+          ],
+          "evidencia": "Planilha com 12 meses de quebra por cartão, PIX e boleto e por motivo de recusa, anexada ao painel",
+          "kpi_meta": "Quebra medida em 3 de 3 meios de pagamento até 29/11/2026 (hoje, 0 de 3), partindo de 7,1% em SET/26",
+          "gatilho": "Se a exportação por meio de pagamento não estiver pronta até 29/11, então a Ação 14 segue com a quebra total e a Ação 24 espera a medição",
+          "solucoes": [
+            "P4.S1"
+          ]
+        },
+        {
+          "numero": 7,
+          "frente": "Produto / Mix / Portfólio",
+          "acao": "Fechar a oferta da Black Friday com desconto de até 20% e brinde",
+          "achado_origem": "02 · Black Friday: 35% de desconto no Kit Rotina Essencial e no sérum, com frete grátis sem valor mínimo, deixou a margem muito ruim; 03 · ticket de NOV/25 de R$ 170,9",
+          "alavanca": "Ticket médio e margem",
+          "alavanca_da_meta": true,
+          "como": "Desconto de até 20% (era 35% em NOV/25), com brinde por valor mínimo de pedido (item da Curva C, 07) e o sérum fora do desconto profundo (02). Com margem de contribuição de 20%, um desconto de 35% consome a margem inteira antes da mídia. Frete grátis só acima do mínimo vigente (R$ 249 no Sul e Sudeste e R$ 349 nas demais regiões). A oferta e as regras ficam escritas e valem de 26/11 a 30/11.",
+          "dono": "Direção · Cliente",
+          "inicio": "23/11/2026",
+          "entrega": "24/11/2026",
+          "depende_de": [],
+          "evidencia": "Documento da oferta aprovado, com desconto máximo por produto, brinde, valor mínimo e datas",
+          "kpi_meta": "Ticket médio de NOV de R$ 170,9 (06 · Realista, NOV/26) com desconto máximo de 20%, contra 35% em NOV/25, até 30/11/2026",
+          "gatilho": "Se o ticket médio diário da Black Friday ficar abaixo de R$ 165 por 2 dias seguidos, então trocar desconto adicional por brinde acima do valor mínimo, sem passar de 20%",
+          "solucoes": [],
+          "decisao_cliente": {
+            "ate": "24/11/2026",
+            "recomendacao": "Aprovar desconto máximo, brinde e valor mínimo. Recomendação: até 20% nos kits e nos produtos fora do trio líder, brinde a partir de R$ 249 e o sérum fora do desconto. Critério: com margem de contribuição de 20%, cada ponto de desconto acima de 20% leva a venda para o prejuízo antes da mídia, e o sérum, com cerca de 7 dias de cobertura, não precisa de desconto para vender."
+          }
+        },
+        {
+          "numero": 8,
+          "frente": "Produto / Mix / Portfólio",
+          "acao": "Ativar a lista de espera do sérum e a retirada do produto do Merchant quando a pausa disparar",
+          "achado_origem": "03 · Curva ABC: sérum com cerca de 7 dias de cobertura; ruptura de MAR e ABR e produto no Google Shopping por mais um dia (kickoff)",
+          "alavanca": "Taxa de conversão (ruptura do sérum)",
+          "alavanca_da_meta": true,
+          "como": "Ativar na página do sérum o aviso de volta ao estoque e a captura de e-mail da lista de espera, com o texto do prazo de reposição (cerca de 09/01/2027). Se a regra da Ação 5 pausar o sérum, o site mostra a lista de espera no lugar do botão de compra e o produto sai do feed do Merchant no mesmo dia. Os e-mails da lista entram no CRM para o aviso de volta ao estoque.",
+          "dono": "Time de e-commerce · Cliente",
+          "inicio": "25/11/2026",
+          "entrega": "26/11/2026",
+          "depende_de": [
+            5
+          ],
+          "evidencia": "Print da página do sérum com a lista de espera ativa e teste de retirada do produto do feed do Merchant",
+          "kpi_meta": "Zero vendas do sérum sem estoque na Black Friday e lista de espera em 100% das páginas do sérum e dos kits que o incluem até 26/11/2026",
+          "gatilho": "Se a lista de espera não estiver ativa até 26/11, então o sérum sai da oferta da Black Friday (Ação 7)",
+          "solucoes": []
+        },
+        {
+          "numero": 9,
+          "frente": "Monitoramento e Governança",
+          "acao": "Enviar a margem por SKU da Curva A e recalcular os pisos de ROAS por produto",
+          "achado_origem": "05 · Pontos em aberto: margem por produto (kits e protetor) sem confirmação; a margem bruta de 68% (62% nos kits) é estimativa",
+          "alavanca": "Margem (base dos pisos de ROAS)",
+          "alavanca_da_meta": false,
+          "como": "Finanças e operações envia em planilha a margem de contribuição antes da mídia (receita menos custo do produto, imposto, frete, taxa do gateway e comissões) dos 9 produtos da Curva A, com os kits separados. A Agência recalcula o LTV/CAC em margem e os pisos de ROAS por produto e compara com a margem de 20% usada no plano.",
+          "dono": "Finanças e operações · Cliente",
+          "inicio": "23/11/2026",
+          "entrega": "30/11/2026",
+          "depende_de": [],
+          "evidencia": "Planilha com a margem de contribuição por SKU da Curva A, recebida pela Agência",
+          "kpi_meta": "Margem confirmada em 9 de 9 produtos da Curva A até 30/11/2026 (hoje, 0 de 9)",
+          "gatilho": "Se a planilha não chegar até 30/11, então a margem de 20% segue valendo e o recálculo do LTV/CAC em margem vai para o checkpoint de 30/12",
+          "solucoes": []
+        },
+        {
+          "numero": 10,
+          "frente": "Monitoramento e Governança",
+          "acao": "Registrar o backup das campanhas e do contêiner do GTM antes de qualquer mudança",
+          "achado_origem": "07 · Pontos em aberto: prints das campanhas atuais não enviados e estrutura de campanha não analisada",
+          "alavanca": "Governança de mudança (reversão)",
+          "alavanca_da_meta": false,
+          "como": "Exportar o contêiner do GTM e registrar a estrutura atual das campanhas do Google (Search, Shopping e Performance Max) e do Meta (conversão, catálogo, remarketing e sazonais), com verba, públicos e ROAS dos últimos 30 dias. Abrir o registro de mudanças (data, quem, o quê, por quê, como desfazer e resultado).",
+          "dono": "Gestor de tráfego · Agência",
+          "inicio": "24/11/2026",
+          "entrega": "25/11/2026",
+          "depende_de": [
+            11
+          ],
+          "evidencia": "Arquivo do contêiner do GTM, planilha de estrutura das campanhas e registro de mudanças aberto",
+          "kpi_meta": "Backup e registro em 100% das campanhas ativas do Google e do Meta até 25/11/2026",
+          "gatilho": "Se o backup não estiver feito até 25/11, então nenhuma mudança de estrutura entra antes de 04/12",
+          "solucoes": []
+        },
+        {
+          "numero": 11,
+          "frente": "Monitoramento e Governança",
+          "acao": "Liberar à Agência os acessos ao Mercado Pago, à Nuvemshop, ao GA4, ao Merchant e à ferramenta de e-mail",
+          "achado_origem": "03 · Mensuração: Google e Meta explicam só 37% da receita captada, o GA4 registra cerca de 4% mais vendas que a Nuvemshop e a quebra não é medida por meio de pagamento",
+          "alavanca": "Medição (base de todos os KPIs)",
+          "alavanca_da_meta": false,
+          "como": "Dar à Agência acesso de leitura ao Mercado Pago (relatórios de pagamento) e à Nuvemshop (pedidos), e de edição ao GA4, ao Merchant e à ferramenta de e-mail, com pelo menos dois usuários da Agência por ferramenta.",
+          "dono": "Time de e-commerce · Cliente",
+          "inicio": "23/11/2026",
+          "entrega": "24/11/2026",
+          "depende_de": [],
+          "evidencia": "Lista de acessos confirmada pela Agência, com print de cada ferramenta",
+          "kpi_meta": "5 de 5 ferramentas com acesso da Agência até 24/11/2026",
+          "gatilho": "Se algum acesso não estiver liberado até 24/11, então as Ações 5, 6 e 10 seguem só com os dados que a Agência já tem e o pedido volta para a Direção",
+          "solucoes": []
+        },
+        {
+          "numero": 12,
+          "frente": "Monitoramento e Governança",
+          "acao": "Montar o painel de KPIs com as metas mensais do Realista e os pisos de ROAS",
+          "achado_origem": "03 · Conexão dos KPIs: a receita captada subiu 7,3% de OUT a SET com investimento +127%, e o funil e a quebra não são medidos",
+          "alavanca": "Medição (base de todos os KPIs)",
+          "alavanca_da_meta": false,
+          "como": "Painel único com receita captada, investimento, ROAS global e por plataforma, CAC, conversão, ticket, custo por sessão paga, % de sessões pagas e quebra, por mês e por plataforma, com a meta do Realista de NOV a FEV (06) e os pisos de ROAS (07). Atualizado toda semana com GA4, Nuvemshop, Meta, Google e Mercado Pago.",
+          "dono": "Analista de dados · Agência",
+          "inicio": "25/11/2026",
+          "entrega": "30/11/2026",
+          "depende_de": [
+            11
+          ],
+          "evidencia": "Link do painel com os 9 KPIs e a meta mensal, aberto para a Direção",
+          "kpi_meta": "Painel com 9 KPIs e meta mensal no ar até 30/11/2026 (hoje, nenhum painel único)",
+          "gatilho": "Se o painel não estiver no ar até 04/12, então a reunião de 04/01 usa uma planilha manual e a Ação 19 registra o atraso",
+          "solucoes": []
+        }
+      ]
+    },
+    {
+      "nome": "Curto prazo",
+      "titulo": "HORIZONTE 2 · CURTO PRAZO (30/11 a 31/12/2026)",
+      "intro": "Do fim da Black Friday até o Natal: fechar o balanço, ligar pagamento e CRM e manter o portão de verba.",
+      "acoes": [
+        {
+          "numero": 13,
+          "frente": "Mídia Paga / Canal Principal",
+          "acao": "Rodar o portão quinzenal de CAC e ROAS e liberar ou travar o degrau de verba",
+          "achado_origem": "04 · LTV/CAC de 2,77 em SET/26; CAC +127% com os mesmos 292 clientes novos em OUT e SET",
+          "alavanca": "CAC",
+          "alavanca_da_meta": true,
+          "como": "Portão a cada 15 dias, em 07/12, 21/12, 04/01, 18/01, 01/02 e 15/02. O estrategista de mídia lê o CAC e o ROAS por plataforma no painel e libera o degrau seguinte só com o CAC dentro do teto de R$ 103,9 (mensal até R$ 112) e o ROAS acima do piso (Google 1,5x e Meta 0,8x na Curva A). Acima do teto, congela o aumento na quinzena seguinte. Cada decisão vai para o registro de mudanças.",
+          "dono": "Estrategista de mídia · Agência",
+          "inicio": "07/12/2026",
+          "entrega": "22/02/2027",
+          "depende_de": [
+            1,
+            2
+          ],
+          "evidencia": "Seis atas de portão (07/12, 21/12, 04/01, 18/01, 01/02 e 15/02) com CAC, ROAS e decisão de verba",
+          "kpi_meta": "CAC de R$ 112,7 (SET/26) para até R$ 103,9 em todos os fechamentos quinzenais até 22/02/2027",
+          "gatilho": "Se o CAC passar de R$ 112 em 2 portões seguidos, então reverter o último degrau de verba e só voltar a subir em um portão dentro do teto",
+          "solucoes": [
+            "P1.S1",
+            "P1.S3"
+          ]
+        },
+        {
+          "numero": 14,
+          "frente": "Eficiência Operacional",
+          "acao": "Ativar a recuperação de PIX expirado com lembrete antes do vencimento e novo QR",
+          "achado_origem": "03 · Macro financeiro: quebra de 6,3% em média e 7,1% em SET/26, acima de 5% em 11 dos 12 meses; PIX que expira sem lembrete (kickoff)",
+          "alavanca": "Taxa de quebra",
+          "alavanca_da_meta": true,
+          "como": "Na Nuvemshop e na ferramenta de e-mail, enviar um lembrete antes do vencimento do PIX e, depois que expirar, um novo QR do mesmo pedido em 1 hora e em 24 horas, por e-mail (WhatsApp só com consentimento, Ação 28). Usar a leitura da Ação 6 para saber quanto da quebra é PIX. Testar em pedidos reais antes de ligar para todos.",
+          "dono": "Time de e-commerce · Cliente",
+          "inicio": "01/12/2026",
+          "entrega": "11/12/2026",
+          "depende_de": [
+            6
+          ],
+          "evidencia": "Fluxo ativo na ferramenta de e-mail com lembrete e novo QR, e print do primeiro envio",
+          "kpi_meta": "Taxa de quebra de 7,1% (SET/26) para 6,2% (média do Realista) até 22/02/2027, com o fluxo no ar até 11/12/2026",
+          "gatilho": "Se a quebra mensal passar de 7,1% por 4 semanas depois do fluxo no ar, então revisar o texto e o horário dos lembretes e antecipar a Ação 24 (antifraude e retentativa)",
+          "solucoes": [
+            "P4.S2"
+          ]
+        },
+        {
+          "numero": 15,
+          "frente": "Produto / Mix / Portfólio",
+          "acao": "Limitar a venda do Kit Presente de Natal ao estoque disponível",
+          "achado_origem": "07 · Riscos: estoque do kit presente de Natal de 52 unidades contra 109 vendidas no ano; ruptura de 2 semanas antes do Natal no ano anterior (kickoff)",
+          "alavanca": "Taxa de conversão (ruptura)",
+          "alavanca_da_meta": true,
+          "como": "Configurar na Nuvemshop o limite de venda do kit igual ao estoque físico confirmado pela Expedição (52 unidades) e tirar o kit dos anúncios quando acabar. A reposição não cabe no prazo de 45 dias do laboratório, por isso o limite é o estoque.",
+          "dono": "Time de e-commerce · Cliente",
+          "inicio": "01/12/2026",
+          "entrega": "03/12/2026",
+          "depende_de": [],
+          "evidencia": "Print da Nuvemshop com o limite do kit e a regra de saída do anúncio",
+          "kpi_meta": "Zero vendas do Kit Presente de Natal acima do estoque de 52 unidades até 24/12/2026",
+          "gatilho": "Se o kit esgotar antes de 15/12, então retirar o kit dos anúncios no mesmo dia e destacar o Kit Rotina Essencial no lugar",
+          "solucoes": []
+        },
+        {
+          "numero": 16,
+          "frente": "Produto / Mix / Portfólio",
+          "acao": "Manter a Curva C sem mídia direta e definir brinde, order bump e kit com a Curva A",
+          "achado_origem": "07 · Curva ABC: uma venda paga custa R$ 111,5 e o produto médio da Curva C custa R$ 64,0; 38 produtos fazem 5,4% da receita (03)",
+          "alavanca": "CAC e custo por sessão paga",
+          "alavanca_da_meta": true,
+          "como": "O gestor de tráfego tira da mídia direta os produtos da Curva C (0% da verba, 07), usando a estrutura registrada na Ação 10 como linha de base. O time de e-commerce define quais itens da Curva C viram brinde da oferta, order bump no carrinho dos três líderes e componente de kit.",
+          "dono": "Gestor de tráfego · Agência",
+          "inicio": "07/12/2026",
+          "entrega": "11/12/2026",
+          "depende_de": [
+            10
+          ],
+          "evidencia": "Lista de produtos da Curva C fora da mídia direta e lista de brindes, order bumps e kits aprovada",
+          "kpi_meta": "Verba direta da Curva C para 0% do investimento (R$ 0 dos R$ 460,5 mil do ciclo) até 11/12/2026",
+          "gatilho": "Se algum produto da Curva C consumir mais de 1% da verba do mês, então pausar a campanha dele no portão seguinte",
+          "solucoes": []
+        },
+        {
+          "numero": 17,
+          "frente": "Redução de Dependências",
+          "acao": "Montar a régua de reposição do sérum com e-mails aos 45 e aos 60 dias da compra",
+          "achado_origem": "04 · LTV: 69% dos clientes compraram uma vez só (7.176 de 10.400); o sérum dura cerca de 60 dias e não há lembrete de reposição",
+          "alavanca": "Recompra (clientes novos que fazem a segunda compra)",
+          "alavanca_da_meta": true,
+          "como": "No CRM, criar o fluxo: e-mail aos 45 dias da compra do sérum, com lembrete de rotina e link de recompra, e reforço aos 60 dias, sem desconto no primeiro envio. Segmentar por quem comprou o sérum ou um kit com sérum. Usar as avaliações do sérum (mais de 900) como prova social no texto. Montar e testar até 18/12; só entra no ar com a chegada do lote (Ação 26).",
+          "dono": "Estrategista de CRM · Agência",
+          "inicio": "01/12/2026",
+          "entrega": "18/12/2026",
+          "depende_de": [
+            11
+          ],
+          "evidencia": "Fluxo montado e testado na ferramenta de e-mail, com os dois envios e a segmentação, em modo de teste",
+          "kpi_meta": "Fluxo de reposição pronto até 18/12/2026 (hoje, 1 fluxo ativo, o de carrinho abandonado)",
+          "gatilho": "Se não estiver concluída até 18/12, então o go-live da Ação 26 passa para a primeira semana depois da conclusão",
+          "solucoes": [
+            "P3.S1"
+          ]
+        },
+        {
+          "numero": 18,
+          "frente": "Monitoramento e Governança",
+          "acao": "Fechar o balanço da Black Friday e comparar com a meta de NOV",
+          "achado_origem": "02 · Black Friday: novembro pesa quase um sexto do ano e a margem foi muito ruim com 35% de desconto",
+          "alavanca": "Receita captada",
+          "alavanca_da_meta": false,
+          "como": "Montar o relatório de NOV com receita captada, investimento, ROAS e CAC por plataforma, ticket médio, quebra e margem estimada da oferta (desconto, brinde e frete), contra a meta do Realista de NOV/26: R$ 211.738 de receita, ROAS de 3,78x e ticket de R$ 170,9. O relatório vai para o portão de 07/12.",
+          "dono": "Analista de dados · Agência",
+          "inicio": "01/12/2026",
+          "entrega": "04/12/2026",
+          "depende_de": [
+            3
+          ],
+          "evidencia": "Relatório da Black Friday no painel, com realizado contra meta",
+          "kpi_meta": "Receita captada de NOV/26 de R$ 211.738 (06 · Realista), +11,3% sobre os R$ 190.259 de NOV/25, lida até 04/12/2026",
+          "gatilho": "Se a receita captada de NOV ficar abaixo de R$ 190 mil (o nível de NOV/25), então congelar o degrau de DEZ no portão de 07/12",
+          "solucoes": []
+        },
+        {
+          "numero": 19,
+          "frente": "Monitoramento e Governança",
+          "acao": "Realizar a reunião mensal de resultados e registrar as decisões em ata (01/12, 04/01 e 01/02)",
+          "achado_origem": "01 · Kickoff: reunião de resultados no primeiro dia útil de cada mês; 03 · Conexão dos KPIs: receita +7,3% com investimento +127%",
+          "alavanca": "Receita captada e governança",
+          "alavanca_da_meta": false,
+          "como": "Reunião de 45 minutos no primeiro dia útil de DEZ, JAN e FEV com o painel aberto: realizado contra a meta mensal do Realista, CAC, ROAS, quebra, cobertura do sérum e decisões de verba do portão. Cada mudança entra no registro de mudanças.",
+          "dono": "Estrategista de mídia · Agência",
+          "inicio": "01/12/2026",
+          "entrega": "01/02/2027",
+          "depende_de": [
+            12
+          ],
+          "evidencia": "Três atas (01/12, 04/01 e 01/02) com realizado, meta e decisões",
+          "kpi_meta": "3 reuniões realizadas, com meta de receita captada de R$ 211,7 mil (NOV), R$ 143,3 mil (DEZ) e R$ 93,0 mil (JAN) até 01/02/2027",
+          "gatilho": "Se a receita captada do mês ficar abaixo da meta mensal em 2 fechamentos seguidos, então replanejar a verba do mês seguinte na própria reunião",
+          "solucoes": []
+        },
+        {
+          "numero": 20,
+          "frente": "Monitoramento e Governança",
+          "acao": "Fixar a Nuvemshop como fonte da receita no painel e a diferença de 4% do GA4 como tolerância",
+          "achado_origem": "03 · Mensuração: o GA4 registra cerca de 4% mais vendas que a Nuvemshop e só 37% da receita aparece atribuída a Google e Meta; a diferença de 4% foi aceita como tolerância na revisão do plano",
+          "alavanca": "Medição (base de todos os KPIs)",
+          "alavanca_da_meta": false,
+          "como": "Usar os pedidos da Nuvemshop como fonte de receita, ROAS e CAC no painel (Ação 12) e o GA4 só para sessões, conversão e canais. Registrar no painel a diferença mensal entre GA4 e Nuvemshop, com a tolerância de 4% aceita para este plano. Se a diferença passar do nível atual, investigar o evento de compra no GTM (duplicidade, pedidos cancelados, PIX não pago), seguindo o protocolo de mudança.",
+          "dono": "Analista de dados · Agência",
+          "inicio": "01/12/2026",
+          "entrega": "11/12/2026",
+          "depende_de": [
+            11
+          ],
+          "evidencia": "Painel com a Nuvemshop como fonte de receita e a linha mensal de diferença entre GA4 e Nuvemshop",
+          "kpi_meta": "Diferença entre GA4 e Nuvemshop mantida em até 4% (nível atual) até 22/02/2027, com a Nuvemshop como fonte de receita no painel a partir de 11/12/2026",
+          "gatilho": "Se a diferença entre GA4 e Nuvemshop passar de 4% por 2 semanas seguidas, então investigar o evento de compra no GTM, com uma mudança por vez e o backup da Ação 10",
+          "solucoes": []
+        }
+      ]
+    },
+    {
+      "nome": "Médio prazo",
+      "titulo": "HORIZONTE 3 · MÉDIO PRAZO (04/01 a 30/09/2027)",
+      "intro": "De JAN a SET/27: provar a janela de 3 meses, preparar e operar o pico de MAI e fechar o ciclo de 12 meses.",
+      "acoes": [
+        {
+          "numero": 21,
+          "frente": "Mídia Paga / Canal Principal",
+          "acao": "Separar no Meta a prospecção do remarketing, cada uma com ROAS-alvo próprio",
+          "achado_origem": "03 · ROAS do Meta de 2,0x para 0,8x (abaixo de 1x desde JUL/26) e conversão de 0,70% com 62% da verba",
+          "alavanca": "ROAS do Meta",
+          "alavanca_da_meta": true,
+          "como": "Separar no Meta as campanhas de prospecção e de remarketing, cada uma com o ROAS-alvo definido sobre os dados de 4 semanas da separação (de 04/01 a 29/01). O piso de 0,8x do Meta (07) segue valendo até o teste de incrementalidade (Ação 33); o corte da prospecção abaixo de 1x só entra depois dele, se o resultado incremental confirmar (05 pede o corte abaixo de 1x e 07 mantém o piso de 0,8x até a incrementalidade). Feito em JAN, mês de menor verba do período e fora do congelamento.",
+          "dono": "Gestor de tráfego · Agência",
+          "inicio": "04/01/2027",
+          "entrega": "29/01/2027",
+          "depende_de": [
+            10
+          ],
+          "evidencia": "Estrutura de campanhas do Meta com prospecção e remarketing separados e ROAS por campanha no painel",
+          "kpi_meta": "ROAS atribuído do Meta de 0,8x (SET/26) para pelo menos 0,9x (média do Meta no Realista, 07) até 22/02/2027",
+          "gatilho": "Se o ROAS da prospecção do Meta ficar abaixo de 0,8x por 4 semanas, então reduzir a verba da prospecção e movê-la para o Google (Shopping e Performance Max), dentro da alocação de 07",
+          "solucoes": [
+            "P1.S2"
+          ]
+        },
+        {
+          "numero": 22,
+          "frente": "Eficiência Operacional",
+          "acao": "Receber o lote do sérum e confirmar a cobertura de 60 dias",
+          "achado_origem": "03 · Curva ABC: sérum com cerca de 7 dias de cobertura; prazo de 45 dias do laboratório (02)",
+          "alavanca": "Taxa de conversão (ruptura do sérum)",
+          "alavanca_da_meta": true,
+          "como": "Conferir a entrada do lote com a Expedição, atualizar o saldo e a cobertura na planilha da Ação 5 e liberar o sérum na oferta e na régua de reposição (Ação 26). Se o lote vier parcial, recalcular a cobertura e combinar com a Direção a data de entrada da régua.",
+          "dono": "Finanças e operações · Cliente",
+          "inicio": "07/01/2027",
+          "entrega": "15/01/2027",
+          "depende_de": [
+            4
+          ],
+          "evidencia": "Nota de entrada do lote e planilha de cobertura mostrando 60 dias ou mais",
+          "kpi_meta": "Cobertura do sérum de cerca de 7 dias para 60 dias, confirmada até 15/01/2027",
+          "gatilho": "Se o lote não chegar até 15/01/2027, então manter a regra de pausa e mover a verba do sérum para o hidratante e o protetor (cobertura de 58 e 70 dias) até o lote chegar",
+          "solucoes": [
+            "P2.S1"
+          ]
+        },
+        {
+          "numero": 23,
+          "frente": "Eficiência Operacional",
+          "acao": "Qualificar o segundo fornecedor de embalagem do sérum",
+          "achado_origem": "03 · Curva ABC e 02: ruptura de MAR e ABR por atraso do laboratório na embalagem, com fornecedor único de embalagem do sérum",
+          "alavanca": "Taxa de conversão (ruptura do sérum)",
+          "alavanca_da_meta": true,
+          "como": "Levantar cotações com pelo menos 2 fornecedores alternativos (prazo, mínimo por lote, custo por unidade e compatibilidade com a fórmula), pedir uma amostra e validá-la com o laboratório. A Direção escolhe o fornecedor.",
+          "dono": "Finanças e operações · Cliente",
+          "inicio": "04/01/2027",
+          "entrega": "12/02/2027",
+          "depende_de": [],
+          "evidencia": "Comparativo de cotações, amostra aprovada pelo laboratório e fornecedor escolhido por escrito",
+          "kpi_meta": "Fornecedores de embalagem do sérum de 1 para 2 qualificados até 12/02/2027",
+          "gatilho": "Se não houver amostra aprovada até 12/02, então a qualificação vai para o checkpoint de 22/02 e o estoque de 60 dias (Ação 34) fica como a única proteção do pico de MAI",
+          "solucoes": [
+            "P2.S2"
+          ],
+          "decisao_cliente": {
+            "ate": "05/02/2027",
+            "recomendacao": "Escolher o segundo fornecedor. Recomendação: o que entregar a embalagem em menos tempo e passar na amostra do laboratório, mesmo que custe mais por unidade, porque a ruptura de MAR e ABR custou até R$ 65 mil de receita captada por ocorrência (05). Critério: prazo e compatibilidade antes de preço."
+          }
+        },
+        {
+          "numero": 24,
+          "frente": "Eficiência Operacional",
+          "acao": "Revisar com o Mercado Pago as regras de antifraude e a retentativa de cartão recusado",
+          "achado_origem": "03 · Macro financeiro: quebra de 6,3% em média e 7,1% em SET/26; cartão recusado sem medição, com antifraude que pode barrar venda legítima (05 · P4.H1)",
+          "alavanca": "Taxa de quebra",
+          "alavanca_da_meta": true,
+          "como": "Com a leitura por motivo de recusa (Ação 6), levar ao Mercado Pago os motivos de recusa mais frequentes, revisar as regras de antifraude que barram pedidos legítimos e ativar a retentativa do cartão recusado (nova tentativa e oferta de PIX com o desconto de 5%). Uma mudança por vez, com 48 a 72 horas entre elas.",
+          "dono": "Time de e-commerce · Cliente",
+          "inicio": "11/01/2027",
+          "entrega": "29/01/2027",
+          "depende_de": [
+            6
+          ],
+          "evidencia": "Ata da revisão com o Mercado Pago e regras alteradas registradas no registro de mudanças",
+          "kpi_meta": "Taxa de quebra de 7,1% (SET/26) para até 6,2% (média do Realista) até 22/02/2027",
+          "gatilho": "Se a quebra mensal passar de 7,1% por 4 semanas depois da revisão, então desfazer a última regra alterada e abrir chamado no Mercado Pago",
+          "solucoes": [
+            "P4.S3"
+          ]
+        },
+        {
+          "numero": 25,
+          "frente": "Produto / Mix / Portfólio",
+          "acao": "Montar os kits por rotina e o brinde por valor mínimo de pedido",
+          "achado_origem": "06 · Ticket médio sobe +3% no Realista com kits e frete; 03 · os kits somam 24% da receita",
+          "alavanca": "Ticket médio",
+          "alavanca_da_meta": true,
+          "como": "Reorganizar os kits por rotina, manter o Kit Rotina Essencial e o Kit Glow como âncoras e atualizar as fotos antigas dos kits (kickoff). Brinde por valor mínimo de pedido, com item da Curva C (07), e frete grátis por valor mínimo mantido (R$ 249 no Sul e Sudeste e R$ 349 nas demais regiões). Sem mexer no preço de tabela.",
+          "dono": "Time de e-commerce · Cliente",
+          "inicio": "04/01/2027",
+          "entrega": "29/01/2027",
+          "depende_de": [],
+          "evidencia": "Kits e regra de brinde publicados no site, com print da página",
+          "kpi_meta": "Ticket médio de R$ 197,68 (FEV/26) para R$ 201,24 (FEV/27, Realista) até 22/02/2027",
+          "gatilho": "Se o ticket médio de JAN ficar abaixo de R$ 201 por 2 semanas, então rever o valor mínimo do brinde e a composição dos kits no portão seguinte",
+          "solucoes": [],
+          "decisao_cliente": {
+            "ate": "08/01/2027",
+            "recomendacao": "Aprovar o valor mínimo do brinde e a composição dos kits. Recomendação: brinde a partir de R$ 249, o mesmo mínimo do frete grátis no Sul e Sudeste, para puxar o ticket médio de cerca de R$ 198 acima de R$ 201 sem mexer no preço. Critério: o brinde, de item da Curva C, custa menos que o desconto equivalente e não muda a margem do item principal."
+          }
+        },
+        {
+          "numero": 26,
+          "frente": "Redução de Dependências",
+          "acao": "Colocar a régua de reposição do sérum no ar depois da chegada do lote",
+          "achado_origem": "04 · LTV: 69% dos clientes compraram uma vez só e os 31% recorrentes geram 57,5% da receita; recorrentes +28% de OUT a SET sem ação ativa",
+          "alavanca": "Recompra (clientes novos que fazem a segunda compra)",
+          "alavanca_da_meta": true,
+          "como": "Com o lote confirmado (Ação 22) e a régua testada (Ação 17), ligar o fluxo para todos os compradores de sérum e de kits com sérum. Primeira leitura em 22/02. A premissa de 05 é de +3 pontos percentuais de segunda compra entre os clientes novos (R$ 22,0 mil de receita bruta no ano), como exemplo e não como previsão.",
+          "dono": "Estrategista de CRM · Agência",
+          "inicio": "18/01/2027",
+          "entrega": "22/01/2027",
+          "depende_de": [
+            17,
+            22
+          ],
+          "evidencia": "Fluxo ativo na ferramenta de e-mail, print do primeiro envio e relatório de envios",
+          "kpi_meta": "Régua ativa para 100% dos compradores de sérum a partir de 22/01/2027 (hoje, 0%), com primeira leitura de pedidos de reposição em 22/02",
+          "gatilho": "Se a cobertura do sérum ficar abaixo do limite de pausa da Ação 5, então pausar também o envio de reposição do sérum até a cobertura voltar",
+          "solucoes": [
+            "P3.S1"
+          ]
+        },
+        {
+          "numero": 27,
+          "frente": "Redução de Dependências",
+          "acao": "Ativar a reativação dos clientes de compra única aos 90 e aos 150 dias, sem desconto",
+          "achado_origem": "04 · LTV: 7.176 de 10.400 clientes compraram uma vez só (69%) e os 31% recorrentes geram 57,5% da receita",
+          "alavanca": "Recompra (clientes de compra única)",
+          "alavanca_da_meta": true,
+          "como": "Criar a régua de e-mail aos 90 e aos 150 dias da primeira compra, com conteúdo de rotina (uso, resultado e avaliações) e sem cupom. O primeiro disparo vai para a base de compra única que já passou dos 90 dias, em dois lotes, para não pesar na Expedição, que não tem folga.",
+          "dono": "Estrategista de CRM · Agência",
+          "inicio": "04/01/2027",
+          "entrega": "29/01/2027",
+          "depende_de": [
+            17
+          ],
+          "evidencia": "Fluxo ativo na ferramenta de e-mail e relatório do primeiro disparo",
+          "kpi_meta": "Clientes de compra única com a régua ativa de 0 de 7.176 para 7.176 até 29/01/2027, com leitura de segundas compras em 22/02",
+          "gatilho": "Se o primeiro disparo não sair até 29/01, então a leitura da janela de prova em 22/02 considera só a régua de reposição",
+          "solucoes": [
+            "P3.S2"
+          ]
+        },
+        {
+          "numero": 28,
+          "frente": "Redução de Dependências",
+          "acao": "Coletar o consentimento de WhatsApp no checkout, no pós-compra e por e-mail",
+          "achado_origem": "05 · P3: reposição por WhatsApp só com consentimento; WhatsApp hoje só no atendimento (kickoff)",
+          "alavanca": "% de dependência de mídia paga (sessões não pagas)",
+          "alavanca_da_meta": false,
+          "como": "Incluir o campo de consentimento para WhatsApp no checkout e na página de pós-compra e enviar um e-mail à base de compra única pedindo o aceite, com texto aprovado pela Direção e dentro da LGPD. Só quem aceitar entra na lista de envio.",
+          "dono": "Time de e-commerce · Cliente",
+          "inicio": "04/01/2027",
+          "entrega": "22/01/2027",
+          "depende_de": [],
+          "evidencia": "Campo de consentimento ativo no checkout e lista de aceites exportada com data e hora do aceite",
+          "kpi_meta": "Consentimento registrado em 100% dos contatos da lista de WhatsApp até 22/01/2027 (hoje, lista inexistente)",
+          "gatilho": "Se o campo de consentimento não estiver no ar até 22/01, então a Ação 29 não dispara e o WhatsApp fica só no atendimento",
+          "solucoes": [
+            "P3.S3"
+          ]
+        },
+        {
+          "numero": 29,
+          "frente": "Redução de Dependências",
+          "acao": "Disparar a reposição por WhatsApp aos clientes de uma compra que deram consentimento",
+          "achado_origem": "05 · P3: 69% dos clientes compraram uma vez só; o cupom de primeira compra atrai quem compra uma vez e não cria hábito",
+          "alavanca": "% de dependência de mídia paga (sessões não pagas)",
+          "alavanca_da_meta": false,
+          "como": "Enviar a mensagem de reposição só a quem aceitou (Ação 28), começando pelos clientes de uma compra, com link rastreado (UTM) e sem desconto. O volume por canal é medido nos primeiros 90 dias do plano, como combinado em 07.",
+          "dono": "Estrategista de CRM · Agência",
+          "inicio": "25/01/2027",
+          "entrega": "19/02/2027",
+          "depende_de": [
+            26,
+            28
+          ],
+          "evidencia": "Relatório dos disparos com envios, cliques e pedidos por UTM",
+          "kpi_meta": "Disparos com link rastreado em 100% das mensagens até 19/02/2027, para medir as sessões do canal (hoje, 0 sessões de WhatsApp medidas)",
+          "gatilho": "Se mais de 2% dos contatos pedirem saída no mesmo disparo, então pausar o canal e revisar o texto antes de enviar de novo",
+          "solucoes": [
+            "P3.S3"
+          ]
+        },
+        {
+          "numero": 30,
+          "frente": "Redução de Dependências",
+          "acao": "Criar cupom individual e link rastreado por influenciadora",
+          "achado_origem": "03 · Mensuração: microinfluenciadoras (cerca de R$ 4 mil em alguns meses) sem medição de retorno; só 37% da receita atribuída a Google e Meta",
+          "alavanca": "% de dependência de mídia paga (sessões não pagas)",
+          "alavanca_da_meta": false,
+          "como": "Para cada influenciadora ativa, um cupom individual (nunca padronizado) e um link com UTM, e um relatório de vendas por cupom no painel. O Conteúdo e marketing repassa o cupom e o link às influenciadoras.",
+          "dono": "Estrategista de mídia · Agência",
+          "inicio": "11/01/2027",
+          "entrega": "29/01/2027",
+          "depende_de": [],
+          "evidencia": "Lista de influenciadoras com cupom e link e relatório de vendas por cupom no painel",
+          "kpi_meta": "Influenciadoras com cupom e link rastreado de 0% para 100% até 29/01/2027",
+          "gatilho": "Se uma influenciadora paga não gerar nenhuma venda por cupom em 60 dias, então suspender o pagamento dela",
+          "solucoes": []
+        },
+        {
+          "numero": 31,
+          "frente": "Redução de Dependências",
+          "acao": "Publicar um conteúdo por semana com as avaliações do sérum",
+          "achado_origem": "05 · Pontos fortes: mais de 900 avaliações no sérum, cerca de 60% citando textura e resultado, pouco usadas nos anúncios; 03 · sessões não pagas paradas em 16 mil a 19 mil por mês",
+          "alavanca": "% de dependência de mídia paga (sessões não pagas)",
+          "alavanca_da_meta": false,
+          "como": "Um conteúdo por semana (a capacidade do time), com depoimentos do sérum no Instagram e no site, com link para a página do produto e UTM. Os mesmos depoimentos abastecem o remarketing do Meta.",
+          "dono": "Conteúdo e marketing · Cliente",
+          "inicio": "11/01/2027",
+          "entrega": "26/02/2027",
+          "depende_de": [],
+          "evidencia": "Sete conteúdos publicados, um por semana, com link e UTM",
+          "kpi_meta": "Sessões não pagas de 16 mil a 19 mil por mês (histórico) para 20,4 mil em FEV/27 (Realista) até 26/02/2027, com 7 conteúdos publicados",
+          "gatilho": "Se passarem 2 semanas seguidas sem publicação, então reduzir o ritmo para um conteúdo a cada 2 semanas e priorizar a peça de maior resultado",
+          "solucoes": []
+        },
+        {
+          "numero": 32,
+          "frente": "Monitoramento e Governança",
+          "acao": "Fechar o balanço da janela de prova contra as metas mensais",
+          "achado_origem": "06 · Metas mensais do Realista de NOV a FEV e metas dos KPIs da abertura",
+          "alavanca": "Receita captada e todos os KPIs da meta",
+          "alavanca_da_meta": false,
+          "como": "Relatório com realizado contra meta de NOV, DEZ, JAN e FEV (receita, conversão, ticket, custo por sessão, dependência, CAC, ROAS e quebra), a leitura de cada ação (feita, atrasada ou sem efeito) e a proposta de ajuste dos gatilhos para o checkpoint de 22/02. FEV é lido até 21/02.",
+          "dono": "Analista de dados · Agência",
+          "inicio": "15/02/2027",
+          "entrega": "22/02/2027",
+          "depende_de": [
+            12,
+            19
+          ],
+          "evidencia": "Relatório do balanço da janela de prova no painel",
+          "kpi_meta": "Metas de FEV/27 lidas até 21/02: receita de R$ 97,9 mil no mês, conversão de 1,32%, ticket de R$ 201,24 e ROAS de 3,45x",
+          "gatilho": "Se 4 ou mais das 8 metas da abertura ficarem fora do nível do Realista em FEV, então replanejar a verba de MAR e ABR no checkpoint de 22/02",
+          "solucoes": []
+        },
+        {
+          "numero": 33,
+          "frente": "Mídia Paga / Canal Principal",
+          "acao": "Rodar o teste de incrementalidade do Meta",
+          "achado_origem": "07 · ROAS atribuído do Meta de 0,90x em média e abaixo de 1x em 10 dos 12 meses; o piso de 0,8x vale até a medição de incrementalidade",
+          "alavanca": "ROAS do Meta",
+          "alavanca_da_meta": false,
+          "como": "Um teste de incrementalidade no 1º semestre, dentro da capacidade de poucos testes por trimestre: grupo com anúncio do Meta e grupo sem, por 4 semanas, comparando vendas. O resultado diz se o piso de 0,8x é justo e se a prospecção abaixo de 1x deve ser cortada (Ação 21).",
+          "dono": "Estrategista de mídia · Agência",
+          "inicio": "01/03/2027",
+          "entrega": "23/04/2027",
+          "depende_de": [
+            21
+          ],
+          "evidencia": "Relatório do teste com o ROAS incremental do Meta",
+          "kpi_meta": "Incrementalidade do Meta de nenhuma medição para 1 teste concluído até 23/04/2027",
+          "gatilho": "Se o ROAS incremental do Meta ficar abaixo de 0,8x, então reduzir a prospecção do Meta e mover a verba para o Google no portão seguinte, dentro da alocação de 07",
+          "solucoes": []
+        },
+        {
+          "numero": 34,
+          "frente": "Eficiência Operacional",
+          "acao": "Calcular a demanda de MAI e pedir o lote dos três líderes",
+          "achado_origem": "07 · Calendário: MAI é Pico (R$ 50.495 de verba); prazo de 45 dias do laboratório e 60 dias de estoque de segurança (02)",
+          "alavanca": "Taxa de conversão (ruptura dos líderes)",
+          "alavanca_da_meta": false,
+          "como": "Com a venda de MAR e o ritmo do Realista para MAI (R$ 188,4 mil de receita captada), calcular a demanda do sérum, do hidratante e do protetor e pedir o lote até 17/03, 45 dias antes do início de MAI, mantendo 60 dias de estoque de segurança.",
+          "dono": "Finanças e operações · Cliente",
+          "inicio": "01/03/2027",
+          "entrega": "17/03/2027",
+          "depende_de": [
+            22
+          ],
+          "evidencia": "Pedido de compra dos três líderes enviado ao laboratório, com a planilha de cálculo",
+          "kpi_meta": "Cobertura dos três líderes de 60 dias confirmada para 03/05/2027, com o pedido feito até 17/03/2027",
+          "gatilho": "Se o pedido não sair até 17/03, então reduzir a verba de MAI ao que o estoque cobre e pausar os anúncios pela regra de cobertura",
+          "solucoes": [
+            "P2.S1"
+          ]
+        },
+        {
+          "numero": 35,
+          "frente": "Produto / Mix / Portfólio",
+          "acao": "Decidir a descontinuação dos 17 produtos com até 10 vendas no ano",
+          "achado_origem": "07 · Curva C: 38 produtos fazem 5,4% da receita e 17 têm até 10 vendas no ano; 03 · expedição e conteúdo divididos com itens de pouca receita",
+          "alavanca": "Foco do mix e capacidade operacional",
+          "alavanca_da_meta": false,
+          "como": "Listar os 17 produtos com vendas, estoque e margem (Ação 9). Decidir produto a produto: descontinuar, virar brinde ou manter. O produto descontinuado sai do site e do feed do Merchant.",
+          "dono": "Direção · Cliente",
+          "inicio": "01/03/2027",
+          "entrega": "31/03/2027",
+          "depende_de": [],
+          "evidencia": "Lista dos 17 produtos com a decisão de cada um",
+          "kpi_meta": "Decisão registrada para 17 de 17 produtos até 31/03/2027, de um catálogo de 58 produtos",
+          "gatilho": "Se a decisão não sair até 31/03, então os 17 produtos viram brinde na oferta de MAI",
+          "solucoes": [],
+          "decisao_cliente": {
+            "ate": "31/03/2027",
+            "recomendacao": "Decidir produto a produto. Recomendação: descontinuar os que têm até 10 vendas e margem abaixo da média, usar como brinde os que tiverem estoque parado e manter só os que sustentam um kit. Critério: cada produto que sai libera expedição e conteúdo para a Curva A."
+          }
+        },
+        {
+          "numero": 36,
+          "frente": "Monitoramento e Governança",
+          "acao": "Realizar a reunião mensal de resultados de março a setembro de 2027 e registrar as decisões em ata",
+          "achado_origem": "01 · Kickoff: reunião de resultados no primeiro dia útil de cada mês; 06 · Metas do Realista de MAR a SET",
+          "alavanca": "Receita captada e governança",
+          "alavanca_da_meta": false,
+          "como": "Reunião de 45 minutos com o painel aberto nas datas 01/03, 01/04, 03/05, 01/06, 01/07, 02/08 e 01/09: realizado contra a meta mensal do Realista, CAC, ROAS, quebra, cobertura do líder e decisões de verba. Cada mudança entra no registro de mudanças.",
+          "dono": "Estrategista de mídia · Agência",
+          "inicio": "01/03/2027",
+          "entrega": "01/09/2027",
+          "depende_de": [
+            19
+          ],
+          "evidencia": "Sete atas (01/03, 01/04, 03/05, 01/06, 01/07, 02/08 e 01/09)",
+          "kpi_meta": "7 reuniões realizadas, com receita captada na meta do Realista em MAR (R$ 118,8 mil) e ABR (R$ 118,9 mil), +53% sobre o ano atual, até 01/09/2027",
+          "gatilho": "Se a receita captada do mês ficar abaixo da meta mensal em 2 fechamentos seguidos, então replanejar a verba do mês seguinte na própria reunião",
+          "solucoes": []
+        },
+        {
+          "numero": 37,
+          "frente": "Monitoramento e Governança",
+          "acao": "Recalcular o teto de CAC e os pisos de ROAS com a margem por SKU e o resultado de incrementalidade",
+          "achado_origem": "07 · O teto de CAC e o piso de 0,8x do Meta dependem de margem e de incrementalidade; o Realista passa de R$ 103,9 em AGO (R$ 105) e SET (R$ 112)",
+          "alavanca": "CAC",
+          "alavanca_da_meta": false,
+          "como": "Refazer o LTV/CAC em margem com a margem por SKU (Ação 9), atualizar os pisos de ROAS por plataforma com o resultado da Ação 33 e propor à Direção o teto de MAI a SET, olhando AGO e SET, em que o Realista passa do teto de R$ 103,9.",
+          "dono": "Analista de dados · Agência",
+          "inicio": "26/04/2027",
+          "entrega": "29/04/2027",
+          "depende_de": [
+            9,
+            33
+          ],
+          "evidencia": "Documento do novo teto de CAC e dos pisos de ROAS, aprovado pela Direção",
+          "kpi_meta": "Teto de CAC de R$ 103,9 (LTV/CAC 3x em receita) revisado em margem e aprovado até 29/04/2027",
+          "gatilho": "Se a revisão não estiver aprovada até 29/04, então MAI usa o teto de R$ 103,9 e os pisos de 07",
+          "solucoes": []
+        },
+        {
+          "numero": 38,
+          "frente": "Mídia Paga / Canal Principal",
+          "acao": "Rodar a mídia do pico de MAI dentro do teto e do portão",
+          "achado_origem": "07 · Calendário: MAI é Pico, com R$ 50.495 de verba; no ano atual MAI captou R$ 135,3 mil",
+          "alavanca": "ROAS e CAC",
+          "alavanca_da_meta": false,
+          "como": "Verba de MAI de R$ 50.495 (Realista), com a mistura de Google e Meta histórica do mês (07), Curva A com Shopping e Performance Max no Google e catálogo e remarketing no Meta. Congelamento de estrutura de 04/05 a 10/05 (Dia das Mães, 09/05). A regra de pausa do sérum e o portão quinzenal valem.",
+          "dono": "Gestor de tráfego · Agência",
+          "inicio": "03/05/2027",
+          "entrega": "31/05/2027",
+          "depende_de": [
+            34,
+            37
+          ],
+          "evidencia": "Relatório semanal de MAI com CAC e ROAS por plataforma e ata dos portões",
+          "kpi_meta": "Receita captada de MAI de R$ 135,3 mil (MAI/26) para R$ 188,4 mil (+39,2%) até 31/05/2027, com ROAS global de 3,73x",
+          "gatilho": "Se o CAC de MAI passar de R$ 112 por uma semana, então congelar o aumento de verba e voltar ao degrau anterior",
+          "solucoes": []
+        },
+        {
+          "numero": 39,
+          "frente": "Monitoramento e Governança",
+          "acao": "Fechar o balanço do pico de MAI e do Dia das Mães",
+          "achado_origem": "07 · Dia das Mães como causa do pico de MAI é hipótese; MAI é o segundo maior mês de verba",
+          "alavanca": "Receita captada",
+          "alavanca_da_meta": false,
+          "como": "Relatório com a receita captada, o CAC, o ROAS, a quebra e o uso da regra de pausa em MAI até 23/05, contra a meta do Realista (R$ 188,4 mil, ROAS de 3,73x). Confirma ou descarta o Dia das Mães como causa do pico e leva a leitura ao checkpoint de 27/05.",
+          "dono": "Analista de dados · Agência",
+          "inicio": "24/05/2027",
+          "entrega": "27/05/2027",
+          "depende_de": [],
+          "evidencia": "Relatório do balanço de MAI no painel",
+          "kpi_meta": "Receita captada de MAI lida contra a meta de R$ 188,4 mil e CAC contra o teto de R$ 103,9, até 27/05/2027",
+          "gatilho": "Se a receita captada de MAI até 23/05 estiver abaixo de 70% da meta do mês (R$ 188,4 mil), então concentrar a verba restante nas campanhas da Curva A com ROAS acima do piso",
+          "solucoes": []
+        },
+        {
+          "numero": 40,
+          "frente": "Mídia Paga / Canal Principal",
+          "acao": "Rodar a mídia de JUN a SET dentro do teto e do portão",
+          "achado_origem": "07 · Calendário: JUN, JUL e AGO são Manutenção e SET é Escala; o Realista passa do teto de CAC em AGO (R$ 105) e SET (R$ 112)",
+          "alavanca": "ROAS e CAC",
+          "alavanca_da_meta": false,
+          "como": "Verbas do Realista: JUN R$ 34.790, JUL R$ 35.413, AGO R$ 38.229 e SET R$ 44.270 (R$ 152,7 mil), com a alocação de Google e Meta de 07. O portão quinzenal segue valendo, com o teto mensal de R$ 112, e a regra de pausa do sérum continua ativa.",
+          "dono": "Gestor de tráfego · Agência",
+          "inicio": "01/06/2027",
+          "entrega": "30/09/2027",
+          "depende_de": [
+            39
+          ],
+          "evidencia": "Relatório mensal de JUN a SET com CAC e ROAS por plataforma e as atas dos portões",
+          "kpi_meta": "Receita captada de JUN a SET de R$ 512,6 mil (+39,2% sobre JUN a SET/26) com CAC médio até R$ 103,9, até 30/09/2027",
+          "gatilho": "Se o CAC de AGO ou de SET passar de R$ 112, então congelar o aumento de verba na quinzena seguinte e segurar a verba no degrau anterior",
+          "solucoes": []
+        },
+        {
+          "numero": 41,
+          "frente": "Eficiência Operacional",
+          "acao": "Pedir o lote dos três líderes para a Escala de SET",
+          "achado_origem": "07 · Calendário: SET é Escala (R$ 44.270 de verba); prazo de 45 dias do laboratório e 60 dias de estoque de segurança (02)",
+          "alavanca": "Taxa de conversão (ruptura dos líderes)",
+          "alavanca_da_meta": false,
+          "como": "Com a venda de JUN e o ritmo do Realista para SET (R$ 140,0 mil de receita captada), calcular a demanda do sérum, do hidratante e do protetor e pedir o lote até 16/07, 45 dias antes de SET, mantendo 60 dias de estoque de segurança.",
+          "dono": "Finanças e operações · Cliente",
+          "inicio": "01/07/2027",
+          "entrega": "16/07/2027",
+          "depende_de": [
+            34
+          ],
+          "evidencia": "Pedido de compra dos três líderes enviado ao laboratório, com a planilha de cálculo",
+          "kpi_meta": "Cobertura dos três líderes de 60 dias confirmada para 01/09/2027, com o pedido feito até 16/07/2027",
+          "gatilho": "Se o pedido não sair até 16/07, então reduzir a verba de SET ao que o estoque cobre e manter a regra de pausa por cobertura",
+          "solucoes": [
+            "P2.S1"
+          ]
+        },
+        {
+          "numero": 42,
+          "frente": "Redução de Dependências",
+          "acao": "Fechar a leitura da dependência de mídia paga de AGO e projetar SET contra a meta de 52%",
+          "achado_origem": "07 · Dependência de mídia paga: meta de 52% em SET/27 contra 58% do Realista sem ação adicional; 54,7% em SET/26",
+          "alavanca": "% de dependência de mídia paga",
+          "alavanca_da_meta": false,
+          "como": "Medir as sessões não pagas de AGO por canal (CRM por e-mail, WhatsApp, orgânico e SEO, influenciadoras e direto) e projetar SET contra as 23,9 mil sessões não pagas que a meta de 52% exige (5,2 mil a mais que o Realista).",
+          "dono": "Analista de dados · Agência",
+          "inicio": "06/09/2027",
+          "entrega": "17/09/2027",
+          "depende_de": [],
+          "evidencia": "Relatório de sessões não pagas por canal de AGO e projeção de SET no painel",
+          "kpi_meta": "Dependência de mídia paga de 54,7% (SET/26) para 52% em SET/27, com 23,9 mil sessões não pagas, lida até 17/09/2027",
+          "gatilho": "Se a dependência de AGO ficar acima de 55%, então reforçar o CRM e o conteúdo orgânico em SET e levar a diferença ao balanço do ciclo",
+          "solucoes": []
+        },
+        {
+          "numero": 43,
+          "frente": "Monitoramento e Governança",
+          "acao": "Fazer o balanço do ciclo de 12 meses contra o cenário Realista",
+          "achado_origem": "06 · Meta do projeto: +30%, R$ 1.586.601 de receita captada em 12 meses, com o Otimista de +40% como teto",
+          "alavanca": "Receita captada",
+          "alavanca_da_meta": false,
+          "como": "Relatório com a receita captada do ciclo contra os R$ 1.586.601 do Realista, o CAC médio contra R$ 94,8, o ROAS contra 3,45x, a quebra contra 6,2% e a dependência contra 52%, com a leitura do que ficou fora do Realista e o que cada ação entregou.",
+          "dono": "Analista de dados · Agência",
+          "inicio": "20/09/2027",
+          "entrega": "28/09/2027",
+          "depende_de": [
+            42
+          ],
+          "evidencia": "Relatório do balanço do ciclo no painel",
+          "kpi_meta": "Receita captada do ciclo de R$ 1,22 mi (ano atual) para R$ 1.586.601 (Realista), lida até 28/09/2027",
+          "gatilho": "Se a receita acumulada até AGO ficar abaixo de 90% da meta acumulada, então o balanço aponta o que fica fora do Realista e quanto custaria chegar à meta",
+          "solucoes": []
+        }
+      ]
+    }
+  ],
+  "metas_mensais": {
+    "cenario": "Realista",
+    "colunas": [
+      "Mês",
+      "Check em",
+      "Receita (R$)",
+      "Invest. (R$)",
+      "Ticket (R$)",
+      "Conv.",
+      "CPS (R$)",
+      "% pagas",
+      "Sessões",
+      "Vendas"
+    ],
+    "linhas": [
+      [
+        "Out/26",
+        "Encerrado",
+        "101.993",
+        "30.655",
+        "204,95",
+        "1,45%",
+        "1,71",
+        "52,3%",
+        "34.321",
+        "498"
+      ],
+      [
+        "Nov/26",
+        "01/12/2026",
+        "211.738",
+        "56.076",
+        "170,94",
+        "2,05%",
+        "1,77",
+        "52,5%",
+        "60.422",
+        "1.239"
+      ],
+      [
+        "Dez/26",
+        "04/01/2027",
+        "143.322",
+        "42.910",
+        "215,14",
+        "1,60%",
+        "1,77",
+        "58,4%",
+        "41.637",
+        "666"
+      ],
+      [
+        "Jan/27",
+        "01/02/2027",
+        "92.965",
+        "28.529",
+        "201,30",
+        "1,28%",
+        "1,73",
+        "45,7%",
+        "35.974",
+        "462"
+      ],
+      [
+        "Fev/27",
+        "01/03/2027",
+        "97.899",
+        "28.409",
+        "201,24",
+        "1,32%",
+        "1,72",
+        "44,9%",
+        "36.925",
+        "486"
+      ],
+      [
+        "5 meses",
+        "",
+        "647.917",
+        "186.579",
+        "",
+        "",
+        "",
+        "",
+        "209.278",
+        "3.351"
+      ]
+    ],
+    "observacao": "OUT/26 já estava encerrado na data-base (18/11/2026) e aparece só como referência do cenário; as metas do plano começam em NOV/26. A coluna Check em traz o primeiro dia útil do mês seguinte, quando o mês é lido na reunião mensal de resultados."
+  }
+}

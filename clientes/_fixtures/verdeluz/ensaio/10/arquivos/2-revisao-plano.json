@@ -1,0 +1,284 @@
+{
+  "versao": 1,
+  "prospect": "Verdeluz Cosméticos Veganos",
+  "data_hoje": "22/11/2026",
+  "data_reuniao": "22/11/2026",
+  "participantes": {
+    "boomer": [
+      {
+        "nome": "Camila",
+        "funcao": "Estrategista"
+      },
+      {
+        "nome": "Rafael",
+        "funcao": "Gestor de tráfego"
+      }
+    ],
+    "cliente": [
+      {
+        "nome": "Marina",
+        "funcao": "Sócia"
+      },
+      {
+        "nome": "Luiza",
+        "funcao": "Sócia"
+      }
+    ]
+  },
+  "resumo": "A Marina comprou o cenário Realista (+30%) e tratou o Otimista como teto. Do plano, o cliente travou duas coisas: cupom com desconto para influenciadoras (testado em março, sem link, e a Luiza não quer mais desconto, só brinde) e descontinuar produtos antes do Dia das Mães (revisar pode). Trouxe três informações novas: reunião mensal só depois do dia 10, sessão de fotos dos kits na primeira semana de dezembro e consentimento de WhatsApp só de quem comprou a partir de abril. Ficaram em aberto a assinatura do sérum e o TikTok. A Camila assumiu compromissos fora do plano: pauta fixa até 27/11, cupom e UTM na primeira semana e retorno sobre o rótulo do sérum.",
+  "complementos": [
+    {
+      "numero": 1,
+      "acoes": [
+        12,
+        19,
+        36
+      ],
+      "o_que_mudou": "A reunião mensal de resultados passa do primeiro dia útil para o primeiro dia útil depois do dia 10, quando a contabilidade fecha o mês. Ação 19: 11/12, 11/01 e 11/02. Ação 36: 11/03, 12/04, 11/05, 11/06, 12/07, 11/08 e 13/09. A Ação 12 (gatilho) e a coluna Check em das metas mensais acompanham as novas datas.",
+      "trecho": {
+        "texto": "Ela tem que ser depois do dia 10, quando a contabilidade fecha o mês.",
+        "quem": "Luiza (cliente)",
+        "posicao": "≈28 min"
+      }
+    },
+    {
+      "numero": 2,
+      "acoes": [
+        44
+      ],
+      "o_que_mudou": "Ação nova 44: enviar a pauta fixa da reunião mensal ao Cliente até 27/11/2026, com aprovação até 04/12/2026. A Ação 19 passa a depender dela.",
+      "trecho": {
+        "texto": "E a pauta fixa da reunião a gente manda até sexta, dia 27, para vocês aprovarem.",
+        "quem": "Camila (Boomer)",
+        "posicao": "≈28 min"
+      }
+    },
+    {
+      "numero": 3,
+      "acoes": [
+        25,
+        45
+      ],
+      "o_que_mudou": "Ação nova 45: fotografar todos os kits na sessão que o Cliente já marcou para a primeira semana de dezembro (01/12 a 11/12/2026). A Ação 25 passa a publicar essas fotos e depende da 45.",
+      "trecho": {
+        "texto": "o Caio já tem uma sessão de fotos marcada para a primeira semana de dezembro. Dá para aproveitar e fazer todos os kits de uma vez.",
+        "quem": "Marina (cliente)",
+        "posicao": "≈28 min"
+      }
+    },
+    {
+      "numero": 4,
+      "acoes": [
+        17,
+        28,
+        29
+      ],
+      "o_que_mudou": "A régua de reposição (Ação 17) separa, desde o começo, quem tem consentimento de WhatsApp (compra a partir de abril) de quem só recebe e-mail. A Ação 28 confirma a data exata do aviso no checkout e a Ação 29 só dispara WhatsApp para quem comprou a partir de abril ou aceitou depois.",
+      "trecho": {
+        "texto": "O consentimento a gente só tem de quem comprou a partir de abril, quando entrou o aviso no checkout. Os mais antigos é só e-mail.",
+        "quem": "Luiza (cliente)",
+        "posicao": "≈29 min"
+      }
+    }
+  ],
+  "conflitos": [
+    {
+      "numero": 1,
+      "acao": 30,
+      "recomendacao_plano": "Criar cupom individual e link com UTM para cada influenciadora ativa, de 11/01 a 29/01/2027, para medir quanto cada parceira vende de verdade.",
+      "trecho": {
+        "texto": "Já testamos cupom de primeira compra com duas parceiras e não funcionou, quase ninguém usou.",
+        "quem": "Marina (cliente)",
+        "posicao": "≈26 min"
+      },
+      "impacto": "Ação 30 (frente Redução de Dependências, alavanca de sessões não pagas e mensuração, não é alavanca direta da meta). O teste de março foi diferente do que o plano propõe: 10% de desconto na primeira compra, só duas parceiras, cerca de três semanas e sem link, só o código falado no story. Ele mediu se o desconto convence, e o plano usa o cupom para medir venda por parceira, então não invalida a recomendação. Mas a Luiza recusa desconto e a Camila prometeu na reunião o cupom e a UTM já na primeira semana (23/11 a 29/11), e o plano só começa a Ação 30 em 11/01. Sem a medição, o retorno de cerca de R$ 4 mil por mês em microinfluenciadoras segue sem leitura.",
+      "opcoes": {
+        "A": "Manter o plano: cupom individual e link com UTM de 11/01 a 29/01/2027. Risco: a Boomer descumpre o que a Camila disse (primeira semana) e a Luiza pode ler o cupom como desconto de novo.",
+        "B": "Seguir o que foi dito: sem cupom e sem desconto, só link com UTM na bio de cada influenciadora, já na primeira semana. Risco: perde a venda de quem usa o código sem clicar no link, então a medição por parceira fica incompleta.",
+        "C": "Caminho intermediário: link com UTM na bio de cada influenciadora já na primeira semana (23/11 a 29/11), como a Camila disse. O cupom individual entra de 11/01 a 29/01 só como código de identificação, sem desconto, com brinde na compra no lugar. Risco: o brinde depende do valor mínimo e do item definidos na Ação 25 (até 29/01), e o código sozinho pode ter pouco uso, como em março."
+      },
+      "recomendacao_boomer": "C",
+      "decisao": "C",
+      "remove_acao": false,
+      "alavanca_descoberta": null,
+      "substituta": null,
+      "acoes_afetadas": [
+        30,
+        46
+      ]
+    },
+    {
+      "numero": 2,
+      "acao": 35,
+      "recomendacao_plano": "Decidir produto a produto, de 01/03 a 31/03/2027, a descontinuação dos 17 produtos com até 10 vendas no ano, com saída do site e do Merchant e gatilho de virar brinde na oferta de MAI se a decisão atrasar.",
+      "trecho": {
+        "texto": "Tirar produto de linha eu não faço antes do Dia das Mães.",
+        "quem": "Marina (cliente)",
+        "posicao": "≈30 min"
+      },
+      "impacto": "Ação 35 (frente Produto / Mix / Portfólio, foco do mix e capacidade operacional, não é alavanca direta da meta). A Marina aceita revisar em fevereiro e março, mas só descontinua depois de maio, porque há cliente fiel e fórmula que quer relançar. O efeito é adiar a liberação de expedição e de conteúdo para a Curva A, que o plano esperava a partir de abril. Não afeta os KPIs da janela de prova, que fecha em 22/02. O gatilho atual (virar brinde se a decisão atrasar) cai no pico de MAI, então a regra precisa ser reescrita.",
+      "opcoes": {
+        "A": "Manter o plano: decidir e descontinuar em março. Risco: a Marina não executa, o produto não sai e a decisão do plano fica sem efeito.",
+        "B": "Seguir o que foi dito: decidir produto a produto em março (descontinuar depois de maio, virar brinde ou manter) e só tirar do site e do Merchant a partir de 01/06/2027, em ação nova depois do balanço do pico de MAI. Risco: a expedição e o conteúdo seguem divididos com itens de pouca receita até o fim de maio.",
+        "C": "Caminho intermediário: como a B, e os produtos marcados para sair viram brinde da oferta de MAI, para gastar o estoque parado antes de sair em 01/06. Risco: brinde com produto que tem cliente fiel pode criar expectativa de continuar à venda."
+      },
+      "recomendacao_boomer": "C",
+      "decisao": "B",
+      "remove_acao": false,
+      "alavanca_descoberta": null,
+      "substituta": null,
+      "acoes_afetadas": [
+        35,
+        47
+      ]
+    }
+  ],
+  "abertos": [
+    {
+      "numero": 1,
+      "tema": "Assinatura do sérum com entrega a cada 60 dias",
+      "trecho": {
+        "texto": "uma assinatura do sérum, com entrega a cada 60 dias. Vou pensar se faz sentido para a gente.",
+        "quem": "Marina (cliente)",
+        "posicao": "≈31 min"
+      },
+      "destino_sugerido": "Confirmar com a Marina até 22/02/2027, junto com a primeira leitura da régua de reposição (quantas clientes recompram o sérum perto dos 45 dias). Não vira ação agora, porque a Marina ainda vai pensar.",
+      "destino": {
+        "tipo": "confirmar",
+        "ate": "22/02/2027"
+      }
+    },
+    {
+      "numero": 2,
+      "tema": "TikTok: só orgânico no plano, sem linha de verba",
+      "trecho": {
+        "texto": "Pode ser. Vamos ver como ele anda até o começo do ano.",
+        "quem": "Luiza (cliente)",
+        "posicao": "≈32 min"
+      },
+      "destino_sugerido": "Confirmar com a Luiza na reunião mensal de 11/01/2027, com o que o orgânico do TikTok entregou até lá. Sem linha de verba no plano até essa conversa.",
+      "destino": {
+        "tipo": "confirmar",
+        "ate": "11/01/2027"
+      }
+    },
+    {
+      "numero": 3,
+      "tema": "Critério de corte da Curva C citado na reunião (38 SKUs, menos de R$ 5 mil por ano) é diferente do plano (17 produtos com até 10 vendas no ano)",
+      "trecho": {
+        "texto": "No médio prazo tem a revisão dos 38 SKUs da Curva C, com a descontinuação dos que vendem menos de R$ 5 mil por ano.",
+        "quem": "Camila (Boomer)",
+        "posicao": "≈30 min"
+      },
+      "destino_sugerido": "Descartar: vale o critério do plano (17 produtos com até 10 vendas no ano). Avisar a Marina, no envio do plano final, que a frase da reunião foi imprecisa.",
+      "destino": {
+        "tipo": "descartado",
+        "motivo": "Vale o critério do plano (17 produtos com até 10 vendas no ano); a frase da reunião (38 SKUs, menos de R$ 5 mil por ano) foi imprecisa e será corrigida no envio do plano final"
+      }
+    }
+  ],
+  "compromissos": [
+    {
+      "numero": 1,
+      "texto": "Cupom e UTM própria de cada influenciadora já na primeira semana do plano, contra 11/01/2027 no plano apresentado.",
+      "trecho": {
+        "texto": "Na primeira semana entra o cupom e a UTM própria de cada influenciadora",
+        "quem": "Camila (Boomer)",
+        "posicao": "≈25 min"
+      },
+      "no_plano": false,
+      "fora_do_escopo": false,
+      "acoes": [
+        46,
+        30
+      ],
+      "tratamento": "Decidido no Conflito 1 (Opção C): link com UTM na primeira semana (Ação 46) e cupom sem desconto em janeiro (Ação 30)"
+    },
+    {
+      "numero": 2,
+      "texto": "Mover a reunião mensal de resultados para o primeiro dia útil depois do dia 10.",
+      "trecho": {
+        "texto": "a gente passa para o primeiro dia útil depois do dia 10.",
+        "quem": "Camila (Boomer)",
+        "posicao": "≈28 min"
+      },
+      "no_plano": false,
+      "fora_do_escopo": false,
+      "acoes": [
+        19,
+        36
+      ],
+      "tratamento": null
+    },
+    {
+      "numero": 3,
+      "texto": "Mandar a pauta fixa da reunião mensal ao Cliente até 27/11/2026, para aprovação.",
+      "trecho": {
+        "texto": "E a pauta fixa da reunião a gente manda até sexta, dia 27, para vocês aprovarem.",
+        "quem": "Camila (Boomer)",
+        "posicao": "≈28 min"
+      },
+      "no_plano": false,
+      "fora_do_escopo": false,
+      "acoes": [
+        44
+      ],
+      "tratamento": null
+    },
+    {
+      "numero": 4,
+      "texto": "Medir o que vier pelo link com UTM na bio de cada influenciadora, mesmo quando a pessoa esquece o código.",
+      "trecho": {
+        "texto": "O que vier pelo link a gente mede mesmo quando a pessoa esquece o código.",
+        "quem": "Rafael (Boomer)",
+        "posicao": "≈27 min"
+      },
+      "no_plano": false,
+      "fora_do_escopo": false,
+      "acoes": [
+        46
+      ],
+      "tratamento": "Virou a Ação 46: link com UTM na bio de cada influenciadora, com a venda por link medida no painel"
+    },
+    {
+      "numero": 5,
+      "texto": "Mostrar, com a régua de reposição, quantas clientes recompram o sérum perto dos 45 dias, para ajudar a decidir sobre a assinatura.",
+      "trecho": {
+        "texto": "A régua de reposição vai mostrar quantas clientes recompram o sérum perto dos 45 dias",
+        "quem": "Camila (Boomer)",
+        "posicao": "≈31 min"
+      },
+      "no_plano": true,
+      "fora_do_escopo": false,
+      "acoes": [],
+      "tratamento": "Coberto pela primeira leitura da régua de reposição (Ação 26, em 22/02/2027); a amostra de recompra aos 45 dias será pequena, porque a régua só entra no ar em 18/01"
+    },
+    {
+      "numero": 6,
+      "texto": "Dar uma olhada no texto do rótulo novo do sérum e mandar um retorno até sexta, 27/11/2026.",
+      "trecho": {
+        "texto": "Consigo dar uma olhada no texto do rótulo novo e te mando um retorno até sexta.",
+        "quem": "Camila (Boomer)",
+        "posicao": "≈32 min"
+      },
+      "no_plano": false,
+      "fora_do_escopo": true,
+      "acoes": [],
+      "tratamento": "Fora do escopo: a Boomer não analisa o texto do rótulo e o item não entra no plano"
+    },
+    {
+      "numero": 7,
+      "texto": "Ajustar o plano com o que o Cliente trouxe e mandar a versão final.",
+      "trecho": {
+        "texto": "eu ajusto o plano com o que vocês trouxeram hoje e mando a versão final.",
+        "quem": "Camila (Boomer)",
+        "posicao": "≈33 min"
+      },
+      "no_plano": false,
+      "fora_do_escopo": false,
+      "acoes": [],
+      "tratamento": "O envio da versão final ao cliente é feito pelo analista, fora desta etapa, depois da aprovação do documento e da planilha"
+    }
+  ],
+  "divergencias_cenario": []
+}

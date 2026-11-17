@@ -1,0 +1,664 @@
+{
+  "versao": 1,
+  "prospect": "Verdeluz Cosméticos Veganos",
+  "slides": [
+    { "tipo": "capa", "prospect": "Verdeluz Cosméticos Veganos" },
+    { "tipo": "jornada" },
+
+    { "tipo": "divisoria", "numero": "01.", "titulo": "CENÁRIO **ATUAL**" },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · Investimento",
+      "subtitulo": "Investimento em mídia **subiu 127%** de OUT a SET",
+      "imagem": "entrega/ativos-aprovados/graficos/investimento-total-mensal.png",
+      "conclusoes": [
+        "R$ 262 mil no ano: 62% em Meta e 38% em Google.",
+        "OUT a SET: de R$ 14,5 mil para R$ 32,9 mil (+127%).",
+        "Picos em NOV e MAI; JUN a SET sobe sem data comercial."
+      ],
+      "fonte": "03 · Macro financeiro"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · Receita",
+      "subtitulo": "Receita captada **R$ 1,22 mi**, aprovada R$ 1,14 mi",
+      "imagem": "entrega/ativos-aprovados/graficos/receita-captada-vs-aprovada.png",
+      "conclusoes": [
+        "A quebra de pagamento tirou R$ 79,3 mil da receita no ano.",
+        "Captada média de R$ 101,7 mil, 19% abaixo dos R$ 125 mil declarados.",
+        "Verba +127% e receita captada +7% de OUT a SET."
+      ],
+      "fonte": "03 · Macro financeiro"
+    },
+    {
+      "tipo": "analises_2_colunas",
+      "esquerda": {
+        "titulo": "Investimento",
+        "itens": [
+          "Escala sem retorno proporcional: verba +127% e receita +7% (OUT a SET).",
+          "De ABR a SET o investimento quase dobrou (+96%) e a receita captada subiu 30%.",
+          "Picos de NOV e MAI sugerem escala por data comercial."
+        ]
+      },
+      "direita": {
+        "titulo": "Receita",
+        "itens": [
+          "Base estável de JAN a ABR, entre R$ 75 mil e R$ 77 mil por mês.",
+          "NOV e MAI são os picos de receita captada (R$ 190,3 mil e R$ 135,3 mil).",
+          "Faturamento declarado no kickoff fica acima do histórico enviado."
+        ]
+      },
+      "fonte": "03 · Macro financeiro"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · Taxa de quebra",
+      "subtitulo": "Quebra **acima de 5%** em 11 dos 12 meses",
+      "imagem": "entrega/ativos-aprovados/graficos/taxa-de-quebra.png",
+      "conclusoes": [
+        "Média de 6,3% (benchmark até 5%); pico de 7,9% em NOV.",
+        "Desde JAN a taxa sobe todo mês, de 5,5% para 7,1% em SET.",
+        "Quebra por meio de pagamento (PIX, cartão) não é medida."
+      ],
+      "fonte": "03 · Macro financeiro"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · ROAS global",
+      "subtitulo": "ROAS caiu de **6,5x para 3,1x** em 12 meses",
+      "imagem": "entrega/ativos-aprovados/graficos/roas-global.png",
+      "conclusoes": [
+        "ROAS bruto de 6,5x (OUT) para 3,1x (SET), queda de 53%.",
+        "ROAS aprovado de 6,2x para 2,8x no mesmo intervalo.",
+        "A queda tem ritmo contínuo, sem relação direta com os picos de verba."
+      ],
+      "fonte": "03 · Macro financeiro"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · ROAS por plataforma",
+      "subtitulo": "Meta está **abaixo de 1x** desde JUL",
+      "imagem": "entrega/ativos-aprovados/graficos/roas-por-plataforma.png",
+      "conclusoes": [
+        "Google de 3,7x a 2,0x; Meta de 2,0x a 0,8x.",
+        "O Meta tem 62% da verba e o pior ROAS.",
+        "Google e Meta explicam só 37% da receita captada."
+      ],
+      "fonte": "03 · Macro financeiro"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · Sessões",
+      "subtitulo": "Só a **mídia paga** fez o tráfego crescer",
+      "imagem": "entrega/ativos-aprovados/graficos/sessoes-total-e-por-plataforma.png",
+      "conclusoes": [
+        "442,6 mil sessões: 198,1 mil pagas e 244,5 mil não pagas.",
+        "De OUT a SET as pagas subiram 30% e as não pagas ficaram paradas (16,4 mil para 16,3 mil).",
+        "Custo por sessão paga de R$ 0,96 para R$ 1,67 (+74%)."
+      ],
+      "fonte": "03 · Aquisição, dependência e conversão"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · Dependência de mídia paga",
+      "subtitulo": "Dependência chegou a **54,7%** em SET",
+      "imagem": "entrega/ativos-aprovados/graficos/dependencia-midia-paga.png",
+      "conclusoes": [
+        "Média de 44,7%; a faixa de referência é de 45% a 60%.",
+        "De JUN a SET sobe de 44,8% para 54,7%.",
+        "A base não paga fica em 16 mil a 19 mil sessões por mês."
+      ],
+      "fonte": "03 · Aquisição, dependência e conversão"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · Conversão global",
+      "subtitulo": "Conversão global **dentro da faixa** em 11 meses",
+      "imagem": "entrega/ativos-aprovados/graficos/conversao-global.png",
+      "conclusoes": [
+        "Média de 1,38%, dentro da faixa de 1% a 2% em 11 meses.",
+        "MAR (1,05%) e ABR (1,00%) são os mais fracos, com a ruptura.",
+        "De MAI em diante fica estável, entre 1,30% e 1,55%."
+      ],
+      "fonte": "03 · Aquisição, dependência e conversão"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · Conversão Google",
+      "subtitulo": "Google **abaixo do piso** de 2% desde JUN",
+      "imagem": "entrega/ativos-aprovados/graficos/conversao-google.png",
+      "conclusoes": [
+        "Queda contínua de 2,20% (OUT) para 1,90% (SET), -14%.",
+        "Abaixo do piso da faixa (2% a 4%) em JUN, JUL, AGO e SET.",
+        "Mesmo o melhor mês ficou colado no piso do benchmark."
+      ],
+      "fonte": "03 · Aquisição, dependência e conversão"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · Conversão Meta",
+      "subtitulo": "Meta **abaixo do piso** de 1% nos 12 meses",
+      "imagem": "entrega/ativos-aprovados/graficos/conversao-meta.png",
+      "conclusoes": [
+        "Queda de 0,90% (OUT) para 0,70% (SET), -22%.",
+        "Média de 0,80% contra a faixa de 1% a 2%.",
+        "O Meta recebe 62% da verba e converte abaixo do mínimo de mercado."
+      ],
+      "fonte": "03 · Aquisição, dependência e conversão"
+    },
+    {
+      "tipo": "analises_2_colunas",
+      "esquerda": {
+        "titulo": "Sessões e dependência",
+        "itens": [
+          "Todo o crescimento de tráfego de OUT a SET (+14%) veio da mídia paga.",
+          "A dependência sobe com a verba porque a base não paga não cresce.",
+          "Sem canal próprio de retorno, o tráfego não pago não acompanha o pago."
+        ]
+      },
+      "direita": {
+        "titulo": "Conversão",
+        "itens": [
+          "Conversão global estável porque as sessões não pagas sustentam o resultado.",
+          "Google e Meta perdem conversão com a escala, sinal de tráfego mais frio.",
+          "Dados de funil (carrinho e checkout) não vieram e pedem medição."
+        ]
+      },
+      "fonte": "03 · Aquisição, dependência e conversão"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · Curva ABC",
+      "subtitulo": "Curva A: **9 produtos** fazem 78,9% do faturamento",
+      "imagem": "entrega/ativos-aprovados/graficos/curva-abc-faturamento.png",
+      "conclusoes": [
+        "Curva A R$ 924,4 mil (78,9%), B R$ 184 mil (15,7%), C R$ 63,2 mil (5,4%).",
+        "Curva C: 38 produtos (66% do catálogo) e só 5,4% da receita.",
+        "Os 7 kits somam 24% do faturamento."
+      ],
+      "fonte": "03 · Curva ABC e conexão dos KPIs"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Cenário Atual · Top 10 produtos",
+      "subtitulo": "Três produtos fazem **51%** da receita",
+      "imagem": "entrega/ativos-aprovados/graficos/top-10-produtos-faturamento.png",
+      "conclusoes": [
+        "Sérum de vitamina C (22%), hidratante (16%) e protetor FPS 50 (13%).",
+        "O Top 10 faz 81,3% do faturamento.",
+        "Cobertura: sérum 7 dias, hidratante 58 e protetor 70."
+      ],
+      "fonte": "03 · Curva ABC e conexão dos KPIs"
+    },
+    {
+      "tipo": "tabela_lateral",
+      "titulo": "Cenário Atual · Resumo da Curva ABC",
+      "subtitulo": "**58 produtos** e R$ 1,17 mi no relatório",
+      "imagem": "entrega/ativos-aprovados/graficos/tabela-produtos-curva-abc.png",
+      "conclusoes": [
+        "Curva A: 9 produtos e 78,9% do faturamento.",
+        "Curva B: 11 produtos e 15,7%.",
+        "Curva C: 38 produtos e 5,4%."
+      ],
+      "fonte": "03 · Curva ABC e conexão dos KPIs"
+    },
+    {
+      "tipo": "tabela_lateral",
+      "titulo": "Cenário Atual · Produtos da Curva A",
+      "subtitulo": "Curva A: **R$ 924,4 mil** em 9 produtos",
+      "imagem": "entrega/ativos-aprovados/graficos/tabela-produtos-curva-a.png",
+      "conclusoes": [
+        "O sérum de vitamina C é o líder, com 22% do faturamento.",
+        "O sérum tem a menor cobertura de estoque entre os líderes (cerca de 7 dias).",
+        "O prazo do laboratório para repor é de 45 dias."
+      ],
+      "fonte": "03 · Curva ABC e conexão dos KPIs"
+    },
+    {
+      "tipo": "tabela_lateral",
+      "titulo": "Cenário Atual · Produtos da Curva B",
+      "subtitulo": "Curva B: **R$ 184 mil** em 11 produtos",
+      "imagem": "entrega/ativos-aprovados/graficos/tabela-produtos-curva-b.png",
+      "conclusoes": [
+        "A Curva B responde por 15,7% do faturamento.",
+        "Espaço para ampliar o ticket com kits e venda cruzada da Curva A."
+      ],
+      "fonte": "03 · Curva ABC e conexão dos KPIs"
+    },
+    {
+      "tipo": "tabela_lateral",
+      "titulo": "Cenário Atual · Produtos da Curva C",
+      "subtitulo": "Curva C: **R$ 63,2 mil** em 38 produtos",
+      "imagem": "entrega/ativos-aprovados/graficos/tabela-produtos-curva-c.png",
+      "conclusoes": [
+        "38 produtos fazem 5,4% da receita.",
+        "O catálogo longo divide a expedição e o conteúdo, que não têm folga."
+      ],
+      "fonte": "03 · Curva ABC e conexão dos KPIs"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Unidade Econômica · CAC",
+      "subtitulo": "CAC subiu **127%** de OUT a SET",
+      "imagem": "entrega/ativos-aprovados/graficos/cac-mensal.png",
+      "conclusoes": [
+        "De R$ 49,5 (OUT) para R$ 112,7 (SET); média de R$ 71,9.",
+        "OUT e SET trouxeram os mesmos 292 clientes novos, com a verba mais que dobrando.",
+        "É pressão estrutural: o CAC sobe em 10 dos 11 passos mensais."
+      ],
+      "fonte": "04 · CAC e clientes novos vs recorrentes"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Unidade Econômica · Novos e recorrentes",
+      "subtitulo": "O crescimento do volume veio dos **recorrentes**",
+      "imagem": "entrega/ativos-aprovados/graficos/clientes-novos-vs-recorrentes.png",
+      "conclusoes": [
+        "Novos: 63,9% para 58,1%; recorrentes: 36,1% para 41,9%.",
+        "OUT a SET: novos estáveis em 292; recorrentes de 165 para 211 (+28%).",
+        "Sem régua de reposição, a recompra acontece sem ação ativa."
+      ],
+      "fonte": "04 · CAC e clientes novos vs recorrentes"
+    },
+    {
+      "tipo": "bullets",
+      "titulo": "Unidade Econômica · LTV e LTV/CAC",
+      "subtitulo": "LTV/CAC de SET em **2,77**, faixa ruim",
+      "itens": [
+        "LTV histórico de R$ 311,7 por cliente (ticket R$ 191,8 × 1,63 pedido), em receita.",
+        "69% dos clientes compraram uma vez; os 31% que recompram geram 57,5% da receita.",
+        "LTV/CAC de SET: R$ 311,7 ÷ R$ 112,7 = 2,77, abaixo do piso de 3 (ruim).",
+        "Foi acima de 5 de OUT a FEV, entre 3 e 5 de MAR a AGO e caiu abaixo de 3 em SET.",
+        "O CAC que daria 3x é de R$ 103,9; SET passou 8% acima.",
+        "Em margem bruta declarada (68%, sem confirmação) a relação seria cerca de 1,9x."
+      ],
+      "fonte": "04 · LTV histórico e LTV/CAC"
+    },
+
+    { "tipo": "divisoria", "numero": "02.", "titulo": "DESAFIOS" },
+    {
+      "tipo": "bullets",
+      "titulo": "Desafios do projeto",
+      "subtitulo": "**4 problemas** priorizados, cada um com causa e solução",
+      "itens": [
+        "P1 Eficiência da mídia paga: economia de R$ 2,6 mil a R$ 11,9 mil por mês.",
+        "P2 Ruptura do sérum: R$ 47 a 65 mil de receita captada em risco por ocorrência.",
+        "P3 Recompra e CRM: R$ 7,3 mil de receita por ponto percentual de recompra.",
+        "P4 Quebra de pagamento: R$ 18,3 mil de receita aprovada por ano se cair para 5%."
+      ],
+      "fonte": "05 · Soluções (registro validado)"
+    },
+    {
+      "tipo": "desafio",
+      "problema_id": "P1",
+      "titulo": "Mídia paga: **eficiência em queda**",
+      "problema": "Verba +127% e receita +7,3% de OUT a SET: ROAS de 6,5x para 3,1x e CAC de R$ 49,5 para R$ 112,7.",
+      "hipoteses": [
+        "O público pago está saturado: verba +127% e clientes novos estáveis em 292.",
+        "O Meta traz tráfego frio: ROAS de 0,8x e conversão de 0,70% com 62% da verba.",
+        "A verba cresce sem regra de parada: não há teto de CAC nem ROAS mínimo."
+      ],
+      "solucoes": [
+        "Adotar o CAC de R$ 103,9 (LTV/CAC 3x) como teto, com ROAS mínimo por plataforma.",
+        "Separar prospecção e remarketing no Meta e cortar a prospecção abaixo de 1x.",
+        "Congelar o aumento de verba até o CAC voltar ao teto e escalar em degraus."
+      ],
+      "impacto": "Economia de R$ 2,6 mil por mês no teto, até R$ 11,9 mil na média (custo evitado)."
+    },
+    {
+      "tipo": "desafio",
+      "problema_id": "P2",
+      "titulo": "Estoque: **ruptura do sérum e 3 produtos**",
+      "problema": "Três produtos fazem 51% da receita e o sérum tem cerca de 7 dias de cobertura; MAR e ABR converteram 1,05% e 1,00%.",
+      "hipoteses": [
+        "O estoque é gerido sem ligação com a mídia: o anúncio roda com o sérum acabando.",
+        "O prazo do laboratório é de 45 dias e o fornecedor de embalagem é único.",
+        "Três produtos concentram 51% da receita e não têm estoque de segurança."
+      ],
+      "solucoes": [
+        "Manter estoque de segurança de 60 dias nos três líderes, com reposição pelo prazo de 45 dias.",
+        "Qualificar um segundo fornecedor de embalagem para o sérum.",
+        "Pausar e reativar os anúncios do líder por nível de cobertura de estoque."
+      ],
+      "impacto": "R$ 47 a 65 mil de receita captada em risco por ruptura (teto de leitura, antes da quebra)."
+    },
+    {
+      "tipo": "desafio",
+      "problema_id": "P3",
+      "titulo": "Retenção: **recompra sem régua**",
+      "problema": "69% dos clientes compraram uma vez; os 31% que recompram geram 57,5% da receita e não há lembrete de reposição.",
+      "hipoteses": [
+        "Não há lembrete de reposição, embora o sérum dure cerca de 60 dias.",
+        "O CRM tem só carrinho abandonado e newsletter, sem pós-compra nem reativação.",
+        "O cupom de primeira compra atrai quem compra uma vez e não cria hábito."
+      ],
+      "solucoes": [
+        "Criar a régua de reposição do sérum, com e-mail aos 45 dias e reforço aos 60.",
+        "Reativar clientes de compra única aos 90 e 150 dias, sem desconto.",
+        "Oferecer a reposição por WhatsApp só a quem der consentimento."
+      ],
+      "impacto": "R$ 7,3 mil de receita por ponto de recompra (+3 pontos: R$ 22 mil; +5: R$ 36,7 mil)."
+    },
+    {
+      "tipo": "desafio",
+      "problema_id": "P4",
+      "titulo": "Pagamento: **quebra acima do benchmark**",
+      "problema": "Quebra média de 6,3%, acima de 5% em 11 dos 12 meses: R$ 79,3 mil perdidos, com alta desde JAN.",
+      "hipoteses": [
+        "Cartão recusado e antifraude estão barrando vendas legítimas.",
+        "O PIX expira sem lembrete ao cliente.",
+        "A quebra não é medida por meio de pagamento, então a causa não aparece."
+      ],
+      "solucoes": [
+        "Medir a quebra por meio de pagamento (PIX, cartão, boleto) e por motivo de recusa.",
+        "Recuperar o PIX expirado com lembrete antes do vencimento e novo QR.",
+        "Revisar com o gateway o antifraude e a retentativa de cartão recusado."
+      ],
+      "impacto": "R$ 18,3 mil de receita aprovada por ano se a quebra cair de 6,5% para 5%."
+    },
+    {
+      "tipo": "cartoes",
+      "titulo": "Pilares do projeto",
+      "subtitulo": "**3 frentes** organizam as soluções",
+      "cartoes": [
+        "Mídia paga e canal principal: CAC, ROAS e degraus (P1).",
+        "Eficiência operacional: estoque e pagamento (P2 e P4).",
+        "Redução de dependências: recompra e CRM (P3)."
+      ],
+      "fonte": "05 · Soluções; pilares aprovados pelo analista"
+    },
+    {
+      "tipo": "bullets",
+      "titulo": "Pilar 1 · Mídia paga e canal principal",
+      "subtitulo": "Escalar **só com CAC e ROAS dentro da regra**",
+      "itens": [
+        "P1.S1 Teto de CAC de R$ 103,9 e ROAS mínimo por plataforma, decididos a cada quinzena.",
+        "P1.S2 Prospecção separada do remarketing no Meta, com ROAS-alvo próprio.",
+        "P1.S3 Verba congelada até o CAC voltar ao teto e escalada em degraus."
+      ],
+      "fonte": "05 · Soluções (P1)"
+    },
+    {
+      "tipo": "bullets",
+      "titulo": "Pilar 2 · Eficiência operacional",
+      "subtitulo": "Produto em estoque e **pagamento aprovado**",
+      "itens": [
+        "P2.S1 Estoque de segurança de 60 dias para os três líderes.",
+        "P2.S2 Segundo fornecedor de embalagem do sérum.",
+        "P2.S3 Regra de pausa e reativação dos anúncios do líder por cobertura.",
+        "P4.S1 Medição da quebra por meio de pagamento e por motivo de recusa.",
+        "P4.S2 Recuperação do PIX expirado com lembrete e novo QR.",
+        "P4.S3 Revisão do antifraude e da retentativa de cartão com o gateway."
+      ],
+      "fonte": "05 · Soluções (P2 e P4)"
+    },
+    {
+      "tipo": "bullets",
+      "titulo": "Pilar 3 · Redução de dependências",
+      "subtitulo": "Mais receita da **base que já comprou**",
+      "itens": [
+        "P3.S1 Régua de reposição do sérum aos 45 e aos 60 dias.",
+        "P3.S2 Reativação de clientes de compra única aos 90 e aos 150 dias, sem desconto.",
+        "P3.S3 Reposição por WhatsApp, só com consentimento."
+      ],
+      "fonte": "05 · Soluções (P3)"
+    },
+
+    { "tipo": "divisoria", "numero": "03.", "titulo": "**METAS**" },
+    {
+      "tipo": "bullets",
+      "titulo": "Metas do projeto",
+      "subtitulo": "Meta Realista de **+30%** em 12 meses",
+      "itens": [
+        "Meta Realista: R$ 1.586.601 de receita captada (+30% sobre R$ 1.220.462), classificada como agressiva.",
+        "O +40% das sócias (R$ 1.708.647) é o cenário Otimista, tratado como teto.",
+        "Pessimista: +15% (R$ 1.403.532), com as soluções executadas a 75% da intensidade.",
+        "Período projetado de OUT/26 a SET/27, comparado mês a mês com OUT/25 a SET/26.",
+        "A meta não cresce igual todo mês: inércia de +7,3%, rampa das soluções e bônus de ruptura em MAR e ABR."
+      ],
+      "fonte": "06 · Metas e cenários"
+    },
+    {
+      "tipo": "imagem_larga",
+      "titulo": "Metas · Três cenários",
+      "imagem": "entrega/ativos-aprovados/graficos/tabela-cenarios-projecao.png",
+      "texto": "O Realista pede R$ 461 mil de verba (+76%) para chegar a R$ 1,59 mi; o Otimista é o teto.",
+      "fonte": "06 · Metas e cenários"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Metas · Realista contra o ano atual",
+      "subtitulo": "Realista cresce de **+8,9% a +53,3%** por mês",
+      "imagem": "entrega/ativos-aprovados/graficos/meta-ano-atual-vs-realista.png",
+      "conclusoes": [
+        "R$ 1,59 mi em 12 meses contra R$ 1,22 mi no ano atual (+30%).",
+        "MAR e ABR crescem mais (+53,3%), com a ruptura resolvida.",
+        "MAI a SET: +39,2% sobre o mesmo mês do ano atual."
+      ],
+      "fonte": "06 · Metas e cenários"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Metas · Cenários combinados",
+      "subtitulo": "Pessimista, Realista e Otimista: **+15%, +30% e +40%**",
+      "imagem": "entrega/ativos-aprovados/graficos/cenarios-pessimista-realista-otimista.png",
+      "conclusoes": [
+        "R$ 1,40 mi, R$ 1,59 mi e R$ 1,71 mi nos três cenários.",
+        "Os três respeitam a sazonalidade do histórico, sem crescimento igual em todos os meses.",
+        "O Realista fica em destaque como meta do projeto."
+      ],
+      "fonte": "06 · Metas e cenários"
+    },
+
+    { "tipo": "divisoria", "numero": "04.", "titulo": "**CENÁRIOS** E IMPACTOS **ESPERADOS**" },
+    {
+      "tipo": "bullets",
+      "titulo": "Metodologia dos cenários",
+      "subtitulo": "Da **cadeia de KPIs** à receita de cada mês",
+      "itens": [
+        "Investimento: fecha a receita do mês, em degraus com NOV e MAI como picos.",
+        "Custo por sessão paga: contido pelo teto de CAC (P1), -8% em regime no Realista.",
+        "% de sessões pagas: calculado, com +15% de sessões não pagas pela recompra (P3).",
+        "Taxa de conversão: +9% em regime no Realista, com ruptura resolvida e recompra.",
+        "Ticket médio: +3% no Realista com kits e frete, sem mexer no preço.",
+        "Receita, vendas e sessões saem da cadeia de projeção, nunca preenchidas à mão."
+      ],
+      "fonte": "06 · Metas e cenários"
+    },
+    {
+      "tipo": "bullets",
+      "titulo": "Considerações e riscos",
+      "subtitulo": "Onde o Realista **exige atenção**",
+      "itens": [
+        "Verba de R$ 461 mil, 76% acima dos R$ 262 mil do ano atual.",
+        "CAC acima do teto de R$ 103,9 em AGO (R$ 105,1) e SET (R$ 112,2).",
+        "Crescimento de MAR e ABR (+53%) e de MAI a SET (+39%) depende de estoque e recompra a tempo.",
+        "Dependência de mídia paga sobe de 44,8% para 51,9% se nada for feito no canal próprio.",
+        "Tudo em receita bruta: a margem por produto (kits e protetor) ainda não foi confirmada."
+      ],
+      "fonte": "06 · Metas e cenários; 07 · Mídia paga"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Mídia Paga · Alocação de verba",
+      "subtitulo": "Google passa de 38,2% para **41,6%** da verba",
+      "imagem": "entrega/ativos-aprovados/graficos/alocacao-verba-plataforma.png",
+      "conclusoes": [
+        "Google de R$ 100,1 mil para R$ 191,5 mil; Meta de R$ 161,9 mil para R$ 269 mil.",
+        "Google converte 1,90% e rende 2,0x; Meta, 0,70% e 0,8x.",
+        "A participação do Google varia de 37% (NOV) a 46% (SET)."
+      ],
+      "fonte": "07 · Plano de mídia paga"
+    },
+    {
+      "tipo": "imagem_larga",
+      "titulo": "Mídia Paga · Alocação com justificativa",
+      "imagem": "entrega/ativos-aprovados/graficos/tabela-alocacao-verba-plataforma.png",
+      "texto": "O total do mês é o do Realista; só a divisão entre Meta e Google muda.",
+      "fonte": "07 · Plano de mídia paga"
+    },
+    {
+      "tipo": "imagem_larga",
+      "titulo": "Mídia Paga · Estratégia por Curva ABC",
+      "imagem": "entrega/ativos-aprovados/graficos/tabela-curva-abc-estrategia.png",
+      "texto": "Curva A recebe 75% da verba, Curva B 25% e a Curva C entra como brinde, order bump e kit.",
+      "fonte": "07 · Plano de mídia paga"
+    },
+    {
+      "tipo": "imagem_larga",
+      "titulo": "Mídia Paga · Calendário estratégico",
+      "imagem": "entrega/ativos-aprovados/graficos/tabela-calendario-estrategico.png",
+      "texto": "Pico em NOV e MAI (23% da verba), escala em DEZ, ABR e SET, e contenção em JAN e FEV.",
+      "fonte": "07 · Plano de mídia paga"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Mídia Paga · ROAS esperado",
+      "subtitulo": "ROAS global médio de **3,45x** no Realista",
+      "imagem": "entrega/ativos-aprovados/graficos/roas-esperado-plataforma.png",
+      "conclusoes": [
+        "Global de 3,16x a 3,78x; Google médio 1,88x, Meta 0,90x.",
+        "Meta fica abaixo de 1x em 10 dos 12 meses; pisos são gatilho, não meta.",
+        "Plataformas atribuem cerca de 38% da receita."
+      ],
+      "fonte": "07 · Plano de mídia paga"
+    },
+    {
+      "tipo": "grafico",
+      "titulo": "Mídia Paga · Dependência de mídia paga",
+      "subtitulo": "Meta de **52%** das sessões pagas em SET/27",
+      "imagem": "entrega/ativos-aprovados/graficos/trajetoria-dependencia-midia-paga.png",
+      "conclusoes": [
+        "Sem ação adicional o Realista chega a 58%; a meta é 52%.",
+        "Exige 23,9 mil sessões não pagas em SET/27 (+5,2 mil que o Realista).",
+        "Sem isso, +10% no custo por sessão custa R$ 46 mil no ano."
+      ],
+      "fonte": "07 · Plano de mídia paga"
+    },
+    {
+      "tipo": "imagem_larga",
+      "titulo": "Mídia Paga · Canais complementares",
+      "imagem": "entrega/ativos-aprovados/graficos/tabela-canais-complementares.png",
+      "texto": "CRM, WhatsApp com consentimento, orgânico e influenciadoras com medição sustentam a meta de dependência.",
+      "fonte": "07 · Plano de mídia paga"
+    },
+    {
+      "tipo": "bullets",
+      "titulo": "Referências de mercado",
+      "subtitulo": "O que o plano **aproveita** de outras marcas",
+      "itens": [
+        "Kits por rotina (Sallve, Simple Organic, Principia): sustentam a Curva A e a venda cruzada.",
+        "Brinde por valor mínimo e desconto de cerca de 20% (Typology, Glossier): Black Friday.",
+        "Lista de espera (Rhode): complementa a regra de pausa do anúncio por cobertura.",
+        "Benefício pós-compra e kit de recompra (Glossier, Principia): régua de reposição.",
+        "Clube pago (Beauty Pie) descartado para o porte da Verdeluz.",
+        "Páginas oficiais lidas em 17/11/2026: provam o mecanismo, não o resultado."
+      ],
+      "fonte": "07 · Benchmarking de mercado"
+    },
+
+    { "tipo": "divisoria", "numero": "05.", "titulo": "PLANO **DE AÇÃO**" },
+    {
+      "tipo": "bullets",
+      "titulo": "Plano de ação · Fases e checkpoints",
+      "subtitulo": "**43 ações** em 6 fases, até 30/09/2027",
+      "itens": [
+        "Fase 1 (23/11 a 30/11/2026): blindar a Black Friday e destravar estoque e medição.",
+        "Fase 2 (01/12 a 31/12/2026): fechar a Black Friday e ligar pagamento e CRM.",
+        "Fase 3 (04/01 a 28/02/2027): provar a janela de 3 meses (checkpoint em 22/02).",
+        "Fase 4 (01/03 a 30/04/2027): preparar o pico de maio.",
+        "Fase 5 (03/05 a 31/05/2027): operar o pico de maio.",
+        "Fase 6 (01/06 a 30/09/2027): manter e escalar, com balanço em 28/09."
+      ],
+      "fonte": "08 · Plano de ação"
+    },
+    {
+      "tipo": "bullets",
+      "titulo": "Plano de ação · Metas da janela de prova",
+      "subtitulo": "O que **precisa aparecer** até 22/02/2027",
+      "itens": [
+        "Receita captada de FEV/27 de R$ 75.514 (FEV/26) para R$ 97.899.",
+        "Conversão de 1,25% para 1,32% e ticket médio de R$ 197,68 para R$ 201,24.",
+        "CAC de R$ 112,7 (SET/26) para até R$ 103,9 e quebra de 7,1% para 6,2%.",
+        "ROAS global de 3,45x, custo por sessão paga até R$ 1,72 e dependência até 44,9%.",
+        "Fora da janela: os +40%, os +53% de MAR e ABR e a dependência de 52% (meta de SET/27)."
+      ],
+      "fonte": "08 · Plano de ação"
+    },
+    {
+      "tipo": "tabela_plano",
+      "linhas": [
+        { "num": "1", "acao": "Publicar a regra de teto de CAC de R$ 103,9 e de ROAS mínimo por plataforma", "horizonte": "Imediato", "quando": "24/11 a 25/11", "quem": "Estrategista de mídia", "frente": "Mídia Paga / Canal Principal" },
+        { "num": "2", "acao": "Definir os degraus de verba de NOV a FEV e travar qualquer aumento fora deles", "horizonte": "Imediato", "quando": "23/11 a 24/11", "quem": "Estrategista de mídia", "frente": "Mídia Paga / Canal Principal" },
+        { "num": "3", "acao": "Rodar a mídia da Black Friday no degrau aprovado e dentro do teto de CAC", "horizonte": "Imediato", "quando": "26/11 a 30/11", "quem": "Gestor de tráfego", "frente": "Mídia Paga / Canal Principal" },
+        { "num": "4", "acao": "Fazer o pedido de reposição do sérum ao laboratório para o estoque de 60 dias", "horizonte": "Imediato", "quando": "23/11 a 25/11", "quem": "Finanças e operações", "frente": "Eficiência Operacional" },
+        { "num": "5", "acao": "Ativar a regra de pausa e reativação do anúncio do sérum por cobertura", "horizonte": "Imediato", "quando": "24/11 a 25/11", "quem": "Gestor de tráfego", "frente": "Eficiência Operacional" },
+        { "num": "6", "acao": "Passar a medir a quebra por meio de pagamento e por motivo de recusa", "horizonte": "Imediato", "quando": "24/11 a 29/11", "quem": "Analista de dados", "frente": "Eficiência Operacional" },
+        { "num": "7", "acao": "Fechar a oferta da Black Friday com desconto de até 20% e brinde", "horizonte": "Imediato", "quando": "23/11 a 24/11", "quem": "Direção", "frente": "Produto / Mix / Portfólio" },
+        { "num": "8", "acao": "Ativar a lista de espera do sérum e a retirada do produto do Merchant quando a pausa disparar", "horizonte": "Imediato", "quando": "25/11 a 26/11", "quem": "Time de e-commerce", "frente": "Produto / Mix / Portfólio" },
+        { "num": "9", "acao": "Enviar a margem por SKU da Curva A e recalcular os pisos de ROAS por produto", "horizonte": "Imediato", "quando": "23/11 a 30/11", "quem": "Finanças e operações", "frente": "Monitoramento e Governança" }
+      ],
+      "link": "https://docs.google.com/document/d/1oTK3MMMzTP3rEaD3mJ2fsmY_MMVUhXZO/edit?usp=sharing&ouid=109450810910548005861&rtpof=true&sd=true"
+    },
+    {
+      "tipo": "tabela_plano",
+      "linhas": [
+        { "num": "10", "acao": "Registrar o backup das campanhas e do contêiner do GTM antes de qualquer mudança", "horizonte": "Imediato", "quando": "24/11 a 25/11", "quem": "Gestor de tráfego", "frente": "Monitoramento e Governança" },
+        { "num": "11", "acao": "Liberar à Agência os acessos ao Mercado Pago, à Nuvemshop, ao GA4, ao Merchant e à ferramenta de e-mail", "horizonte": "Imediato", "quando": "23/11 a 24/11", "quem": "Time de e-commerce", "frente": "Monitoramento e Governança" },
+        { "num": "12", "acao": "Montar o painel de KPIs com as metas mensais do Realista e os pisos de ROAS", "horizonte": "Imediato", "quando": "25/11 a 30/11", "quem": "Analista de dados", "frente": "Monitoramento e Governança" },
+        { "num": "13", "acao": "Rodar o portão quinzenal de CAC e ROAS e liberar ou travar o degrau de verba", "horizonte": "Curto prazo", "quando": "07/12 a 22/02/27", "quem": "Estrategista de mídia", "frente": "Mídia Paga / Canal Principal" },
+        { "num": "14", "acao": "Ativar a recuperação de PIX expirado com lembrete antes do vencimento e novo QR", "horizonte": "Curto prazo", "quando": "01/12 a 11/12", "quem": "Time de e-commerce", "frente": "Eficiência Operacional" },
+        { "num": "15", "acao": "Limitar a venda do Kit Presente de Natal ao estoque disponível", "horizonte": "Curto prazo", "quando": "01/12 a 03/12", "quem": "Time de e-commerce", "frente": "Produto / Mix / Portfólio" },
+        { "num": "16", "acao": "Manter a Curva C sem mídia direta e definir brinde, order bump e kit com a Curva A", "horizonte": "Curto prazo", "quando": "07/12 a 11/12", "quem": "Gestor de tráfego", "frente": "Produto / Mix / Portfólio" },
+        { "num": "17", "acao": "Montar a régua de reposição do sérum com e-mails aos 45 e aos 60 dias da compra", "horizonte": "Curto prazo", "quando": "01/12 a 18/12", "quem": "Estrategista de CRM", "frente": "Redução de Dependências" }
+      ],
+      "link": "https://docs.google.com/document/d/1oTK3MMMzTP3rEaD3mJ2fsmY_MMVUhXZO/edit?usp=sharing&ouid=109450810910548005861&rtpof=true&sd=true"
+    },
+    {
+      "tipo": "tabela_plano",
+      "linhas": [
+        { "num": "18", "acao": "Fechar o balanço da Black Friday e comparar com a meta de NOV", "horizonte": "Curto prazo", "quando": "01/12 a 04/12", "quem": "Analista de dados", "frente": "Monitoramento e Governança" },
+        { "num": "19", "acao": "Realizar a reunião mensal de resultados e registrar as decisões em ata (01/12, 04/01 e 01/02)", "horizonte": "Curto prazo", "quando": "01/12 a 01/02/27", "quem": "Estrategista de mídia", "frente": "Monitoramento e Governança" },
+        { "num": "20", "acao": "Fixar a Nuvemshop como fonte da receita no painel e a diferença de 4% do GA4 como tolerância", "horizonte": "Curto prazo", "quando": "01/12 a 11/12", "quem": "Analista de dados", "frente": "Monitoramento e Governança" },
+        { "num": "21", "acao": "Separar no Meta a prospecção do remarketing, cada uma com ROAS-alvo próprio", "horizonte": "Médio prazo", "quando": "04/01/27 a 29/01/27", "quem": "Gestor de tráfego", "frente": "Mídia Paga / Canal Principal" },
+        { "num": "22", "acao": "Receber o lote do sérum e confirmar a cobertura de 60 dias", "horizonte": "Médio prazo", "quando": "07/01/27 a 15/01/27", "quem": "Finanças e operações", "frente": "Eficiência Operacional" },
+        { "num": "23", "acao": "Qualificar o segundo fornecedor de embalagem do sérum", "horizonte": "Médio prazo", "quando": "04/01/27 a 12/02/27", "quem": "Finanças e operações", "frente": "Eficiência Operacional" },
+        { "num": "24", "acao": "Revisar com o Mercado Pago as regras de antifraude e a retentativa de cartão recusado", "horizonte": "Médio prazo", "quando": "11/01/27 a 29/01/27", "quem": "Time de e-commerce", "frente": "Eficiência Operacional" },
+        { "num": "25", "acao": "Montar os kits por rotina e o brinde por valor mínimo de pedido", "horizonte": "Médio prazo", "quando": "04/01/27 a 29/01/27", "quem": "Time de e-commerce", "frente": "Produto / Mix / Portfólio" }
+      ],
+      "link": "https://docs.google.com/document/d/1oTK3MMMzTP3rEaD3mJ2fsmY_MMVUhXZO/edit?usp=sharing&ouid=109450810910548005861&rtpof=true&sd=true"
+    },
+    {
+      "tipo": "tabela_plano",
+      "linhas": [
+        { "num": "26", "acao": "Colocar a régua de reposição do sérum no ar depois da chegada do lote", "horizonte": "Médio prazo", "quando": "18/01/27 a 22/01/27", "quem": "Estrategista de CRM", "frente": "Redução de Dependências" },
+        { "num": "27", "acao": "Ativar a reativação dos clientes de compra única aos 90 e aos 150 dias, sem desconto", "horizonte": "Médio prazo", "quando": "04/01/27 a 29/01/27", "quem": "Estrategista de CRM", "frente": "Redução de Dependências" },
+        { "num": "28", "acao": "Coletar o consentimento de WhatsApp no checkout, no pós-compra e por e-mail", "horizonte": "Médio prazo", "quando": "04/01/27 a 22/01/27", "quem": "Time de e-commerce", "frente": "Redução de Dependências" },
+        { "num": "29", "acao": "Disparar a reposição por WhatsApp aos clientes de uma compra que deram consentimento", "horizonte": "Médio prazo", "quando": "25/01/27 a 19/02/27", "quem": "Estrategista de CRM", "frente": "Redução de Dependências" },
+        { "num": "30", "acao": "Criar cupom individual e link rastreado por influenciadora", "horizonte": "Médio prazo", "quando": "11/01/27 a 29/01/27", "quem": "Estrategista de mídia", "frente": "Redução de Dependências" },
+        { "num": "31", "acao": "Publicar um conteúdo por semana com as avaliações do sérum", "horizonte": "Médio prazo", "quando": "11/01/27 a 26/02/27", "quem": "Conteúdo e marketing", "frente": "Redução de Dependências" },
+        { "num": "32", "acao": "Fechar o balanço da janela de prova contra as metas mensais", "horizonte": "Médio prazo", "quando": "15/02/27 a 22/02/27", "quem": "Analista de dados", "frente": "Monitoramento e Governança" },
+        { "num": "33", "acao": "Rodar o teste de incrementalidade do Meta", "horizonte": "Médio prazo", "quando": "01/03/27 a 23/04/27", "quem": "Estrategista de mídia", "frente": "Mídia Paga / Canal Principal" },
+        { "num": "34", "acao": "Calcular a demanda de MAI e pedir o lote dos três líderes", "horizonte": "Médio prazo", "quando": "01/03/27 a 17/03/27", "quem": "Finanças e operações", "frente": "Eficiência Operacional" }
+      ],
+      "link": "https://docs.google.com/document/d/1oTK3MMMzTP3rEaD3mJ2fsmY_MMVUhXZO/edit?usp=sharing&ouid=109450810910548005861&rtpof=true&sd=true"
+    },
+    {
+      "tipo": "tabela_plano",
+      "linhas": [
+        { "num": "35", "acao": "Decidir a descontinuação dos 17 produtos com até 10 vendas no ano", "horizonte": "Médio prazo", "quando": "01/03/27 a 31/03/27", "quem": "Direção", "frente": "Produto / Mix / Portfólio" },
+        { "num": "36", "acao": "Realizar a reunião mensal de resultados de março a setembro de 2027 e registrar as decisões em ata", "horizonte": "Médio prazo", "quando": "01/03/27 a 01/09/27", "quem": "Estrategista de mídia", "frente": "Monitoramento e Governança" },
+        { "num": "37", "acao": "Recalcular o teto de CAC e os pisos de ROAS com a margem por SKU e o resultado de incrementalidade", "horizonte": "Médio prazo", "quando": "26/04/27 a 29/04/27", "quem": "Analista de dados", "frente": "Monitoramento e Governança" },
+        { "num": "38", "acao": "Rodar a mídia do pico de MAI dentro do teto e do portão", "horizonte": "Médio prazo", "quando": "03/05/27 a 31/05/27", "quem": "Gestor de tráfego", "frente": "Mídia Paga / Canal Principal" },
+        { "num": "39", "acao": "Fechar o balanço do pico de MAI e do Dia das Mães", "horizonte": "Médio prazo", "quando": "24/05/27 a 27/05/27", "quem": "Analista de dados", "frente": "Monitoramento e Governança" },
+        { "num": "40", "acao": "Rodar a mídia de JUN a SET dentro do teto e do portão", "horizonte": "Médio prazo", "quando": "01/06/27 a 30/09/27", "quem": "Gestor de tráfego", "frente": "Mídia Paga / Canal Principal" },
+        { "num": "41", "acao": "Pedir o lote dos três líderes para a Escala de SET", "horizonte": "Médio prazo", "quando": "01/07/27 a 16/07/27", "quem": "Finanças e operações", "frente": "Eficiência Operacional" },
+        { "num": "42", "acao": "Fechar a leitura da dependência de mídia paga de AGO e projetar SET contra a meta de 52%", "horizonte": "Médio prazo", "quando": "06/09/27 a 17/09/27", "quem": "Analista de dados", "frente": "Redução de Dependências" },
+        { "num": "43", "acao": "Fazer o balanço do ciclo de 12 meses contra o cenário Realista", "horizonte": "Médio prazo", "quando": "20/09/27 a 28/09/27", "quem": "Analista de dados", "frente": "Monitoramento e Governança" }
+      ],
+      "link": "https://docs.google.com/document/d/1oTK3MMMzTP3rEaD3mJ2fsmY_MMVUhXZO/edit?usp=sharing&ouid=109450810910548005861&rtpof=true&sd=true"
+    },
+
+    { "tipo": "obrigado" }
+  ]
+}

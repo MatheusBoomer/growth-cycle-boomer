@@ -149,16 +149,26 @@ describe("fixture real da Verdeluz", () => {
     }
   })
 
-  it("o fixture não passa de 25 MB de conteúdo único (o git guarda cópias idênticas uma vez)", async () => {
-    const itens = await readdir(fixture.pasta, { recursive: true, withFileTypes: true })
+  /** MB de conteúdo único sob `pasta` (o git guarda cópias idênticas uma vez); `pular` deixa uma subpasta de fora. */
+  async function mbUnicos(pasta: string, pular?: string): Promise<number> {
+    const itens = await readdir(pasta, { recursive: true, withFileTypes: true })
     const vistos = new Map<string, number>()
     for (const i of itens) {
       if (!i.isFile()) continue
       const abs = path.join(i.parentPath, i.name)
+      if (pular && path.relative(pasta, abs).split(path.sep)[0] === pular) continue
       vistos.set(createHash("sha1").update(await readFile(abs)).digest("hex"), (await stat(abs)).size)
     }
-    const total = [...vistos.values()].reduce((a, b) => a + b, 0)
-    expect(total / 1024 / 1024).toBeLessThan(25)
+    return [...vistos.values()].reduce((a, b) => a + b, 0) / 1024 / 1024
+  }
+
+  it("o kit do fixture (sem o pacote de ensaio) não passa de 25 MB de conteúdo único", async () => {
+    expect(await mbUnicos(fixture.pasta, "ensaio")).toBeLessThan(25)
+  })
+
+  // O pacote de ensaio é lido etapa a etapa, sem ser copiado para o cliente de teste; o teto só evita que cresça sem ninguém ver.
+  it("o pacote de ensaio do fixture não passa de 60 MB de conteúdo único", async () => {
+    expect(await mbUnicos(path.join(fixture.pasta, "ensaio"))).toBeLessThan(60)
   })
 
   it("o plano de ação da 08 sai em documento e planilha, ambos aprovados", () => {
