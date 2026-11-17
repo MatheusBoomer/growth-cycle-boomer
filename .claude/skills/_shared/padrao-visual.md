@@ -19,6 +19,31 @@ conteúdo para dentro de uma skill — referencie este arquivo.
 8. Os dados plotados devem corresponder exatamente aos dados da planilha de
    origem — nunca arredondar de forma a mascarar uma diferença real.
 
+## Rótulos de valor nos pontos (padrão)
+
+Todo gráfico traz o **valor escrito em cada ponto** (ou no topo de cada barra),
+para o analista e o cliente lerem o número sem consultar o eixo.
+
+- **Formato:** percentuais com o mesmo número de casas do eixo (`3,2%`), razões
+  com `x` (`4,1x`), contagens com separador de milhar (`12.450`).
+- **Valores monetários sempre abreviados:** `R$ 850`, `R$ 12,4 mil`,
+  `R$ 1,2 mi`, `R$ 3,5 bi`. Uma casa decimal, vírgula decimal, sem zeros
+  inúteis (`R$ 2 mi`, não `R$ 2,0 mi`). O eixo vertical segue a mesma
+  abreviação.
+- **Sem sobreposição:** o rótulo nunca cobre outro rótulo, a linha da série, uma
+  linha de referência ou a legenda. Em série única, coloque o rótulo acima do
+  ponto (abaixo nos vales). Com duas ou mais séries próximas, rótulos de séries
+  diferentes ficam em lados opostos (a série de cima acima do ponto, a de baixo
+  abaixo). Quando dois rótulos da mesma série ainda colidirem, alterne acima e
+  abaixo ou afaste o rótulo com `annotate` (`xytext` em pontos). Se mesmo assim
+  não couber, a figura é que cresce, com a fonte na mesma proporção.
+- **Cor e tamanho:** o rótulo usa a cor da própria série e o mesmo corpo de
+  fonte do restante do gráfico, sem caixa de fundo.
+- **Conferência:** depois de salvar o PNG, abra-o com Read e confira se há
+  rótulo cortado, sobreposto ou fora da figura antes de propor. Corrija na hora.
+- A regra 8 vale também para os rótulos: o texto é o valor real, arredondado só
+  no que a abreviação exige.
+
 ## Tamanho da figura e da fonte (gráficos e tabelas em PNG)
 
 A fonte só fica legível se o tamanho da figura for fixado junto: uma figura

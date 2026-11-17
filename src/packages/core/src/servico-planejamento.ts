@@ -46,7 +46,15 @@ import {
 import { destinoInsumo, extensao, extensaoAceita, nomeSeguro, registrarInsumo } from "./insumos"
 import * as me from "./maquina-estados"
 import { descreverMarcacoes, type MarcaAjuste } from "./marcacoes"
-import { mensagemAjuste, mensagemAjustes, mensagemAprovacao, mensagemEtapaAnteriorAlterada, mensagemInsumoDaTresRecebido, mensagemInsumoRecebido } from "./prompts"
+import {
+  mensagemAjuste,
+  mensagemAjustes,
+  mensagemAprovacao,
+  mensagemEtapaAnteriorAlterada,
+  mensagemInsumoDaTresRecebido,
+  mensagemInsumoRecebido,
+  resumoDecisoesGraficos,
+} from "./prompts"
 import { CacheCurto } from "./metricas/cache-curto"
 import { custoDoTurno, custoPorEtapa } from "./metricas/custo"
 import { agregarPainel, type EntradaProjeto, type FiltroPainel, type PainelMetricas } from "./metricas/painel"
@@ -1063,6 +1071,11 @@ export class ServicoPlanejamento {
 
   // ---------- entregáveis ----------
 
+  /**
+   * Gráfico: aprovação silenciosa. Só marca e salva; o agente fica sabendo na próxima mensagem do analista no chat
+   * (ver `resumoParaMensagem`), para o analista aprovar vários gráficos sem disparar um turno a cada clique.
+   * Qualquer outro tipo de entregável chama o agente na hora, como antes.
+   */
   async aprovarEntregavel(slug: string, id: string, autor: string | null = null): Promise<void> {
     const aprovado = await this.mutar(slug, async (e) => {
       const alvo = encontrarEntregavel(e, id)
@@ -1070,6 +1083,9 @@ export class ServicoPlanejamento {
       const destino = destinoAprovado(alvo)
       await this.arm.copiar(slug, alvo.arquivoRascunho, destino)
       const avisos = await this.copiarAcompanhantes(slug, alvo)
+      if (alvo.tipo === "grafico") {
+        novo = { ...novo, entregaveis: novo.entregaveis.map((x) => (x.id === id ? { ...x, avisoPendente: true } : x)) }
+      }
       novo = me.reavaliarPronta(novo, etapaDaConversa(alvo), this.catalogo, this.agora())
       return { estado: novo, resultado: { ...alvo, destino, avisos } }
     })
@@ -1081,6 +1097,7 @@ export class ServicoPlanejamento {
         console.error(`Não consegui registrar o aviso da aprovação em "${slug}":`, e)
       }
     }
+    if (aprovado.tipo === "grafico") return
     await this.enfileirar(
       slug,
       etapaDaConversa(aprovado),
@@ -1127,6 +1144,35 @@ export class ServicoPlanejamento {
         // acompanhante que não chegou vira aviso na aprovação
       }
     }
+  }
+
+  /**
+   * Resumo dos gráficos da conversa de `etapa` para anexar à mensagem do analista: os aprovados em silêncio desde a
+   * última mensagem (e os marca como avisados) e os que seguem pendentes sem decisão. `ajustando`: gráficos já citados
+   * na própria mensagem como pedido de ajuste, que não entram na lista de "sem decisão". Vazio quando não há o que contar.
+   */
+  async resumoParaMensagem(slug: string, etapa: EtapaId, ajustando: string[] = []): Promise<string> {
+    return this.mutar(slug, (e) => {
+      const daEtapa = e.entregaveis.filter((x) => x.tipo === "grafico" && etapaDaConversa(x) === etapa)
+      const aprovados = daEtapa.filter((x) => x.status === "aprovado" && x.avisoPendente)
+      const semDecisao = daEtapa.filter((x) => x.status === "pendente" && !x.ajustePedido && !ajustando.includes(x.id))
+      if (aprovados.length === 0 && semDecisao.length === 0) return { estado: e, resultado: "" }
+      const ids = new Set(aprovados.map((x) => x.id))
+      const novo: Estado = {
+        ...e,
+        entregaveis: e.entregaveis.map((x) => {
+          if (!ids.has(x.id)) return x
+          const { avisoPendente: _, ...resto } = x
+          return resto
+        }),
+        atualizadoEm: this.agora(),
+      }
+      const texto = resumoDecisoesGraficos(
+        aprovados.map((x) => ({ titulo: x.titulo, nomeFinal: x.nomeFinal, destino: `clientes/${slug}/${destinoAprovado(x)}` })),
+        semDecisao.map((x) => ({ titulo: x.titulo, nomeFinal: x.nomeFinal })),
+      )
+      return { estado: novo, resultado: texto }
+    })
   }
 
   /** O analista corrige a seção pendente direto no visualizador; o texto vale como a proposta. */

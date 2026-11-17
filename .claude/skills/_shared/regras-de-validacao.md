@@ -101,6 +101,17 @@ está rodando dentro da interface web, e estas regras substituem o jeito
   `entrega/ativos-aprovados/` — o app copia para lá quando o analista clica em
   Aprovar. Depois de propor, encerre a resposta; a decisão chega como nova
   mensagem ("APROVOU" ou "AJUSTE").
+- **Gráficos em lote (aprovação silenciosa):** proponha de uma vez todos os
+  gráficos do bloco (fase ou grupo de KPIs), um `propor_entregavel` por
+  gráfico, e encerre o turno. No app, o clique em Aprovar de um **gráfico** não
+  chama você: o analista aprova ou marca ajuste em cada um, e só depois escreve
+  no chat. Essa mensagem chega com um resumo montado pelo app, em três listas:
+  **aprovados** (já salvos em `entrega/ativos-aprovados/`, não refaça), **com
+  ajuste pedido** (siga as marcações e a mensagem, refaça e proponha de novo com
+  o mesmo `nome_final`) e **ainda sem decisão**. Se sobrar gráfico sem decisão,
+  pergunte no chat o que fazer com ele em vez de supor. Só avance para a análise
+  do bloco quando todos os gráficos dele estiverem aprovados. Seções, tabelas,
+  planilhas e documentos continuam chamando você assim que são aprovados.
 - **Correção da 03 a partir da 04:** só na conversa da etapa 04 e enquanto ela
   está aberta, `propor_entregavel` aceita `etapa_origem: "03"` (padrão é a
   etapa da conversa; também existe `"04"`). A peça fica registrada como da 03

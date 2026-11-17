@@ -100,6 +100,41 @@ export function mensagemAjuste(titulo: string, nomeFinal: string, texto: string,
   return `O analista pediu AJUSTE no entregável “${titulo}” (${nomeFinal}): “${texto}”.${marcacoes} Refaça, salve em .app/rascunhos/ e proponha de novo com o mesmo nome_final.`
 }
 
+export interface DecisaoGrafico {
+  titulo: string
+  nomeFinal: string
+  /** Onde o app salvou o gráfico aprovado, relativo à raiz do projeto. */
+  destino?: string
+}
+
+/**
+ * Resumo que o app anexa à mensagem do analista no chat quando há gráficos decididos em silêncio
+ * (aprovar um gráfico não chama o agente). Vazio quando não há nada a contar.
+ */
+export function resumoDecisoesGraficos(aprovados: DecisaoGrafico[], semDecisao: DecisaoGrafico[]): string {
+  if (aprovados.length === 0 && semDecisao.length === 0) return ""
+  const linhas: string[] = ["Resumo do app sobre os gráficos desta etapa (aprovar um gráfico não chama o agente; vale o que está abaixo):"]
+  if (aprovados.length > 0) {
+    linhas.push(
+      "",
+      "APROVADOS desde a última mensagem (já salvos, não refaça):",
+      ...aprovados.map((g) => `- “${g.titulo}” (${g.nomeFinal})${g.destino ? `, em \`${g.destino}\`` : ""}`),
+    )
+  }
+  if (semDecisao.length > 0) {
+    linhas.push(
+      "",
+      "AINDA SEM DECISÃO (nem aprovados nem com ajuste pedido): pergunte ao analista no chat o que fazer com eles, sem supor:",
+      ...semDecisao.map((g) => `- “${g.titulo}” (${g.nomeFinal})`),
+    )
+  }
+  linhas.push(
+    "",
+    "Gráficos com AJUSTE pedido, quando houver, vêm descritos na mensagem acima, com as marcações. Refaça só esses, salve em .app/rascunhos/ e proponha de novo com o mesmo nome_final.",
+  )
+  return linhas.join("\n")
+}
+
 export interface ItemAjusteMensagem {
   titulo: string
   nomeFinal: string

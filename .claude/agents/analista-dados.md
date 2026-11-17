@@ -32,8 +32,9 @@ problema do registro, a partir dos números já aprovados nas seções das Skill
 
 1. Leia o(s) arquivo(s) de `dados/` indicados com pandas.
 2. Para gráficos: siga `.claude/skills/_shared/padrao-visual.md` à risca —
-   tipo de gráfico, cores, marcadores, linhas de referência, formato dos
-   eixos. Salve o PNG com nome descritivo e estável (ex.:
+   tipo de gráfico, cores, marcadores, rótulo de valor em cada ponto (R$
+   sempre abreviado, sem rótulos sobrepostos), linhas de referência, formato
+   dos eixos. Salve o PNG com nome descritivo e estável (ex.:
    `investimento-total-mensal.png`) — não inclua timestamp ou versão no
    nome, porque a skill que chamou você vai sobrescrever esse arquivo em
    `entrega/ativos-aprovados/graficos/` quando o analista aprovar.
@@ -57,7 +58,8 @@ problema do registro, a partir dos números já aprovados nas seções das Skill
      antes de montar as listas. Ver o cabeçalho do script para o formato exato
      do JSON.
 4. Confira os números antes de devolver: os valores no gráfico batem
-   exatamente com os dados de origem? A soma mensal de uma projeção bate
+   exatamente com os dados de origem? Abra cada PNG com Read e veja se algum
+   rótulo ficou cortado ou por cima de outro; se ficou, refaça antes de devolver. A soma mensal de uma projeção bate
    com o total anual?
 5. Devolva ao chat principal um resumo executivo: os números finais, o
    caminho do(s) PNG(s) gerado(s), e qualquer inconsistência ou observação

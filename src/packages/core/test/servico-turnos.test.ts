@@ -157,6 +157,39 @@ describe("turnos", () => {
     })
   })
 
+  it("mensagem no chat leva o resumo dos gráficos aprovados em silêncio e dos que seguem sem decisão", async () => {
+    const { t, executor } = turnos(roteiroSimples("ok", "sessao-1"))
+    const slug = await servico.criarProspect("Iszi", null)
+    await t.iniciar(slug, "01")
+    await t.aguardarOcioso(slug)
+    await servico.ferramenta({ slug, etapa: "01" }, "solicitar_insumo", { insumo_id: "kickoff-transcricao" })
+    await mkdir(path.join(raiz, "clientes", slug, ".app/rascunhos"), { recursive: true })
+    for (const nome of ["a", "b"]) {
+      await writeFile(path.join(raiz, "clientes", slug, `.app/rascunhos/${nome}.png`), "png")
+      await servico.ferramenta({ slug, etapa: "01" }, "propor_entregavel", {
+        tipo: "grafico",
+        titulo: `Gráfico ${nome}`,
+        arquivo_rascunho: `clientes/${slug}/.app/rascunhos/${nome}.png`,
+        nome_final: nome,
+      })
+    }
+    const [a] = (await servico.estado(slug)).entregaveis
+    const antes = executor.pedidos.length
+    await servico.aprovarEntregavel(slug, a!.id)
+    await t.aguardarOcioso(slug)
+    expect(executor.pedidos.length).toBe(antes) // aprovar sozinho não dispara turno
+    await t.enviarMensagem(slug, "01", "fiz meus apontamentos")
+    await t.aguardarOcioso(slug)
+    const enviada = executor.pedidos.at(-1)!.mensagem
+    expect(enviada).toContain("fiz meus apontamentos")
+    expect(enviada).toContain("APROVADOS")
+    expect(enviada).toContain("“Gráfico a” (a)")
+    expect(enviada).toContain("AINDA SEM DECISÃO")
+    expect(enviada).toContain("“Gráfico b” (b)")
+    const balao = (await servico.conversa(slug, "01")).filter((e) => e.tipo === "mensagem_analista").at(-1)!
+    expect(balao).toMatchObject({ texto: "fiz meus apontamentos" }) // o balão mostra só o que o analista escreveu
+  })
+
   it("mensagem com ajuste inválido não envia nada e libera o prospect", async () => {
     const { t, executor } = turnos(roteiroSimples("ok", "sessao-1"))
     const slug = await servico.criarProspect("Iszi", null)

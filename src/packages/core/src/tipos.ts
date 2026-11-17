@@ -91,6 +91,8 @@ export interface Entregavel {
   decididoPor?: string
   /** Etapa do chat onde o card vive, quando difere de `etapa` (ex.: gráfico da 03 refeito na conversa da 04). */
   etapaConversa?: EtapaId
+  /** Gráfico aprovado em silêncio: o agente só fica sabendo na próxima mensagem do analista no chat, que leva o resumo. */
+  avisoPendente?: boolean
 }
 
 export type StatusInsumo = "pendente" | "invalido" | "valido"
