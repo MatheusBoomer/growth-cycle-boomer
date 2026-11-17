@@ -1,0 +1,5076 @@
+{
+  "versao": 1,
+  "etapa": "05",
+  "trechos": [
+    {
+      "gatilho": "automatica",
+      "textoPreenchido": null,
+      "passos": [
+        {
+          "dtMs": 1216,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_015jvxKTpLSz2LDe1NmN5a17",
+            "nome": "Skill",
+            "entrada": {
+              "skill": "05-solucoes"
+            }
+          }
+        },
+        {
+          "dtMs": 1227,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_01RSQevkqaGP54HTSXQPC3EZ",
+            "nome": "Read",
+            "entrada": {
+              "file_path": "/Users/matheus/Documents/Claude/Projetos Boomer/planejamento-estrategico-boomer-v2/.claude/skills/_shared/regras-de-validacao.md"
+            }
+          }
+        },
+        {
+          "dtMs": 451,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_01WqxaqU7HRFSvuUPpVi8fUF",
+            "nome": "Read",
+            "entrada": {
+              "file_path": "/Users/matheus/Documents/Claude/Projetos Boomer/planejamento-estrategico-boomer-v2/.claude/skills/_shared/repertorio-solucoes.md"
+            }
+          }
+        },
+        {
+          "dtMs": 431,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_01L67gGa7A6r36quW8acV75p",
+            "nome": "Read",
+            "entrada": {
+              "file_path": "/Users/matheus/Documents/Claude/Projetos Boomer/planejamento-estrategico-boomer-v2/.claude/skills/_shared/benchmarks-kpi.md"
+            }
+          }
+        },
+        {
+          "dtMs": 2664,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_01BXqP7mPMpTLTwfLCd9BQ7s",
+            "nome": "Bash",
+            "entrada": {
+              "command": "cd \"/Users/matheus/Documents/Claude/Projetos Boomer/planejamento-estrategico-boomer-v2/.claude/worktrees/modo-ensaiado\" && ls clientes/verdeluz-teste clientes/verdeluz-teste/contexto clientes/verdeluz-teste/contexto/decisoes clientes/verdeluz-teste/.app 2>&1 | head -50; ls scripts; sed -n 1,60p scripts/validar_solucoes.py"
+            }
+          }
+        },
+        {
+          "dtMs": 1220,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_013SWjjXniY4dpoXfFSpHPCd",
+            "nome": "Glob",
+            "entrada": {
+              "pattern": "clientes/verdeluz-teste/**/*"
+            }
+          }
+        },
+        {
+          "dtMs": 2307,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_017tj5H61Lv5NkQE7ivLKUaj",
+            "nome": "Read",
+            "entrada": {
+              "file_path": "/Users/matheus/Documents/Claude/Projetos Boomer/planejamento-estrategico-boomer-v2/.claude/worktrees/modo-ensaiado/clientes/verdeluz-teste/kit-de-teste/05/roteiro.md"
+            }
+          }
+        },
+        {
+          "dtMs": 588,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_0154g4SRoW4Ngo2eqhkbVdg1",
+            "nome": "Read",
+            "entrada": {
+              "file_path": "/Users/matheus/Documents/Claude/Projetos Boomer/planejamento-estrategico-boomer-v2/.claude/worktrees/modo-ensaiado/clientes/verdeluz-teste/contexto/contextualizacao-estrategica.md"
+            }
+          }
+        },
+        {
+          "dtMs": 545,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_018WmGQ2PMtwtcoPnyXGkbFA",
+            "nome": "Read",
+            "entrada": {
+              "file_path": "/Users/matheus/Documents/Claude/Projetos Boomer/planejamento-estrategico-boomer-v2/.claude/worktrees/modo-ensaiado/scripts/validar_solucoes.py"
+            }
+          }
+        },
+        {
+          "dtMs": 14093,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "Li"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " o"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " contexto, os res"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ultados das"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " et"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "apas 03 e 04"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " e as regras da etap"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "a. Agora mon"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "to a lista de problemas"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " e pontos fortes do"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " diagnóstico para você"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " confirmar e orden"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ar.\n\n## Problemas"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " (ag"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "rupei"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " os"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " corre"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "latos)\n\n-"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " **P1 "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "Eficiência da míd"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ia paga:** investimento"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " +127%"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " (R$ 14,5"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " mil →"
+          }
+        },
+        {
+          "dtMs": 2,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " R$ 32,9 "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "mil)"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " e receita +7%. "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ROAS global"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " de"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " 6,5x para"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " 3,1x,"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Meta em"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " 0,8x, CA"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "C de R$ 49,"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "5 para R$ 112"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ",7, LTV/C"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "AC de 2,77 "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "(ab"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "aixo de 3) e"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " dependência de mídia pa"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ga de 44,8% para"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " 54,7%"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ".\n- **P2 "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "Ruptura do sérum"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " e concentração em"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "3 produtos:** os"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " três lí"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "deres f"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "azem 51% da receita"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " e"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " o sérum tem cer"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ca de 7 dias de"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " cobertura. Em M"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "AR e ABR a"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " conversão "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ficou em 1,05%"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " e 1,00%."
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "\n- **P3 Recomp"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ra e CRM:** "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "69% d"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "os clientes compra"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ram uma vez só"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ". Não"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " há régua de reposição,"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " e o sérum dura c"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "erca de 60 dias"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ". Os recorrentes"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " c"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "resceram 28% s"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "em ação "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ativa, e as sessões"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " não pagas est"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ão"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " pa"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "radas em 16 mil"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " a 19 mil por"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " mês.\n- **P4"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Quebra de pag"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "amento:** média"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " de 6,3% cont"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ra o"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " teto de 5%, ac"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ima d"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ele em 11 dos "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "12 meses. Per"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "da de R$ 79,"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "3 mil no ano,"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " com pico de"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " 7,9% em NO"
+          }
+        },
+        {
+          "dtMs": 4,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "V.\n- **P5 "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "Conversão e"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " funil:** conversão do"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Meta em"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " 0,70% (pi"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "so de 1%) e do"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Google em 1,90%"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " (piso de 2%)."
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Não há dado"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " de carrinho, check"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "out e pagamento, e"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " o c"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "liente t"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "em um"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " único e-mail de rec"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "uperação.\n- **P"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "6 Black Friday e"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " desconto:** NOV"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " t"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "em o CAC mais ba"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ixo (R$ 40"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ",1) e a ma"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ior queb"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ra (7,9%). A"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " marca trein"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ou o cliente com"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " cupom de primeira comp"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ra e Black Friday ag"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ressiva. A margem por"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " SKU "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ainda não fo"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "i confirmada.\n-"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " **P7 Mensu"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ração:** Google m"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ais Meta expl"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "icam só 37% da rece"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ita captada. Há u"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ma diferença de cerca"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " de 4% entre GA"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "4 e plataforma,"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " as"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " influenciadoras não são"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " medidas e o faturam"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ento declarado está"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " 19% acima do histór"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ico.\n- **P8 "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "Mix e catálogo"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ":** 38 produtos"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " da Curva C fazem"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " 5,4% da receita"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ". Os kits som"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "am 24%, e exp"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "edição e con"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "teúdo não"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " têm fol"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ga.\n\n## Pontos"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " fortes (vi"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ram argumento"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ")\n\n- Conversão global"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " de"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " 1,38%"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ", dentro da faixa"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " de 1% a 2%"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ".\n- Os 31%"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " de"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " clientes rec"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "orrentes geram 57"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ",5% da receita."
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "\n- Prova social robusta"
+          }
+        },
+        {
+          "dtMs": 8,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " ("
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "mais de 900 ava"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "liações no sérum)."
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "\n- Margem bruta decl"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "arada de 68% (est"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "imativa, s"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "em confirmação)."
+          }
+        },
+        {
+          "dtMs": 37,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "\n\n## Pergunta"
+          }
+        },
+        {
+          "dtMs": 39,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "\n\nVocê"
+          }
+        },
+        {
+          "dtMs": 32,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " confirma essa lista e"
+          }
+        },
+        {
+          "dtMs": 38,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " es"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ses agrupamentos?"
+          }
+        },
+        {
+          "dtMs": 32,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Em"
+          }
+        },
+        {
+          "dtMs": 37,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " P"
+          }
+        },
+        {
+          "dtMs": 34,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "1 ju"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ntei CAC, RO"
+          }
+        },
+        {
+          "dtMs": 46,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "AS,"
+          }
+        },
+        {
+          "dtMs": 23,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " LTV/CAC e"
+          }
+        },
+        {
+          "dtMs": 37,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " dependência de"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " mídia."
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Em P7"
+          }
+        },
+        {
+          "dtMs": 34,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " juntei atribuição"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ", GA4 e influen"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ciadoras.\n\nMin"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ha s"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ugestão de pr"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ioridade é P1,"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " P2, P3, P4"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ", P5, P6, P"
+          }
+        },
+        {
+          "dtMs": 37,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "7, P8. Co"
+          }
+        },
+        {
+          "dtMs": 34,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "loqu"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ei a"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " e"
+          }
+        },
+        {
+          "dtMs": 37,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ficiência da mídia e"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " a"
+          }
+        },
+        {
+          "dtMs": 34,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " ruptura prim"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "eiro porque a meta"
+          }
+        },
+        {
+          "dtMs": 37,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " de crescimento dep"
+          }
+        },
+        {
+          "dtMs": 38,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ende de"
+          }
+        },
+        {
+          "dtMs": 32,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " resolver as"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " duas."
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Diga se mu"
+          }
+        },
+        {
+          "dtMs": 49,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "da algum ag"
+          }
+        },
+        {
+          "dtMs": 22,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "rupamento ou a "
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ordem."
+          }
+        },
+        {
+          "dtMs": 9,
+          "evento": {
+            "tipo": "texto",
+            "texto": "Li o contexto, os resultados das etapas 03 e 04 e as regras da etapa. Agora monto a lista de problemas e pontos fortes do diagnóstico para você confirmar e ordenar.\n\n## Problemas (agrupei os correlatos)\n\n- **P1 Eficiência da mídia paga:** investimento +127% (R$ 14,5 mil → R$ 32,9 mil) e receita +7%. ROAS global de 6,5x para 3,1x, Meta em 0,8x, CAC de R$ 49,5 para R$ 112,7, LTV/CAC de 2,77 (abaixo de 3) e dependência de mídia paga de 44,8% para 54,7%.\n- **P2 Ruptura do sérum e concentração em 3 produtos:** os três líderes fazem 51% da receita e o sérum tem cerca de 7 dias de cobertura. Em MAR e ABR a conversão ficou em 1,05% e 1,00%.\n- **P3 Recompra e CRM:** 69% dos clientes compraram uma vez só. Não há régua de reposição, e o sérum dura cerca de 60 dias. Os recorrentes cresceram 28% sem ação ativa, e as sessões não pagas estão paradas em 16 mil a 19 mil por mês.\n- **P4 Quebra de pagamento:** média de 6,3% contra o teto de 5%, acima dele em 11 dos 12 meses. Perda de R$ 79,3 mil no ano, com pico de 7,9% em NOV.\n- **P5 Conversão e funil:** conversão do Meta em 0,70% (piso de 1%) e do Google em 1,90% (piso de 2%). Não há dado de carrinho, checkout e pagamento, e o cliente tem um único e-mail de recuperação.\n- **P6 Black Friday e desconto:** NOV tem o CAC mais baixo (R$ 40,1) e a maior quebra (7,9%). A marca treinou o cliente com cupom de primeira compra e Black Friday agressiva. A margem por SKU ainda não foi confirmada.\n- **P7 Mensuração:** Google mais Meta explicam só 37% da receita captada. Há uma diferença de cerca de 4% entre GA4 e plataforma, as influenciadoras não são medidas e o faturamento declarado está 19% acima do histórico.\n- **P8 Mix e catálogo:** 38 produtos da Curva C fazem 5,4% da receita. Os kits somam 24%, e expedição e conteúdo não têm folga.\n\n## Pontos fortes (viram argumento)\n\n- Conversão global de 1,38%, dentro da faixa de 1% a 2%.\n- Os 31% de clientes recorrentes geram 57,5% da receita.\n- Prova social robusta (mais de 900 avaliações no sérum).\n- Margem bruta declarada de 68% (estimativa, sem confirmação).\n\n## Pergunta\n\nVocê confirma essa lista e esses agrupamentos? Em P1 juntei CAC, ROAS, LTV/CAC e dependência de mídia. Em P7 juntei atribuição, GA4 e influenciadoras.\n\nMinha sugestão de prioridade é P1, P2, P3, P4, P5, P6, P7, P8. Coloquei a eficiência da mídia e a ruptura primeiro porque a meta de crescimento depende de resolver as duas. Diga se muda algum agrupamento ou a ordem."
+          }
+        }
+      ]
+    },
+    {
+      "gatilho": "mensagem",
+      "textoPreenchido": "Quero trabalhar P1, P2, P3, P4",
+      "passos": [
+        {
+          "dtMs": 5048,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_01Q31ST4KWpxKNxZ2P1enqZD",
+            "nome": "ToolSearch",
+            "entrada": {
+              "query": "select:TaskCreate,TaskUpdate",
+              "max_results": 2
+            }
+          }
+        },
+        {
+          "dtMs": 1391,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_01RQ9kG48wBBeXUdbSEMhaca",
+            "nome": "Grep",
+            "entrada": {
+              "pattern": "já tent|tentamos|cupom|PRIMEIRA10|influenciad|aumentamos|e-mail",
+              "path": "/Users/matheus/Documents/Claude/Projetos Boomer/planejamento-estrategico-boomer-v2/.claude/worktrees/modo-ensaiado/clientes/verdeluz-teste/contexto/kickoff-transcricao.md",
+              "output_mode": "content",
+              "-i": true,
+              "head_limit": 30
+            }
+          }
+        },
+        {
+          "dtMs": 1706,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_0174wbS4ty5dFxyHXbnrKXTN",
+            "nome": "TaskCreate",
+            "entrada": {
+              "subject": "Abrir P1 a P4 (hipóteses, soluções, frente)",
+              "description": "Montar hipóteses de causa, 1 a 3 soluções e frente para P1 Eficiência da mídia, P2 Ruptura do sérum, P3 Recompra e CRM, P4 Quebra de pagamento",
+              "activeForm": "Abrindo P1 a P4"
+            }
+          }
+        },
+        {
+          "dtMs": 732,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_017XFBcmWNZ21ryJ1DvzQw9U",
+            "nome": "TaskCreate",
+            "entrada": {
+              "subject": "Calcular impacto de P1 a P4 com analista-dados",
+              "description": "Impacto em R$ ou % com fórmula e premissa, sem inventar número",
+              "activeForm": "Calculando impactos"
+            }
+          }
+        },
+        {
+          "dtMs": 874,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_01YQsYN8uPxMbG2r13LvUb2v",
+            "nome": "TaskCreate",
+            "entrada": {
+              "subject": "Gravar solucoes.json, validar e propor a seção",
+              "description": "Gravar registro, rodar validar_solucoes.py em .app/rascunhos, propor_entregavel tipo secao nome_final solucoes",
+              "activeForm": "Gravando e validando o registro"
+            }
+          }
+        },
+        {
+          "dtMs": 614,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_01HJpqXT6Jiueu5eToapHrSa",
+            "nome": "TaskCreate",
+            "entrada": {
+              "subject": "Sinalizar etapa pronta com resumo e handoff",
+              "description": "Depois da aprovação da seção, chamar sinalizar_etapa_pronta",
+              "activeForm": "Sinalizando etapa pronta"
+            }
+          }
+        },
+        {
+          "dtMs": 966,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_01S9LVWfqJbTUNVHq8WU3Nhs",
+            "nome": "TaskUpdate",
+            "entrada": {
+              "taskId": "1",
+              "status": "in_progress"
+            }
+          }
+        },
+        {
+          "dtMs": 18034,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "Já"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " t"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "enho o que o cliente"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " t"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "entou no kickoff,"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " então"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " não pre"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ciso perguntar is"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "so. Ele us"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ou o cupom PRI"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "MEIRA10, que"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " traz cliente m"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "as dá desconto a qu"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "em compraria de qualqu"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "er forma. Também"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " m"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "and"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ou um único e-mail de"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " carrinho, fez par"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "cerias com microinflu"
+          }
+        },
+        {
+          "dtMs": 2,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "enciadoras sem med"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ição e a"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "umentou a verba para seg"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "urar volume. Nada"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " dis"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "so res"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "olve"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "u. Por"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " isso n"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "enhuma solução ab"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "aixo precisa ser"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " descartada.\n\nO registro"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " vai "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ter só P1 a P4"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ". P5 "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "a P8 ficam de"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " fora des"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ta etapa, e eu"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " registro isso no"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " resumo.\n\nSeg"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ue o rascunho de h"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ipóteses e soluções"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ". Os impactos em"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " R$ eu calculo"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " dep"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ois com o analista de"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " dados.\n\n**P1 "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "Eficiência da míd"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ia paga**"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " (fr"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ente"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Mídia Paga /"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Canal Principal)"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "\n- H1 O"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " público pago está"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " saturado:"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " o"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " investimento sub"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "iu 127% e os cl"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ientes novos ficaram"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " estáveis em 292."
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "\n- H2 O"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Meta tra"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "z tráfego frio s"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "em qualificação:"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " ROAS de"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " 0,8x e convers"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ão de 0,70% com"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " 62% da verba."
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "\n- H3 A verba c"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "resce sem regra de par"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ada: não há te"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "to de CAC n"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "em ROAS mínim"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "o por pl"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ataforma.\n- P"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "1.S1 ("
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "H3) Adotar o"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " C"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "AC de R$ 103"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ",9 (o que dá"
+          }
+        },
+        {
+          "dtMs": 3,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " LTV/CAC "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "3x) como te"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "to,"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " com ROAS mínim"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "o por plataforma, para"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " dec"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "idir esc"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "alar ou pausar a"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " cada quinzena."
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "\n- P1.S2 ("
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "H2) Separar no"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Meta a prospecção"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " do"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " remarketing,"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " c"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ada um"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " com ROAS-alv"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "o próprio,"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " e cortar a prospec"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ção abaixo de 1"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "x."
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "\n- P1.S3 "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "(H1) Cong"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "elar o"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " aumento de verba até"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " o C"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "AC voltar ab"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "aixo do teto e"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " escalar em"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " deg"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "raus, a"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " cada deg"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "rau com"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " CAC d"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "entro do teto.\n\n**"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "P2 Ruptura"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " do sérum e concentração"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " em 3 produtos**"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " (frente Eficiência"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Operacional)\n- H"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "1 O est"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "oque é"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " gerido sem ligação"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " com a mídia: o an"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "úncio ro"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "da com o sérum qu"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ase sem cobertura ("
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "cerca de 7 d"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ias).\n- H2 O"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " prazo do laboratório"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " é de 45 dias e"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " o fornecedor de"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " embalagem é único."
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "\n- H3 Três produt"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "os fazem 51% da"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " receita e"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " não há estoque de segur"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ança.\n- P2.S"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "1 ("
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "H2,"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " H3) Manter esto"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "que de segurança de 60"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " dias para"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " os três líderes,"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " com "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ponto de repos"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ição cal"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "culado pel"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "o prazo de"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " 45 dias do"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " laboratório.\n- P"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "2.S2 (H2"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ") Qualificar um"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " segundo fornecedor"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " de embalagem para"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " o sérum.\n- P"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "2.S3 (H1"
+          }
+        },
+        {
+          "dtMs": 16,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ") Criar a regra de"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " pausa e"
+          }
+        },
+        {
+          "dtMs": 28,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " reativ"
+          }
+        },
+        {
+          "dtMs": 37,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ação d"
+          }
+        },
+        {
+          "dtMs": 33,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "os anúncios do"
+          }
+        },
+        {
+          "dtMs": 38,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " produ"
+          }
+        },
+        {
+          "dtMs": 33,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "to lí"
+          }
+        },
+        {
+          "dtMs": 39,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "der por n"
+          }
+        },
+        {
+          "dtMs": 47,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ível de cobertura,"
+          }
+        },
+        {
+          "dtMs": 21,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " comb"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "inada ent"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "re exp"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "edição, Rafael e"
+          }
+        },
+        {
+          "dtMs": 39,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " agência.\n\n**P3 "
+          }
+        },
+        {
+          "dtMs": 34,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "Recompra e CRM"
+          }
+        },
+        {
+          "dtMs": 33,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "** (frente Redução de"
+          }
+        },
+        {
+          "dtMs": 37,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Dependências)\n- H"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "1 Não exist"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "e rég"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ua de reposição,"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " embora o sérum dure"
+          }
+        },
+        {
+          "dtMs": 37,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " cerca de 60 d"
+          }
+        },
+        {
+          "dtMs": 34,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ias.\n- H2 O"
+          }
+        },
+        {
+          "dtMs": 39,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " CRM t"
+          }
+        },
+        {
+          "dtMs": 33,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "em só um fluxo ("
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "carrinho abandonado"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ") e uma newsletter"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ".\n- H3 O c"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "up"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "om de primeira compra at"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "rai qu"
+          }
+        },
+        {
+          "dtMs": 37,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "em comp"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ra u"
+          }
+        },
+        {
+          "dtMs": 33,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ma vez e não c"
+          }
+        },
+        {
+          "dtMs": 52,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ria h"
+          }
+        },
+        {
+          "dtMs": 26,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ábito de recompra."
+          }
+        },
+        {
+          "dtMs": 37,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "\n- P3.S1 ("
+          }
+        },
+        {
+          "dtMs": 29,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "H1) Criar a rég"
+          }
+        },
+        {
+          "dtMs": 34,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ua de reposição do sér"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "um, com e-mail a"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "os 45"
+          }
+        },
+        {
+          "dtMs": 37,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " dias da"
+          }
+        },
+        {
+          "dtMs": 34,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " compra e re"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "forço aos 60"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "."
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "\n- P3.S2 "
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "(H2) Ativar"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " a"
+          }
+        },
+        {
+          "dtMs": 38,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " re"
+          }
+        },
+        {
+          "dtMs": 34,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ativação de clientes de comp"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ra única a"
+          }
+        },
+        {
+          "dtMs": 38,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "os 90"
+          }
+        },
+        {
+          "dtMs": 33,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " e 150"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " dias, com con"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "teúdo de rotina"
+          }
+        },
+        {
+          "dtMs": 37,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " (s"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "em desconto).\n- P"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "3.S3 (H1"
+          }
+        },
+        {
+          "dtMs": 34,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ", H2) O"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ferecer o"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " WhatsApp de re"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "posição só para"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " quem der"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " consentimento, us"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ando a"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " base"
+          }
+        },
+        {
+          "dtMs": 38,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " de clientes com "
+          }
+        },
+        {
+          "dtMs": 33,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "1 compra.\n\n**P"
+          }
+        },
+        {
+          "dtMs": 54,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "4 Quebra de p"
+          }
+        },
+        {
+          "dtMs": 23,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "agamento** (frente"
+          }
+        },
+        {
+          "dtMs": 33,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Eficiência Operacional"
+          }
+        },
+        {
+          "dtMs": 32,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ")\n- H1 "
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "Cartão recusado e ant"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ifraude est"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ão bar"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "rando v"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "endas.\n- H2 "
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "O PIX expira sem"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " l"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "embrete."
+          }
+        },
+        {
+          "dtMs": 34,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "\n- H3 Não há"
+          }
+        },
+        {
+          "dtMs": 37,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " medição da"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " quebra por meio de p"
+          }
+        },
+        {
+          "dtMs": 39,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "agamento.\n- P4"
+          }
+        },
+        {
+          "dtMs": 40,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ".S1 (H3)"
+          }
+        },
+        {
+          "dtMs": 32,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Pass"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ar a med"
+          }
+        },
+        {
+          "dtMs": 38,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ir a quebra por meio"
+          }
+        },
+        {
+          "dtMs": 32,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " de pagamento (PI"
+          }
+        },
+        {
+          "dtMs": 33,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "X, cartão e"
+          }
+        },
+        {
+          "dtMs": 33,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " boleto) e"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " por motivo de"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " recusa.\n- P4"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ".S2 (H2)"
+          }
+        },
+        {
+          "dtMs": 38,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Recuperar P"
+          }
+        },
+        {
+          "dtMs": 33,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "IX expirado com"
+          }
+        },
+        {
+          "dtMs": 37,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " lembrete antes do"
+          }
+        },
+        {
+          "dtMs": 34,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " vencimento e um novo"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " QR por e-mail "
+          }
+        },
+        {
+          "dtMs": 40,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ou WhatsApp."
+          }
+        },
+        {
+          "dtMs": 31,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "\n- P4.S3 "
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "(H1) Revisar"
+          }
+        },
+        {
+          "dtMs": 38,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " as regras de antifraude"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " e a"
+          }
+        },
+        {
+          "dtMs": 38,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " retent"
+          }
+        },
+        {
+          "dtMs": 31,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ativ"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "a de"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " cartão com o gateway"
+          }
+        },
+        {
+          "dtMs": 34,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ".\n\n**"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "Pergunta:** ess"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "as hipóteses e so"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "luções fazem sentido"
+          }
+        },
+        {
+          "dtMs": 37,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " para o"
+          }
+        },
+        {
+          "dtMs": 37,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Verdeluz, "
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ou você"
+          }
+        },
+        {
+          "dtMs": 34,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " quer tr"
+          }
+        },
+        {
+          "dtMs": 34,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ocar,"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " cortar ou inc"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "luir al"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "guma? Se"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " est"
+          }
+        },
+        {
+          "dtMs": 36,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "iver bom"
+          }
+        },
+        {
+          "dtMs": 34,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ", s"
+          }
+        },
+        {
+          "dtMs": 37,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "igo para"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " o cálculo de"
+          }
+        },
+        {
+          "dtMs": 35,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " impacto."
+          }
+        },
+        {
+          "dtMs": 15,
+          "evento": {
+            "tipo": "texto",
+            "texto": "Já tenho o que o cliente tentou no kickoff, então não preciso perguntar isso. Ele usou o cupom PRIMEIRA10, que traz cliente mas dá desconto a quem compraria de qualquer forma. Também mandou um único e-mail de carrinho, fez parcerias com microinfluenciadoras sem medição e aumentou a verba para segurar volume. Nada disso resolveu. Por isso nenhuma solução abaixo precisa ser descartada.\n\nO registro vai ter só P1 a P4. P5 a P8 ficam de fora desta etapa, e eu registro isso no resumo.\n\nSegue o rascunho de hipóteses e soluções. Os impactos em R$ eu calculo depois com o analista de dados.\n\n**P1 Eficiência da mídia paga** (frente Mídia Paga / Canal Principal)\n- H1 O público pago está saturado: o investimento subiu 127% e os clientes novos ficaram estáveis em 292.\n- H2 O Meta traz tráfego frio sem qualificação: ROAS de 0,8x e conversão de 0,70% com 62% da verba.\n- H3 A verba cresce sem regra de parada: não há teto de CAC nem ROAS mínimo por plataforma.\n- P1.S1 (H3) Adotar o CAC de R$ 103,9 (o que dá LTV/CAC 3x) como teto, com ROAS mínimo por plataforma, para decidir escalar ou pausar a cada quinzena.\n- P1.S2 (H2) Separar no Meta a prospecção do remarketing, cada um com ROAS-alvo próprio, e cortar a prospecção abaixo de 1x.\n- P1.S3 (H1) Congelar o aumento de verba até o CAC voltar abaixo do teto e escalar em degraus, a cada degrau com CAC dentro do teto.\n\n**P2 Ruptura do sérum e concentração em 3 produtos** (frente Eficiência Operacional)\n- H1 O estoque é gerido sem ligação com a mídia: o anúncio roda com o sérum quase sem cobertura (cerca de 7 dias).\n- H2 O prazo do laboratório é de 45 dias e o fornecedor de embalagem é único.\n- H3 Três produtos fazem 51% da receita e não há estoque de segurança.\n- P2.S1 (H2, H3) Manter estoque de segurança de 60 dias para os três líderes, com ponto de reposição calculado pelo prazo de 45 dias do laboratório.\n- P2.S2 (H2) Qualificar um segundo fornecedor de embalagem para o sérum.\n- P2.S3 (H1) Criar a regra de pausa e reativação dos anúncios do produto líder por nível de cobertura, combinada entre expedição, Rafael e agência.\n\n**P3 Recompra e CRM** (frente Redução de Dependências)\n- H1 Não existe régua de reposição, embora o sérum dure cerca de 60 dias.\n- H2 O CRM tem só um fluxo (carrinho abandonado) e uma newsletter.\n- H3 O cupom de primeira compra atrai quem compra uma vez e não cria hábito de recompra.\n- P3.S1 (H1) Criar a régua de reposição do sérum, com e-mail aos 45 dias da compra e reforço aos 60.\n- P3.S2 (H2) Ativar a reativação de clientes de compra única aos 90 e 150 dias, com conteúdo de rotina (sem desconto).\n- P3.S3 (H1, H2) Oferecer o WhatsApp de reposição só para quem der consentimento, usando a base de clientes com 1 compra.\n\n**P4 Quebra de pagamento** (frente Eficiência Operacional)\n- H1 Cartão recusado e antifraude estão barrando vendas.\n- H2 O PIX expira sem lembrete.\n- H3 Não há medição da quebra por meio de pagamento.\n- P4.S1 (H3) Passar a medir a quebra por meio de pagamento (PIX, cartão e boleto) e por motivo de recusa.\n- P4.S2 (H2) Recuperar PIX expirado com lembrete antes do vencimento e um novo QR por e-mail ou WhatsApp.\n- P4.S3 (H1) Revisar as regras de antifraude e a retentativa de cartão com o gateway.\n\n**Pergunta:** essas hipóteses e soluções fazem sentido para o Verdeluz, ou você quer trocar, cortar ou incluir alguma? Se estiver bom, sigo para o cálculo de impacto."
+          }
+        }
+      ]
+    },
+    {
+      "gatilho": "mensagem",
+      "textoPreenchido": "Faz sentido, pode seguir",
+      "passos": [
+        {
+          "dtMs": 1280,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_01TxHjhy7Bbjxq7rhtWCdvrw",
+            "nome": "TaskUpdate",
+            "entrada": {
+              "taskId": "1",
+              "status": "completed"
+            }
+          }
+        },
+        {
+          "dtMs": 180,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_01JtaK4Ys2K1R3emPE8NBrpE",
+            "nome": "TaskUpdate",
+            "entrada": {
+              "taskId": "2",
+              "status": "in_progress"
+            }
+          }
+        },
+        {
+          "dtMs": 19803,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_01DHFiQQC9i87cxSCzhBPsJL",
+            "nome": "Agent",
+            "entrada": {
+              "description": "Impacto em R$ de P1 a P4",
+              "subagent_type": "analista-dados",
+              "run_in_background": false,
+              "prompt": "Você calcula o impacto estimado em R$ ou % de 4 problemas do prospect de teste Verdeluz (pasta clientes/verdeluz-teste/, dados 100% fictícios), para a Skill 05 · Soluções. Só cálculo: não grave arquivo nenhum, não crie gráfico, devolva uma tabela no texto da resposta. Nunca reproduza dado de cliente final (CPF, e-mail, telefone, endereço): o relatório de clientes só tem ID, nome, pedidos e valor total, e você deve usar só agregados.\n\nFontes (rode Python com pandas/openpyxl, caminhos relativos à raiz do repositório):\n- clientes/verdeluz-teste/dados/historico-mensal.xlsx (12 meses, OUT a SET: investimento Meta e Google, receita captada e aprovada, sessões por origem, conversão, % de clientes novos, CAC)\n- clientes/verdeluz-teste/dados/produtos-curva-abc.xlsx\n- clientes/verdeluz-teste/dados/clientes-historico.xlsx (10.400 clientes únicos, pedidos por cliente)\n- Números já aprovados que você deve conferir contra a planilha antes de usá-los: investimento de R$ 262 mil no ano, receita captada de R$ 1,22 mi e aprovada de R$ 1,14 mi, perda por quebra de R$ 79,3 mil (quebra média de 6,3%, 6,5% ponderada), CAC de R$ 49,5 em OUT e R$ 112,7 em SET, 292 clientes novos em OUT e em SET, LTV histórico de R$ 311,7 (ticket por pedido R$ 191,8 vezes 1,63 pedidos por cliente), LTV/CAC de SET 2,77, CAC que daria 3x = R$ 103,9, 69% dos clientes com uma compra só (7.176 de 10.400), 3.823 clientes novos em 6.244 vendas no ano, sérum com cobertura de cerca de 7 dias, MAR e ABR com conversão de 1,05% e 1,00% e sessões de 38,8 mil e 40,4 mil.\nSe algum número não bater com a planilha, pare e diga qual e a diferença: não siga com ele.\n\nCalcule, para cada problema, um impacto principal com fórmula, premissa explícita e valor em R$ (por mês e por ano quando fizer sentido), e diga se ele se sobrepõe a algum dos outros (os impactos de P1 a P4 provavelmente se sobrepõem e não devem ser somados: aponte onde).\n\nP1 Eficiência da mídia paga. Solução: teto de CAC de R$ 103,9 (LTV/CAC 3x) e regra de pausa e escala. Calcule a economia mensal de investimento se o CAC de SET (R$ 112,7) cair ao teto de R$ 103,9, mantendo os 292 clientes novos de SET, e também se cair à média do período (R$ 71,9), como faixa. Informe o investimento de SET usado. Não proponha alocação de verba nem metas.\n\nP2 Ruptura do sérum. Calcule a receita captada que ficou de fora em MAR e ABR por conversão abaixo da normal: sessões do mês vezes (conversão média dos meses sem ruptura menos conversão do mês) vezes ticket médio do mês (ou receita por sessão), e informe como definiu os meses de referência. Dê o valor por ocorrência e a ordem de grandeza anualizada se a ruptura se repetir uma vez por ano. Deixe claro que é estimativa de receita em risco e que conversão foi a única causa assumida.\n\nP3 Recompra e CRM. Hoje 31% da base recompra (3.224 de 10.400) e esses geram 57,5% da receita. Não invente uma meta de recompra: calcule a sensibilidade, isto é, o valor em R$ de cada +1 ponto percentual de clientes de compra única que passam a fazer um segundo pedido, usando como base os clientes novos do ano (3.823) e o ticket por pedido de R$ 191,8 (receita bruta, não margem). Dê também o valor se esse aumento fosse de 3 e de 5 pontos percentuais, como exemplos rotulados como premissa, não como previsão.\n\nP4 Quebra de pagamento. Calcule a receita aprovada recuperável se a quebra média baixar da média atual para o teto de 5% (benchmark de até 5%), usando a receita captada do ano, e também o ganho se baixar só até a metade do caminho (5,65%). Confira a fórmula contra os R$ 79,3 mil de perda. Informe o equivalente em meses de investimento em mídia (receita recuperada / investimento mensal médio, ou perda / investimento mensal médio).\n\nEntrega: para cada problema, uma linha com valor, fórmula, premissas e a conferência dos números de partida contra a planilha. Português do Brasil, sem travessão no meio das frases."
+            }
+          }
+        },
+        {
+          "dtMs": 5221,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_01FRnMsweiVtLeam5zGW7HUT",
+            "nome": "TaskUpdate",
+            "entrada": {
+              "taskId": "2",
+              "status": "completed"
+            }
+          }
+        },
+        {
+          "dtMs": 295,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_01CYLVMsMVgLUYRhMU13MNKi",
+            "nome": "TaskUpdate",
+            "entrada": {
+              "taskId": "3",
+              "status": "in_progress"
+            }
+          }
+        },
+        {
+          "dtMs": 25867,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_01RT6aXUvmDhJ2yS2DyFdk9x",
+            "nome": "Write",
+            "entrada": {
+              "file_path": "/Users/matheus/Documents/Claude/Projetos Boomer/planejamento-estrategico-boomer-v2/.claude/worktrees/modo-ensaiado/clientes/verdeluz-teste/contexto/solucoes.json",
+              "content": "{\n  \"versao\": 1,\n  \"prospect\": \"Verdeluz Cosméticos Veganos\",\n  \"problemas\": [\n    {\n      \"id\": \"P1\",\n      \"tema\": \"eficiencia-midia\",\n      \"titulo\": \"Eficiência da mídia paga em queda\",\n      \"origem\": \"03 · ROAS, custo por sessão, conversão e dependência; 04 · CAC e LTV/CAC\",\n      \"dado\": \"De OUT a SET o investimento subiu 127% (R$ 14,5 mil para R$ 32,9 mil) e a receita captada só 7,3%. ROAS global de 6,5x para 3,1x, Meta em 0,8x em SET (abaixo de 1x desde JUL) e conversão do Meta em 0,70%. CAC de R$ 49,5 para R$ 112,7, com os mesmos 292 clientes novos em OUT e SET. LTV/CAC de SET em 2,77. Dependência de mídia paga de 44,8% (JUN) para 54,7% (SET).\",\n      \"benchmark\": \"LTV/CAC: abaixo de 3 é ruim, de 3 a 5 normal, acima de 5 escala. Dependência de mídia paga: 45% a 60% (DTC consolidada). Conversão Meta de 1% a 2% e Google de 2% a 4%. Referência de mercado, fonte a confirmar. ROAS e CAC não têm faixa em benchmarks-kpi.md.\",\n      \"hipoteses\": [\n        { \"id\": \"H1\", \"texto\": \"O público pago está saturado: o investimento subiu 127% e os clientes novos ficaram estáveis em 292.\" },\n        { \"id\": \"H2\", \"texto\": \"O Meta traz tráfego frio sem qualificação: ROAS de 0,8x e conversão de 0,70% com 62% da verba.\" },\n        { \"id\": \"H3\", \"texto\": \"A verba cresce sem regra de parada: não há teto de CAC nem ROAS mínimo por plataforma.\" }\n      ],\n      \"solucoes\": [\n        { \"id\": \"P1.S1\", \"acao\": \"Adotar o CAC de R$ 103,9 (o que dá LTV/CAC de 3x) como teto, com ROAS mínimo por plataforma, para decidir escalar ou pausar a cada quinzena.\", \"hipotese\": \"H3\" },\n        { \"id\": \"P1.S2\", \"acao\": \"Separar no Meta a prospecção do remarketing, cada um com ROAS-alvo próprio, e cortar a prospecção que ficar abaixo de 1x.\", \"hipotese\": \"H2\" },\n        { \"id\": \"P1.S3\", \"acao\": \"Congelar o aumento de verba até o CAC voltar abaixo do teto e depois escalar em degraus, liberando o próximo só com o CAC dentro do teto.\", \"hipotese\": \"H1\" }\n      ],\n      \"impacto\": {\n        \"tipo\": \"R$\",\n        \"valor\": \"Economia de R$ 2,6 mil por mês no teto de R$ 103,9, até R$ 11,9 mil por mês se o CAC voltar à média do período (R$ 71,9)\",\n        \"calculo\": \"investimento de SET (R$ 32.901) menos 292 clientes novos vezes o CAC alvo; premissa: os mesmos 292 clientes novos. É custo evitado de mídia, não receita, e não se soma aos demais. Só SET passa do teto, por isso o ganho no teto é pequeno.\"\n      },\n      \"frente\": \"Mídia Paga / Canal Principal\"\n    },\n    {\n      \"id\": \"P2\",\n      \"tema\": \"ruptura-estoque\",\n      \"titulo\": \"Ruptura do sérum e concentração em três produtos\",\n      \"origem\": \"03 · Curva ABC e conexão dos KPIs\",\n      \"dado\": \"Sérum de vitamina C, hidratante gel-creme e protetor FPS 50 fazem 51% da receita. O sérum tem cerca de 7 dias de cobertura (hidratante cerca de 58 e protetor cerca de 70). Em MAR e ABR, com a ruptura citada no kickoff, a conversão foi de 1,05% e 1,00%, com sessões de 38,8 mil e 40,4 mil.\",\n      \"benchmark\": \"Cobertura de estoque não tem faixa em benchmarks-kpi.md. Referência do cliente: estoque de segurança de 60 dias para os três líderes, com prazo do laboratório de 45 dias. Conversão global de 1% a 2%: MAR e ABR ficaram na faixa, mas entre as menores do ano.\",\n      \"hipoteses\": [\n        { \"id\": \"H1\", \"texto\": \"O estoque é gerido sem ligação com a mídia: o anúncio segue rodando com o sérum perto de acabar.\" },\n        { \"id\": \"H2\", \"texto\": \"O prazo do laboratório é de 45 dias e o fornecedor de embalagem do sérum é único.\" },\n        { \"id\": \"H3\", \"texto\": \"Três produtos concentram 51% da receita e não há estoque de segurança definido para eles.\" }\n      ],\n      \"solucoes\": [\n        { \"id\": \"P2.S1\", \"acao\": \"Manter estoque de segurança de 60 dias para os três líderes, com ponto de reposição calculado pelo prazo de 45 dias do laboratório.\", \"hipotese\": \"H3\" },\n        { \"id\": \"P2.S2\", \"acao\": \"Qualificar um segundo fornecedor de embalagem para o sérum.\", \"hipotese\": \"H2\" },\n        { \"id\": \"P2.S3\", \"acao\": \"Criar a regra de pausa e reativação dos anúncios do produto líder por nível de cobertura, combinada entre expedição, gestor de tráfego e agência.\", \"hipotese\": \"H1\" }\n      ],\n      \"impacto\": {\n        \"tipo\": \"R$\",\n        \"valor\": \"Receita captada em risco de R$ 47 a 65 mil por ocorrência de ruptura (MAR R$ 29,9 mil e ABR R$ 35,3 mil na referência principal)\",\n        \"calculo\": \"sessões vezes (conversão de referência menos conversão do mês) vezes ticket do mês. Referência principal: média de 1,455% dos 10 meses sem ruptura (R$ 65,2 mil). Referência conservadora: 1,336%, sem NOV, DEZ e MAI (R$ 47,1 mil). Premissa: a conversão é a única causa. É um teto de leitura: em MAR as sessões subiram 27% por tráfego não pago e a conversão já vinha baixa em JAN e FEV (1,25%). Receita captada, antes da quebra.\"\n      },\n      \"frente\": \"Eficiência Operacional\"\n    },\n    {\n      \"id\": \"P3\",\n      \"tema\": \"recompra-crm\",\n      \"titulo\": \"Recompra e CRM sem régua de reposição\",\n      \"origem\": \"04 · Clientes novos vs recorrentes e LTV; 03 · Aquisição e dependência\",\n      \"dado\": \"69% dos clientes compraram uma vez só (7.176 de 10.400). Os 31% que recompram geram 57,5% da receita. Clientes novos são 58% a 64% das vendas e os recorrentes cresceram 28% de OUT a SET sem ação ativa. As sessões não pagas ficaram paradas em 16 mil a 19 mil por mês. O sérum dura cerca de 60 dias e o CRM tem um único fluxo (carrinho abandonado) e uma newsletter.\",\n      \"benchmark\": \"Compra única e ciclo de recompra por categoria estão na lista de pendentes de benchmarks-kpi.md, sem faixa. Referência de LTV/CAC: abaixo de 3 é ruim, e SET está em 2,77.\",\n      \"hipoteses\": [\n        { \"id\": \"H1\", \"texto\": \"Não existe lembrete de reposição, embora o sérum dure cerca de 60 dias.\" },\n        { \"id\": \"H2\", \"texto\": \"O CRM tem só um fluxo (carrinho abandonado) e uma newsletter, sem régua de pós-compra nem de reativação.\" },\n        { \"id\": \"H3\", \"texto\": \"O cupom de primeira compra atrai quem compra uma vez e não cria hábito de recompra.\" }\n      ],\n      \"solucoes\": [\n        { \"id\": \"P3.S1\", \"acao\": \"Criar a régua de reposição do sérum, com e-mail aos 45 dias da compra e reforço aos 60.\", \"hipotese\": \"H1\" },\n        { \"id\": \"P3.S2\", \"acao\": \"Ativar a reativação dos clientes de compra única aos 90 e aos 150 dias, com conteúdo de rotina e sem desconto.\", \"hipotese\": \"H2\" },\n        { \"id\": \"P3.S3\", \"acao\": \"Oferecer a reposição por WhatsApp só a quem der consentimento, começando pelos clientes de uma compra.\", \"hipotese\": \"H3\" }\n      ],\n      \"impacto\": {\n        \"tipo\": \"R$\",\n        \"valor\": \"R$ 7,3 mil de receita bruta por ponto percentual de clientes novos que fazem a segunda compra (+3 pontos: R$ 22,0 mil; +5 pontos: R$ 36,7 mil, como exemplos de premissa, não previsão)\",\n        \"calculo\": \"3.823 clientes novos do ano vezes 1% vezes 1 pedido extra vezes ticket de R$ 191,8. Premissas: cada cliente que recompra faz só um segundo pedido, o ticket segue o histórico e a conta é em receita, não em margem. Aplicado sobre os 7.176 de compra única seria R$ 13,8 mil por ponto. Mais recompra eleva o LTV e o teto de CAC do P1.\"\n      },\n      \"frente\": \"Redução de Dependências\"\n    },\n    {\n      \"id\": \"P4\",\n      \"tema\": \"quebra\",\n      \"titulo\": \"Quebra de pagamento acima do benchmark e em alta\",\n      \"origem\": \"03 · Macro financeiro (taxa de quebra)\",\n      \"dado\": \"Quebra média de 6,3% (6,5% ponderada), acima de 5% em 11 dos 12 meses. Perda de R$ 79,3 mil no ano (receita captada de R$ 1,22 mi contra R$ 1,14 mi aprovada). Pico de 7,9% em NOV e alta mês a mês desde JAN (5,5% para 7,1% em SET). Cartão recusado e PIX expirado não são medidos por meio de pagamento.\",\n      \"benchmark\": \"Quebra de até 5% (geral, fonte a confirmar). Quebra por PIX e por boleto aparece como pendente em benchmarks-kpi.md.\",\n      \"hipoteses\": [\n        { \"id\": \"H1\", \"texto\": \"Cartão recusado e antifraude estão barrando vendas legítimas.\" },\n        { \"id\": \"H2\", \"texto\": \"O PIX expira sem lembrete ao cliente.\" },\n        { \"id\": \"H3\", \"texto\": \"Não há medição da quebra por meio de pagamento, então a causa não aparece nos dados.\" }\n      ],\n      \"solucoes\": [\n        { \"id\": \"P4.S1\", \"acao\": \"Passar a medir a quebra por meio de pagamento (PIX, cartão e boleto) e por motivo de recusa.\", \"hipotese\": \"H3\" },\n        { \"id\": \"P4.S2\", \"acao\": \"Recuperar o PIX expirado com lembrete antes do vencimento e um novo QR enviado por e-mail ou WhatsApp.\", \"hipotese\": \"H2\" },\n        { \"id\": \"P4.S3\", \"acao\": \"Revisar com o gateway as regras de antifraude e a retentativa de cartão recusado.\", \"hipotese\": \"H1\" }\n      ],\n      \"impacto\": {\n        \"tipo\": \"R$\",\n        \"valor\": \"R$ 18,3 mil de receita aprovada por ano se a quebra cair de 6,5% para 5% (R$ 9,2 mil na metade do caminho, em 5,75%)\",\n        \"calculo\": \"(quebra ponderada de 6,5% menos 5%) vezes a receita captada de R$ 1.220.462. Conferido contra os R$ 79,3 mil de perda (6,5% da captada). Equivale a 0,84 mês de investimento em mídia. Premissa: só a parte da quebra que é recusa de pagamento é recuperável, e o arquivo não separa as causas. Não considera a receita extra de P2 e P3.\"\n      },\n      \"frente\": \"Eficiência Operacional\"\n    }\n  ],\n  \"pontos_fortes\": [\n    {\n      \"titulo\": \"Conversão global dentro da faixa\",\n      \"dado\": \"Média de 1,38% no ano, dentro da faixa de 1% a 2% em 11 dos 12 meses\",\n      \"uso\": \"Prova que o site converte e que o problema está na eficiência da mídia e nas pontas do funil, não na loja.\"\n    },\n    {\n      \"titulo\": \"Recorrentes valem mais\",\n      \"dado\": \"Os 31% de clientes que compram duas vezes ou mais geram 57,5% da receita\",\n      \"uso\": \"Sustenta a régua de reposição: cada segunda compra tem peso alto na receita.\"\n    },\n    {\n      \"titulo\": \"Prova social robusta\",\n      \"dado\": \"Mais de 900 avaliações no sérum, com cerca de 60% citando textura e resultado\",\n      \"uso\": \"Material pronto para campanhas de remarketing e conteúdo, sem depender de desconto.\"\n    },\n    {\n      \"titulo\": \"Margem bruta declarada\",\n      \"dado\": \"68% declarados pelo cliente (62% nos kits), ainda sem confirmação\",\n      \"uso\": \"Dá espaço para investir em CRM e estoque. Só vira argumento depois que a Luiza confirmar a margem por SKU.\"\n    }\n  ]\n}\n"
+            }
+          }
+        },
+        {
+          "dtMs": 1848,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_014v6iNFYMo34rt7tVdqTXdw",
+            "nome": "Bash",
+            "entrada": {
+              "command": "python3 scripts/validar_solucoes.py --modo registro --registro clientes/verdeluz-teste/contexto/solucoes.json --markdown clientes/verdeluz-teste/.app/rascunhos/solucoes.md",
+              "description": "Validar o registro e gerar a seção"
+            }
+          }
+        },
+        {
+          "dtMs": 2995,
+          "ferramenta": "propor_entregavel",
+          "entrada": {
+            "tipo": "secao",
+            "nome_final": "solucoes",
+            "caminho": "clientes/verdeluz-teste/.app/rascunhos/solucoes.md",
+            "titulo": "Soluções do diagnóstico (P1 a P4)",
+            "resumo": "Checklist da Regra 8:\n1. Problema com 1 a 3 soluções: atendido. 4 problemas, 12 soluções, validado em código sem erro.\n2. Hipótese antes da ação: atendido, de 3 hipóteses por problema. Confira se cada hipótese explica o dado.\n3. Impacto em R$: atendido nos 4 problemas. P1 é custo evitado de mídia e P2 é teto de leitura (conversão como única causa). P2, P3 e P4 se sobrepõem e não se somam.\nFora desta seção: P5 a P8 e a margem por SKU."
+          }
+        },
+        {
+          "dtMs": 980,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "Registro validado ("
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "4 problemas, 12"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " soluções). Estou"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " enviando a"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " seção para a"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " s"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ua aprovação."
+          }
+        },
+        {
+          "dtMs": 6,
+          "evento": {
+            "tipo": "texto",
+            "texto": "Registro validado (4 problemas, 12 soluções). Estou enviando a seção para a sua aprovação."
+          }
+        },
+        {
+          "dtMs": 711,
+          "ferramenta": "propor_entregavel",
+          "entrada": {
+            "tipo": "secao",
+            "nome_final": "solucoes",
+            "arquivo_rascunho": "1-solucoes.md",
+            "titulo": "Soluções do diagnóstico (P1 a P4)"
+          }
+        },
+        {
+          "dtMs": 955,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_01CaMQNqcHhHkA51g7He6qpQ",
+            "nome": "TaskUpdate",
+            "entrada": {
+              "taskId": "3",
+              "status": "completed"
+            }
+          }
+        },
+        {
+          "dtMs": 4103,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "A"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " seção de soluções ("
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "P1 a P4) está"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " no card para"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " a"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " sua aprovação. O"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " valid"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ador rodou sem erro"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " e s"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "em aviso: são"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " 4 problemas e "
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "12 soluções,"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " c"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ada u"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ma "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ligada a uma hipót"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ese.\n\nChecklist da"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Regra 8:\n1"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ". **1"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " a 3 soluções"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " por problema:** atendido"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ". Cada problema tem"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " 3."
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "\n2. **Hipót"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ese antes da ação:**"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " atendido,"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " com 3 hipóte"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ses por problema. Confira"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " se cada u"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ma explica o dado."
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "\n3. **Impacto em"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " R$:** atendido n"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "os 4 problemas."
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Estes são"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " os valores:\n   - **"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "P1:** R$ "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "2,6 mil por m"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ês de"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " economia de mídia, até"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " R$ 11,9 "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "mil se"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " o CAC voltar à"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " média. É custo evitado"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ", não receita.\n   -"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " **P2:** R$"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " 47 a 65 m"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "il de receita captada em"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " risco por ocorrência"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " de ruptura. É um"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " teto de leitura, por"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "que as sessões de"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " MAR e ABR sub"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "iram por tráfego não"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " pago e a conversão já"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " vinha baixa em J"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "AN e FEV."
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "\n   - **P3:** R"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "$ 7,3 m"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "il por"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " ponto percentual de rec"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ompra."
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "\n   - **P4:**"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " R$ 18,3 "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "mil por ano se"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " a quebra cair de"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " 6,5% para 5"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "%.\n   - **"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "Sobreposição:** P"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "2, P3 e P4"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " se sobrepõem"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " e não se somam."
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "\n\nFicam de"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " fora desta se"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ção P"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "5 a P8 e a"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " margem por SKU. A"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Luiza ainda não"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " en"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "viou a margem,"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " então nen"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "hum impacto está"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " em margem."
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Os"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " pontos fortes estão"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " no"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " registro, e"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " a margem bruta declar"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ada de"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " 68% está marcada como"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " sem confirmação."
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "\n\nDepois da"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " s"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ua decisão, s"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "igo para o"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " f"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "echamento da etapa."
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto",
+            "texto": "A seção de soluções (P1 a P4) está no card para a sua aprovação. O validador rodou sem erro e sem aviso: são 4 problemas e 12 soluções, cada uma ligada a uma hipótese.\n\nChecklist da Regra 8:\n1. **1 a 3 soluções por problema:** atendido. Cada problema tem 3.\n2. **Hipótese antes da ação:** atendido, com 3 hipóteses por problema. Confira se cada uma explica o dado.\n3. **Impacto em R$:** atendido nos 4 problemas. Estes são os valores:\n   - **P1:** R$ 2,6 mil por mês de economia de mídia, até R$ 11,9 mil se o CAC voltar à média. É custo evitado, não receita.\n   - **P2:** R$ 47 a 65 mil de receita captada em risco por ocorrência de ruptura. É um teto de leitura, porque as sessões de MAR e ABR subiram por tráfego não pago e a conversão já vinha baixa em JAN e FEV.\n   - **P3:** R$ 7,3 mil por ponto percentual de recompra.\n   - **P4:** R$ 18,3 mil por ano se a quebra cair de 6,5% para 5%.\n   - **Sobreposição:** P2, P3 e P4 se sobrepõem e não se somam.\n\nFicam de fora desta seção P5 a P8 e a margem por SKU. A Luiza ainda não enviou a margem, então nenhum impacto está em margem. Os pontos fortes estão no registro, e a margem bruta declarada de 68% está marcada como sem confirmação.\n\nDepois da sua decisão, sigo para o fechamento da etapa."
+          }
+        }
+      ]
+    },
+    {
+      "gatilho": "aprovar",
+      "textoPreenchido": null,
+      "passos": [
+        {
+          "dtMs": 1170,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_01FnrMdFKeTRu3ezE8uKY9tM",
+            "nome": "TaskUpdate",
+            "entrada": {
+              "taskId": "4",
+              "status": "in_progress"
+            }
+          }
+        },
+        {
+          "dtMs": 13665,
+          "ferramenta": "sinalizar_etapa_pronta",
+          "entrada": {
+            "resumo_decisoes": "# 05 · Soluções: Verdeluz Cosméticos Veganos\n\nSeção `solucoes` aprovada pelo analista. Registro validado em código (`validar_solucoes.py --modo registro`): 4 problemas, 12 soluções, sem erro e sem aviso. Nenhuma meta, cenário, alocação de verba ou calendário foi proposto.\n\n## Escopo e escolhas do analista\n- Lista levantada com 8 problemas (P1 a P8). O analista escolheu trabalhar só **P1 a P4** nesta etapa.\n- **Ficaram de fora:** P5 Conversão e funil, P6 Black Friday e desconto, P7 Mensuração, P8 Mix e catálogo. Não estão no registro nem na seção aprovada.\n- Prioridade confirmada: P1, P2, P3, P4.\n- Hipóteses e soluções aprovadas sem troca. Impactos calculados pelo `analista-dados`, com os números de partida conferidos contra as planilhas.\n- O que o cliente já tentou (kickoff): cupom PRIMEIRA10, um e-mail de carrinho abandonado, microinfluenciadoras sem medição e aumento de verba. Nada disso resolveu, e nenhuma solução foi descartada por tentativa anterior.\n\n## Problemas, soluções e impactos\n\n### P1 Eficiência da mídia paga (frente Mídia Paga / Canal Principal)\n- Dado: investimento +127% e receita +7,3% de OUT a SET. ROAS global de 6,5x para 3,1x, CAC de R$ 49,5 para R$ 112,7, LTV/CAC de 2,77.\n- Soluções:\n  - P1.S1 Teto de CAC de R$ 103,9 (LTV/CAC 3x) e ROAS mínimo por plataforma, para escalar ou pausar a cada quinzena.\n  - P1.S2 Separar prospecção e remarketing no Meta, com ROAS-alvo próprio, e cortar a prospecção abaixo de 1x.\n  - P1.S3 Congelar o aumento de verba até o CAC voltar ao teto e escalar em degraus.\n- Impacto: economia de R$ 2,6 mil por mês no teto, até R$ 11,9 mil por mês na média do período (R$ 71,9). Custo evitado de mídia, não receita.\n\n### P2 Ruptura do sérum e concentração em 3 produtos (frente Eficiência Operacional)\n- Dado: três produtos fazem 51% da receita, o sérum tem cerca de 7 dias de cobertura, e MAR e ABR tiveram conversão de 1,05% e 1,00%.\n- Soluções:\n  - P2.S1 Estoque de segurança de 60 dias para os três líderes, com ponto de reposição pelo prazo de 45 dias do laboratório.\n  - P2.S2 Qualificar um segundo fornecedor de embalagem do sérum.\n  - P2.S3 Regra de pausa e reativação dos anúncios do líder por nível de cobertura.\n- Impacto: R$ 47 a 65 mil de receita captada em risco por ocorrência (referência principal R$ 65,2 mil). É teto de leitura: as sessões de MAR subiram 27% por tráfego não pago e a conversão já estava baixa em JAN e FEV.\n\n### P3 Recompra e CRM (frente Redução de Dependências)\n- Dado: 69% dos clientes compraram uma vez só e os 31% recorrentes geram 57,5% da receita. Não há régua de reposição.\n- Soluções:\n  - P3.S1 Régua de reposição do sérum aos 45 e aos 60 dias.\n  - P3.S2 Reativação de clientes de compra única aos 90 e 150 dias, sem desconto.\n  - P3.S3 Reposição por WhatsApp só com consentimento.\n- Impacto: R$ 7,3 mil de receita bruta por ponto percentual de clientes novos que recompram (+3 pontos: R$ 22,0 mil; +5 pontos: R$ 36,7 mil, como premissa). Base de 3.823 clientes novos, ticket de R$ 191,8, receita e não margem.\n\n### P4 Quebra de pagamento (frente Eficiência Operacional)\n- Dado: quebra média de 6,3% (6,5% ponderada), acima de 5% em 11 dos 12 meses, perda de R$ 79,3 mil.\n- Soluções:\n  - P4.S1 Medir a quebra por meio de pagamento e por motivo de recusa.\n  - P4.S2 Recuperar PIX expirado com lembrete e novo QR.\n  - P4.S3 Revisar antifraude e retentativa de cartão com o gateway.\n- Impacto: R$ 18,3 mil de receita aprovada por ano se a quebra cair de 6,5% para 5% (R$ 9,2 mil na metade do caminho). Equivale a 0,84 mês de mídia. Só a parte que é recusa de pagamento é recuperável.\n\n## Ressalvas sobre os impactos\n- P1 é custo evitado e não se soma aos demais, que são receita.\n- P2, P3 e P4 se sobrepõem: a receita extra de P2 e P3 também sofre a quebra, e o P4 foi calculado só sobre a receita atual. Não somar.\n- Mais recompra (P3) eleva o LTV e o teto de CAC do P1.\n- Tudo em receita bruta: nenhum impacto está em margem, porque a margem por SKU não foi confirmada.\n\n## Pontos fortes (argumento do plano)\n- Conversão global de 1,38%, dentro da faixa de 1% a 2% em 11 dos 12 meses.\n- Os 31% de clientes recorrentes geram 57,5% da receita.\n- Prova social robusta (mais de 900 avaliações no sérum, cerca de 60% citando textura e resultado).\n- Margem bruta declarada de 68% (62% nos kits), sem confirmação até a Luiza enviar a margem por SKU.\n\n## Pontos em aberto\n- P5 a P8 sem solução registrada. Se o plano precisar cobri-los, a etapa 05 teria que ser reaberta.\n- Margem por SKU da Curva A (a Luiza envia) para refazer LTV/CAC e os impactos em margem.\n- Quebra por meio de pagamento não veio nos dados (P4.S1 existe para medir isso).\n- Período do relatório de produtos não informado, e a cobertura de 7 dias do sérum supõe 12 meses.",
+            "handoff": "Nesta sessão, cada problema escolhido (P1 a P4) ganhou hipóteses, soluções e impacto em R$. P5 a P8 ficaram fora do registro. Não preciso de arquivo novo: só pensa numa meta clara (qual número, em quanto tempo) e tenha em mente a receita do ano passado e alguma sazonalidade importante do negócio, porque vou te perguntar isso logo no início da próxima etapa. As soluções com impacto vão virar alavancas dos cenários.\n\nQuando estiver pronto, rode `/06-metas-e-cenarios`."
+          }
+        },
+        {
+          "dtMs": 1051,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "Só"
+          }
+        },
+        {
+          "dtMs": 2,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " o n"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ome do campo do"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " handoff estava errado."
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Re"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "envio com o nome corre"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "to."
+          }
+        },
+        {
+          "dtMs": 5,
+          "evento": {
+            "tipo": "texto",
+            "texto": "Só o nome do campo do handoff estava errado. Reenvio com o nome correto."
+          }
+        },
+        {
+          "dtMs": 11311,
+          "ferramenta": "sinalizar_etapa_pronta",
+          "entrada": {
+            "resumo_decisoes": "# 05 · Soluções: Verdeluz Cosméticos Veganos\n\nSeção `solucoes` aprovada pelo analista. Registro validado em código (`validar_solucoes.py --modo registro`): 4 problemas, 12 soluções, sem erro e sem aviso. Nenhuma meta, cenário, alocação de verba ou calendário foi proposto.\n\n## Escopo e escolhas do analista\n- Lista levantada com 8 problemas (P1 a P8). O analista escolheu trabalhar só **P1 a P4** nesta etapa.\n- **Ficaram de fora:** P5 Conversão e funil, P6 Black Friday e desconto, P7 Mensuração, P8 Mix e catálogo. Não estão no registro nem na seção aprovada.\n- Prioridade confirmada: P1, P2, P3, P4.\n- Hipóteses e soluções aprovadas sem troca. Impactos calculados pelo `analista-dados`, com os números de partida conferidos contra as planilhas.\n- O que o cliente já tentou (kickoff): cupom PRIMEIRA10, um e-mail de carrinho abandonado, microinfluenciadoras sem medição e aumento de verba. Nada disso resolveu, e nenhuma solução foi descartada por tentativa anterior.\n\n## Problemas, soluções e impactos\n\n### P1 Eficiência da mídia paga (frente Mídia Paga / Canal Principal)\n- Dado: investimento +127% e receita +7,3% de OUT a SET. ROAS global de 6,5x para 3,1x, CAC de R$ 49,5 para R$ 112,7, LTV/CAC de 2,77.\n- Soluções:\n  - P1.S1 Teto de CAC de R$ 103,9 (LTV/CAC 3x) e ROAS mínimo por plataforma, para escalar ou pausar a cada quinzena.\n  - P1.S2 Separar prospecção e remarketing no Meta, com ROAS-alvo próprio, e cortar a prospecção abaixo de 1x.\n  - P1.S3 Congelar o aumento de verba até o CAC voltar ao teto e escalar em degraus.\n- Impacto: economia de R$ 2,6 mil por mês no teto, até R$ 11,9 mil por mês na média do período (R$ 71,9). Custo evitado de mídia, não receita.\n\n### P2 Ruptura do sérum e concentração em 3 produtos (frente Eficiência Operacional)\n- Dado: três produtos fazem 51% da receita, o sérum tem cerca de 7 dias de cobertura, e MAR e ABR tiveram conversão de 1,05% e 1,00%.\n- Soluções:\n  - P2.S1 Estoque de segurança de 60 dias para os três líderes, com ponto de reposição pelo prazo de 45 dias do laboratório.\n  - P2.S2 Qualificar um segundo fornecedor de embalagem do sérum.\n  - P2.S3 Regra de pausa e reativação dos anúncios do líder por nível de cobertura.\n- Impacto: R$ 47 a 65 mil de receita captada em risco por ocorrência (referência principal R$ 65,2 mil). É teto de leitura: as sessões de MAR subiram 27% por tráfego não pago e a conversão já estava baixa em JAN e FEV.\n\n### P3 Recompra e CRM (frente Redução de Dependências)\n- Dado: 69% dos clientes compraram uma vez só e os 31% recorrentes geram 57,5% da receita. Não há régua de reposição.\n- Soluções:\n  - P3.S1 Régua de reposição do sérum aos 45 e aos 60 dias.\n  - P3.S2 Reativação de clientes de compra única aos 90 e 150 dias, sem desconto.\n  - P3.S3 Reposição por WhatsApp só com consentimento.\n- Impacto: R$ 7,3 mil de receita bruta por ponto percentual de clientes novos que recompram (+3 pontos: R$ 22,0 mil; +5 pontos: R$ 36,7 mil, como premissa). Base de 3.823 clientes novos, ticket de R$ 191,8, receita e não margem.\n\n### P4 Quebra de pagamento (frente Eficiência Operacional)\n- Dado: quebra média de 6,3% (6,5% ponderada), acima de 5% em 11 dos 12 meses, perda de R$ 79,3 mil.\n- Soluções:\n  - P4.S1 Medir a quebra por meio de pagamento e por motivo de recusa.\n  - P4.S2 Recuperar PIX expirado com lembrete e novo QR.\n  - P4.S3 Revisar antifraude e retentativa de cartão com o gateway.\n- Impacto: R$ 18,3 mil de receita aprovada por ano se a quebra cair de 6,5% para 5% (R$ 9,2 mil na metade do caminho). Equivale a 0,84 mês de mídia. Só a parte que é recusa de pagamento é recuperável.\n\n## Ressalvas sobre os impactos\n- P1 é custo evitado e não se soma aos demais, que são receita.\n- P2, P3 e P4 se sobrepõem: a receita extra de P2 e P3 também sofre a quebra, e o P4 foi calculado só sobre a receita atual. Não somar.\n- Mais recompra (P3) eleva o LTV e o teto de CAC do P1.\n- Tudo em receita bruta: nenhum impacto está em margem, porque a margem por SKU não foi confirmada.\n\n## Pontos fortes (argumento do plano)\n- Conversão global de 1,38%, dentro da faixa de 1% a 2% em 11 dos 12 meses.\n- Os 31% de clientes recorrentes geram 57,5% da receita.\n- Prova social robusta (mais de 900 avaliações no sérum, cerca de 60% citando textura e resultado).\n- Margem bruta declarada de 68% (62% nos kits), sem confirmação até a Luiza enviar a margem por SKU.\n\n## Pontos em aberto\n- P5 a P8 sem solução registrada. Se o plano precisar cobri-los, a etapa 05 teria que ser reaberta.\n- Margem por SKU da Curva A (a Luiza envia) para refazer LTV/CAC e os impactos em margem.\n- Quebra por meio de pagamento não veio nos dados (P4.S1 existe para medir isso).\n- Período do relatório de produtos não informado, e a cobertura de 7 dias do sérum supõe 12 meses.",
+            "handoff_proxima": "Nesta sessão, cada problema escolhido (P1 a P4) ganhou hipóteses, soluções e impacto em R$. P5 a P8 ficaram fora do registro. Não preciso de arquivo novo: só pensa numa meta clara (qual número, em quanto tempo) e tenha em mente a receita do ano passado e alguma sazonalidade importante do negócio, porque vou te perguntar isso logo no início da próxima etapa. As soluções com impacto vão virar alavancas dos cenários.\n\nQuando estiver pronto, rode `/06-metas-e-cenarios`."
+          }
+        },
+        {
+          "dtMs": 1107,
+          "evento": {
+            "tipo": "ferramenta",
+            "id": "toolu_017BNwV3CzEy4LoAXrNiZ9EV",
+            "nome": "TaskUpdate",
+            "entrada": {
+              "taskId": "4",
+              "status": "completed"
+            }
+          }
+        },
+        {
+          "dtMs": 3021,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "Nesta sessão,"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " os"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " problemas P"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "1 a P4 gan"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "haram hipóteses,"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " soluções e impacto em"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " R$. A seção está"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " aprovada e o res"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "umo fo"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "i enviado para o"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " app. Fal"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ta você"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " clicar em Concluir"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ".\n\nO que f"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ica regist"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "rado como"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " ress"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "alva:\n- **"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "P5 a P8 "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ficaram fora:** con"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "versão e funil, Black"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " Friday e"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " desconto, mensuração"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " e mix de"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " catálogo não"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " têm solução no"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " registro. Se o"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " plano precisar de"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "les, a etapa 05"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " t"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "em que ser rea"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "berta.\n- **Imp"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "actos não se"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " somam:** P2"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ", P3 e P4 "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "se sobrepõem."
+          }
+        },
+        {
+          "dtMs": 11,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " O P1 é custo ev"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "itado de mídia, não"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " receita.\n- **Marg"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "em por"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " SKU pendente:**"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " tod"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "os os impactos estão em"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " receita bruta até"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " a Luiza enviar"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " a margem da Curva A"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": ".\n\nPara a próxima"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " etapa não preciso de"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " arquivo. P"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ens"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "a numa meta clara ("
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "qual número, em quanto"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " tempo) e tenha"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " em mente a receita do "
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ano passado e alguma s"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "azonalidade importante do"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " negócio. Vou per"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "guntar isso logo no"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " início."
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " As soluções com impacto"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " vi"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ram alavancas d"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "os cenários.\n\nQu"
+          }
+        },
+        {
+          "dtMs": 1,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "ando estiver pronto,"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": " rode `/06-metas"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "-e-cenarios`"
+          }
+        },
+        {
+          "dtMs": 0,
+          "evento": {
+            "tipo": "texto_delta",
+            "texto": "."
+          }
+        },
+        {
+          "dtMs": 8,
+          "evento": {
+            "tipo": "texto",
+            "texto": "Nesta sessão, os problemas P1 a P4 ganharam hipóteses, soluções e impacto em R$. A seção está aprovada e o resumo foi enviado para o app. Falta você clicar em Concluir.\n\nO que fica registrado como ressalva:\n- **P5 a P8 ficaram fora:** conversão e funil, Black Friday e desconto, mensuração e mix de catálogo não têm solução no registro. Se o plano precisar deles, a etapa 05 tem que ser reaberta.\n- **Impactos não se somam:** P2, P3 e P4 se sobrepõem. O P1 é custo evitado de mídia, não receita.\n- **Margem por SKU pendente:** todos os impactos estão em receita bruta até a Luiza enviar a margem da Curva A.\n\nPara a próxima etapa não preciso de arquivo. Pensa numa meta clara (qual número, em quanto tempo) e tenha em mente a receita do ano passado e alguma sazonalidade importante do negócio. Vou perguntar isso logo no início. As soluções com impacto viram alavancas dos cenários.\n\nQuando estiver pronto, rode `/06-metas-e-cenarios`."
+          }
+        }
+      ]
+    }
+  ]
+}
