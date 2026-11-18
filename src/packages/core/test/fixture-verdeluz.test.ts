@@ -113,7 +113,10 @@ describe("fixture real da Verdeluz", () => {
       ["clientes-historico", "dados/clientes-historico.xlsx"],
     ]
     for (const [id, rel] of insumos) {
-      const saida = execFileSync("python3", [path.join(RAIZ, "scripts/validar_insumo.py"), "--insumo", id, "--arquivo", caminhoNaBase(fixture, rel)], { encoding: "utf8" })
+      // O kit tem o layout antigo do histórico mensal, não o do modelo oficial em modelos-insumo/: aponta o
+      // validador para uma pasta sem modelos, para conferir só o formato básico.
+      const semModelos = path.join(RAIZ, "clientes/_fixtures/_sem-modelos")
+      const saida = execFileSync("python3", [path.join(RAIZ, "scripts/validar_insumo.py"), "--insumo", id, "--arquivo", caminhoNaBase(fixture, rel), "--modelos", semModelos], { encoding: "utf8" })
       const r = JSON.parse(saida) as { ok: boolean; problemas: string[] }
       expect(r.ok, `${id}: ${r.problemas.join("; ")}`).toBe(true)
     }

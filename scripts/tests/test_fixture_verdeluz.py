@@ -27,8 +27,12 @@ def perto(valor: float, alvo: float, tol: float = TOL) -> bool:
 
 
 def validar(insumo: str, arquivo: Path) -> dict:
+    # O fixture tem o layout antigo do histórico mensal, não o do modelo oficial em modelos-insumo/;
+    # aqui só confere o formato básico (DATA e 12 meses), por isso aponta para uma pasta sem modelos.
+    sem_modelos = arquivo.parent / "_sem-modelos"
     saida = subprocess.run(
-        [sys.executable, str(RAIZ / "scripts/validar_insumo.py"), "--insumo", insumo, "--arquivo", str(arquivo)],
+        [sys.executable, str(RAIZ / "scripts/validar_insumo.py"), "--insumo", insumo, "--arquivo", str(arquivo),
+         "--modelos", str(sem_modelos)],
         capture_output=True, text=True, check=True,
     ).stdout
     return json.loads(saida)
