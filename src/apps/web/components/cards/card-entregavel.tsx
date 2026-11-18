@@ -33,7 +33,7 @@ export const ROTULO_STATUS_ENTREGAVEL: Record<StatusEntregavel, string> = { pend
 
 /** `anterior`: a versão anterior do mesmo entregável (null na primeira); o roteiro a usa para mostrar só o que mudou. */
 export function CardEntregavel({ slug, entregavel: e, anterior = null }: { slug: string; entregavel: Entregavel; anterior?: Entregavel | null }) {
-  const { abrir, abrirSecao, abrirPlanilha, abrirArquivo, mencionar } = useVisualizador()
+  const { abrir, abrirSecao, abrirPlanilha, mencionar } = useVisualizador()
   const [ocupado, setOcupado] = useState(false)
   const [ampliado, setAmpliado] = useState(false)
   const refs = useReferencias(etapaDaConversa(e))
@@ -114,7 +114,7 @@ export function CardEntregavel({ slug, entregavel: e, anterior = null }: { slug:
                   ? () => abrirSecao(e.etapa, e.nomeFinal)
                   : e.tipo === "planilha"
                     ? () => abrirPlanilha(e.etapa, e.nomeFinal)
-                    : () => abrirArquivo(e.arquivoRascunho)
+                    : undefined
             }
           />
         )}

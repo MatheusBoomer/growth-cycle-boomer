@@ -14,6 +14,9 @@ describe("card de entregável", () => {
     expect(fonte).toMatch(/aoAmpliar=\{ehImagem \? \(\) => setAmpliado\(true\) : undefined\}/)
     expect(fonte).toMatch(/\{ehImagem && \(\s*<ModalGrafico/)
   })
+  it("não sobrou o atalho que abria gráfico e tabela na coluna 3 (agora é o modal)", () => {
+    expect(fonte).not.toContain("abrirArquivo")
+  })
   it("o modal usa as mesmas regras do card: aprovar devolve se deu certo e o ajuste pendente trava o Aprovar", () => {
     expect(fonte).toMatch(/async function aprovar\(\): Promise<boolean>/)
     expect(fonte).toMatch(/aprovarDesabilitado=\{aguardandoNovaVersao\}/)
