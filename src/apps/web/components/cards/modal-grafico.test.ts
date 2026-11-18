@@ -95,3 +95,56 @@ describe("ModalGrafico", () => {
     expect(document.body.querySelector("img")).toBeNull()
   })
 })
+
+describe("ModalGrafico: foco ao fechar", () => {
+  // Como no card: o botão "Ampliar" que abriu o modal some quando o ajuste é pedido (a prévia dá lugar ao marcador), e o
+  // foco deve ir para o campo de mensagem, onde o pedido é escrito, em vez de cair no corpo da página.
+  async function montarComPai() {
+    const { useState } = await import("react")
+    function Pai() {
+      const [aberto, setAberto] = useState(false)
+      const [ajustando, setAjustando] = useState(false)
+      return createElement(
+        "div",
+        null,
+        !ajustando && createElement("button", { id: "ampliar", onClick: () => setAberto(true) }, "Ampliar"),
+        createElement("textarea", { id: "mensagem" }),
+        createElement(ModalGrafico, {
+          aberto,
+          aoMudarAberto: setAberto,
+          titulo: "ROAS",
+          urlImagem: "/a.png",
+          urlDownload: "/a.png?baixar=1",
+          pendente: true,
+          aprovarDesabilitado: false,
+          ocupado: false,
+          aoAprovar: async () => true,
+          aoPedirAjuste: () => setAjustando(true),
+          focoAoPedirAjuste: () => document.getElementById("mensagem"),
+        }),
+      )
+    }
+    raiz = document.createElement("div")
+    document.body.append(raiz)
+    r = createRoot(raiz)
+    await act(async () => r.render(createElement(Pai)))
+    const ampliar = document.getElementById("ampliar")!
+    ampliar.focus()
+    await act(async () => ampliar.click())
+  }
+  const esperar = () => act(async () => void (await new Promise((resolver) => setTimeout(resolver, 50))))
+
+  it("Pedir ajuste leva o foco para o campo de mensagem, mesmo com o botão que abriu o modal já desmontado", async () => {
+    await montarComPai()
+    await act(async () => botao("Pedir ajuste")!.click())
+    await esperar()
+    expect(document.activeElement).toBe(document.getElementById("mensagem"))
+  })
+
+  it("fechar sem pedir ajuste devolve o foco ao botão que abriu o modal", async () => {
+    await montarComPai()
+    await act(async () => document.body.querySelector<HTMLElement>('[data-slot="dialog-close"]')!.click())
+    await esperar()
+    expect(document.activeElement).toBe(document.getElementById("ampliar"))
+  })
+})

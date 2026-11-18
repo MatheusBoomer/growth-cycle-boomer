@@ -1,6 +1,7 @@
 "use client"
 
 import { CheckIcon, DownloadIcon, ExternalLinkIcon } from "lucide-react"
+import { useEffect, useRef } from "react"
 import { Button } from "@workspace/ui/components/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@workspace/ui/components/dialog"
 import { Spinner } from "@workspace/ui/components/spinner"
@@ -21,6 +22,7 @@ export function ModalGrafico({
   ocupado,
   aoAprovar,
   aoPedirAjuste,
+  focoAoPedirAjuste,
 }: {
   aberto: boolean
   aoMudarAberto: (aberto: boolean) => void
@@ -34,18 +36,31 @@ export function ModalGrafico({
   /** Devolve `true` se aprovou; o modal só fecha nesse caso (com erro, o card já mostrou o aviso). */
   aoAprovar: () => Promise<boolean>
   aoPedirAjuste: () => void
+  /**
+   * Para onde o foco vai depois de "Pedir ajuste…": a prévia que abriu o modal é desmontada (dá lugar ao marcador),
+   * então não há botão para devolver o foco e ele cairia no corpo da página. Sem isto vale o comportamento padrão.
+   */
+  focoAoPedirAjuste?: () => HTMLElement | null
 }) {
+  const pediuAjuste = useRef(false)
+  useEffect(() => {
+    if (aberto) pediuAjuste.current = false
+  }, [aberto])
   async function aprovar() {
     if (await aoAprovar()) aoMudarAberto(false)
   }
   function pedirAjuste() {
+    pediuAjuste.current = true
     aoPedirAjuste()
     aoMudarAberto(false)
   }
 
   return (
     <Dialog open={aberto} onOpenChange={aoMudarAberto}>
-      <DialogContent className="h-[92vh] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-[min(96vw,1500px)]">
+      <DialogContent
+        finalFocus={() => (pediuAjuste.current ? (focoAoPedirAjuste?.() ?? true) : true)}
+        className="h-[92vh] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-[min(96vw,1500px)]"
+      >
         <div className="flex flex-wrap items-center gap-2 border-b py-2 pr-12 pl-4">
           <DialogTitle className="mr-2 min-w-0 flex-1 truncate font-serif text-base font-normal italic">{titulo}</DialogTitle>
           <DialogDescription className="sr-only">Imagem ampliada do entregável.</DialogDescription>

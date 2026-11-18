@@ -13,6 +13,7 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
 import { useVisualizador } from "@/components/trabalho/contexto-visualizador"
 import { api, mensagemDeErro, urlArquivo } from "@/lib/api"
+import { ROTULO_CAMPO_MENSAGEM } from "@/components/chat/compositor"
 import { useReferencias } from "@/components/chat/contexto-referencias"
 import { numerar } from "@/lib/referencias"
 import { MarcadorImagem } from "./marcador-imagem"
@@ -166,6 +167,7 @@ export function CardEntregavel({ slug, entregavel: e, anterior = null }: { slug:
           ocupado={ocupado}
           aoAprovar={aprovar}
           aoPedirAjuste={pedirAjuste}
+          focoAoPedirAjuste={() => document.querySelector<HTMLElement>(`textarea[aria-label="${ROTULO_CAMPO_MENSAGEM}"]`)}
         />
       )}
     </Card>

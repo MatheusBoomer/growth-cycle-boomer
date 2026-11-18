@@ -37,6 +37,9 @@ interface AnexoCompositor {
   erro: string | null
 }
 
+/** Rótulo do campo de mensagem: quem precisa devolver o foco a ele (o modal do gráfico) o encontra por aqui. */
+export const ROTULO_CAMPO_MENSAGEM = "Mensagem para o agente"
+
 export function Compositor({
   slug,
   etapa,
@@ -414,7 +417,7 @@ export function Compositor({
             placeholder="Responda ao agente…"
             disabled={desabilitado}
             rows={1}
-            aria-label="Mensagem para o agente"
+            aria-label={ROTULO_CAMPO_MENSAGEM}
             // Dentro da pílula do compositor: sem borda nem fundo próprios (o brilho do foco fica na pílula).
             className="max-h-50 min-h-8 flex-1 resize-none border-0 bg-transparent px-1 py-[5px] text-[15px] leading-[22px] shadow-none focus-visible:ring-0 md:text-[15px] dark:bg-transparent"
           />

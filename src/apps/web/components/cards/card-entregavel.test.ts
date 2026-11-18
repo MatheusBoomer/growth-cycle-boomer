@@ -23,5 +23,6 @@ describe("card de entregável", () => {
     expect(fonte).toContain("Disponível quando o agente gerar a nova versão com o ajuste")
     expect(fonte).toMatch(/aoAprovar=\{aprovar\}/)
     expect(fonte).toMatch(/aoPedirAjuste=\{pedirAjuste\}/)
+    expect(fonte).toMatch(/focoAoPedirAjuste=\{\(\) => document\.querySelector<HTMLElement>\(`textarea\[aria-label="\$\{ROTULO_CAMPO_MENSAGEM\}"\]`\)\}/)
   })
 })
