@@ -92,6 +92,22 @@ class TestJornada:
         assert lay.alinhar_jornada(slide) is False
         assert [(s.name, s.left, s.top, s.width, s.height) for s in slide.shapes] == antes
 
+    @pytest.mark.parametrize("defeito", ["uma_seta", "lista_sem_espacamento", "lista_sem_numeracao"])
+    def test_molde_fora_do_formato_devolve_false_sem_alterar_nada_nem_quebrar(self, defeito):
+        from lxml import etree
+
+        slide = molde_slide("jornada")
+        if defeito == "uma_seta":
+            for seta in setas(slide)[1:]:
+                seta._element.getparent().remove(seta._element)
+        else:
+            tag = "a:lnSpc" if defeito == "lista_sem_espacamento" else "a:buAutoNum"
+            for el in list(lista_original(slide)._element.iter(qn(tag))):
+                el.getparent().remove(el)
+        antes = etree.tostring(slide.shapes._spTree)
+        assert lay.alinhar_jornada(slide) is False
+        assert etree.tostring(slide.shapes._spTree) == antes
+
     def test_molde_inesperado_avisa_e_nao_quebra_a_geracao(self, tmp_path, prospect):
         molde = tmp_path / "molde-sem-setas.pptx"
         prs = Presentation(ga.CAMINHO_MOLDE)

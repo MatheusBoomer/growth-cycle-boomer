@@ -24,15 +24,39 @@ import apresentacao_pptx as ap
 ALTURA_ITEM_JORNADA = 420_000
 
 
+def _paragrafos(forma) -> List[object]:
+    """Parágrafos da forma, sem criar caixa de texto onde ela não existe (python-pptx cria ao ler `text_frame`)."""
+    corpo = forma._element.find(qn("p:txBody"))
+    return corpo.findall(qn("a:p")) if corpo is not None else []
+
+
 def _setas(slide) -> List[object]:
     """Setas azuis da jornada: auto-formas sem texto coladas na borda esquerda, de cima para baixo."""
-    achadas = [s for s in slide.shapes if s.shape_type == MSO_SHAPE_TYPE.AUTO_SHAPE and s.left == 0 and not s.text_frame.text.strip()]
+    achadas = [
+        s
+        for s in slide.shapes
+        if s.shape_type == MSO_SHAPE_TYPE.AUTO_SHAPE and s.left == 0 and not any((t.text or "").strip() for p in _paragrafos(s) for t in p.iter(qn("a:t")))
+    ]
     return sorted(achadas, key=lambda s: s.top)
 
 
+def _item_valido(paragrafo) -> bool:
+    """Parágrafo de lista numerada com espaçamento de linha em %: o que `alinhar_jornada` sabe reescrever."""
+    pPr = paragrafo.find(qn("a:pPr"))
+    return pPr is not None and pPr.find(qn("a:lnSpc") + "/" + qn("a:spcPct")) is not None and pPr.find(qn("a:buAutoNum")) is not None
+
+
 def _lista_da_jornada(slide, itens: int) -> Optional[object]:
-    """A caixa de texto com um parágrafo por item da jornada (a do título "JORNADA" tem só um)."""
-    return next((s for s in slide.shapes if s.has_text_frame and len(s.text_frame.paragraphs) == itens), None)
+    """A caixa de texto com um parágrafo numerado por item da jornada (a do título "JORNADA" não é numerada)."""
+    for forma in slide.shapes:
+        paragrafos = _paragrafos(forma)
+        if len(paragrafos) != itens or not all(_item_valido(p) for p in paragrafos):
+            continue
+        sp = forma._element
+        if sp.find(qn("p:spPr") + "/" + qn("a:xfrm") + "/" + qn("a:off")) is not None and sp.find(qn("p:spPr") + "/" + qn("a:xfrm") + "/" + qn("a:ext")) is not None \
+                and sp.find(qn("p:txBody") + "/" + qn("a:bodyPr")) is not None and sp.find(".//" + qn("p:cNvPr")) is not None:
+            return forma
+    return None
 
 
 def alinhar_jornada(slide) -> bool:
