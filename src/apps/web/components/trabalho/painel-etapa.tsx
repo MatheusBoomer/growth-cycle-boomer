@@ -189,7 +189,8 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
         {(estadoEtapa.status === "em_andamento" || estadoEtapa.status === "pronta") && concluir === "pronto" && (
           <div className="surgir space-y-2.5">
             <p className="text-sucesso text-xs">✓ Tudo aprovado nesta etapa</p>
-            <Button className="w-full" disabled={ocupado !== null} onClick={() => executar("concluir", "")}>
+            {/* Rótulo longo ("… ir para 03 · Diagnóstico de performance →") quebra linha em vez de vazar da coluna. */}
+            <Button className="h-auto min-h-9 w-full py-2 text-center whitespace-normal text-balance" disabled={ocupado !== null} onClick={() => executar("concluir", "")}>
               {ocupado === "concluir" && <Spinner />}
               {rotuloProxima ? `Concluir etapa e ir para ${rotuloProxima} →` : "Concluir etapa"}
             </Button>

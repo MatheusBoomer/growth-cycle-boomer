@@ -59,5 +59,19 @@ describe("PainelEtapa: concluir só quando tudo estiver pronto", () => {
     expect(h).toContain("Tudo aprovado nesta etapa")
     expect(h).toContain("Concluir etapa e ir para 05 · Soluções")
   })
+
+  it("o botão de concluir deixa o rótulo longo quebrar linha em vez de vazar da coluna", () => {
+    const h = html([], true)
+    const botao = /<button([^>]*)>(?:(?!<\/button>)[\s\S])*Concluir etapa e ir para 05 · Soluções/.exec(h)?.[1] ?? ""
+    expect(botao).toMatch(/class="[^"]*\bwhitespace-normal\b/)
+    expect(botao).toMatch(/class="[^"]*\bh-auto\b/)
+    expect(botao).toMatch(/class="[^"]*\btext-balance\b/)
+  })
+})
+
+describe("PainelEtapa: altura da coluna", () => {
+  it("o aside ocupa a altura da coluna, para a área de entregáveis rolar em vez de ser cortada", () => {
+    expect(html([], true)).toMatch(/<aside[^>]*class="[^"]*\bh-full\b/)
+  })
 })
 
