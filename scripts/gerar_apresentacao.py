@@ -22,6 +22,7 @@ from typing import Dict, List, Tuple
 from pptx import Presentation
 
 import apresentacao_pptx as ap
+import layout_slides as lay
 import linhas_plano_acao as plano
 
 RAIZ = Path(__file__).resolve().parent.parent
@@ -164,6 +165,11 @@ def validar_roteiro(roteiro: dict, pasta_prospect: Path, tipos_do_molde: set) ->
 
 def _preencher(prs, slide, tipo: str, dados: dict, pasta: Path, numero: int, avisos: List[str]) -> None:
     c = ap.campos(slide)
+    if tipo == "jornada" and not lay.alinhar_jornada(slide):
+        avisos.append(f"Slide {numero} (jornada): o molde não tem a estrutura esperada; o alinhamento com as setas não foi aplicado.")
+    if tipo in lay.COLUNA_TEXTO:
+        # Antes de preencher: a imagem é encaixada na área que a forma tem neste momento.
+        lay.aplicar_coluna(prs, slide, tipo, pasta / dados["imagem"])
     if tipo == "desafio":
         ap.preencher_texto(c["titulo"], dados["titulo"])
         ap.preencher_bloco(c["esquerda"], f"**Problema:** {dados['problema']}", [f"Hipótese: {h}" for h in dados["hipoteses"]])

@@ -25,6 +25,45 @@ describe("layout ao abrir e fechar o visualizador", () => {
   })
 })
 
+describe("layout ao abrir o visualizador respeita o estado atual do painel lateral (coluna 3)", () => {
+  const soma = (l: Record<string, number>) => Object.values(l).reduce((t, v) => t + v, 0)
+  const recolhido = { trilha: 20, chat: 80, visualizador: 0, painel: 0 }
+  const salvoComPainel = { trilha: 10, chat: 30, visualizador: 40, painel: 20 }
+
+  it("painel recolhido continua recolhido, mesmo com layout salvo que o tinha aberto; a largura vai para o chat", () => {
+    const r = layoutParaVisualizador(recolhido, salvoComPainel, true, { recolhido: true, largura: 30 })
+    expect(r).toEqual({ trilha: 10, chat: 50, visualizador: 40, painel: 0 })
+    expect(soma(r)).toBe(100)
+  })
+
+  it("painel recolhido, sem layout salvo: abre o visualizador e o painel segue recolhido", () => {
+    const r = layoutParaVisualizador(recolhido, null, true, { recolhido: true, largura: 30 })
+    expect(r.painel).toBe(0)
+    expect(r.visualizador).toBe(50)
+    expect(soma(r)).toBeCloseTo(100)
+  })
+
+  it("painel aberto continua aberto, mesmo com layout salvo que o tinha recolhido", () => {
+    const salvoSemPainel = { trilha: 20, chat: 40, visualizador: 40, painel: 0 }
+    const r = layoutParaVisualizador(fechado, salvoSemPainel, true, { recolhido: false, largura: 22 })
+    expect(r.painel).toBe(22)
+    expect(Object.values(r).every((v) => v >= 0)).toBe(true)
+    expect(soma(r)).toBeCloseTo(100)
+  })
+
+  it("painel aberto e layout salvo que já o tem aberto: devolve o salvo, sem alteração", () => {
+    expect(layoutParaVisualizador(fechado, salvoComPainel, true, { recolhido: false, largura: 22 })).toEqual(salvoComPainel)
+  })
+
+  it("ao fechar o visualizador com o painel recolhido, ele segue recolhido", () => {
+    const aberto = { trilha: 10, chat: 50, visualizador: 40, painel: 0 }
+    const salvoFechadoComPainel = { trilha: 20, chat: 50, visualizador: 0, painel: 30 }
+    const r = layoutParaVisualizador(aberto, salvoFechadoComPainel, false, { recolhido: true, largura: 30 })
+    expect(r.painel).toBe(0)
+    expect(soma(r)).toBe(100)
+  })
+})
+
 describe("Esc não fecha o visualizador enquanto o analista digita", () => {
   const el = (tagName: string, extra: Partial<{ isContentEditable: boolean; dentroDeDialogo: boolean }> = {}) => ({
     tagName,

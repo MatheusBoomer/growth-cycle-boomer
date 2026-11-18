@@ -1,6 +1,6 @@
 "use client"
 
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import { toast } from "sonner"
 import { nomeCurto } from "@workspace/core/autenticacao"
 import type {
@@ -26,6 +26,7 @@ import {
   agruparProcesso,
   cardsDepoisDaResposta,
   separarProcessoAoVivo,
+  type EventoProcesso,
 } from "@/lib/passos"
 import { Compositor } from "./compositor"
 import { FimDaEtapa } from "./fim-da-etapa"
@@ -51,6 +52,27 @@ export function ChatEtapa({
   capa,
 }: PropsChatEtapa) {
   const meuEmail = useEmailDaConta()
+  // Histórico de ações aberto pelo analista, por bloco (o horário do 1º passo): o bloco ao vivo vira o da lista ao fim do turno.
+  const [historicosAbertos, setHistoricosAbertos] = useState<ReadonlySet<string>>(new Set())
+  const historico = (itens: EventoProcesso[], aoVivo: boolean) => {
+    const chave = itens[0]!.em
+    return (
+      <ThoughtLine
+        itens={itens}
+        slug={slug}
+        aoVivo={aoVivo}
+        aberto={historicosAbertos.has(chave)}
+        aoMudarAberto={(aberto) =>
+          setHistoricosAbertos((atual) => {
+            const novo = new Set(atual)
+            if (aberto) novo.add(chave)
+            else novo.delete(chave)
+            return novo
+          })
+        }
+      />
+    )
+  }
   const estadoEtapa = dados.estado.etapas[etapa]
   const ativoAqui = dados.turnoAtivo === etapa
   const ativoOutra = dados.turnoAtivo !== null && !ativoAqui
@@ -118,7 +140,8 @@ export function ChatEtapa({
           />
           <MessageScroller className="min-h-0 flex-1">
             <MessageScrollerViewport>
-              <MessageScrollerContent className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
+              {/* pb-14: o fim da conversa fica acima do degradê de baixo (h-12), sem véu sobre a última linha. */}
+              <MessageScrollerContent className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 pb-14">
                 {capa}
                 {estadoEtapa.origem === "terminal" && eventos.length === 0 && (
                   <MessageScrollerItem messageId="terminal">
@@ -136,11 +159,7 @@ export function ChatEtapa({
                       key={`passos-${item.indice}`}
                       messageId={`evento-${item.indice}`}
                     >
-                      <ThoughtLine
-                        itens={item.itens}
-                        slug={slug}
-                        aoVivo={false}
-                      />
+                      {historico(item.itens, false)}
                     </MessageScrollerItem>
                   ) : (
                     <MessageScrollerItem
@@ -183,9 +202,7 @@ export function ChatEtapa({
                             )}
                           </div>
                         )}
-                        {aoVivo.length > 0 && (
-                          <ThoughtLine itens={aoVivo} slug={slug} aoVivo />
-                        )}
+                        {aoVivo.length > 0 && historico(aoVivo, true)}
                       </MessageContent>
                     </Message>
                   </MessageScrollerItem>

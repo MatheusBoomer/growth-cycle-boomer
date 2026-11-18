@@ -289,17 +289,23 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
     const grupo = grupoRef.current
     if (!grupo) return
     try {
+      // O painel (coluna 3) mantém o estado em que o analista o deixou: o layout salvo não o reabre nem o esconde.
+      const painel = {
+        recolhido: painelRef.current?.isCollapsed() ?? false,
+        largura: larguraPainel.current,
+      }
       grupo.setLayout(
         layoutParaVisualizador(
           grupo.getLayout(),
           lerLayout(chaveColunas(visualizadorAberto)),
-          visualizadorAberto
+          visualizadorAberto,
+          painel
         )
       )
     } catch {
       // grupo ainda montando ou já desmontado: vale o layout que ele tiver
     }
-  }, [visualizadorAberto, grupoRef])
+  }, [visualizadorAberto, grupoRef, painelRef])
 
   useEffect(() => {
     if (!arrastando) return

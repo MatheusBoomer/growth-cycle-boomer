@@ -10,4 +10,19 @@ describe("card de entregável", () => {
   it("título em serifada", () => expect(fonte).toMatch(/<CardTitle className="[^"]*font-serif/))
   it("botão Aprovar com o brilho que passa", () => expect(fonte).toMatch(/<Button\s+className="brilho-passa"\s+onClick=\{aprovar\}/))
   it("aprovar não solta confete (o confete é só ao concluir a etapa)", () => expect(fonte).not.toMatch(/confete|celebrar/))
+  it("gráfico e tabela ampliam num modal, só quando são imagem", () => {
+    expect(fonte).toMatch(/aoAmpliar=\{ehImagem \? \(\) => setAmpliado\(true\) : undefined\}/)
+    expect(fonte).toMatch(/\{ehImagem && \(\s*<ModalGrafico/)
+  })
+  it("não sobrou o atalho que abria gráfico e tabela na coluna 3 (agora é o modal)", () => {
+    expect(fonte).not.toContain("abrirArquivo")
+  })
+  it("o modal usa as mesmas regras do card: aprovar devolve se deu certo e o ajuste pendente trava o Aprovar", () => {
+    expect(fonte).toMatch(/async function aprovar\(\): Promise<boolean>/)
+    expect(fonte).toMatch(/aprovarDesabilitado=\{aguardandoNovaVersao\}/)
+    expect(fonte).toContain("Disponível quando o agente gerar a nova versão com o ajuste")
+    expect(fonte).toMatch(/aoAprovar=\{aprovar\}/)
+    expect(fonte).toMatch(/aoPedirAjuste=\{pedirAjuste\}/)
+    expect(fonte).toMatch(/focoAoPedirAjuste=\{\(\) => document\.querySelector<HTMLElement>\(`textarea\[aria-label="\$\{ROTULO_CAMPO_MENSAGEM\}"\]`\)\}/)
+  })
 })

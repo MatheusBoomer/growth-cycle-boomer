@@ -15,6 +15,7 @@ export function PreviaArquivo({
   caminho,
   titulo,
   aoAbrir,
+  aoAmpliar,
   entregavelId,
   podeComentar,
   caminhoAnterior,
@@ -24,6 +25,8 @@ export function PreviaArquivo({
   caminho: string
   titulo: string
   aoAbrir?: () => void
+  /** Gráfico e tabela: abre a imagem ampliada num modal (o botão "Ampliar" e o clique na imagem). */
+  aoAmpliar?: () => void
   entregavelId?: string
   podeComentar?: boolean
   /** Roteiro: arquivo da versão anterior, para mostrar só o que mudou. */
@@ -46,12 +49,12 @@ export function PreviaArquivo({
   if (tipo === "grafico" || tipo === "tabela") {
     return (
       <div className="group relative">
-        <button type="button" className="block w-full cursor-zoom-in" onClick={aoAbrir} aria-label={`Abrir ${titulo}`} disabled={!aoAbrir}>
+        <button type="button" className="block w-full cursor-zoom-in" onClick={aoAmpliar} aria-label={`Abrir ${titulo}`} disabled={!aoAmpliar}>
           {/* eslint-disable-next-line @next/next/no-img-element -- arquivo local servido pela rota do app */}
           <img src={url} alt={titulo} className="w-full rounded-2xl border border-border bg-papel" />
         </button>
-        {aoAbrir && (
-          <Button size="sm" variant="midia" className="absolute top-2.5 right-2.5 h-[30px] px-3 text-xs" onClick={aoAbrir}>
+        {aoAmpliar && (
+          <Button size="sm" variant="midia" className="absolute top-2.5 right-2.5 h-[30px] px-3 text-xs" onClick={aoAmpliar}>
             <ZoomInIcon /> Ampliar
           </Button>
         )}
