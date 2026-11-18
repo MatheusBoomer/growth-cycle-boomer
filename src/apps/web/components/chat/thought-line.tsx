@@ -4,10 +4,11 @@ import { CheckIcon, ChevronRightIcon, SparklesIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 import { cn } from "@workspace/ui/lib/utils"
 import { Markdown } from "@/components/markdown"
+import { fraseDoPasso } from "@/lib/frases-do-agente"
 import { duracaoDoProcesso, type EventoProcesso } from "@/lib/passos"
 
 /** Linha curta de um item do processo: passo sem o prefixo da pasta do prospect, ou a 1ª linha da fala. */
-export function linhaDoProcesso(e: EventoProcesso, slug: string): string {
+function linhaDoProcesso(e: EventoProcesso, slug: string): string {
   if (e.tipo === "atividade") return e.detalhe.replaceAll(`clientes/${slug}/`, "")
   return (e.texto.split("\n").find((l) => l.trim()) ?? "").replace(/[*_`#>]/g, "").trim()
 }
@@ -24,19 +25,14 @@ export function duracaoLegivel(s: number): string {
 }
 
 /**
- * Processo do agente como Thought Line (React Bits): enquanto trabalha, o ✦ respira, o rótulo mostra o passo atual
- * e o cronômetro corre, com os passos abertos; ao terminar recolhe em "Pensou por X s". Clicar abre e fecha.
+ * Processo do agente como Thought Line (React Bits): recolhido por padrão, inclusive enquanto trabalha. Ao vivo, o ✦
+ * respira, o rótulo mostra o passo atual em frase amigável e o cronômetro corre; ao terminar vira "Pensou por X s".
+ * Só o clique abre e fecha a lista: nada muda sozinho. O texto técnico de cada passo fica no tooltip.
  */
 export function ThoughtLine({ itens, slug, aoVivo }: { itens: EventoProcesso[]; slug: string; aoVivo: boolean }) {
-  const [aberto, setAberto] = useState(aoVivo)
-  const [vivoAntes, setVivoAntes] = useState(aoVivo)
+  const [aberto, setAberto] = useState(false)
   const [agora, setAgora] = useState(() => Date.now())
 
-  // Recolhe sozinho quando o agente termina; abre quando volta a trabalhar (ajuste durante a renderização, sem efeito).
-  if (vivoAntes !== aoVivo) {
-    setVivoAntes(aoVivo)
-    setAberto(aoVivo)
-  }
   useEffect(() => {
     if (!aoVivo) return
     const id = setInterval(() => setAgora(Date.now()), 100)
@@ -46,8 +42,9 @@ export function ThoughtLine({ itens, slug, aoVivo }: { itens: EventoProcesso[]; 
   const duracao = duracaoDoProcesso(itens, aoVivo ? agora : null)
   const passos = itens.filter((e) => e.tipo === "atividade").length
   const ultimo = itens.length - 1
+  const atual = itens[ultimo]
   const rotulo = aoVivo
-    ? (itens[ultimo] ? linhaDoProcesso(itens[ultimo], slug) : "Pensando…")
+    ? (atual ? (atual.tipo === "atividade" ? fraseDoPasso(atual, ultimo) : linhaDoProcesso(atual, slug)) : "Pensando…")
     : duracao !== null
       ? `Pensou por ${duracaoLegivel(duracao)}`
       : passos === 0
@@ -70,18 +67,18 @@ export function ThoughtLine({ itens, slug, aoVivo }: { itens: EventoProcesso[]; 
       {aberto && (
         <ul className="border-border mt-2.5 ml-1.5 flex flex-col gap-2 border-l py-0.5 pl-3.5">
           {itens.map((e, i) => {
-            const atual = aoVivo && i === ultimo
+            const emCurso = aoVivo && i === ultimo
             return (
               <li key={`${e.em}-${i}`} className="surgir text-muted-foreground flex min-w-0 gap-2.5 text-[13px]" style={{ "--i": 0 } as React.CSSProperties}>
                 <span
                   aria-hidden="true"
-                  className={cn("mt-0.5 grid size-3.5 shrink-0 place-items-center rounded-full", atual ? "" : "bg-sucesso-fundo text-sucesso")}
+                  className={cn("mt-0.5 grid size-3.5 shrink-0 place-items-center rounded-full", emCurso ? "" : "bg-sucesso-fundo text-sucesso")}
                 >
-                  {atual ? <span className="bg-link-acao size-1.5 rounded-full motion-safe:animate-pulse" /> : <CheckIcon className="size-2.5" />}
+                  {emCurso ? <span className="bg-link-acao size-1.5 rounded-full motion-safe:animate-pulse" /> : <CheckIcon className="size-2.5" />}
                 </span>
                 {e.tipo === "atividade" ? (
                   <span className="min-w-0 truncate" title={e.detalhe}>
-                    {linhaDoProcesso(e, slug)}
+                    {fraseDoPasso(e, i)}
                   </span>
                 ) : (
                   <div className="text-foreground/80 min-w-0">
