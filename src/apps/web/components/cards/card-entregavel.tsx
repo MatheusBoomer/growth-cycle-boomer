@@ -16,6 +16,7 @@ import { api, mensagemDeErro, urlArquivo } from "@/lib/api"
 import { useReferencias } from "@/components/chat/contexto-referencias"
 import { numerar } from "@/lib/referencias"
 import { MarcadorImagem } from "./marcador-imagem"
+import { ModalGrafico } from "./modal-grafico"
 import { PreviaArquivo } from "./previa-arquivo"
 
 const ROTULO_TIPO: Record<TipoEntregavel, string> = {
@@ -34,6 +35,7 @@ export const ROTULO_STATUS_ENTREGAVEL: Record<StatusEntregavel, string> = { pend
 export function CardEntregavel({ slug, entregavel: e, anterior = null }: { slug: string; entregavel: Entregavel; anterior?: Entregavel | null }) {
   const { abrir, abrirSecao, abrirPlanilha, abrirArquivo, mencionar } = useVisualizador()
   const [ocupado, setOcupado] = useState(false)
+  const [ampliado, setAmpliado] = useState(false)
   const refs = useReferencias(etapaDaConversa(e))
   const nomeNaApresentacao = destinoAprovado(e).split("/").pop()
   // Com ajuste pedido, a versão atual está superada: só a nova versão do agente libera a aprovação.
@@ -43,12 +45,15 @@ export function CardEntregavel({ slug, entregavel: e, anterior = null }: { slug:
   const referencia = refs.referencias.find((r) => r.entregavelId === e.id)
   const ajusteNaImagem = ehImagem && referencia !== undefined && refs.marcando === e.id
 
-  async function aprovar() {
+  /** Devolve se aprovou: o modal do "Ampliar" só fecha com a aprovação feita. */
+  async function aprovar(): Promise<boolean> {
     setOcupado(true)
     try {
       await api.aprovar(slug, e.id)
+      return true
     } catch (erro) {
       toast.error(mensagemDeErro(erro))
+      return false
     } finally {
       setOcupado(false)
     }
@@ -101,6 +106,7 @@ export function CardEntregavel({ slug, entregavel: e, anterior = null }: { slug:
             entregavelId={e.id}
             podeComentar={e.status === "pendente"}
             titulo={e.titulo}
+            aoAmpliar={ehImagem ? () => setAmpliado(true) : undefined}
             aoAbrir={
               e.tipo === "html" || e.tipo === "apresentacao"
                 ? () => abrir(e.etapa, e.nomeFinal)
@@ -146,6 +152,21 @@ export function CardEntregavel({ slug, entregavel: e, anterior = null }: { slug:
             Pedir ajuste…
           </Button>
         </CardFooter>
+      )}
+      {ehImagem && (
+        <ModalGrafico
+          aberto={ampliado}
+          aoMudarAberto={setAmpliado}
+          titulo={e.titulo}
+          urlImagem={urlArquivo(slug, e.arquivoRascunho)}
+          urlDownload={urlArquivo(slug, e.arquivoRascunho, true)}
+          pendente={e.status === "pendente"}
+          aprovarDesabilitado={aguardandoNovaVersao}
+          motivoAprovarDesabilitado="Disponível quando o agente gerar a nova versão com o ajuste"
+          ocupado={ocupado}
+          aoAprovar={aprovar}
+          aoPedirAjuste={pedirAjuste}
+        />
       )}
     </Card>
   )
