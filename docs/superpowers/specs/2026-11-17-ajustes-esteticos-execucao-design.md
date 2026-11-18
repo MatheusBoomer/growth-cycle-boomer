@@ -124,9 +124,11 @@ slide 9 144 000 × 5 143 500 EMU, medida em % do slide):
   (`preparar_molde_apresentacao.ajustar_jornada`), e as setas em posições fixas. O alinhamento depende de como
   cada programa desenha o espaçamento, e o resultado sai deslocado quase meia linha.
 - **Correção no gerador** (`scripts/gerar_apresentacao.py`, tipo `jornada`): em vez de uma caixa com 5
-  parágrafos, uma caixa de texto por item, com o mesmo `x` e a mesma largura da caixa original, `y` e altura
-  iguais aos da seta correspondente, ancoragem vertical ao centro e espaçamento de linha de 100%. A caixa
-  original é removida. As setas não mudam de lugar. O resultado não depende do motor de renderização.
+  parágrafos, uma caixa de texto por item, com o mesmo `x` e a mesma largura da caixa original e o mesmo
+  **centro vertical** da seta correspondente (altura própria de 420 000 EMU, maior que a linha de texto, porque
+  a seta tem só 210 900). Cada caixa tem ancoragem vertical ao centro, espaçamento de linha de 100% e a
+  numeração automática continuando de 1 a 5 (`startAt`), já que cada item passa a ser uma lista própria. A
+  caixa original é removida. As setas não mudam de lugar. O resultado não depende do motor de renderização.
 - **Teste** (`scripts/tests/test_gerar_apresentacao.py`): o centro vertical de cada caixa de item coincide com
   o centro da sua seta, na ordem, e o slide tem exatamente 5 caixas de item.
 
@@ -148,9 +150,11 @@ slide 9 144 000 × 5 143 500 EMU, medida em % do slide):
 - **Risco:** a coluna estreita pode estourar o texto. O gerador já calcula `ocupacao` e avisa acima de 1,1; o
   limite de avisos e o tamanho da fonte são ajustados com o ensaio gravado do Verdeluz
   (`clientes/_fixtures/verdeluz`) como referência.
-- **Testes:** em `test_gerar_apresentacao.py`, a imagem de cada um dos 3 tipos ocupa pelo menos ~60% da
-  largura e ~80% da altura quando a proporção é ≤ 2,8, e mantém a faixa larga quando é maior; título e texto
-  ficam dentro da coluna e não se sobrepõem à imagem.
+- **Testes:** para cada um dos 3 tipos e proporção ≤ 2,8, a imagem fica dentro da área da direita
+  (x 34–97%, y 7–92%) e encosta nela pelo lado limitante: ou a largura é ~63% do slide, ou a altura é ~85%
+  (uma imagem larga demais para encher a altura é limitada pela largura, e uma alta pela altura). Com
+  proporção maior que 2,8 a geometria do molde é mantida. Título, subtítulo e texto ficam dentro da coluna da
+  esquerda e não se sobrepõem à imagem.
 
 ## Como será implementado
 
