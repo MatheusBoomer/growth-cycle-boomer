@@ -169,6 +169,16 @@ class TestColuna:
                 assert anterior["y"] + anterior["h"] <= c["y"] + 0.1
             anterior = c
 
+    def test_titulo_comporta_tres_linhas_sem_invadir_o_campo_de_baixo(self, tmp_path, prospect, tipo):
+        # Título de ~45 caracteres quebra em 3 linhas na coluna estreita (visto no deck do Verdeluz).
+        prs, slide, caixas, _ = gerar_com_imagem(tmp_path, prospect, tipo, 1200, 600)
+        titulo = ap.campos(slide)["titulo"]
+        altura_pt = caixas["titulo"]["h"] / 100 * prs.slide_height / 12700
+        margens_pt = 2 * 91425 / 12700
+        assert altura_pt >= 3 * 1.2 * ap._tamanho_pt(titulo) + margens_pt
+        abaixo = caixas[CAMPOS_DE_TEXTO[tipo][1]]
+        assert caixas["titulo"]["y"] + caixas["titulo"]["h"] <= abaixo["y"] + 0.1
+
     def test_mapa_de_slides_traz_a_geometria_nova(self, tmp_path, prospect, tipo):
         import json
 

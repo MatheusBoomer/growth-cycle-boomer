@@ -80,18 +80,19 @@ def alinhar_jornada(slide) -> bool:
 
 # Imagem mais larga que isto (largura/altura) ficaria pequena na coluna: mantém a faixa larga do molde.
 ASPECTO_FAIXA_LARGA = 2.8
-# (x, y, largura, altura) em % do slide.
+# (x, y, largura, altura) em % do slide. O título tem altura para 3 linhas: na coluna estreita, títulos a partir de
+# ~35 caracteres quebram assim (visto no deck do Verdeluz) e a 3ª linha não pode cair sobre o campo de baixo.
 Caixa = Tuple[float, float, float, float]
 AREA_IMAGEM: Caixa = (34.0, 7.0, 63.0, 85.0)
 _COLUNA_COM_SUBTITULO: Dict[str, Caixa] = {
-    "titulo": (4.4, 7.2, 26.6, 16.0),
-    "subtitulo": (4.4, 24.0, 26.6, 24.0),
-    "conclusoes": (4.4, 49.0, 26.6, 43.0),
+    "titulo": (4.4, 7.2, 26.6, 22.0),
+    "subtitulo": (4.4, 30.0, 26.6, 20.0),
+    "conclusoes": (4.4, 51.0, 26.6, 41.0),
 }
 COLUNA_TEXTO: Dict[str, Dict[str, Caixa]] = {
     "grafico": _COLUNA_COM_SUBTITULO,
     "tabela_lateral": _COLUNA_COM_SUBTITULO,
-    "imagem_larga": {"titulo": (4.4, 7.2, 26.6, 16.0), "texto": (4.4, 26.0, 26.6, 66.0)},
+    "imagem_larga": {"titulo": (4.4, 7.2, 26.6, 22.0), "texto": (4.4, 30.0, 26.6, 62.0)},
 }
 
 

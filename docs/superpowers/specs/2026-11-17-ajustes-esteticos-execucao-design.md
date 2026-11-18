@@ -141,7 +141,7 @@ slide 9 144 000 × 5 143 500 EMU, medida em % do slide):
   - **coluna de texto à esquerda**, de x = 4,4% a ~31%: título, subtítulo (quando existir) e
     conclusões/texto, que quebram linha dentro da coluna;
   - **imagem à direita**, de x = ~34% a 97% (cerca de 63–65% da largura) e de y = 7% a 92% (cerca de 85% da
-    altura), encaixada com a proporção original e alinhada ao topo da coluna.
+    altura), encaixada com a proporção original e centralizada nessa área.
 - **Exceção:** imagem com proporção (largura/altura) acima de 2,8 mantém a faixa larga atual, porque na coluna
   ficaria pequena de novo.
 - **Onde:** ajuste de geometria em tempo de geração, aplicado depois de duplicar o slide modelo e identificar os
