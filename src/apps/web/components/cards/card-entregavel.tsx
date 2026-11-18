@@ -34,7 +34,7 @@ export const ROTULO_STATUS_ENTREGAVEL: Record<StatusEntregavel, string> = { pend
 
 /** `anterior`: a versão anterior do mesmo entregável (null na primeira); o roteiro a usa para mostrar só o que mudou. */
 export function CardEntregavel({ slug, entregavel: e, anterior = null }: { slug: string; entregavel: Entregavel; anterior?: Entregavel | null }) {
-  const { abrir, abrirSecao, abrirPlanilha, mencionar } = useVisualizador()
+  const { abrir, abrirSecao, abrirPlanilha, abrirDocumento, mencionar } = useVisualizador()
   const [ocupado, setOcupado] = useState(false)
   const [ampliado, setAmpliado] = useState(false)
   const refs = useReferencias(etapaDaConversa(e))
@@ -115,7 +115,9 @@ export function CardEntregavel({ slug, entregavel: e, anterior = null }: { slug:
                   ? () => abrirSecao(e.etapa, e.nomeFinal)
                   : e.tipo === "planilha"
                     ? () => abrirPlanilha(e.etapa, e.nomeFinal)
-                    : undefined
+                    : e.tipo === "documento"
+                      ? () => abrirDocumento(e.etapa, e.nomeFinal)
+                      : undefined
             }
           />
         )}
@@ -128,7 +130,8 @@ export function CardEntregavel({ slug, entregavel: e, anterior = null }: { slug:
         {e.ajustePedido && e.status === "pendente" && (
           <p className="text-muted-foreground text-sm whitespace-pre-line">Ajuste pedido: “{e.ajustePedido}”. Aguardando a nova versão do agente.</p>
         )}
-        {ajusteNaImagem && referencia?.urlImagem && (
+        {/* Com o modal aberto a marcação acontece nele; fechado no X no meio da marcação, ela continua aqui. */}
+        {ajusteNaImagem && !ampliado && referencia?.urlImagem && (
           <MarcadorImagem
             titulo={e.titulo}
             urlImagem={referencia.urlImagem}
@@ -167,6 +170,16 @@ export function CardEntregavel({ slug, entregavel: e, anterior = null }: { slug:
           ocupado={ocupado}
           aoAprovar={aprovar}
           aoPedirAjuste={pedirAjuste}
+          marcacao={
+            ajusteNaImagem && referencia
+              ? {
+                  marcas: referencia.marcas,
+                  primeiroNumero: numerar(refs.referencias).find((n) => n.entregavelId === e.id)!.primeira,
+                  aoMudar: (marcas) => refs.mudarMarcas(e.id, marcas),
+                  aoConcluir: refs.terminarMarcacao,
+                }
+              : null
+          }
           focoAoPedirAjuste={() => document.querySelector<HTMLElement>(`textarea[aria-label="${ROTULO_CAMPO_MENSAGEM}"]`)}
         />
       )}

@@ -82,12 +82,50 @@ describe("ModalGrafico", () => {
     expect(p.aoMudarAberto).not.toHaveBeenCalled()
   })
 
-  it("Pedir ajuste chama aoPedirAjuste e depois fecha o modal", async () => {
-    const ordem: string[] = []
-    const p = await montar({ aoPedirAjuste: vi.fn(() => ordem.push("ajuste")), aoMudarAberto: vi.fn(() => ordem.push("fechou")) })
+  it("Pedir ajuste chama aoPedirAjuste e mantém o modal aberto para marcar", async () => {
+    const p = await montar()
     await act(async () => botao("Pedir ajuste")!.click())
     expect(p.aoPedirAjuste).toHaveBeenCalledTimes(1)
-    expect(ordem).toEqual(["ajuste", "fechou"])
+    expect(p.aoMudarAberto).not.toHaveBeenCalled()
+  })
+
+  it("marcando: mostra o marcador e Concluir marcação, sem Aprovar nem Pedir ajuste", async () => {
+    await montar({ marcacao: { marcas: [], primeiroNumero: 1, aoMudar: vi.fn(), aoConcluir: vi.fn() } })
+    expect(document.body.querySelector('[aria-label="Imagem de ROAS por plataforma para marcar os ajustes"]')).not.toBeNull()
+    expect(botao("Concluir marcação")).toBeDefined()
+    expect(botao("Aprovar")).toBeUndefined()
+    expect(botao("Pedir ajuste")).toBeUndefined()
+  })
+
+  it("Concluir marcação encerra a marcação e depois fecha o modal", async () => {
+    const ordem: string[] = []
+    await montar({
+      marcacao: { marcas: [], primeiroNumero: 1, aoMudar: vi.fn(), aoConcluir: vi.fn(() => ordem.push("concluiu")) },
+      aoMudarAberto: vi.fn(() => ordem.push("fechou")),
+    })
+    await act(async () => botao("Concluir marcação")!.click())
+    expect(ordem).toEqual(["concluiu", "fechou"])
+  })
+
+  it("zoom: + amplia, − reduz e a porcentagem volta ao ajustado", async () => {
+    await montar()
+    const rotulo = () => botao("%")!.textContent
+    expect(rotulo()).toBe("100%")
+    await act(async () => document.body.querySelector<HTMLElement>('[aria-label="Aumentar zoom"]')!.click())
+    expect(rotulo()).toBe("125%")
+    await act(async () => botao("%")!.click())
+    expect(rotulo()).toBe("100%")
+    await act(async () => document.body.querySelector<HTMLElement>('[aria-label="Diminuir zoom"]')!.click())
+    expect(rotulo()).toBe("75%")
+  })
+
+  it("zoom pelo teclado: + e 0, com o foco dentro do modal", async () => {
+    await montar()
+    document.body.querySelector<HTMLElement>('[aria-label="Aumentar zoom"]')!.focus()
+    await act(async () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "+" })))
+    expect(botao("%")!.textContent).toBe("125%")
+    await act(async () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "0" })))
+    expect(botao("%")!.textContent).toBe("100%")
   })
 
   it("fechado: não desenha nada", async () => {
@@ -97,8 +135,8 @@ describe("ModalGrafico", () => {
 })
 
 describe("ModalGrafico: foco ao fechar", () => {
-  // Como no card: o botão "Ampliar" que abriu o modal some quando o ajuste é pedido (a prévia dá lugar ao marcador), e o
-  // foco deve ir para o campo de mensagem, onde o pedido é escrito, em vez de cair no corpo da página.
+  // Como no card: o botão "Ampliar" que abriu o modal some quando o ajuste é pedido (a prévia dá lugar ao marcador), e ao
+  // concluir a marcação o foco deve ir para o campo de mensagem, onde o pedido é escrito, em vez de cair no corpo da página.
   async function montarComPai() {
     const { useState } = await import("react")
     function Pai() {
@@ -120,6 +158,7 @@ describe("ModalGrafico: foco ao fechar", () => {
           ocupado: false,
           aoAprovar: async () => true,
           aoPedirAjuste: () => setAjustando(true),
+          marcacao: ajustando ? { marcas: [], primeiroNumero: 1, aoMudar: () => {}, aoConcluir: () => {} } : null,
           focoAoPedirAjuste: () => document.getElementById("mensagem"),
         }),
       )
@@ -134,9 +173,10 @@ describe("ModalGrafico: foco ao fechar", () => {
   }
   const esperar = () => act(async () => void (await new Promise((resolver) => setTimeout(resolver, 50))))
 
-  it("Pedir ajuste leva o foco para o campo de mensagem, mesmo com o botão que abriu o modal já desmontado", async () => {
+  it("Pedir ajuste e Concluir marcação levam o foco para o campo de mensagem, mesmo com o botão que abriu o modal já desmontado", async () => {
     await montarComPai()
     await act(async () => botao("Pedir ajuste")!.click())
+    await act(async () => botao("Concluir marcação")!.click())
     await esperar()
     expect(document.activeElement).toBe(document.getElementById("mensagem"))
   })
