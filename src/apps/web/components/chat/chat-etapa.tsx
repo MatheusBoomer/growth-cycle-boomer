@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 import { nomeCurto } from "@workspace/core/autenticacao"
 import type {
@@ -17,6 +17,7 @@ import {
   MessageScrollerItem,
   MessageScrollerProvider,
   MessageScrollerViewport,
+  useMessageScroller,
 } from "@workspace/ui/components/message-scroller"
 import { Markdown } from "@/components/markdown"
 import { useEmailDaConta } from "@/components/marca/conta-contexto"
@@ -126,6 +127,9 @@ export function ChatEtapa({
         </p>
       )}
       <MessageScrollerProvider autoScroll>
+        <SeguirMensagensDoAnalista
+          quantidade={eventos.filter((e) => e.tipo === "mensagem_analista" && !e.automatica).length}
+        />
         <div className="relative flex min-h-0 flex-1 flex-col">
           {/* Desfoque nas bordas da rolagem (Progressive Blur): o texto some suave em vez de cortar seco. */}
           <div
@@ -165,10 +169,6 @@ export function ChatEtapa({
                     <MessageScrollerItem
                       key={`${item.evento.em}-${item.indice}`}
                       messageId={`evento-${item.indice}`}
-                      scrollAnchor={
-                        item.evento.tipo === "mensagem_analista" &&
-                        !item.evento.automatica
-                      }
                     >
                       <ItemConversa
                         evento={item.evento}
@@ -225,4 +225,20 @@ export function ChatEtapa({
       />
     </div>
   )
+}
+
+/**
+ * Leva a conversa ao fim quando chega mensagem nova do analista. Substitui o `scrollAnchor` da biblioteca de
+ * rolagem: com ele, qualquer troca de item que não mudasse a contagem (ex.: "fim da etapa" virando "Pensando…" ao
+ * aprovar) fazia a biblioteca rolar até a primeira âncora que ela ainda não tinha tratado. Como as mensagens que vêm
+ * do histórico nunca são tratadas, o chat pulava para a primeira mensagem da conversa.
+ */
+function SeguirMensagensDoAnalista({ quantidade }: { quantidade: number }) {
+  const { scrollToEnd } = useMessageScroller()
+  const anterior = useRef(quantidade)
+  useEffect(() => {
+    if (quantidade > anterior.current) scrollToEnd({ behavior: "auto" })
+    anterior.current = quantidade
+  }, [quantidade, scrollToEnd])
+  return null
 }
