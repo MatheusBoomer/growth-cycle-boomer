@@ -3,13 +3,16 @@ flowchart TD
   P1["Parte 1 · Definir KPI-alvo e horizonte (perguntar se faltar)"]
   P2["Classificar a meta: conservadora, realista ou agressiva"]
   P3["Perguntar: cenário único ou múltiplos (só muda o deck)"]
-  S1["analista-dados: projecao.py quebra a meta mês a mês, nunca flat"]
-  D0{"A meta saiu dividida igual por todos os meses?"}
+  P8["Calendário de datas do varejo ajustado ao nicho do prospect"]
+  S1["analista-dados: projecao.py quebra a meta mês a mês pela sazonalidade do A-1 e pelas datas do varejo"]
+  D0{"A meta saiu igual por mês ou com o mesmo crescimento em todo mês?"}
   R0["Regra crítica: interromper e pedir redistribuição"]
   P4["Gráfico ano analisado x ano projetado"]
   C1{"Analista aprova?"}
   P5["Parte 2 · Alavancas: soluções do registro por cenário"]
   S2["analista-dados: 3 cenários pela cadeia de KPIs (projecao.py)"]
+  D1{"Pessimista abaixo do A-1 no ano ou em algum mês?"}
+  R1["Subir os KPIs dos meses abaixo do A-1"]
   P6["Tabela, gráfico combinado e tabela-imagem dos cenários"]
   C2{"Analista aprova?"}
   P7["Bullets: lógica, papel dos KPIs, risco e alavanca principal"]
@@ -22,7 +25,8 @@ flowchart TD
   I1 --> P1
   P1 --> P2
   P2 --> P3
-  P3 --> S1
+  P3 --> P8
+  P8 --> S1
   S1 --> D0
   D0 -->|"sim"| R0
   R0 --> S1
@@ -31,7 +35,10 @@ flowchart TD
   C1 -->|"sim"| P5
   C1 -->|"não, ajustar"| S1
   P5 --> S2
-  S2 --> P6
+  S2 --> D1
+  D1 -->|"sim"| R1
+  R1 --> S2
+  D1 -->|"não"| P6
   P6 --> C2
   C2 -->|"sim"| P7
   C2 -->|"não, ajustar"| S2
