@@ -167,6 +167,9 @@ def _preencher(prs, slide, tipo: str, dados: dict, pasta: Path, numero: int, avi
     c = ap.campos(slide)
     if tipo == "jornada" and not lay.alinhar_jornada(slide):
         avisos.append(f"Slide {numero} (jornada): o molde não tem a estrutura esperada; o alinhamento com as setas não foi aplicado.")
+    if tipo in lay.COLUNA_TEXTO:
+        # Antes de preencher: a imagem é encaixada na área que a forma tem neste momento.
+        lay.aplicar_coluna(prs, slide, tipo, pasta / dados["imagem"])
     if tipo == "desafio":
         ap.preencher_texto(c["titulo"], dados["titulo"])
         ap.preencher_bloco(c["esquerda"], f"**Problema:** {dados['problema']}", [f"Hipótese: {h}" for h in dados["hipoteses"]])

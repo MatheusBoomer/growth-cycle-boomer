@@ -4,16 +4,21 @@ scripts/layout_slides.py: ajustes de geometria dos slides na hora de gerar a apr
 sem alterar o molde .pptx. Usado por gerar_apresentacao.py.
 
 - alinhar_jornada: um item da jornada por caixa de texto, centrado na seta azul correspondente.
+- aplicar_coluna: slides com imagem (gráfico, tabela) em coluna: texto à esquerda, imagem grande à direita.
 """
 
 from __future__ import annotations
 
 import copy
-from typing import List, Optional
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 
+from PIL import Image
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls, qn
+
+import apresentacao_pptx as ap
 
 # Maior que uma linha de texto (a seta tem só 210 900 EMU): a caixa é centrada na seta, não do tamanho dela.
 ALTURA_ITEM_JORNADA = 420_000
@@ -68,4 +73,52 @@ def alinhar_jornada(slide) -> bool:
         identificador.set("name", f"Jornada item {indice + 1}")
         original.addprevious(caixa)
     original.getparent().remove(original)
+    return True
+
+
+# ---- slides com imagem em coluna ----
+
+# Imagem mais larga que isto (largura/altura) ficaria pequena na coluna: mantém a faixa larga do molde.
+ASPECTO_FAIXA_LARGA = 2.8
+# (x, y, largura, altura) em % do slide.
+Caixa = Tuple[float, float, float, float]
+AREA_IMAGEM: Caixa = (34.0, 7.0, 63.0, 85.0)
+_COLUNA_COM_SUBTITULO: Dict[str, Caixa] = {
+    "titulo": (4.4, 7.2, 26.6, 16.0),
+    "subtitulo": (4.4, 24.0, 26.6, 24.0),
+    "conclusoes": (4.4, 49.0, 26.6, 43.0),
+}
+COLUNA_TEXTO: Dict[str, Dict[str, Caixa]] = {
+    "grafico": _COLUNA_COM_SUBTITULO,
+    "tabela_lateral": _COLUNA_COM_SUBTITULO,
+    "imagem_larga": {"titulo": (4.4, 7.2, 26.6, 16.0), "texto": (4.4, 26.0, 26.6, 66.0)},
+}
+
+
+def _posicionar(prs, forma, caixa: Caixa) -> None:
+    x, y, w, h = caixa
+    forma.left, forma.top = round(x / 100 * prs.slide_width), round(y / 100 * prs.slide_height)
+    forma.width, forma.height = round(w / 100 * prs.slide_width), round(h / 100 * prs.slide_height)
+
+
+def aplicar_coluna(prs, slide, tipo: str, imagem: Path) -> bool:
+    """
+    Põe os campos do slide em coluna: texto à esquerda (cerca de 30%) e a área da imagem à direita (cerca de 63% da
+    largura e 85% da altura); `ap.trocar_imagem` encaixa a imagem nessa área, com a proporção dela. Chamar antes de
+    preencher os campos. Devolve False, sem alterar nada, para outro tipo de slide ou imagem de proporção acima de
+    ASPECTO_FAIXA_LARGA, que continua na faixa larga do molde.
+    """
+    coluna = COLUNA_TEXTO.get(tipo)
+    if coluna is None:
+        return False
+    with Image.open(imagem) as img:
+        largura, altura = img.size
+    if largura > ASPECTO_FAIXA_LARGA * altura:
+        return False
+    campos = ap.campos(slide)
+    for nome, caixa in coluna.items():
+        if nome in campos:
+            _posicionar(prs, campos[nome], caixa)
+    if "imagem" in campos:
+        _posicionar(prs, campos["imagem"], AREA_IMAGEM)
     return True
