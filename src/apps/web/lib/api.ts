@@ -139,6 +139,8 @@ export const api = {
     chamar<{ disponivel: boolean; slides: string[]; mapa: MapaPrevia | null; erro: string | null }>(`${base(slug)}/entregaveis/${id}/previa`),
   previaPlanilha: (slug: string, id: string) =>
     chamar<{ disponivel: boolean; caminho: string | null; erro: string | null }>(`${base(slug)}/entregaveis/${id}/previa-planilha`),
+  previaDocumento: (slug: string, id: string) =>
+    chamar<{ disponivel: boolean; caminho: string | null; erro: string | null }>(`${base(slug)}/entregaveis/${id}/previa-documento`),
   comentarios: (slug: string, id: string) => chamar<{ comentarios: Comentario[] }>(`${base(slug)}/entregaveis/${id}/comentarios`),
   comentar: (slug: string, id: string, d: { slide: number; regiao: Regiao | null; texto: string }) =>
     chamar<{ comentario: Comentario }>(`${base(slug)}/entregaveis/${id}/comentarios`, comJson("POST", d)),

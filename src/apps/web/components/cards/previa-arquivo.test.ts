@@ -25,3 +25,16 @@ describe("PreviaArquivo: gráfico e tabela são ampliados num modal", () => {
     expect(html({ ...base, tipo: "apresentacao", aoAbrir: () => {} })).toContain("Abrir prévia")
   })
 })
+
+describe("PreviaArquivo: documento Word", () => {
+  it("com aoAbrir: Ver prévia, além de Baixar", () => {
+    const h = html({ ...base, caminho: "entrega/plano.docx", tipo: "documento", aoAbrir: () => {} })
+    expect(h).toContain("Ver prévia")
+    expect(h).toContain("Baixar")
+    expect(h).toContain("veja a prévia sem baixar")
+  })
+
+  it("sem aoAbrir: só Baixar", () => {
+    expect(html({ ...base, caminho: "entrega/plano.docx", tipo: "documento" })).not.toContain("Ver prévia")
+  })
+})

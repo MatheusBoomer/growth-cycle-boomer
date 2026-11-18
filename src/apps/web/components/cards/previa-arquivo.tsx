@@ -132,10 +132,10 @@ export function PreviaArquivo({
       </div>
       <div className="min-w-[140px] flex-1">
         <b className="block truncate text-[13.5px] font-medium">{titulo}</b>
-        <small className="text-xs text-muted-foreground">{tipo === "planilha" ? "Planilha Excel · veja a prévia sem baixar" : "Documento Word · abra para conferir"}</small>
+        <small className="text-xs text-muted-foreground">{tipo === "planilha" ? "Planilha Excel · veja a prévia sem baixar" : "Documento Word · veja a prévia sem baixar"}</small>
       </div>
       <div className="ml-auto flex shrink-0 items-center gap-1.5">
-        {tipo === "planilha" && aoAbrir && (
+        {(tipo === "planilha" || tipo === "documento") && aoAbrir && (
           <Button size="sm" variant="ghost" onClick={aoAbrir}>
             Ver prévia
           </Button>

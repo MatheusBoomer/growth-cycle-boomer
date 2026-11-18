@@ -26,6 +26,7 @@ export class ServicoComentarios {
   /** Conversões em andamento por pasta: duas aberturas simultâneas esperam a mesma. */
   private readonly gerando = new Map<string, Promise<{ slides: number } | { erro: string }>>()
   private readonly gerandoPlanilha = new Map<string, Promise<{ abas: number } | { erro: string }>>()
+  private readonly gerandoDocumento = new Map<string, Promise<{ pdf: string } | { erro: string }>>()
   /** Fila por versão: criar, editar, apagar e enviar leem e regravam o mesmo arquivo, um de cada vez. */
   private readonly filas = new Map<string, Promise<unknown>>()
 
@@ -92,6 +93,25 @@ export class ServicoComentarios {
           .gerarPlanilha(this.arm.caminhoAbsoluto(slug, e.arquivoRascunho), pastaAbs, e.titulo)
           .finally(() => this.gerandoPlanilha.delete(pastaAbs))
         this.gerandoPlanilha.set(pastaAbs, pendente)
+      }
+      const r = await pendente
+      if ("erro" in r) return { disponivel: false, caminho: null, erro: r.erro }
+    }
+    return { disponivel: true, caminho, erro: null }
+  }
+
+  /** Documento Word convertido em PDF (uma vez por versão), para ver no app sem baixar. */
+  async previaDocumento(slug: string, id: string): Promise<{ disponivel: boolean; caminho: string | null; erro: string | null }> {
+    const e = await this.entregavel(slug, id)
+    if (e.tipo !== "documento") throw new ErroEntrada("A prévia em PDF é só para documentos.")
+    const pasta = `.app/previas/${id}`
+    const caminho = `${pasta}/documento.pdf`
+    if (!(await this.arm.existeArquivo(slug, caminho))) {
+      const pastaAbs = this.arm.caminhoAbsoluto(slug, pasta)
+      let pendente = this.gerandoDocumento.get(pastaAbs)
+      if (!pendente) {
+        pendente = this.gerador.gerarDocumento(this.arm.caminhoAbsoluto(slug, e.arquivoRascunho), pastaAbs).finally(() => this.gerandoDocumento.delete(pastaAbs))
+        this.gerandoDocumento.set(pastaAbs, pendente)
       }
       const r = await pendente
       if ("erro" in r) return { disponivel: false, caminho: null, erro: r.erro }
