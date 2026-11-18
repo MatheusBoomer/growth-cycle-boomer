@@ -70,7 +70,7 @@ export function PainelEtapa({ slug, etapa, dados }: { slug: string; etapa: Etapa
     .filter((e) => dados.estado.etapas[e.id].status === "concluida")
 
   return (
-    <aside className="flex min-h-0 flex-col">
+    <aside className="flex h-full min-h-0 flex-col">
       <div className="flex-1 space-y-6 overflow-y-auto p-4">
         {final && (
           <section className="space-y-2 rounded-md border p-3">
