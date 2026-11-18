@@ -41,6 +41,14 @@ problema do registro, a partir dos números já aprovados nas seções das Skill
 3. Para projeções e cenários: use `scripts/projecao.py` — nunca estime a
    distribuição mensal ou a cadeia de KPIs Influenciadores → Resultado "no
    olho". Chame o script e use o resultado dele.
+   - `distribuir` recebe a receita do A-1 por mês e, quando a skill passar, o
+     calendário de datas do varejo (`eventos`); devolva ao chat o crescimento
+     de cada mês (`crescimento_mensal`) junto com os valores.
+   - `projetar` de cada cenário vai sempre com `historico_mensal` (receita
+     A-1 por mês) e `cenario`. O script recusa crescimento igual em todos os
+     meses e Pessimista abaixo do A-1 em qualquer mês; se recusar, ajuste os
+     KPIs Influenciadores dos meses apontados e rode de novo — nunca contorne
+     a checagem omitindo o histórico.
    - Ao final da Skill 06, depois que os cenários estiverem aprovados, gere a
      planilha de Projeção de Cenários com `scripts/preencher_projecao_xlsx.py`
      (passando `--modelo`, `--input` com o JSON, e `--output` para

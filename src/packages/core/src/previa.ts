@@ -9,6 +9,8 @@ export interface Previa {
   gerar(pptxAbs: string, pastaAbs: string): Promise<{ slides: number } | { erro: string }>
   /** Converte a planilha em `<pasta>/planilha.html` (todas as abas, fórmulas calculadas). */
   gerarPlanilha(xlsxAbs: string, pastaAbs: string, titulo: string): Promise<{ abas: number } | { erro: string }>
+  /** Converte o documento Word em `<pasta>/documento.pdf`. */
+  gerarDocumento(docxAbs: string, pastaAbs: string): Promise<{ pdf: string } | { erro: string }>
   recortar(slideAbs: string, regiao: Regiao, saidaAbs: string): Promise<void>
 }
 
@@ -22,6 +24,7 @@ function mensagem(e: unknown, padrao = "Não consegui gerar a prévia da apresen
 export function criarPreviaPython(raiz: string, python = "python3"): Previa {
   const script = path.join(raiz, "scripts", "previa_apresentacao.py")
   const scriptPlanilha = path.join(raiz, "scripts", "previa_planilha.py")
+  const scriptDocumento = path.join(raiz, "scripts", "previa_documento.py")
   return {
     async gerar(pptxAbs, pastaAbs) {
       try {
@@ -39,6 +42,14 @@ export function criarPreviaPython(raiz: string, python = "python3"): Previa {
         return JSON.parse(stdout) as { abas: number }
       } catch (e) {
         return { erro: mensagem(e, "Não consegui gerar a prévia da planilha.") }
+      }
+    },
+    async gerarDocumento(docxAbs, pastaAbs) {
+      try {
+        const { stdout } = await exec(python, [scriptDocumento, "gerar", "--docx", docxAbs, "--saida", pastaAbs], { timeout: 150_000 })
+        return JSON.parse(stdout) as { pdf: string }
+      } catch (e) {
+        return { erro: mensagem(e, "Não consegui gerar a prévia do documento.") }
       }
     },
     async recortar(slideAbs, r, saidaAbs) {

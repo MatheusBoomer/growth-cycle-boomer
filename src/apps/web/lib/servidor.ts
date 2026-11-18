@@ -124,8 +124,8 @@ export function servidor(): Servidor {
   const desatualizado = atual !== undefined && !(atual.servico instanceof ServicoPlanejamento) && !turnoEmAndamento(atual)
   if (atual && !desatualizado) {
     // Processo do next dev que já rodava antes do serviço de comentários existir (ou antes de um método novo dele,
-    // como a prévia de planilha): completa sem recriar os demais.
-    if (typeof atual.comentarios?.previaPlanilha !== "function") atual.comentarios = new ServicoComentarios({ armazenamento: atual.armazenamento, planejamento: atual.servico, previa: criarPreviaPython(atual.raiz) })
+    // como a prévia de planilha ou de documento): completa sem recriar os demais.
+    if (typeof atual.comentarios?.previaDocumento !== "function") atual.comentarios = new ServicoComentarios({ armazenamento: atual.armazenamento, planejamento: atual.servico, previa: criarPreviaPython(atual.raiz) })
     // Idem para o repositório de usuários: null só no modo fs; no supabase ele sempre existe (ver montarNuvem).
     if (atual.usuarios === undefined) atual.usuarios = modoDeDados() === "fs" ? null : montarNuvem(atual.raiz).usuarios
     // Idem para a lista de modelos, que veio depois das demais partes.

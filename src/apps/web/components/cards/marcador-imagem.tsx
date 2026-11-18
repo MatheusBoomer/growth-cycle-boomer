@@ -1,7 +1,7 @@
 "use client"
 
 import { CircleIcon, HashIcon, SquareIcon, XIcon } from "lucide-react"
-import { useRef, useState, type PointerEvent } from "react"
+import { useRef, useState, type PointerEvent, type ReactNode } from "react"
 import { Button } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
 import { caixaDoArrasto, caixaDoNumero, type FormaMarca, type Marca, type Ponto, ROTULO_FORMA } from "@/lib/anotacoes"
@@ -16,6 +16,10 @@ const FERRAMENTAS: { forma: FormaMarca; icone: typeof SquareIcon; dica: string }
  * Marcações numeradas sobre a imagem de um gráfico ou tabela, para o pedido de ajuste. O que mudar em cada
  * número o analista escreve na mensagem do chat; aqui só se marca. `primeiroNumero` mantém a numeração
  * contínua com as outras referências da mesma mensagem.
+ *
+ * No modal do gráfico, `envolverArea` põe a imagem marcável dentro do palco com zoom; como as marcas são em % da
+ * imagem, valem em qualquer zoom. Sem `aoFechar`, o botão de concluir fica
+ * com quem usa o marcador (o modal tem o seu no rodapé).
  */
 export function MarcadorImagem({
   titulo,
@@ -24,6 +28,8 @@ export function MarcadorImagem({
   primeiroNumero,
   aoMudar,
   aoFechar,
+  envolverArea,
+  className,
   instrucao = "Escolha a forma e marque na imagem. Cada marcação ganha um número: escreva o que mudar em cada um na mensagem do chat (ex.: “1: eixo X em meses por extenso”).",
 }: {
   titulo: string
@@ -31,7 +37,9 @@ export function MarcadorImagem({
   marcas: Marca[]
   primeiroNumero: number
   aoMudar: (marcas: Marca[]) => void
-  aoFechar: () => void
+  aoFechar?: () => void
+  envolverArea?: (area: ReactNode) => ReactNode
+  className?: string
   /** Texto de ajuda abaixo da imagem; o padrão fala do chat. */
   instrucao?: string
 }) {
@@ -73,8 +81,39 @@ export function MarcadorImagem({
 
   const caixaRascunho = rascunho ? caixaDoArrasto(rascunho.inicio, rascunho.fim) : null
 
+  const area = (
+    <div
+      ref={areaRef}
+      className="relative shrink-0 touch-none overflow-hidden rounded-2xl border border-border bg-papel select-none"
+      style={{ cursor: "crosshair" }}
+      onPointerDown={aoPressionar}
+      onPointerMove={aoMover}
+      onPointerUp={aoSoltar}
+      onPointerCancel={() => setRascunho(null)}
+      aria-label={`Imagem de ${titulo} para marcar os ajustes`}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element -- arquivo local servido pela rota do app */}
+      <img src={urlImagem} alt={titulo} draggable={false} className="block w-full" />
+      <svg className="pointer-events-none absolute inset-0 size-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
+        {marcas.map((m) => (
+          <Forma key={m.id} marca={m} destacada={false} />
+        ))}
+        {caixaRascunho && <Forma marca={{ id: "rascunho", forma: ferramenta, ...caixaRascunho }} destacada />}
+      </svg>
+      {marcas.map((m, i) => (
+        <span
+          key={m.id}
+          className="absolute flex size-[22px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground ring-3 ring-papel"
+          style={{ left: `${m.x}%`, top: `${m.y}%` }}
+        >
+          {primeiroNumero + i}
+        </span>
+      ))}
+    </div>
+  )
+
   return (
-    <div className="space-y-3">
+    <div className={cn("space-y-3", className)}>
       <div className="flex flex-wrap items-center gap-1.5">
         <span id="marcar-rotulo" className="mr-1 text-[13px] text-muted-foreground">
           Marcar:
@@ -97,39 +136,14 @@ export function MarcadorImagem({
             </button>
           ))}
         </div>
-        <Button size="sm" variant="ghost" className="ml-auto text-muted-foreground" onClick={aoFechar}>
-          Concluir marcação
-        </Button>
+        {aoFechar && (
+          <Button size="sm" variant="ghost" className="ml-auto text-muted-foreground" onClick={aoFechar}>
+            Concluir marcação
+          </Button>
+        )}
       </div>
 
-      <div
-        ref={areaRef}
-        className="relative touch-none overflow-hidden rounded-2xl border border-border bg-papel select-none"
-        style={{ cursor: "crosshair" }}
-        onPointerDown={aoPressionar}
-        onPointerMove={aoMover}
-        onPointerUp={aoSoltar}
-        onPointerCancel={() => setRascunho(null)}
-        aria-label={`Imagem de ${titulo} para marcar os ajustes`}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element -- arquivo local servido pela rota do app */}
-        <img src={urlImagem} alt={titulo} draggable={false} className="block w-full" />
-        <svg className="pointer-events-none absolute inset-0 size-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
-          {marcas.map((m) => (
-            <Forma key={m.id} marca={m} destacada={false} />
-          ))}
-          {caixaRascunho && <Forma marca={{ id: "rascunho", forma: ferramenta, ...caixaRascunho }} destacada />}
-        </svg>
-        {marcas.map((m, i) => (
-          <span
-            key={m.id}
-            className="absolute flex size-[22px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground ring-3 ring-papel"
-            style={{ left: `${m.x}%`, top: `${m.y}%` }}
-          >
-            {primeiroNumero + i}
-          </span>
-        ))}
-      </div>
+      {envolverArea ? envolverArea(area) : area}
       <p className="text-xs text-muted-foreground">{instrucao}</p>
 
       {marcas.length > 0 && (

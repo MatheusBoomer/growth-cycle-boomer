@@ -10,6 +10,8 @@ export interface ControleVisualizador {
   abrirSecao: (etapa: EtapaId, nomeFinal: string) => void
   /** Abre a prévia de uma planilha (.xlsx), com todas as abas, na coluna larga. */
   abrirPlanilha: (etapa: EtapaId, nomeFinal: string) => void
+  /** Abre a prévia de um documento Word (.docx), convertido em PDF, na coluna larga. */
+  abrirDocumento: (etapa: EtapaId, nomeFinal: string) => void
   /** Abre um arquivo do prospect (caminho relativo à pasta dele) no visualizador embaixo do painel. */
   abrirArquivo: (caminho: string) => void
   /** Insere "@caminho" no campo de mensagem, na posição do cursor. */
@@ -26,6 +28,7 @@ export const ContextoVisualizador = createContext<ControleVisualizador>({
   abrir: () => {},
   abrirSecao: () => {},
   abrirPlanilha: () => {},
+  abrirDocumento: () => {},
   abrirArquivo: () => {},
   mencionar: () => {},
   inserirNoCompositor: () => {},

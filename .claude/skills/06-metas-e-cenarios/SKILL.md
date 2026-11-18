@@ -1,6 +1,6 @@
 ---
 name: metas-e-cenarios
-description: Define a meta do projeto, quebra ela mês a mês respeitando sazonalidade histórica (nunca de forma flat), e constrói os 3 cenários (Pessimista/Realista/Otimista) com a cadeia de KPIs Influenciadores para KPIs Resultado. Use após unidade-economica, com o diagnóstico completo já concluído.
+description: Define a meta do projeto, quebra ela mês a mês respeitando sazonalidade histórica e datas do varejo (nunca de forma flat, nem em valor nem em crescimento), e constrói os 3 cenários (Pessimista/Realista/Otimista) com a cadeia de KPIs Influenciadores para KPIs Resultado. Use após unidade-economica, com o diagnóstico completo já concluído.
 ---
 
 # Skill 06 — Metas e Cenários
@@ -29,10 +29,17 @@ desta skill.
 - [ ] Skill 05 (Soluções) concluída e aprovada: os cenários usam as soluções do
       registro como alavancas.
 
-**Regra crítica do analista:** se o resultado dividir a meta igualmente por
-todos os meses, interrompa imediatamente e peça redistribuição — isso não
-deveria acontecer, já que `scripts/projecao.py` recusa distribuição flat, mas
-é a checagem final antes de seguir.
+**Regra crítica do analista:** meta flat é proibida nas duas formas — a meta
+dividida igualmente por todos os meses **e** o mesmo crescimento % sobre o A-1
+em todos os meses (ex.: +30% em cada mês). Se a quebra mensal ou um cenário
+sair assim, interrompa imediatamente e peça redistribuição. Isso não deveria
+acontecer, já que `scripts/projecao.py` recusa as duas, mas é a checagem final
+antes de seguir.
+
+**Regra crítica do Pessimista:** o cenário Pessimista **nunca** fica abaixo
+do resultado do ano anterior (A-1) — nem no total do ano, nem em nenhum mês.
+O pior cenário que a agência apresenta é repetir o A-1. `scripts/projecao.py`
+recusa um Pessimista abaixo do A-1.
 
 ## Parte 1 — Meta do Projeto
 
@@ -47,16 +54,27 @@ deveria acontecer, já que `scripts/projecao.py` recusa distribuição flat, mas
    múltiplos cenários. A decisão final é do analista, mas a etapa 2 abaixo
    sempre constrói os 3 cenários de qualquer forma (a decisão do analista
    aqui só afeta o que é mostrado ao prospect depois).
-4. **Quebrar a meta mês a mês** — chamar `scripts/projecao.py` com o
-   histórico do ano anterior. O script identifica meses de maior e menor
-   potencial histórico e distribui o crescimento de forma proporcional,
-   nunca flat.
-5. **Gerar gráfico comparativo** (padrão `padrao-visual.md`): resultado mês a
+4. **Montar o calendário de datas do varejo do prospect.** O script parte de
+   um calendário padrão de e-commerce (Dia do Consumidor, Dia das Mães, Dia
+   dos Namorados, Dia dos Pais, Dia das Crianças, Black Friday e Natal, com
+   peso maior para Black Friday e Natal). Ajuste ao nicho do prospect com o
+   que já se sabe das Skills 02 e 03: tire datas que não vendem para esse
+   público, inclua datas próprias do nicho (ex.: Páscoa para chocolate, volta
+   às aulas para papelaria) e reforce as que o histórico mostrou fortes.
+   Mostre o calendário ao analista junto com a quebra mensal.
+5. **Quebrar a meta mês a mês** — chamar `scripts/projecao.py distribuir` com
+   a receita do A-1 por mês e o calendário (`eventos`). O crescimento de cada
+   mês sobre o A-1 varia: cresce mais o mês que foi forte no A-1 e o mês com
+   data relevante do varejo; cresce menos o mês fraco sem data. O script
+   devolve o crescimento de cada mês (`crescimento_mensal`) e recusa
+   crescimento igual em todos os meses.
+6. **Gerar gráfico comparativo** (padrão `padrao-visual.md`): resultado mês a
    mês do ano analisado vs. resultado projetado mês a mês do ano seguinte.
-6. **Checagem manual:** "Confirme se a soma anual está correta e se a
+7. **Checagem manual:** "Confirme se a soma anual está correta e se a
    distribuição mensal faz sentido estratégico." Teste de coerência: a soma
-   mensal atinge a meta anual? Respeita a sazonalidade? Existe exagero em
-   meses estruturalmente fracos?
+   mensal atinge a meta anual? Respeita a sazonalidade? O crescimento varia
+   por mês, com os meses fortes e as datas do varejo crescendo mais? Existe
+   exagero em meses estruturalmente fracos?
 
 ## Parte 2 — Cenários e Impactos Esperados
 
@@ -85,7 +103,9 @@ receita        = vendas * ticket_médio
 
 1. Os resultados mês a mês do cenário Realista devem bater exatamente com a
    meta quebrada na Parte 1.
-2. Não é permitido crescimento flat em nenhum KPI Influenciador.
+2. Não é permitido crescimento flat em nenhum KPI Influenciador, nem na
+   receita de nenhum cenário: o crescimento % sobre o A-1 varia por mês,
+   seguindo a sazonalidade do A-1 e as datas do varejo, como na Parte 1.
 3. Deve respeitar sazonalidade histórica, sazonalidade de mercado e
    benchmarks aceitáveis (ver `benchmarks-kpi.md` para os benchmarks de
    conversão e dependência já usados no diagnóstico).
@@ -93,6 +113,11 @@ receita        = vendas * ticket_médio
    diagnóstico.
 5. O raciocínio deve fechar matematicamente — `scripts/projecao.py` valida
    isso e recusa um cenário que não feche.
+6. **Pessimista ≥ A-1 em todos os meses e no total.** Rode cada cenário com
+   `scripts/projecao.py projetar` passando `historico_mensal` (receita A-1
+   por mês) e `cenario`; com `cenario: "pessimista"` o script recusa qualquer
+   mês abaixo do A-1. O Pessimista é "nenhuma alavanca funciona além da
+   operação atual", não "o negócio piora".
 
 ### Alavancas nomeadas (soluções do registro)
 

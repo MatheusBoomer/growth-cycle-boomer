@@ -82,3 +82,21 @@ describe("resposta ao vivo", () => {
     expect(h).toMatch(/<div class="[^"]*text-\[15px\][^"]*">.*Calculando o LTV/s)
   })
 })
+
+describe("chat: rolagem", () => {
+  it("nenhuma mensagem é âncora de rolagem (âncora fazia o chat pular para a primeira mensagem do analista)", () => {
+    const eventos = [
+      { tipo: "mensagem_analista", texto: "primeira", automatica: false, em: "2026-11-17T10:00:00Z" },
+      { tipo: "texto_agente", texto: "resposta", em: "2026-11-17T10:00:05Z" },
+      { tipo: "mensagem_analista", texto: "segunda", automatica: false, em: "2026-11-17T10:01:00Z" },
+    ] as unknown as Parameters<typeof ChatEtapa>[0]["eventos"]
+    const html = renderToStaticMarkup(
+      createElement(ProvedorConta, {
+        email: null,
+        children: createElement(ChatEtapa, { slug: "iszi", etapa: "01", dados: dadosDe(null, null), eventos, delta: "" }),
+      }),
+    )
+    expect(html).toContain("segunda")
+    expect(html).not.toMatch(/data-scroll-anchor="true"/)
+  })
+})

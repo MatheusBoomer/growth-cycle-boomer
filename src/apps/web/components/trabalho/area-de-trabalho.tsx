@@ -74,6 +74,7 @@ import { TrilhaEtapas } from "./trilha-etapas"
 import { VisualizadorArquivo } from "./visualizador-arquivo"
 import { VisualizadorApresentacao } from "./visualizador-apresentacao"
 import { VisualizadorHtml } from "./visualizador-html"
+import { VisualizadorDocumento } from "./visualizador-documento"
 import { VisualizadorPlanilha } from "./visualizador-planilha"
 import { VisualizadorSecao } from "./visualizador-secao"
 
@@ -109,6 +110,7 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
     nomeFinal: string
     secao?: boolean
     planilha?: boolean
+    documento?: boolean
   } | null>(null)
   const [telaCheia, setTelaCheia] = useState(false)
   const [entregaveisVistos, setEntregaveisVistos] = useState<
@@ -125,7 +127,13 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   const etapa =
     selecionada ?? (dados ? escolherEtapaInicial(dados.estado) : null)
   // O visualizador guarda a etapa dona do arquivo; ele abre na conversa onde o card do entregável aparece (pode ser a 04 para um da 03).
-  const tiposDoVisualizador: TipoEntregavel[] | undefined = visualizador?.secao ? ["secao"] : visualizador?.planilha ? ["planilha"] : undefined
+  const tiposDoVisualizador: TipoEntregavel[] | undefined = visualizador?.secao
+    ? ["secao"]
+    : visualizador?.planilha
+      ? ["planilha"]
+      : visualizador?.documento
+        ? ["documento"]
+        : undefined
   const visualizadorAberto =
     visualizador !== null &&
     etapa !== null &&
@@ -167,6 +175,9 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
   }, [])
   const abrirPlanilha = useCallback((etapaAlvo: EtapaId, nomeFinal: string) => {
     setVisualizador({ etapa: etapaAlvo, nomeFinal, planilha: true })
+  }, [])
+  const abrirDocumento = useCallback((etapaAlvo: EtapaId, nomeFinal: string) => {
+    setVisualizador({ etapa: etapaAlvo, nomeFinal, documento: true })
   }, [])
   const fechar = useCallback(() => {
     setTelaCheia(false)
@@ -241,6 +252,7 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
       abrir,
       abrirSecao,
       abrirPlanilha,
+      abrirDocumento,
       abrirArquivo,
       mencionar,
       inserirNoCompositor: inserirTexto,
@@ -251,6 +263,7 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
       abrir,
       abrirSecao,
       abrirPlanilha,
+      abrirDocumento,
       abrirArquivo,
       mencionar,
       inserirTexto,
@@ -395,7 +408,9 @@ export function AreaDeTrabalho({ slug }: { slug: string }) {
     ? VisualizadorSecao
     : visualizador?.planilha
       ? VisualizadorPlanilha
-      : aberto?.tipo === "apresentacao"
+      : visualizador?.documento
+        ? VisualizadorDocumento
+        : aberto?.tipo === "apresentacao"
         ? VisualizadorApresentacao
         : VisualizadorHtml
   const painelVisualizador = visualizadorAberto ? (
