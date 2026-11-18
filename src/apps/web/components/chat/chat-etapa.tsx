@@ -118,7 +118,8 @@ export function ChatEtapa({
           />
           <MessageScroller className="min-h-0 flex-1">
             <MessageScrollerViewport>
-              <MessageScrollerContent className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
+              {/* pb-14: o fim da conversa fica acima do degradê de baixo (h-12), sem véu sobre a última linha. */}
+              <MessageScrollerContent className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 pb-14">
                 {capa}
                 {estadoEtapa.origem === "terminal" && eventos.length === 0 && (
                   <MessageScrollerItem messageId="terminal">

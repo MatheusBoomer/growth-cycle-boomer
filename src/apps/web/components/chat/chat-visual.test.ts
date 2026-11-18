@@ -12,6 +12,9 @@ describe("chat como no protótipo", () => {
     expect(chat).not.toMatch(/data-slot="desfoque-chat"[^>]*from-background/)
     expect(chat.match(/data-slot="desfoque-chat"[^>]*from-\(--vidro-[12]\)/g)).toHaveLength(2)
   })
+  it("o fim da conversa tem respiro maior que o degradê de baixo, para a última linha não ficar sob a sombra", () => {
+    expect(chat).toMatch(/<MessageScrollerContent\s+className="[^"]*\bpb-14\b/)
+  })
   it("mensagem da pessoa em bolha clara com borda, não laranja", () => expect(ler("item-conversa.tsx")).toMatch(/<Bubble variant="outline" align="end">/))
   it("resposta do agente em 15 px (passado ao Markdown, que impõe text-sm)", () => {
     expect(ler("resposta-agente.tsx")).toMatch(/<Markdown className="text-\[15px\]">/)
