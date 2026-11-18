@@ -15,8 +15,19 @@ function valido(salvo: Layout | null, atual: Layout, aberto: boolean): salvo is 
  * Layout a aplicar quando o visualizador abre ou fecha: o salvo daquela combinação, se houver;
  * senão, ao abrir ele ocupa metade da largura (tirada proporcionalmente das outras colunas) e,
  * ao fechar, a largura dele volta para o chat.
+ *
+ * `painel` (a coluna 3): o estado atual dela prevalece sobre o do layout salvo. Recolhida continua recolhida (a
+ * largura vai para o chat) e aberta continua aberta (volta com `largura` se o salvo a tinha recolhido). Sem
+ * `painel`, vale o layout escolhido como está.
  */
-export function layoutParaVisualizador(atual: Layout, salvo: Layout | null, aberto: boolean): Layout {
+export function layoutParaVisualizador(atual: Layout, salvo: Layout | null, aberto: boolean, painel?: { recolhido: boolean; largura: number }): Layout {
+  const r = escolherLayout(atual, salvo, aberto)
+  if (!painel) return r
+  if (painel.recolhido) return (r.painel ?? 0) > 0 ? { ...r, chat: (r.chat ?? 0) + r.painel!, painel: 0 } : r
+  return (r.painel ?? 0) === 0 ? layoutParaPainel(r, true, painel.largura) : r
+}
+
+function escolherLayout(atual: Layout, salvo: Layout | null, aberto: boolean): Layout {
   if (valido(salvo, atual, aberto)) return salvo
   const largura = atual.visualizador ?? 0
   if (!aberto) return { ...atual, chat: (atual.chat ?? 0) + largura, visualizador: 0 }
