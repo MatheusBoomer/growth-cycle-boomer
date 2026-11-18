@@ -68,6 +68,20 @@ describe("ThoughtLine", () => {
     expect(cabecalho().getAttribute("aria-expanded")).toBe("false")
   })
 
+  it("controlado pelo pai: mostra o estado recebido e avisa o clique sem mudar sozinho", async () => {
+    const aoMudarAberto = vi.fn()
+    raiz = document.createElement("div")
+    document.body.append(raiz)
+    r = createRoot(raiz)
+    window.matchMedia = vi.fn().mockReturnValue({ matches: false }) as unknown as typeof window.matchMedia
+    await act(async () => r.render(createElement(ThoughtLine, { itens: DOIS, slug: "x", aoVivo: false, aberto: true, aoMudarAberto })))
+    expect(cabecalho().getAttribute("aria-expanded")).toBe("true")
+    expect(raiz.querySelectorAll("li")).toHaveLength(2)
+    await act(async () => (cabecalho() as HTMLElement).click())
+    expect(aoMudarAberto).toHaveBeenCalledWith(false)
+    expect(cabecalho().getAttribute("aria-expanded")).toBe("true")
+  })
+
   it("ao vivo sem nenhum passo ainda: 'Pensando…'", async () => {
     await montar([], true)
     expect(cabecalho().textContent).toContain("Pensando…")

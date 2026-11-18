@@ -29,8 +29,26 @@ export function duracaoLegivel(s: number): string {
  * respira, o rótulo mostra o passo atual em frase amigável e o cronômetro corre; ao terminar vira "Pensou por X s".
  * Só o clique abre e fecha a lista: nada muda sozinho. O texto técnico de cada passo fica no tooltip.
  */
-export function ThoughtLine({ itens, slug, aoVivo }: { itens: EventoProcesso[]; slug: string; aoVivo: boolean }) {
-  const [aberto, setAberto] = useState(false)
+export function ThoughtLine({
+  itens,
+  slug,
+  aoVivo,
+  aberto: abertoPeloPai,
+  aoMudarAberto,
+}: {
+  itens: EventoProcesso[]
+  slug: string
+  aoVivo: boolean
+  /** Controlado pelo pai: o bloco ao vivo e o já encerrado são instâncias diferentes, e quem abriu o histórico não o vê fechar. */
+  aberto?: boolean
+  aoMudarAberto?: (aberto: boolean) => void
+}) {
+  const [abertoInterno, setAbertoInterno] = useState(false)
+  const aberto = abertoPeloPai ?? abertoInterno
+  const alternar = () => {
+    setAbertoInterno(!aberto)
+    aoMudarAberto?.(!aberto)
+  }
   const [agora, setAgora] = useState(() => Date.now())
 
   useEffect(() => {
@@ -56,7 +74,7 @@ export function ThoughtLine({ itens, slug, aoVivo }: { itens: EventoProcesso[]; 
       <button
         type="button"
         aria-expanded={aberto}
-        onClick={() => setAberto((v) => !v)}
+        onClick={alternar}
         className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 inline-flex max-w-full items-center gap-2 rounded-md outline-none focus-visible:ring-3"
       >
         <SparklesIcon aria-hidden="true" className={cn("text-link-acao size-3.5 shrink-0", aoVivo && "motion-safe:animate-pulse")} />
